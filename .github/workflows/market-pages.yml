@@ -17,8 +17,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
       - name: Test data handling
-        run: node --test scripts/market.test.mjs
+        run: npm test
       - name: Restore previous deployed snapshot for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json -o data/previous.json && mv data/previous.json data/market.json || true
@@ -28,14 +31,11 @@ jobs:
         run: node scripts/collect-market.mjs
       - name: Build static site
         run: |
-          mkdir -p _site/data _site/assets
-          cp index.html _site/
-          cp assets/market.* _site/assets/
-          cp data/market.json _site/data/
-          touch _site/.nojekyll
+          npm run build
+          touch dist/.nojekyll
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: _site
+          path: dist
   deploy:
     needs: build
     runs-on: ubuntu-latest

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+_site/
+.vercel/
+.env
+.env.*
+*.tmp
+*-확인.png

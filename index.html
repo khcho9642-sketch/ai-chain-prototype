@@ -149,9 +149,9 @@ aside h2{margin:0;font-size:16px}
     <div class="spacer"></div>
     <div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B95A3" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <label for="q" class="sr">종목 검색</label><input id="q" type="text" placeholder="종목이나 고리 검색">
+      <label for="q" class="sr">종목 검색</label><input id="q" type="text" placeholder="종목 검색 후 Enter">
     </div>
-    <button class="mine-btn">내 종목 3</button>
+    <button class="mine-btn">관심종목 0</button>
   </div>
 </header>
 
@@ -167,7 +167,7 @@ aside h2{margin:0;font-size:16px}
 
   <section id="market-preview" class="panel sec market-section" aria-label="실제 시장 시세"></section>
   <section id="map" class="panel mapbox" aria-label="AI Value Chain">
-    <div class="maphead"><span>CHIPS → INFRA → AI SERVICES</span><span>파란 표시: 내 종목이 있는 고리</span></div>
+    <div class="maphead"><span>CHIPS → INFRA → AI SERVICES</span><span>파란 표시: 관심종목이 있는 고리</span></div>
     <div class="map" id="mapRow"></div>
   </section>
 
@@ -309,8 +309,6 @@ document.addEventListener('click',function(e){
 document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});
 route();
 </script>
-<script src="./assets/market.js"></script>
+<script type="module" src="./assets/dashboard.js"></script>
 </body>
 </html>
-
-
