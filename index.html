@@ -137,6 +137,7 @@ aside h2{margin:0;font-size:16px}
   .tabbar a.on{color:var(--accent);font-weight:700}
 }
 </style>
+<link rel="stylesheet" href="./assets/market.css">
 </head>
 <body>
 <header>
@@ -164,6 +165,7 @@ aside h2{margin:0;font-size:16px}
     <div class="counts" id="counts"></div>
   </div>
 
+  <section id="market-preview" class="panel sec market-section" aria-label="실제 시장 시세"></section>
   <section id="map" class="panel mapbox" aria-label="AI Value Chain">
     <div class="maphead"><span>CHIPS → INFRA → AI SERVICES</span><span>파란 표시: 내 종목이 있는 고리</span></div>
     <div class="map" id="mapRow"></div>
@@ -211,7 +213,7 @@ var S=[
  {id:3,name:'메모리',desc:'DRAM·HBM·NAND',t:['SK하이닉스','삼성전자','마이크론'],sig:'보통',mine:true,m:[['DRAM 현물가','[값]','','TrendForce'],['한국 반도체 수출','[값]','','관세청 10월 1~20일'],['HBM 가격 동향','[값]','','업계 추정']],up:[1],down:[4],ai:ph},
  {id:4,name:'AI 칩',desc:'GPU와 맞춤형 칩(ASIC) 설계',t:['엔비디아','AMD','브로드컴'],sig:'강세',mine:true,m:[['데이터센터 매출','[값]','','엔비디아 IR'],['다음 분기 가이던스','[값]','','엔비디아 IR'],['CoWoS 할당 비중','[추정치]','','기관 추정']],up:[2,3],down:[6],ai:ph},
  {id:5,name:'전력',desc:'변압기·전선·냉각',t:['HD현대일렉트릭','LS일렉트릭','버티브'],sig:'약세',mine:false,m:[['수주잔고','[값]','','각 사 실적'],['변압기 수출','[값]','','관세청'],['데이터센터 전력 수요','[값]','','업계 자료']],up:[],down:[6],ai:ph},
- {id:6,name:'인프라',desc:'데이터센터·클라우드',t:['마이크로소프트','아마존'],sig:'강세',mine:true,m:[['빅테크 설비투자 합계','[값]','','각 사 실적'],['클라우드 매출 성장률','[값]','','각 사 실적'],['데이터센터 착공','[값]','','업계 자료']],up:[4,5],down:[7],ai:ph},
+ {id:6,name:'인프라',desc:'데이터센터·클라우드·데이터센터 리츠',t:['마이크로소프트','아마존','에퀴닉스','디지털 리얼티'],sig:'강세',mine:true,m:[['빅테크 설비투자 합계','[값]','','각 사 실적'],['클라우드 매출 성장률','[값]','','각 사 실적'],['데이터센터 착공','[값]','','업계 자료']],up:[4,5],down:[7],ai:ph},
  {id:7,name:'모델',desc:'AI 모델 개발',t:['구글','메타'],sig:'보통',mine:false,m:[['주요 모델 출시','[건수]','','각 사 발표'],['AI 이용량 지표','[값]','','각 사 발표'],['모델 학습 투자','[값]','','실적 자료']],up:[6],down:[8],ai:ph},
  {id:8,name:'애플리케이션',desc:'AI 서비스·소프트웨어',t:['네이버','팔란티어'],sig:'보통',mine:false,m:[['AI 매출 비중','[값]','','각 사 실적'],['유료 사용자','[값]','','각 사 발표'],['신규 AI 서비스','[건수]','','각 사 발표']],up:[7],down:[],ai:ph}
 ];
@@ -307,5 +309,8 @@ document.addEventListener('click',function(e){
 document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});
 route();
 </script>
+<script src="./assets/market.js"></script>
 </body>
 </html>
+
+
