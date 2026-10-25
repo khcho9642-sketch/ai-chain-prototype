@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AI 체인 · PC Value Chain</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;background:#0B0E13}
+a{color:#7FD4FF}a:hover{color:#B5E6FF}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0E13; color: #E8ECF1; font-family: 'Noto Sans KR', system-ui, sans-serif">
+  <header style="border-bottom: 1px solid #1E2733">
+    <div style="max-width: 1360px; margin: 0 auto; padding: 16px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap">
+      <span style="font-size: 20px; font-weight: 900; letter-spacing: -0.02em">AI 체인 <span style="font-size: 12px; font-weight: 500; color: #8B95A3">(가칭)</span></span>
+      <nav aria-label="주요 메뉴" style="display: flex; gap: 22px; font-size: 14px; flex-wrap: wrap">
+        <a href="#map" style="color: #E8ECF1; font-weight: 700; text-decoration: none; border-bottom: 2px solid {{accent}}; padding: 10px 0">Value Chain</a>
+        <a href="#data" style="color: #8B95A3; text-decoration: none; padding: 10px 0">데이터</a>
+        <a href="#talk" style="color: #8B95A3; text-decoration: none; padding: 10px 0">토론</a>
+        <a href="#ai" style="color: #8B95A3; text-decoration: none; padding: 10px 0">AI에게 묻기</a>
+      </nav>
+      <div style="flex: 1 1 200px"></div>
+      <div style="display: flex; align-items: center; gap: 8px; background: #121821; border: 1px solid #1E2733; border-radius: 22px; padding: 0 14px; height: 44px; min-width: 240px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B95A3" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <label for="pc-search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">종목 검색</label>
+        <input id="pc-search" type="text" placeholder="종목이나 고리 검색" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #E8ECF1; font: inherit; font-size: 14px">
+      </div>
+      <button style="height: 44px; padding: 0 16px; border-radius: 22px; border: 0; background: {{accent}}; color: #0B0E13; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">내 종목 3</button>
+    </div>
+  </header>
+
+  <main style="max-width: 1360px; margin: 0 auto; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; color: #8B95A3">10월 25일 (일) 기준</span>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.02em">AI Value Chain <span style="font-size: 16px; font-weight: 500; color: #8B95A3; letter-spacing: 0">Today</span></h1>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #8B95A3">
+        <span style="{{pills.up}}">강세 {{cnt.up}}</span>
+        <span style="{{pills.mid}}">보통 {{cnt.mid}}</span>
+        <span style="{{pills.down}}">약세 {{cnt.down}}</span>
+        <span>판정은 예시예요 · 고리를 눌러 자세히 보기</span>
+      </div>
+    </div>
+
+    <section id="map" aria-label="AI Value Chain" style="background: #0F141B; border: 1px solid #1E2733; border-radius: 20px; padding: 24px">
+      <div style="display: flex; gap: 12px; font-size: 12px; color: #8B95A3; margin-bottom: 16px; flex-wrap: wrap">
+        <span style="letter-spacing: 0.04em">CHIPS → INFRA → AI SERVICES</span>
+        <span style="margin-left: auto">파란 표시: 내 종목이 있는 고리</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n1.pick}}" style="{{n1.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n1.num}}</span><span style="{{n1.pill}}">{{n1.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n1.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n1.tickerText}}</span>
+            <sc-if value="{{n1.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n2.pick}}" style="{{n2.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n2.num}}</span><span style="{{n2.pill}}">{{n2.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n2.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n2.tickerText}}</span>
+            <sc-if value="{{n2.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+          <button onClick="{{n3.pick}}" style="{{n3.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n3.num}}</span><span style="{{n3.pill}}">{{n3.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n3.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n3.tickerText}}</span>
+            <sc-if value="{{n3.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n4.pick}}" style="{{n4.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n4.num}}</span><span style="{{n4.pill}}">{{n4.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n4.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n4.tickerText}}</span>
+            <sc-if value="{{n4.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+          <button onClick="{{n5.pick}}" style="{{n5.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n5.num}}</span><span style="{{n5.pill}}">{{n5.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n5.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n5.tickerText}}</span>
+            <sc-if value="{{n5.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n6.pick}}" style="{{n6.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n6.num}}</span><span style="{{n6.pill}}">{{n6.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n6.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n6.tickerText}}</span>
+            <sc-if value="{{n6.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n7.pick}}" style="{{n7.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n7.num}}</span><span style="{{n7.pill}}">{{n7.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n7.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n7.tickerText}}</span>
+            <sc-if value="{{n7.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+
+        <div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <button onClick="{{n8.pick}}" style="{{n8.box}}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8B95A3">{{n8.num}}</span><span style="{{n8.pill}}">{{n8.signal}}</span></div>
+            <span style="font-size: 16px; font-weight: 700">{{n8.name}}</span>
+            <span style="font-size: 12px; color: #8B95A3; line-height: 1.5">{{n8.tickerText}}</span>
+            <sc-if value="{{n8.mine}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; color: {{accent}}">내 종목</span></sc-if>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+      <section aria-label="선택한 고리" style="flex: 999 1 560px; min-width: 0; background: #0F141B; border: 1px solid #1E2733; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; color: #8B95A3">선택한 고리 · {{d.num}}</span>
+            <h2 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em">{{d.name}}</h2>
+            <span style="font-size: 14px; color: #8B95A3">{{d.desc}}</span>
+          </div>
+          <span style="{{d.pill}}">{{d.signal}} · 예시</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <sc-for list="{{d.tickerList}}" as="t" hint-placeholder-count="3">
+            <span style="padding: 8px 14px; border-radius: 999px; background: #16202C; border: 1px solid #1E2733; font-size: 14px">{{t.t}}</span>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+          <sc-for list="{{d.metrics}}" as="m" hint-placeholder-count="3">
+            <div style="background: #121821; border: 1px solid #1E2733; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+              <span style="font-size: 12px; color: #8B95A3">{{m.label}}</span>
+              <span style="font-family: 'JetBrains Mono', 'Noto Sans KR', monospace; font-size: 22px; font-weight: 700">{{m.value}}</span>
+              <span style="font-size: 12px; color: {{accent}}">{{m.sub}}</span>
+              <span style="font-size: 11px; color: #8B95A3">출처 · {{m.src}}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="border: 1px dashed #2A3644; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: #8B95A3">← 공급받는 고리</span>
+            <span style="font-size: 15px; font-weight: 700">{{d.upText}}</span>
+          </div>
+          <div style="border: 1px dashed #2A3644; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: #8B95A3">공급하는 고리 →</span>
+            <span style="font-size: 15px; font-weight: 700">{{d.downText}}</span>
+          </div>
+        </div>
+
+        <div style="background: #121821; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 11px; font-weight: 700; color: #0B0E13; background: {{accent}}; padding: 3px 8px; border-radius: 6px">AI</span><span style="font-size: 14px; font-weight: 700">이 고리 해설</span></div>
+          <p style="margin: 0; font-size: 14px; line-height: 1.7">{{d.ai}}</p>
+          <span style="font-size: 11px; color: #8B95A3">참고용 해설이며 매수·매도 추천이 아닙니다.</span>
+        </div>
+
+        <div id="talk" style="display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 700">{{d.name}} 토론방</h3>
+            <a href="#talk" style="font-size: 13px">토론방 가기</a>
+          </div>
+          <sc-for list="{{d.talks}}" as="p" hint-placeholder-count="2">
+            <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #1E2733; flex-wrap: wrap">
+              <span style="font-size: 14px">{{p.t}}</span>
+              <span style="font-size: 12px; color: #8B95A3">{{p.meta}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #0F141B; border: 1px solid #1E2733; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 11px; font-weight: 700; color: #0B0E13; background: {{accent}}; padding: 3px 8px; border-radius: 6px">AI</span><h2 style="margin: 0; font-size: 16px; font-weight: 700">아침 브리핑</h2></div>
+          <button onClick="{{n2.pick}}" style="text-align: left; background: none; border: 0; border-top: 1px solid #1E2733; padding: 12px 0 0; color: #E8ECF1; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 14px; line-height: 1.55">TSMC 4분기 매출 가이던스 523억~543억 달러 제시</span>
+            <span style="font-size: 12px; color: {{accent}}">파운드리 → 메모리 · AI 칩</span>
+          </button>
+          <button onClick="{{n2.pick}}" style="text-align: left; background: none; border: 0; border-top: 1px solid #1E2733; padding: 12px 0 0; color: #E8ECF1; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 14px; line-height: 1.55">TSMC 3분기 웨이퍼 출하 447.6만 장, 전 분기 대비 3.2% 증가</span>
+            <span style="font-size: 12px; color: {{accent}}">파운드리</span>
+          </button>
+          <button onClick="{{n6.pick}}" style="text-align: left; background: none; border: 0; border-top: 1px solid #1E2733; padding: 12px 0 0; color: #E8ECF1; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 14px; line-height: 1.55">[밤사이 빅테크 설비투자 관련 소식]</span>
+            <span style="font-size: 12px; color: {{accent}}">인프라 → AI 칩 · 전력</span>
+          </button>
+          <span style="font-size: 11px; color: #8B95A3">출처: TSMC 3Q26 실적 자료</span>
+        </section>
+
+        <section style="background: #0F141B; border: 1px solid #1E2733; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 700">다가오는 일정 · 한국 시간</h2>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #8B95A3; width: 52px">11.01</span>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px">한국 10월 수출입 동향</span><span style="font-size: 12px; color: #8B95A3">메모리 · 소부장</span></div>
+          </div>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #8B95A3; width: 52px">11.10</span>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px">TSMC 10월 월매출</span><span style="font-size: 12px; color: #8B95A3">파운드리·패키징</span></div>
+          </div>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #8B95A3; width: 52px">[날짜]</span>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px">엔비디아 분기 실적</span><span style="font-size: 12px; color: #8B95A3">AI 칩 → 메모리·파운드리 파급</span></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <p style="margin: 0; font-size: 12px; color: #8B95A3; line-height: 1.6">프로토타입입니다. 신호 판정과 [값]은 예시이며 실제 데이터가 아닙니다. 이 서비스는 데이터를 모아 보여줄 뿐 매수·매도를 추천하지 않습니다.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4CC2FF","options":["#4CC2FF","#3DDC97","#F5C451"]},"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const A = this.props.accent ?? '#4CC2FF';
+    const st = this.state || {};
+    const S = st.sel ?? 2;
+    const ph = '[이 고리의 오늘 AI 해설이 들어갈 자리]';
+    const raw = [
+      { id: 1, name: '소부장', desc: '반도체 장비·소재·부품·기판', tickers: ['ASML', '한미반도체', '[국내 소재·기판]'], signal: '보통', mine: false,
+        metrics: [{ label: 'ASML 신규 수주', value: '[값]', src: 'ASML 실적 자료' }, { label: '국내 수주 공시', value: '[건수]', src: 'DART 최근 30일' }, { label: '고객사 설비투자', value: '[값]', src: '실적 발표 자료' }], up: [], down: [2, 3], ai: ph },
+      { id: 2, name: '파운드리·패키징', desc: '칩 위탁생산과 CoWoS 같은 첨단 패키징', tickers: ['TSMC', '삼성전자', '인텔'], signal: '강세', mine: false,
+        metrics: [{ label: 'TSMC 9월 매출', value: 'NT$5,118.6억', sub: '전년 대비 +54.6%', src: 'TSMC 10월 8일' }, { label: '3분기 웨이퍼 출하', value: '447.6만 장', sub: '전 분기 대비 +3.2%', src: 'TSMC 10월 15일' }, { label: '4분기 매출 가이던스', value: '$523억~543억', sub: '', src: 'TSMC 10월 15일' }], up: [1], down: [4],
+        ai: 'TSMC가 4분기 매출을 523억~543억 달러로 제시했어요. 7나노 이하 첨단 공정이 웨이퍼 매출의 79%를 차지해요. 첨단 패키징이 늘수록 HBM(메모리)과 AI 칩 고리의 물량으로 이어져요.' },
+      { id: 3, name: '메모리', desc: 'DRAM·HBM·NAND', tickers: ['SK하이닉스', '삼성전자', '마이크론'], signal: '보통', mine: true,
+        metrics: [{ label: 'DRAM 현물가', value: '[값]', src: 'TrendForce' }, { label: '한국 반도체 수출', value: '[값]', src: '관세청 10월 1~20일' }, { label: 'HBM 가격 동향', value: '[값]', src: '업계 추정' }], up: [1], down: [4], ai: ph },
+      { id: 4, name: 'AI 칩', desc: 'GPU와 맞춤형 칩(ASIC) 설계', tickers: ['엔비디아', 'AMD', '브로드컴'], signal: '강세', mine: true,
+        metrics: [{ label: '데이터센터 매출', value: '[값]', src: '엔비디아 IR' }, { label: '다음 분기 가이던스', value: '[값]', src: '엔비디아 IR' }, { label: 'CoWoS 할당 비중', value: '[추정치]', src: '기관 추정' }], up: [2, 3], down: [6], ai: ph },
+      { id: 5, name: '전력', desc: '변압기·전선·냉각', tickers: ['HD현대일렉트릭', 'LS일렉트릭', '버티브'], signal: '약세', mine: false,
+        metrics: [{ label: '수주잔고', value: '[값]', src: '각 사 실적' }, { label: '변압기 수출', value: '[값]', src: '관세청' }, { label: '데이터센터 전력 수요', value: '[값]', src: '업계 자료' }], up: [], down: [6], ai: ph },
+      { id: 6, name: '인프라', desc: '데이터센터·클라우드', tickers: ['마이크로소프트', '아마존'], signal: '강세', mine: true,
+        metrics: [{ label: '빅테크 설비투자 합계', value: '[값]', src: '각 사 실적' }, { label: '클라우드 매출 성장률', value: '[값]', src: '각 사 실적' }, { label: '데이터센터 착공', value: '[값]', src: '업계 자료' }], up: [4, 5], down: [7], ai: ph },
+      { id: 7, name: '모델', desc: 'AI 모델 개발', tickers: ['구글', '메타'], signal: '보통', mine: false,
+        metrics: [{ label: '주요 모델 출시', value: '[건수]', src: '각 사 발표' }, { label: 'AI 이용량 지표', value: '[값]', src: '각 사 발표' }, { label: '모델 학습 투자', value: '[값]', src: '실적 자료' }], up: [6], down: [8], ai: ph },
+      { id: 8, name: '애플리케이션', desc: 'AI 서비스·소프트웨어', tickers: ['네이버', '팔란티어'], signal: '보통', mine: false,
+        metrics: [{ label: 'AI 매출 비중', value: '[값]', src: '각 사 실적' }, { label: '유료 사용자', value: '[값]', src: '각 사 발표' }, { label: '신규 AI 서비스', value: '[건수]', src: '각 사 발표' }], up: [7], down: [], ai: ph }
+    ];
+    const sig = {
+      '강세': { bg: 'rgba(76,194,255,0.14)', fg: '#7FD4FF' },
+      '보통': { bg: 'rgba(139,149,163,0.18)', fg: '#C3CBD6' },
+      '약세': { bg: 'rgba(255,138,61,0.16)', fg: '#FFB07A' }
+    };
+    const pillOf = (s) => 'font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; background: ' + sig[s].bg + '; color: ' + sig[s].fg;
+    const nm = (id) => raw.find((x) => x.id === id).name;
+    const mk = (s) => {
+      const sel = s.id === S;
+      const border = sel ? '2px solid ' + A : (s.mine ? '1px solid rgba(76,194,255,0.45)' : '1px solid #1E2733');
+      return Object.assign({}, s, {
+        num: String(s.id).padStart(2, '0'),
+        pick: () => this.setState({ sel: s.id }),
+        pill: pillOf(s.signal),
+        box: 'display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; width: 100%; box-sizing: border-box; padding: 14px; border-radius: 14px; min-height: 124px; cursor: pointer; font: inherit; color: #E8ECF1; background: ' + (sel ? '#16202C' : '#121821') + '; border: ' + border,
+        tickerText: s.tickers.join(' · '),
+        tickerList: s.tickers.map((t) => ({ t })),
+        metrics: s.metrics.map((m) => Object.assign({ sub: '' }, m)),
+        upText: s.up.length ? s.up.map(nm).join(' · ') : '사슬의 시작',
+        downText: s.down.length ? s.down.map(nm).join(' · ') : '최종 사용자',
+        talks: [{ t: '[' + s.name + ' 토론방 인기 분석 글 제목]', meta: '인증 주주 · 출처 포함' }, { t: '[' + s.name + ' 토론방 질문 글 제목]', meta: '인증 주주 · 질문' }]
+      });
+    };
+    const all = raw.map(mk);
+    const d = all[S - 1];
+    return {
+      accent: A,
+      n1: all[0], n2: all[1], n3: all[2], n4: all[3], n5: all[4], n6: all[5], n7: all[6], n8: all[7],
+      d: Object.assign({}, d, { pill: pillOf(d.signal).replace('font-size: 12px', 'font-size: 14px').replace('padding: 4px 10px', 'padding: 8px 14px') }),
+      cnt: { up: raw.filter((x) => x.signal === '강세').length, mid: raw.filter((x) => x.signal === '보통').length, down: raw.filter((x) => x.signal === '약세').length },
+      pills: { up: pillOf('강세'), mid: pillOf('보통'), down: pillOf('약세') }
+    };
+  }
+}
+</script>
+</body>
+</html>

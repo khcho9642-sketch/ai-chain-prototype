@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 체인 · AI Value Chain</title>
+<meta name="description" content="AI Value Chain 8단계를 한 화면에. AI 관련 종목 주주를 위한 정보·커뮤니티 플랫폼 프로토타입.">
+<meta property="og:title" content="AI 체인 · AI Value Chain">
+<meta property="og:description" content="소부장부터 애플리케이션까지, AI Value Chain 8단계를 한 화면에.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{--bg:#0B0E13;--panel:#0F141B;--card:#121821;--card-on:#16202C;--line:#1E2733;--dash:#2A3644;--ink:#E8ECF1;--muted:#8B95A3;--accent:#4CC2FF;--arrow:#3A4656}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif}
+a{color:#7FD4FF}a:hover{color:#B5E6FF}
+button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:'JetBrains Mono','Noto Sans KR',monospace}
+.muted{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wrap{max-width:1360px;margin:0 auto;padding:0 32px}
+header{border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding-top:16px;padding-bottom:16px}
+.brand{font-size:20px;font-weight:900;letter-spacing:-.02em}
+.brand small{font-size:12px;font-weight:500;color:var(--muted)}
+.topnav{display:flex;gap:22px;font-size:14px}
+.topnav a{color:var(--muted);text-decoration:none;padding:10px 0}
+.topnav a.on{color:var(--ink);font-weight:700;border-bottom:2px solid var(--accent)}
+.spacer{flex:1 1 200px}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:0 14px;height:44px;min-width:240px}
+.search input{flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink);font:inherit;font-size:14px}
+.mine-btn{height:44px;padding:0 16px;border-radius:22px;border:0;background:var(--accent);color:var(--bg);font-size:14px;font-weight:700}
+main{padding-top:28px;padding-bottom:48px;display:flex;flex-direction:column;gap:24px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hero h1{margin:0;font-size:32px;font-weight:900;letter-spacing:-.02em}
+.hero h1 span{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
+.counts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px;white-space:nowrap}
+.s-up{background:rgba(76,194,255,.14);color:#7FD4FF}
+.s-mid{background:rgba(139,149,163,.18);color:#C3CBD6}
+.s-down{background:rgba(255,138,61,.16);color:#FFB07A}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px}
+.mapbox{padding:24px}
+.maphead{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:16px;flex-wrap:wrap;letter-spacing:.04em}
+.maphead span:last-child{margin-left:auto;letter-spacing:0}
+.map{display:flex;align-items:center;gap:6px}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:10px}
+.arrow{flex:0 0 22px;display:flex;justify-content:center}
+.arrow .down{display:none}
+.node{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;width:100%;padding:14px;border-radius:14px;min-height:124px;background:var(--card);border:1px solid var(--line);transition:background .15s,border-color .15s}
+.node:hover{background:var(--card-on)}
+.node.mine{border-color:rgba(76,194,255,.45)}
+.node.on{background:var(--card-on);border:2px solid var(--accent);padding:13px}
+.node .row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.node .num{font-size:12px;color:var(--muted)}
+.node .name{font-size:16px;font-weight:700}
+.node .tick{font-size:12px;color:var(--muted);line-height:1.5}
+.node .tag{font-size:11px;font-weight:700;color:var(--accent)}
+.below{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.detail{flex:999 1 560px;min-width:0;padding:28px;display:flex;flex-direction:column;gap:24px}
+.dhead{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.dhead h2{margin:4px 0;font-size:28px;font-weight:900;letter-spacing:-.02em}
+.dhead .pill{font-size:14px;padding:8px 14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;background:var(--card-on);border:1px solid var(--line);font-size:14px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.metric .v{font-size:22px;font-weight:700}
+.metric .s{font-size:12px;color:var(--accent);min-height:1em}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.link{border:1px dashed var(--dash);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.link b{font-size:15px}
+.ai{background:var(--card);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.ai p{margin:0;font-size:14px;line-height:1.7}
+.badge{font-size:11px;font-weight:700;color:var(--bg);background:var(--accent);padding:3px 8px;border-radius:6px}
+.talk h3{margin:0;font-size:16px}
+.post{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap;font-size:14px}
+aside{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px}
+aside .panel{padding:22px;display:flex;flex-direction:column;gap:12px}
+aside h2{margin:0;font-size:16px}
+.brief{text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:12px 0 0;display:flex;flex-direction:column;gap:4px}
+.brief span:first-child{font-size:14px;line-height:1.55}
+.brief span:last-child{font-size:12px;color:var(--accent)}
+.ev{display:flex;gap:14px;align-items:center}
+.ev .mono{font-size:13px;color:var(--muted);width:52px}
+.ev div{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.ev small{font-size:12px;color:var(--muted)}
+.note{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
+.view[hidden]{display:none}
+.view{display:flex;flex-direction:column;gap:24px}
+.sec{padding:24px;display:flex;flex-direction:column;gap:16px}
+.sec h2{margin:0;font-size:22px;font-weight:900}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.f{padding:7px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+.f.on{background:var(--card-on);border-color:var(--accent);color:var(--ink);font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl .v{font-weight:700}
+.ok{color:#7FD4FF;font-size:11px;font-weight:700}.no{color:var(--muted);font-size:11px}
+.tgrid{display:grid;grid-template-columns:240px 1fr;gap:24px}
+.rooms{display:flex;flex-direction:column;gap:6px}
+.room{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.room.on{border-color:var(--accent);background:var(--card-on);font-weight:700}
+.warn{font-size:11px;font-weight:700;color:#FFB07A;background:rgba(255,138,61,.16);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.compose{display:flex;gap:8px}
+.compose input,.ask input{flex:1;min-width:0;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 16px;font:inherit;font-size:14px}
+.compose button,.ask button{height:44px;padding:0 18px;border-radius:22px;border:0;background:var(--accent);color:var(--bg);font-weight:700}
+.compose button:disabled{opacity:.4;cursor:not-allowed}
+.ask{display:flex;gap:8px}
+.qs{display:flex;gap:8px;flex-wrap:wrap}
+.ans{background:var(--card);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.7}
+.ans p{margin:0}
+@media (max-width:760px){.tgrid{grid-template-columns:1fr}.rooms{flex-direction:row;overflow-x:auto}.room{white-space:nowrap}.sec{padding:16px}.tbl .hide-m{display:none}}
+.tabbar{display:none}
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  .topnav,.search,.mine-btn,.spacer{display:none}
+  .hero h1{font-size:22px}
+  .mapbox{padding:14px}
+  .maphead span:last-child{display:none}
+  .map{flex-direction:column;align-items:stretch;gap:4px}
+  .col{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px}
+  .arrow{flex:none}
+  .arrow .right{display:none}
+  .arrow .down{display:block}
+  .node{min-height:64px;padding:12px;gap:6px}
+  .node.on{padding:11px}
+  .node .name{font-size:14px}
+  .node .tick{font-size:11px}
+  .detail{padding:18px;gap:16px}
+  .dhead h2{font-size:22px}
+  .metrics{grid-template-columns:1fr}
+  main{padding-bottom:96px}
+  .tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:8px 0 calc(12px + env(safe-area-inset-bottom))}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;justify-content:center;color:var(--muted);text-decoration:none;font-size:11px}
+  .tabbar a.on{color:var(--accent);font-weight:700}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <span class="brand">AI 체인 <small>(가칭)</small></span>
+    <nav class="topnav" aria-label="주요 메뉴">
+      <a href="#map" data-r="map" class="on">Value Chain</a><a href="#data" data-r="data">데이터</a><a href="#talk" data-r="talk">토론</a><a href="#ai" data-r="ai">AI에게 묻기</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B95A3" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <label for="q" class="sr">종목 검색</label><input id="q" type="text" placeholder="종목이나 고리 검색">
+    </div>
+    <button class="mine-btn">내 종목 3</button>
+  </div>
+</header>
+
+<main class="wrap">
+<div id="v-map" class="view">
+  <div class="hero">
+    <div>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">10월 26일 (월) 기준</div>
+      <h1>AI Value Chain <span>Today</span></h1>
+    </div>
+    <div class="counts" id="counts"></div>
+  </div>
+
+  <section id="map" class="panel mapbox" aria-label="AI Value Chain">
+    <div class="maphead"><span>CHIPS → INFRA → AI SERVICES</span><span>파란 표시: 내 종목이 있는 고리</span></div>
+    <div class="map" id="mapRow"></div>
+  </section>
+
+  <div class="below">
+    <section class="panel detail" id="detail" aria-live="polite"></section>
+    <aside>
+      <section class="panel">
+        <div style="display:flex;align-items:center;gap:8px"><span class="badge">AI</span><h2>아침 브리핑</h2></div>
+        <button class="brief" data-go="2"><span>TSMC 4분기 매출 가이던스 523억~543억 달러 제시</span><span>파운드리 → 메모리 · AI 칩</span></button>
+        <button class="brief" data-go="2"><span>TSMC 3분기 웨이퍼 출하 447.6만 장, 전 분기 대비 3.2% 증가</span><span>파운드리</span></button>
+        <button class="brief" data-go="6"><span>[밤사이 빅테크 설비투자 관련 소식]</span><span>인프라 → AI 칩 · 전력</span></button>
+        <span class="muted" style="font-size:11px">출처: TSMC 3Q26 실적 자료</span>
+      </section>
+      <section class="panel">
+        <h2>다가오는 일정 · 한국 시간</h2>
+        <div class="ev"><span class="mono">11.01</span><div>한국 10월 수출입 동향<small>메모리 · 소부장</small></div></div>
+        <div class="ev"><span class="mono">11.10</span><div>TSMC 10월 월매출<small>파운드리·패키징</small></div></div>
+        <div class="ev"><span class="mono">[날짜]</span><div>엔비디아 분기 실적<small>AI 칩 → 메모리·파운드리 파급</small></div></div>
+      </section>
+    </aside>
+  </div>
+
+</div>
+<div id="v-data" class="view" hidden></div>
+<div id="v-talk" class="view" hidden></div>
+<div id="v-ai" class="view" hidden></div>
+
+  <p class="note">프로토타입입니다. 신호 판정과 [값]은 예시이며 실제 데이터가 아닙니다. 이 서비스는 데이터를 모아 보여줄 뿐 매수·매도를 추천하지 않습니다.</p>
+</main>
+
+<nav class="tabbar" aria-label="주요 메뉴">
+  <a href="#map" data-r="map" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
+  <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>데이터</a>
+  <a href="#talk" data-r="talk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>토론</a>
+  <a href="#ai" data-r="ai"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>AI</a>
+</nav>
+
+<script>
+var ph='[이 고리의 오늘 AI 해설이 들어갈 자리]';
+var S=[
+ {id:1,name:'소부장',desc:'반도체 장비·소재·부품·기판',t:['ASML','한미반도체','[국내 소재·기판]'],sig:'보통',mine:false,m:[['ASML 신규 수주','[값]','','ASML 실적 자료'],['국내 수주 공시','[건수]','','DART 최근 30일'],['고객사 설비투자','[값]','','실적 발표 자료']],up:[],down:[2,3],ai:ph},
+ {id:2,name:'파운드리·패키징',desc:'칩 위탁생산과 CoWoS 같은 첨단 패키징',t:['TSMC','삼성전자','인텔'],sig:'강세',mine:false,m:[['TSMC 9월 매출','NT$5,118.6억','전년 대비 +54.6%','TSMC 10월 8일'],['3분기 웨이퍼 출하','447.6만 장','전 분기 대비 +3.2%','TSMC 10월 15일'],['4분기 매출 가이던스','$523억~543억','','TSMC 10월 15일']],up:[1],down:[4],ai:'TSMC가 4분기 매출을 523억~543억 달러로 제시했어요. 7나노 이하 첨단 공정이 웨이퍼 매출의 79%를 차지해요. 첨단 패키징이 늘수록 HBM(메모리)과 AI 칩 고리의 물량으로 이어져요.'},
+ {id:3,name:'메모리',desc:'DRAM·HBM·NAND',t:['SK하이닉스','삼성전자','마이크론'],sig:'보통',mine:true,m:[['DRAM 현물가','[값]','','TrendForce'],['한국 반도체 수출','[값]','','관세청 10월 1~20일'],['HBM 가격 동향','[값]','','업계 추정']],up:[1],down:[4],ai:ph},
+ {id:4,name:'AI 칩',desc:'GPU와 맞춤형 칩(ASIC) 설계',t:['엔비디아','AMD','브로드컴'],sig:'강세',mine:true,m:[['데이터센터 매출','[값]','','엔비디아 IR'],['다음 분기 가이던스','[값]','','엔비디아 IR'],['CoWoS 할당 비중','[추정치]','','기관 추정']],up:[2,3],down:[6],ai:ph},
+ {id:5,name:'전력',desc:'변압기·전선·냉각',t:['HD현대일렉트릭','LS일렉트릭','버티브'],sig:'약세',mine:false,m:[['수주잔고','[값]','','각 사 실적'],['변압기 수출','[값]','','관세청'],['데이터센터 전력 수요','[값]','','업계 자료']],up:[],down:[6],ai:ph},
+ {id:6,name:'인프라',desc:'데이터센터·클라우드',t:['마이크로소프트','아마존'],sig:'강세',mine:true,m:[['빅테크 설비투자 합계','[값]','','각 사 실적'],['클라우드 매출 성장률','[값]','','각 사 실적'],['데이터센터 착공','[값]','','업계 자료']],up:[4,5],down:[7],ai:ph},
+ {id:7,name:'모델',desc:'AI 모델 개발',t:['구글','메타'],sig:'보통',mine:false,m:[['주요 모델 출시','[건수]','','각 사 발표'],['AI 이용량 지표','[값]','','각 사 발표'],['모델 학습 투자','[값]','','실적 자료']],up:[6],down:[8],ai:ph},
+ {id:8,name:'애플리케이션',desc:'AI 서비스·소프트웨어',t:['네이버','팔란티어'],sig:'보통',mine:false,m:[['AI 매출 비중','[값]','','각 사 실적'],['유료 사용자','[값]','','각 사 발표'],['신규 AI 서비스','[건수]','','각 사 발표']],up:[7],down:[],ai:ph}
+];
+var cls={'강세':'s-up','보통':'s-mid','약세':'s-down'};
+var cols=[[1],[2,3],[4,5],[6],[7],[8]];
+var sel=2;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function get(id){return S[id-1];}
+function pad(n){return (n<10?'0':'')+n;}
+function arrow(){return '<div class="arrow" aria-hidden="true"><svg class="right" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="down" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>';}
+function node(s){return '<button class="node'+(s.mine?' mine':'')+(s.id===sel?' on':'')+'" data-id="'+s.id+'" aria-pressed="'+(s.id===sel)+'"><div class="row"><span class="num mono">'+pad(s.id)+'</span><span class="pill '+cls[s.sig]+'">'+s.sig+'</span></div><span class="name">'+esc(s.name)+'</span><span class="tick">'+esc(s.t.join(' · '))+'</span>'+(s.mine?'<span class="tag">내 종목</span>':'')+'</button>';}
+function renderMap(){
+  document.getElementById('mapRow').innerHTML=cols.map(function(c){return '<div class="col" style="--n:'+c.length+'">'+c.map(function(id){return node(get(id));}).join('')+'</div>';}).join(arrow());
+  var c={'강세':0,'보통':0,'약세':0};S.forEach(function(s){c[s.sig]++;});
+  document.getElementById('counts').innerHTML='<span class="pill s-up">강세 '+c['강세']+'</span><span class="pill s-mid">보통 '+c['보통']+'</span><span class="pill s-down">약세 '+c['약세']+'</span><span>판정은 예시예요 · 고리를 눌러 자세히 보기</span>';
+}
+function renderDetail(){
+  var d=get(sel);
+  var up=d.up.length?d.up.map(function(i){return get(i).name;}).join(' · '):'사슬의 시작';
+  var dn=d.down.length?d.down.map(function(i){return get(i).name;}).join(' · '):'최종 사용자';
+  document.getElementById('detail').innerHTML=
+   '<div class="dhead"><div><span class="muted" style="font-size:12px">선택한 고리 · '+pad(d.id)+'</span><h2>'+esc(d.name)+'</h2><span class="muted" style="font-size:14px">'+esc(d.desc)+'</span></div><span class="pill '+cls[d.sig]+'">'+d.sig+' · 예시</span></div>'+
+   '<div class="chips">'+d.t.map(function(x){return '<span class="chip">'+esc(x)+'</span>';}).join('')+'</div>'+
+   '<div class="metrics">'+d.m.map(function(m){return '<div class="metric"><span class="muted" style="font-size:12px">'+esc(m[0])+'</span><span class="v mono">'+esc(m[1])+'</span><span class="s">'+esc(m[2])+'</span><span class="muted" style="font-size:11px">출처 · '+esc(m[3])+'</span></div>';}).join('')+'</div>'+
+   '<div class="links"><div class="link"><span class="muted" style="font-size:12px">← 공급받는 고리</span><b>'+esc(up)+'</b></div><div class="link"><span class="muted" style="font-size:12px">공급하는 고리 →</span><b>'+esc(dn)+'</b></div></div>'+
+   '<div class="ai"><div style="display:flex;align-items:center;gap:8px"><span class="badge">AI</span><b style="font-size:14px">이 고리 해설</b></div><p>'+esc(d.ai)+'</p><span class="muted" style="font-size:11px">참고용 해설이며 매수·매도 추천이 아닙니다.</span></div>'+
+   '<div class="talk"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>'+esc(d.name)+' 토론방</h3><a href="#talk/'+d.id+'" style="font-size:13px">토론방 가기</a></div>'+
+   '<div class="post"><span>['+esc(d.name)+' 토론방 인기 분석 글 제목]</span><span class="muted" style="font-size:12px">인증 주주 · 출처 포함</span></div>'+
+   '<div class="post"><span>['+esc(d.name)+' 토론방 질문 글 제목]</span><span class="muted" style="font-size:12px">인증 주주 · 질문</span></div></div>';
+}
+function pick(id,scroll){sel=id;renderMap();renderDetail();if(scroll&&window.innerWidth<=760)document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'start'});}
+document.addEventListener('click',function(e){
+  var n=e.target.closest('.node');if(n){pick(+n.dataset.id,true);return;}
+  var b=e.target.closest('[data-go]');if(b){pick(+b.dataset.go,false);document.getElementById('map').scrollIntoView({behavior:'smooth'});}
+});
+pick(2,false);
+
+var NOREC=/(살까|팔까|사야|팔아야|매수|매도|추천|목표가|목표주가|오를까|내릴까|전망|예측)/;
+var dataF=0,room=0;
+var rooms=[{n:'이슈방 (전체)'}].concat(S.map(function(s){return {n:s.name+' 토론방',id:s.id};}));
+function renderData(){
+  var rows=[];S.forEach(function(s){if(dataF&&s.id!==dataF)return;s.m.forEach(function(m){rows.push([s,m]);});});
+  var ok=0;rows.forEach(function(r){if(r[1][1].charAt(0)!=='[')ok++;});
+  document.getElementById('v-data').innerHTML='<section class="panel sec"><div><h2>고리별 데이터</h2><p class="note">모든 숫자는 출처와 함께 표시합니다. 확인되지 않은 값은 [값]으로 비워 두었어요. 확인된 값 '+ok+' / '+rows.length+'개</p></div>'+
+   '<div class="filters">'+['전체'].concat(S.map(function(s){return s.name;})).map(function(n,i){return '<button class="f'+(i===dataF?' on':'')+'" data-df="'+i+'">'+esc(n)+'</button>';}).join('')+'</div>'+
+   '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>고리</th><th>지표</th><th>값</th><th class="hide-m">변화</th><th>출처·기준일</th></tr></thead><tbody>'+
+   rows.map(function(r){var m=r[1],c=m[1].charAt(0)!=='[';return '<tr><td>'+esc(r[0].name)+'</td><td>'+esc(m[0])+'</td><td class="v mono">'+esc(m[1])+'<br>'+(c?'<span class="ok">확인</span>':'<span class="no">미확인</span>')+'</td><td class="hide-m" style="color:var(--accent)">'+esc(m[2])+'</td><td class="muted">'+esc(m[3])+'</td></tr>';}).join('')+
+   '</tbody></table></div></section>';
+}
+function renderTalk(){
+  var nm=room?S[room-1].name:'';
+  var posts=room?['['+nm+' 인기 분석 글 제목]','['+nm+' 질문 글 제목]','[출처 없는 단정적 예측 글 예시 - 경고 라벨이 붙어요]']:['[오늘의 이슈 글 제목]','[실적 발표 직후 토론 글 제목]','[출처 없는 단정적 예측 글 예시 - 경고 라벨이 붙어요]'];
+  var meta=['인증 주주 · 출처 포함 · 추천 [수]','인증 주주 · 질문','미인증 · 출처 없음'];
+  document.getElementById('v-talk').innerHTML='<section class="panel sec"><div><h2>토론</h2><p class="note">토론방은 2단계에서 열려요. 지금은 화면 예시입니다. 인증·추천·출처 가중 정렬, AI 1차 검수, 외부 유료방 링크 금지를 적용할 예정이에요.</p></div>'+
+   '<div class="tgrid"><div class="rooms">'+rooms.map(function(r,i){return '<button class="room'+(i===room?' on':'')+'" data-room="'+i+'">'+esc(r.n)+'</button>';}).join('')+'</div>'+
+   '<div><h3 style="margin:0 0 8px">'+esc(rooms[room].n)+'</h3>'+
+   posts.map(function(t,i){return '<div class="post"><span>'+esc(t)+(i===2?' <span class="warn">단정적 예측 주의</span>':'')+'</span><span class="muted" style="font-size:12px">'+meta[i]+'</span></div>';}).join('')+
+   '<div class="compose" style="margin-top:16px"><input disabled placeholder="주주 인증 후 글을 쓸 수 있어요 (2단계)"><button disabled>등록</button></div></div></div></section>';
+}
+function answer(q){
+  if(NOREC.test(q))return '<p>이 서비스는 매수·매도 추천, 목표주가, 주가 예측을 제공하지 않아요. 대신 해당 고리의 공개 지표와 출처를 보여드릴 수 있어요. 고리 이름으로 다시 물어보세요.</p>';
+  var hit=null;S.forEach(function(s){if(!hit&&(q.indexOf(s.name.split('·')[0])>-1||s.t.some(function(t){return t.charAt(0)!=='['&&q.toLowerCase().indexOf(t.toLowerCase())>-1;})))hit=s;});
+  if(!hit)return '<p>아직 8개 고리 이름이나 대표 종목으로 묻는 질문만 답할 수 있어요. 예: “메모리 고리는 어디서 물량을 받나요?”</p>';
+  var up=hit.up.map(function(i){return get(i).name;}).join(', ')||'없음(사슬의 시작)',dn=hit.down.map(function(i){return get(i).name;}).join(', ')||'없음(최종 사용자)';
+  var conf=hit.m.filter(function(m){return m[1].charAt(0)!=='[';});
+  return '<p><b>'+esc(hit.name)+'</b> — '+esc(hit.desc)+'. 공급받는 고리: '+esc(up)+' / 공급하는 고리: '+esc(dn)+'.</p>'+
+   (conf.length?'<p>확인된 지표: '+conf.map(function(m){return esc(m[0])+' '+esc(m[1])+' ('+esc(m[3])+')';}).join(', ')+'</p>':'<p>아직 확인된 수치가 없어요. 데이터 연결 후 채워져요.</p>')+
+   '<span class="muted" style="font-size:11px">참고용 정리이며 매수·매도 추천이 아닙니다. 현재는 규칙 기반 예시 답변이고 실제 AI 연결 전이에요.</span>';
+}
+var QS=['TSMC는 어느 고리에 속하나요?','메모리 고리는 어디서 물량을 받나요?','전력 고리는 무엇에 영향을 주나요?','SK하이닉스 살까요?'];
+function renderAI(){
+  document.getElementById('v-ai').innerHTML='<section class="panel sec"><div style="display:flex;align-items:center;gap:8px"><span class="badge">AI</span><h2>AI에게 묻기</h2></div>'+
+   '<p class="note">근거가 되는 데이터와 출처를 함께 보여줘요. 추천·예측 질문에는 답하지 않아요.</p>'+
+   '<form class="ask" id="askForm"><label class="sr" for="aq">질문</label><input id="aq" placeholder="고리나 종목에 대해 물어보세요"><button type="submit">묻기</button></form>'+
+   '<div class="qs">'+QS.map(function(q){return '<button class="f" data-q="'+esc(q)+'">'+esc(q)+'</button>';}).join('')+'</div>'+
+   '<div class="ans" id="ansBox" aria-live="polite"><span class="muted">질문을 입력하거나 위 예시를 눌러보세요.</span></div></section>';
+}
+function ask(q){document.getElementById('aq').value=q;document.getElementById('ansBox').innerHTML='<b>Q. '+esc(q)+'</b>'+answer(q);}
+function route(){
+  var h=location.hash.replace('#','').split('/'),r=['map','data','talk','ai'].indexOf(h[0])>-1?h[0]:'map';
+  if(r==='talk'&&h[1])room=+h[1]||0;
+  ['map','data','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
+  document.querySelectorAll('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===r);});
+  if(r==='data')renderData();if(r==='talk')renderTalk();if(r==='ai')renderAI();
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+document.addEventListener('click',function(e){
+  var f=e.target.closest('[data-df]');if(f){dataF=+f.dataset.df;renderData();return;}
+  var r=e.target.closest('[data-room]');if(r){room=+r.dataset.room;renderTalk();return;}
+  var q=e.target.closest('[data-q]');if(q){ask(q.dataset.q);}
+});
+document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});
+route();
+</script>
+</body>
+</html>
