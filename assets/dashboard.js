@@ -83,8 +83,8 @@ async function loadSnapshot(){
     const r=await fetch(`${apiAvailable?'./api/snapshot':'./data/market.json'}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(20000)})
     if(!r.ok)throw new Error(`시세 파일 HTTP ${r.status}`)
     const body=await r.json();if(body.schemaVersion!==1||!Array.isArray(body.quotes))throw new Error('시세 파일 형식 오류')
-    snapshot=body;snapshotQuotes=new Map(body.quotes.map(q=>[q.symbol,q]));snapshotError=''
-  }catch(error){snapshotError=`시세 파일 조회 실패: ${error.message}. 기존 값이 있으면 유지합니다.`}
+    snapshot=body;snapshotQuotes=new Map(body.quotes.map(q=>[q.symbol,q]));snapshotError='';window.aiChainSnapshot=body;window.dispatchEvent(new CustomEvent('market-snapshot',{detail:body}))
+  }catch(error){snapshotError=`시세 파일 조회 실패: ${error.message}. 기존 값이 있으면 유지합니다.`;window.dispatchEvent(new CustomEvent('market-snapshot-error',{detail:snapshotError}))}
   finally{snapshotBusy=false;syncWatch();update()}
 }
 async function request(symbol,r,signal){
@@ -138,5 +138,6 @@ document.addEventListener('submit',event=>{if(event.target.id==='market-add-form
 document.addEventListener('input',event=>{if(event.target.id==='market-search'){search=event.target.value;const el=document.getElementById('market-results');if(el)el.innerHTML=result()}})
 document.addEventListener('change',event=>{if(event.target.id==='market-group'){group=event.target.value;update()}if(event.target.id==='market-filter'){filter=Number(event.target.value);update()}})
 document.getElementById('q')?.addEventListener('keydown',event=>{if(event.key==='Enter'){search=event.target.value;group='전체';filter=0;if(location.hash!=='#data')location.hash='data';else mount()}})
+window.addEventListener('market-refresh-request',()=>loadSnapshot());
 mount();syncWatch();loadSnapshot().then(()=>loadDetail())
 setInterval(()=>{if(!document.hidden){loadSnapshot();loadDetail(true)}},60000)

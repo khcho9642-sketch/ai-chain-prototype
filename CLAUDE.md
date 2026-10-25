@@ -35,3 +35,6 @@ AI Value Chain 8단계를 한 화면에 보여주고, 그 사슬에 걸친 국�
 
 ## 통합 구조
 독립 stock-site 앱을 다시 만들지 않는다. assets/instruments.js의 40개 카탈로그와 server/market.mjs의 단일 API를 사용한다. 관심종목·직접 티커·모든 기간 차트·OHLCV·CSV는 assets/dashboard.js에 통합했다. 디자인 원본과 사용자 목표는 보존한다. 실행 방법·배포 차이는 README.md를 따른다.
+
+## 고리별 주가 비교
+assets/peer-comparison-core.js는 공통거래일·기준100·현지통화 종가등락률 동일비중 평균을 계산한다. assets/peer-comparison.js·css가 #compare 8개선·피어목록·CSV를 제공하며 dashboard의 market-snapshot 이벤트를 공유한다. 기존의 예시 산업신호와 비교 주가 지수를 혼동하지 않는다. 세부계산은 README와 scripts/peer-comparison.test.mjs 참고.
