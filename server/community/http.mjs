@@ -35,7 +35,7 @@ export function createCommunityHandler({ catalog, path, workerToken, adminToken,
       if (req.headers.origin) ensure(req.headers.origin === origin, 'invalid_origin', 403)
       const url = new URL(req.url, origin), route = url.pathname.slice('/api/community'.length)
       const isWorker = route.startsWith('/worker/'), isAdmin = route.startsWith('/admin')
-      if (isWorker) ensure(authorised(req, workerToken), 'worker_unauthorized', 401)
+      if (isWorker) { ensure(authorised(req, workerToken), 'worker_unauthorized', 401); store.touchWorker(String(req.headers['x-worker-id'] || 'local')) }
       if (isAdmin) ensure(authorised(req, adminToken), 'admin_unauthorized', 401)
       if (req.method === 'GET' && (route === '/events' || route === '/worker/events')) {
         ensure(streams.size < 64, 'too_many_streams', 429)

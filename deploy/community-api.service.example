@@ -1,0 +1,24 @@
+# Example only. Review paths/user and install explicitly on a persistent Linux host.
+# This does not run the AI CLIs. Run only one API replica with this SQLite volume.
+[Unit]
+Description=AI Chain shared community API
+After=network-online.target
+
+[Service]
+Type=simple
+User=ai-chain
+Group=ai-chain
+WorkingDirectory=/srv/ai-chain
+EnvironmentFile=/etc/ai-chain/community.env
+ExecStart=/usr/bin/node /srv/ai-chain/scripts/community-server.mjs
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ai-chain
+
+[Install]
+WantedBy=multi-user.target

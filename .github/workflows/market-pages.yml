@@ -38,6 +38,8 @@ jobs:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
         run: node scripts/collect-industry.mjs
       - name: Build static site
+        env:
+          COMMUNITY_API_ORIGIN: ${{ vars.COMMUNITY_API_ORIGIN }}
         run: |
           npm run build
           touch dist/.nojekyll

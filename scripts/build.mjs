@@ -1,10 +1,13 @@
 import { copyFile, lstat, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveCommunityOrigin } from '../assets/community-ui-core.js'
 import { validateIndustry } from '../assets/industry-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export async function build(root = projectRoot) {
+export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
+  // Only a public endpoint is emitted. Secrets never enter the browser build.
+  if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
   const source = resolve(root)
   const output = resolve(source, 'dist')
   // Only the generated dist folder directly inside this project can be replaced.
@@ -28,6 +31,7 @@ export async function build(root = projectRoot) {
   await writeFile(join(output, 'index.html'), html)
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
   await Promise.all(['market.json','industry.json'].map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  if (assets.some(entry => entry.name === 'community.js')) await writeFile(join(output, 'assets', 'community-runtime.js'), `export const communityApiOrigin = ${JSON.stringify(communityOrigin)}\n`)
   return output
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
