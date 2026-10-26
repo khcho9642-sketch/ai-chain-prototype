@@ -142,3 +142,7 @@ API 오류·호출 제한·유효하지 않은 응답은 이전 관측과 `lastS
 새 읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter를 직접 호출하거나 매출·사용자 수를 새로 수집하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
 
 배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 5종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+
+## 커뮤니티 서버 배포 준비
+
+기존 댓글·회원·AI 워커 구현은 별도 Node24+영속 SQLite 서버를 사용한다. `npm run community:package`는 API 실행에 필요한 공개 소스만 `.local/releases/`에 패키징하고 파일별 SHA-256을 기록한다. 서버·계정·방화벽을 설치하거나 변경하지 않는다. 실제 서버의 읽기 전용 연결 검사는 `npm run community:check -- https://API도메인 https://웹도메인`이다. [Oracle 계정부터 시작하는 안내](docs/oracle-community-quickstart.md)를 참고한다. 실제 운영 연결과 모델 활성화는 아직 준비 단계다.

@@ -25,6 +25,14 @@ jobs:
           node-version: 24
       - run: npm test
       - run: npm run build
+      - name: Package persistent community API source
+        run: npm run community:package
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: community-api-release
+          path: .local/releases/
+          retention-days: 3
+          if-no-files-found: error
 
   windows:
     runs-on: windows-latest
@@ -37,6 +45,7 @@ jobs:
         with:
           node-version: 24
       - run: npm run test:community
+      - run: npm run test:community:deploy
       - name: Parse development task script without installing any tasks
         shell: pwsh
         run: |

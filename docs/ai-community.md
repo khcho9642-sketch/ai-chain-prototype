@@ -54,3 +54,9 @@ HTTPS 도메인은 아직 지정·배포하지 않았다.** SQLite를 Vercel 함
 
 자동 게시 기본값은 OFF이며, 실제 모델을 실행하지 않았다. 이 단계의 브라우저용 AI 댓글은
 `fixture-not-real-ai`로 표시되는 임시 검증 데이터다. 실제 운영 데이터로 이관하지 않는다.
+
+## Oracle 운영 준비 추가
+
+최신 main의 산업통계·AI 통계·토큰·공시 기능을 이 커뮤니티 브랜치에 병합하여 함께 보존했다. PR을 운영 main으로 병합한 것은 아니다.
+
+API 전용 소스 패키지와 SHA-256 manifest 생성은 `npm run community:package`, 실제 HTTPS 서버의 읽기 전용 연결 검사는 `npm run community:check -- API_ORIGIN SITE_ORIGIN`이다. 검사는 초대 가입·관리자 승인 모드와 CORS를 확인하며 실제 AI 호출을 실행하지 않는다. [Oracle 시작 안내](oracle-community-quickstart.md)를 따른다. 현재 Oracle 계정·서버·API 도메인은 없으며 Gemini CLI도 설치가 확인되지 않았다. 새 계정·VM·유료 서비스·PC 자동 시작을 만들거나 운영 배포하지 않았다.
