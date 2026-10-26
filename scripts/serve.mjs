@@ -3,9 +3,12 @@ import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { middleware } from '../server/market.mjs'
-import { build, projectRoot } from './build.mjs'
+import { build, projectRoot, publicSnapshotFiles } from './build.mjs'
 import { instruments } from '../assets/instruments.js'
 import { createCommunityHandler } from '../server/community/http.mjs'
+
+const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json',
+  '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json'}
 
 export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null } = {}) {
   return createServer(async (req, res) => {
@@ -15,7 +18,7 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
       res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
       return res.end(JSON.stringify({ error: 'community_development_mode_disabled' }))
     }
-    if (pathname === '/api/snapshot' || pathname === '/api/industry') {
+    if (Object.hasOwn(snapshotRoutes, pathname)) {
       res.setHeader('Content-Type', 'application/json; charset=utf-8')
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -25,12 +28,12 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         return res.end(JSON.stringify({ error: 'GET 또는 HEAD 요청만 지원합니다.' }))
       }
       try {
-        const content = await readFile(join(root, 'data', pathname === '/api/industry' ? 'industry.json' : 'market.json'))
+        const content = await readFile(join(root, 'data', snapshotRoutes[pathname]))
         res.statusCode = 200
         return res.end(req.method === 'HEAD' ? undefined : content)
       } catch {
         res.statusCode = 503
-        return res.end(JSON.stringify({ error: '시세 스냅샷을 불러올 수 없습니다.' }))
+        return res.end(JSON.stringify({ error: '데이터 스냅샷을 불러올 수 없습니다.' }))
       }
     }
     await middleware(req, res, async () => {
@@ -42,7 +45,7 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname)
         const relative = path === '/' ? 'index.html' : path.slice(1)
         // Explicit public-file allowlist keeps source, design notes and Git files private.
-        if (relative !== 'index.html' && !['data/market.json','data/industry.json'].includes(relative) && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
+        if (relative !== 'index.html' && !publicSnapshotFiles.map(name => 'data/' + name).includes(relative) && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
           res.statusCode = 404; return res.end('페이지를 찾을 수 없습니다.')
         }
         const content = await readFile(join(root, relative))

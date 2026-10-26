@@ -41,3 +41,15 @@ assets/peer-comparison-core.js는 공통거래일·기준100·현지통화 종�
 
 ## 기업·산업통계 확장
 AI 기업 75개(국내18·해외57), 고리 편입77건을 같은 시세 카탈로그로 제공한다. 기업 역할·국가·공식 출처는 assets/company-profiles.js에 있다. #industry의 공식 통계12개와 수집·오류 처리·단위는 README 및 docs/industry-sources.md 참고. 관세청 발표문 검증 수치는 자동 API 자료로 표현하지 않는다. 품목별 kg API는 미연결이다.
+
+## AI 수요·매출·토큰 통계
+
+`#ai-stats`는 `assets/ai-statistics.js`·`ai-statistics.css`와 `ai-statistics-core.js`를 사용한다. 2026-10-26 검토본은 산업 50개, OpenAI 12개, Anthropic 11개, 외부 비교 8개로 총 81개 정의다. 외부 비교를 회사·제품별 15행으로 나누므로 화면은 총 88행이며, 중복 제거한 검증 관측은 145개, 미확인 지표는 11개다. 산업 지표 안에 중국 8개·일본 4개·한국 2개가 포함된다. 이 수를 기업 수나 기존 #industry 통계 12개와 혼동하지 않는다.
+
+`research/ai-statistics-2026-10-26.json`은 공개 문서·보고서를 검토한 원본이다. `npm run build:statistics`가 이를 `data/ai-statistics.json`으로 변환·검증한다. 값·원래 단위·관측기간·발표일·출처·공식/보도/추정/연구 구분과 측정 범위를 유지한다. 과거 관측을 현재값으로 보간하지 않으며, 전체 이력은 수집하지 않았다. 회사·제품 매출, 실제 기간 매출·연환산 매출, WAU·앱 MAU·방문 횟수·좌석·기업 고객은 서로 구분한다. 손실액에는 손실 표기를 유지하고, 미확인은 `null`과 사유로 기록한다. 기간·모집단이 다른 통계로 전환율·ARPU를 자동 계산하지 않는다.
+
+`npm run collect:disclosures`는 OpenAI·Anthropic 공식 문서·RSS·뉴스 목록의 변경을 한국 시간 날짜당 한 번 확인한다. `data/ai-disclosures.json`의 후보는 `needs-review`이며 수치 자동 추출·승인이나 검토 통계의 자동 갱신을 하지 않는다. 원문을 확인한 뒤 검토 원본과 공개 통계를 별도 변경으로 반영한다. 실패 시 이전 해시·성공 확인일을 유지한다. 세부 동작은 `docs/ai-disclosure-collection.md`를 따른다.
+
+`npm run collect:tokens`는 OpenRouter 공식 `rankings-daily` API를 통해 기본 90개의 완료된 UTC 날짜를 조회한다. GitHub Actions Secret과 로컬 환경변수 이름은 `OPENROUTER_API_KEY`이며 브라우저·공개 JSON·코드·로그에 키를 넣지 않는다. 같은 UTC 날짜의 성공 수집 뒤에는 건너뛰고, `--force`·`--days 1~366`을 지원한다. 키가 없으면 이전 자료와 `missing-key` 상태를 남긴다. 초기 자료는 2026-10-25 상위 모델 10개의 반올림 스냅샷으로 플랫폼 전체 합계가 아니다. 성공한 API의 상위 50개+`other`에서만 공개 플랫폼 총량을 계산하며 개발사 합계는 식별된 모델만의 관측량이다. 비공개 트래픽이나 회사 전체 사용량으로 확대하지 않는다. 정수 문자열·`BigInt`를 유지하고, 이동평균은 연속 7일이 있을 때만 표시한다. 오류 시 이전 관측과 `lastSuccessAt`을 보존한다.
+
+기존 Pages workflow가 이전 토큰·문서 감시 상태를 복원해 일일 수집을 이어가며, 승인된 사업·산업 통계는 Git의 검토 파일을 사용한다. 새 스냅샷 API `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`는 로컬에서 로컬 파일을, Vercel에서 Pages의 검증된 JSON을 제공한다. API 경로 자체가 원천 데이터 수집을 실행하지 않는다. `scripts/build.mjs`의 공개 데이터 허용목록은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json` 5개다. `research/` 원본·임의 JSON·환경 파일은 정적 빌드에 포함하지 않는다.

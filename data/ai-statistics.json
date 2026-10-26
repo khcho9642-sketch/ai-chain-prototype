@@ -1,0 +1,4489 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-26",
+  "generatedAt": "2026-10-26T00:00:00.000Z",
+  "definitionCount": 81,
+  "collection": {
+    "method": "reviewed-sources",
+    "status": "reviewed-snapshot"
+  },
+  "notes": [
+    "매출·사용자 통계는 발표 자료와 공개 보고서를 검토한 값입니다. 새 발표는 검토 후 반영합니다.",
+    "회사 전체 매출, 제품 매출, 실제 기간 매출, 연환산 매출을 합산하거나 같은 지표로 비교하지 않습니다.",
+    "공식 사용자·방문 횟수·외부 추정 MAU·기업 고객·유료 좌석은 각각 다른 모집단입니다.",
+    "기간과 발표일을 구분하며, 미확인 값은 0으로 대체하지 않습니다."
+  ],
+  "metrics": [
+    {
+      "id": "global_semiconductor_sales_3mma",
+      "definitionId": "global_semiconductor_sales_3mma",
+      "name": "세계 반도체 월 매출·3개월 이동평균",
+      "entity": "SIA / WSTS",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Global",
+      "definition": "WSTS monthly semiconductor sales reported by SIA as a three-month moving average.",
+      "frequency": "monthly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.semiconductors.org/year-to-date-global-semiconductor-sales-top-1-trillion-through-august/",
+          "title": "SIA: Year-to-Date Global Semiconductor Sales Top $1 Trillion Through August",
+          "publishedAt": "2026-10-05",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "All semiconductors, not AI-only.",
+        "Three-month moving average; do not treat as raw single-month sales or sum it into an official annual total.",
+        "Detailed WSTS history and forecasts are subscription products; public releases expose selected figures.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 159.7,
+          "operator": "eq",
+          "period": "2026-08",
+          "sourceUrl": "https://www.semiconductors.org/year-to-date-global-semiconductor-sales-top-1-trillion-through-august/",
+          "sourceName": "semiconductors.org",
+          "evidence": "official",
+          "publishedAt": "2026-10-05",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "global_semiconductor_equipment_billings",
+      "definitionId": "global_semiconductor_equipment_billings",
+      "name": "세계 반도체 장비 매출액",
+      "entity": "SEMI / SEAJ WWSEMS",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Global",
+      "definition": "Quarterly worldwide semiconductor equipment billings compiled from equipment vendors.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.semi.org/en/semi-press-release/global-semiconductor-equipment-billings-increased-23-percent-year-over-year-in-q2-2026-semi-reports",
+          "title": "SEMI: Global Semiconductor Equipment Billings Increased 23% in Q2 2026",
+          "publishedAt": "2026-09-03",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "All semiconductor equipment, not AI-specific.",
+        "Public quarterly summary; detailed monthly and product-segment WWSEMS data require subscription.",
+        "Regional tables in the release may be images.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 40.53,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://www.semi.org/en/semi-press-release/global-semiconductor-equipment-billings-increased-23-percent-year-over-year-in-q2-2026-semi-reports",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-09-03",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "global_silicon_wafer_shipments",
+      "definitionId": "global_silicon_wafer_shipments",
+      "name": "세계 실리콘 웨이퍼 출하면적",
+      "entity": "SEMI Silicon Manufacturers Group",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "million square inches (MSI)",
+      "scope": "Global",
+      "definition": "Semiconductor-application silicon wafer shipments measured by surface area; includes polished, epitaxial and non-polished wafers.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "title": "SEMI: Silicon Shipment Statistics",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Includes semiconductor wafers of different diameters and applications.",
+        "Excludes solar applications; not AI-only or advanced-node-only.",
+        "No API verified; public HTML table is available.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 제곱인치",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2896,
+          "operator": "eq",
+          "period": "2025-Q1",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 3327,
+          "operator": "eq",
+          "period": "2025-Q2",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 3313,
+          "operator": "eq",
+          "period": "2025-Q3",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 3437,
+          "operator": "eq",
+          "period": "2025-Q4",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 3275,
+          "operator": "eq",
+          "period": "2026-Q1",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 3573,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://www.semi.org/en/products-services/market-data/materials/si-shipment-statistics",
+          "sourceName": "semi.org",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 5
+    },
+    {
+      "id": "asml_lithography_systems_sold",
+      "definitionId": "asml_lithography_systems_sold",
+      "name": "ASML 노광장비 판매 대수",
+      "entity": "ASML",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "systems",
+      "scope": "Company global operations",
+      "definition": "Number of lithography systems sold, including new and used systems, excluding metrology and inspection systems.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "title": "ASML Financial Statements US GAAP Q3 2026",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Not EUV-only.",
+        "New and used systems are included.",
+        "2026 quarterly statements do not disclose the old quarterly net-bookings metric; do not invent replacement bookings.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "대",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 72,
+          "operator": "eq",
+          "period": "2025-Q3",
+          "sourceUrl": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "sourceName": "investor.asml.com",
+          "evidence": "official",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 102,
+          "operator": "eq",
+          "period": "2025-Q4",
+          "sourceUrl": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "sourceName": "investor.asml.com",
+          "evidence": "official",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 79,
+          "operator": "eq",
+          "period": "2026-Q1",
+          "sourceUrl": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "sourceName": "investor.asml.com",
+          "evidence": "official",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 91,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "sourceName": "investor.asml.com",
+          "evidence": "official",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 121,
+          "operator": "eq",
+          "period": "2026-Q3",
+          "sourceUrl": "https://investor.asml.com/static-files/d310262b-d037-485d-83b5-92c93cc462f0",
+          "sourceName": "investor.asml.com",
+          "evidence": "official",
+          "publishedAt": "2026-10-14",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-09-27"
+        }
+      ],
+      "latestIndex": 4
+    },
+    {
+      "id": "nvidia_data_center_revenue",
+      "definitionId": "nvidia_data_center_revenue",
+      "name": "NVIDIA 데이터센터 매출",
+      "entity": "NVIDIA",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Company-reported revenue for the Data Center business.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "direct_business_segment",
+      "sources": [
+        {
+          "url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/",
+          "title": "NVIDIA Announces Financial Results for Second Quarter Fiscal 2027",
+          "publishedAt": "2026-08-26",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Company segment revenue; not the size of the global AI market.",
+        "Fiscal quarter differs from calendar quarter.",
+        "Preserve recast comparative figures if segment definitions change.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 89,
+          "operator": "eq",
+          "period": "FY2027-Q2",
+          "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/",
+          "sourceName": "investor.nvidia.com",
+          "evidence": "official",
+          "publishedAt": "2026-08-26",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-07-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "micron_cloud_memory_revenue",
+      "definitionId": "micron_cloud_memory_revenue",
+      "name": "Micron Cloud Memory 사업 매출",
+      "entity": "Micron",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Revenue of Micron Cloud Memory Business Unit (CMBU).",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://investors.micron.com/files/doc_financials/2026/q4/Q4-26-Earnings-Deck.pdf",
+          "title": "Micron Q4 FY2026 Earnings Deck",
+          "publishedAt": "2026-09-30",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "CMBU revenue is not HBM-only revenue.",
+        "Check business-unit reporting changes before connecting older periods.",
+        "Fiscal and calendar quarter labels must remain distinct.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 4.543,
+          "operator": "eq",
+          "period": "FY2025-Q4",
+          "sourceUrl": "https://investors.micron.com/files/doc_financials/2026/q4/Q4-26-Earnings-Deck.pdf",
+          "sourceName": "investors.micron.com",
+          "evidence": "official",
+          "publishedAt": "2026-09-30",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 13.769,
+          "operator": "eq",
+          "period": "FY2026-Q3",
+          "sourceUrl": "https://investors.micron.com/files/doc_financials/2026/q4/Q4-26-Earnings-Deck.pdf",
+          "sourceName": "investors.micron.com",
+          "evidence": "official",
+          "publishedAt": "2026-09-30",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 16.283,
+          "operator": "eq",
+          "period": "FY2026-Q4",
+          "sourceUrl": "https://investors.micron.com/files/doc_financials/2026/q4/Q4-26-Earnings-Deck.pdf",
+          "sourceName": "investors.micron.com",
+          "evidence": "official",
+          "publishedAt": "2026-09-30",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 2
+    },
+    {
+      "id": "vertiv_net_sales",
+      "definitionId": "vertiv_net_sales",
+      "name": "Vertiv 매출",
+      "entity": "Vertiv",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "energy",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Company consolidated net sales, covering critical digital infrastructure products and services.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Second-Quarter-2026-with-Diluted-EPS-Growth-of-53-Adjusted-Diluted-EPS-Growth-of-60-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
+          "title": "Vertiv Second Quarter 2026 Results",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Total company revenue is not AI-only revenue.",
+        "Q3 2026 results were scheduled for October 28, after this catalog's as-of date.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 3.274,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Second-Quarter-2026-with-Diluted-EPS-Growth-of-53-Adjusted-Diluted-EPS-Growth-of-60-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
+          "sourceName": "investors.vertiv.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-29",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "ge_vernova_data_center_orders_ytd",
+      "definitionId": "ge_vernova_data_center_orders_ytd",
+      "name": "GE Vernova 데이터센터 누적 주문액",
+      "entity": "GE Vernova",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "energy",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Year-to-date orders associated with data centers as disclosed in the second-quarter release.",
+      "frequency": "quarterly_if_disclosed",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "title": "GE Vernova Second Quarter 2026 Results",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Reported as over $5 billion; value is a lower bound, not an exact point.",
+        "Year-to-date orders are a flow and must not be mixed with quarterly-only revenue or backlog.",
+        "Data centers include workloads beyond AI.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 5,
+          "operator": "gt",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "sourceName": "gevernova.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "ge_vernova_backlog_rpo",
+      "definitionId": "ge_vernova_backlog_rpo",
+      "name": "GE Vernova 수주잔고·RPO",
+      "entity": "GE Vernova",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "energy",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Company total backlog defined as remaining performance obligations.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "title": "GE Vernova Second Quarter 2026 Results",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Stock measured at period end, not orders received or revenue for the period.",
+        "Includes Power, Wind, Electrification and services; not AI-specific.",
+        "Q3 2026 results were scheduled for October 28, after the as-of date.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 176,
+          "operator": "eq",
+          "period": "2026-Q2-end",
+          "sourceUrl": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "sourceName": "gevernova.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "ge_vernova_gas_equipment_reserved_capacity",
+      "definitionId": "ge_vernova_gas_equipment_reserved_capacity",
+      "name": "GE Vernova 가스발전 장비 잔고·슬롯예약 용량",
+      "entity": "GE Vernova",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "energy",
+      "unit": "GW",
+      "scope": "Company global operations",
+      "definition": "Combined gas power equipment backlog and slot reservation agreements expressed as generation capacity.",
+      "frequency": "quarterly_if_disclosed",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "title": "GE Vernova Second Quarter 2026 Results",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Includes slot reservations; not firm orders alone.",
+        "Not commissioned generation capacity or output during the quarter.",
+        "Not AI-only.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "GW",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 100,
+          "operator": "eq",
+          "period": "2026-Q1-end",
+          "sourceUrl": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "sourceName": "gevernova.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 116,
+          "operator": "eq",
+          "period": "2026-Q2-end",
+          "sourceUrl": "https://www.gevernova.com/news/press-releases/ge-vernova-reports-second-quarter-2026-financial-results-raises-2026-financial",
+          "sourceName": "gevernova.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-22",
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "us_commercial_electricity_price",
+      "definitionId": "us_commercial_electricity_price",
+      "name": "미국 상업용 평균 전기요금",
+      "entity": "US EIA",
+      "company": null,
+      "region": "미국",
+      "group": "industry",
+      "category": "energy",
+      "unit": "US cents per kWh",
+      "scope": "United States",
+      "definition": "Average electricity revenue per kilowatt-hour sold to commercial end-use customers.",
+      "frequency": "monthly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "title": "EIA Electric Power Monthly Table 5.3",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Commercial-sector average, not a data-center-specific PPA or tariff.",
+        "EIA API requires a free registered API key; public HTML and XLS are available.",
+        "State and sector breakdowns can be added; API data have not been downloaded in this research.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "미국 센트/kWh",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 13.62,
+          "operator": "eq",
+          "period": "2026-01",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 14.37,
+          "operator": "eq",
+          "period": "2026-02",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 13.94,
+          "operator": "eq",
+          "period": "2026-03",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 13.5,
+          "operator": "eq",
+          "period": "2026-04",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 13.52,
+          "operator": "eq",
+          "period": "2026-05",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 14.18,
+          "operator": "eq",
+          "period": "2026-06",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 14.53,
+          "operator": "eq",
+          "period": "2026-07",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 14.47,
+          "operator": "eq",
+          "period": "2026-08",
+          "sourceUrl": "https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=table_5_03",
+          "sourceName": "eia.gov",
+          "evidence": "official",
+          "publishedAt": "2026-10-23",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 7
+    },
+    {
+      "id": "global_data_center_electricity_consumption",
+      "definitionId": "global_data_center_electricity_consumption",
+      "name": "세계 데이터센터 전력소비",
+      "entity": "IEA",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "energy",
+      "unit": "TWh",
+      "scope": "Global",
+      "definition": "Estimated historical electricity consumption of all data centers.",
+      "frequency": "annual_or_report_update",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "historical_estimate",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary",
+          "title": "IEA Key Questions on Energy and AI",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Includes non-AI data-center workloads.",
+        "2025 figure is a historical estimate, not a direct worldwide meter census.",
+        "Related 2015–2025 chart says its CSV data are not available for download; no public API established.",
+        "2030 outlook of 950 TWh is not included as an actual observation.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "TWh",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 485,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary",
+          "sourceName": "iea.org",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "china_genai_users",
+      "definitionId": "china_genai_users",
+      "name": "중국 생성형 AI 이용자 수",
+      "entity": "CNNIC",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "million users",
+      "scope": "China, report-defined internet-user population",
+      "definition": "Reported number of generative AI users in China.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "title": "Primary public statistical or company release",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Reported as more than 700 million; retain the lower-bound qualifier.",
+        "Apply CNNIC's surveyed population and usage definition, not all residents.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 명",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 700,
+          "operator": "gt",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "sourceName": "cnnic.cn",
+          "evidence": "estimated",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "china_intelligent_compute_capacity_fp16",
+      "definitionId": "china_intelligent_compute_capacity_fp16",
+      "name": "중국 지능형 연산능력·FP16",
+      "entity": "CNNIC / official Chinese government statistical briefing",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "EFLOPS (FP16)",
+      "scope": "China",
+      "definition": "Reported intelligent-computing capacity normalized to FP16 precision.",
+      "frequency": "official_report_updates",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_capacity",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "title": "Primary public statistical or company release",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "url": "https://english.scio.gov.cn/pressroom/node_9019937.html",
+          "title": "SCIO official statistical briefing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Capacity measure, not actual compute used or GPU utilization.",
+        "Precision FP16 is mandatory metadata; do not compare directly with FP32, FP64 or FP8 series.",
+        "Keep coverage and normalization methodology consistent.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "EFLOPS·FP16",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2185,
+          "operator": "eq",
+          "period": "2026-06",
+          "sourceUrl": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "sourceName": "cnnic.cn",
+          "evidence": "official",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "china_ic_output",
+      "definitionId": "china_ic_output",
+      "name": "중국 집적회로 생산량",
+      "entity": "National Bureau of Statistics of China",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "supply",
+      "unit": "billion integrated circuits",
+      "scope": "China, NBS industrial production reporting coverage",
+      "definition": "Monthly reported output of integrated circuits.",
+      "frequency": "monthly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.stats.gov.cn/zwfwck/sjfb/202610/t20261019_1965617.html",
+          "title": "Primary public statistical or company release",
+          "publishedAt": "2026-10-19",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Original published unit is 100 million units: 543 亿 = 54.3 billion.",
+        "All integrated circuits, not AI chips only.",
+        "Preserve NBS industrial reporting coverage and subsequent revisions.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 개",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 54.3,
+          "operator": "eq",
+          "period": "2026-09",
+          "sourceUrl": "https://www.stats.gov.cn/zwfwck/sjfb/202610/t20261019_1965617.html",
+          "sourceName": "stats.gov.cn",
+          "evidence": "official",
+          "publishedAt": "2026-10-19",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "china_industrial_robot_output",
+      "definitionId": "china_industrial_robot_output",
+      "name": "중국 산업용 로봇 생산량",
+      "entity": "National Bureau of Statistics of China",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "supply",
+      "unit": "robots",
+      "scope": "China, NBS industrial production reporting coverage",
+      "definition": "Monthly reported output of industrial robots.",
+      "frequency": "monthly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.stats.gov.cn/zwfwck/sjfb/202610/t20261019_1965617.html",
+          "title": "Primary public statistical or company release",
+          "publishedAt": "2026-10-19",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Production flow, not installed robot stock.",
+        "Industrial robots are not necessarily AI-equipped.",
+        "Preserve NBS reporting coverage.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "대",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 96752,
+          "operator": "eq",
+          "period": "2026-09",
+          "sourceUrl": "https://www.stats.gov.cn/zwfwck/sjfb/202610/t20261019_1965617.html",
+          "sourceName": "stats.gov.cn",
+          "evidence": "official",
+          "publishedAt": "2026-10-19",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "alibaba_ai_cloud_compute_revenue",
+      "definitionId": "alibaba_ai_cloud_compute_revenue",
+      "name": "Alibaba AI Cloud and Compute Services 매출",
+      "entity": "Alibaba",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "RMB million",
+      "scope": "Company segment global operations",
+      "definition": "Company-reported revenue for AI Cloud and Compute Services under its new segment definition.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "국가 필터는 기업 본거지(중국)입니다. 실제 매출·투자 범위는 회사의 연결 또는 사업부 기준입니다.",
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "New segment combines cloud and T-Head from 2026 Q2; use restated comparisons across this definition break.",
+        "Not equivalent to AI-related product revenue and not purely AI revenue.",
+        "AI-related product revenue below is a subset and must not be added to this total.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 위안",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 48437,
+          "operator": "eq",
+          "period": "2026-04 to 2026-06",
+          "sourceUrl": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "sourceName": "data.alibabagroup.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "alibaba_ai_related_product_revenue",
+      "definitionId": "alibaba_ai_related_product_revenue",
+      "name": "Alibaba AI 관련 제품 매출",
+      "entity": "Alibaba",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "RMB million",
+      "scope": "Company-defined AI-related products within AI Cloud and Compute Services",
+      "definition": "Revenue from AI-related products as disclosed by Alibaba.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "국가 필터는 기업 본거지(중국)입니다. 실제 매출·투자 범위는 회사의 연결 또는 사업부 기준입니다.",
+        "Subset of AI Cloud and Compute Services revenue.",
+        "Company-defined AI-related product scope; retain definition and any changes.",
+        "Do not add this subset to segment total.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 위안",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 12376,
+          "operator": "eq",
+          "period": "2026-04 to 2026-06",
+          "sourceUrl": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "sourceName": "data.alibabagroup.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "alibaba_group_capex",
+      "definitionId": "alibaba_group_capex",
+      "name": "Alibaba 그룹 설비투자",
+      "entity": "Alibaba",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "investment",
+      "unit": "RMB million",
+      "scope": "Company consolidated operations",
+      "definition": "Group-wide capital expenditure as reported by Alibaba for the quarter.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "국가 필터는 기업 본거지(중국)입니다. 실제 매출·투자 범위는 회사의 연결 또는 사업부 기준입니다.",
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Group-wide capital expenditure, not pure AI capex.",
+        "Retain the company's capex definition; do not interchange with cash-flow investing total or lease-inclusive capex.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 위안",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 67678,
+          "operator": "eq",
+          "period": "2026-04 to 2026-06",
+          "sourceUrl": "https://data.alibabagroup.com/ecms-files/1532295521/fa5d65fc-9b3e-4e82-a8fc-4ce1c3e2c407/Alibaba%20Group%20Announces%20June%20Quarter%202026%20Results.pdf",
+          "sourceName": "data.alibabagroup.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "china_ai_financing_amount",
+      "definitionId": "china_ai_financing_amount",
+      "name": "중국 AI 분야 투자·융자 금액",
+      "entity": "CNNIC",
+      "company": null,
+      "region": "중국",
+      "group": "industry",
+      "category": "investment",
+      "unit": "RMB billion",
+      "scope": "China, financing events captured by the report",
+      "definition": "Reported funding amount across AI financing events.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "compiled_deals_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "title": "Primary public statistical or company release",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Report covers 1,255 financing events; event count is contextual and not a separate metric definition here.",
+        "Fundraising differs from realized capex or operating revenue.",
+        "Taxonomy and coverage may differ from Stanford/OECD investment statistics; do not add overlapping totals.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 위안",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 250.14,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cnnic.cn/n4/2026/1008/c88-11704.html",
+          "sourceName": "cnnic.cn",
+          "evidence": "research",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "japan_adult_genai_experience",
+      "definitionId": "japan_adult_genai_experience",
+      "name": "일본 20세 이상 생성형 AI 사용 경험률",
+      "entity": "Japan Ministry of Internal Affairs and Communications",
+      "company": null,
+      "region": "일본",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of respondents aged 20+",
+      "scope": "Japan, survey respondents aged 20 and older",
+      "definition": "Share of respondents aged 20+ reporting experience using generative AI.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Age denominator is 20+; a 15+ sample gives a different 58.8% statistic and must not be spliced into this series.",
+        "Use survey population rather than all residents.",
+        "Experience is different from regular active use.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·20세 이상 응답자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 26.7,
+          "operator": "eq",
+          "period": "FY2024 survey",
+          "sourceUrl": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "sourceName": "soumu-gov.note.jp",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 52.2,
+          "operator": "eq",
+          "period": "FY2025 survey",
+          "sourceUrl": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "sourceName": "soumu-gov.note.jp",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "japan_enterprise_ai_policy",
+      "definitionId": "japan_enterprise_ai_policy",
+      "name": "일본 기업 AI 활용방침 수립률",
+      "entity": "Japan Ministry of Internal Affairs and Communications",
+      "company": null,
+      "region": "일본",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of surveyed enterprises",
+      "scope": "Japan, enterprise survey respondents",
+      "definition": "Share of surveyed companies with an AI-use policy under the survey's definition.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Survey respondents are the denominator, not every registered Japanese company.",
+        "Having a policy is not the same as actual AI use.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·응답 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 49.7,
+          "operator": "eq",
+          "period": "FY2024 survey",
+          "sourceUrl": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "sourceName": "soumu-gov.note.jp",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 68.9,
+          "operator": "eq",
+          "period": "FY2025 survey",
+          "sourceUrl": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "sourceName": "soumu-gov.note.jp",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "japan_enterprise_genai_business_use",
+      "definitionId": "japan_enterprise_genai_business_use",
+      "name": "일본 기업 업무용 생성형 AI 사용률",
+      "entity": "Japan Ministry of Internal Affairs and Communications",
+      "company": null,
+      "region": "일본",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of surveyed enterprises",
+      "scope": "Japan, enterprise survey respondents",
+      "definition": "Share of surveyed enterprises reporting use of generative AI in business.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Not 86.4% of all registered Japanese companies.",
+        "Check survey selection, enterprise size and question wording before comparing with Eurostat or US Census.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·응답 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 86.4,
+          "operator": "eq",
+          "period": "FY2025 survey",
+          "sourceUrl": "https://soumu-gov.note.jp/n/n435d5584a8c0",
+          "sourceName": "soumu-gov.note.jp",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "japan_industrial_robot_installations",
+      "definitionId": "japan_industrial_robot_installations",
+      "name": "일본 산업용 로봇 신규 설치 대수",
+      "entity": "International Federation of Robotics",
+      "company": null,
+      "region": "일본",
+      "group": "industry",
+      "category": "supply",
+      "unit": "robots installed",
+      "scope": "Japan",
+      "definition": "Annual newly installed industrial robots.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://ifr.org/ifr-press-releases/news/five-million-robots-now-operate-in-factories-globally",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "New installations are a flow, not operating stock or domestic robot production.",
+        "Industrial robots are not necessarily AI-equipped.",
+        "Public press-release summary; detailed World Robotics datasets may require purchase.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "대·신규 설치",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 36219,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://ifr.org/ifr-press-releases/news/five-million-robots-now-operate-in-factories-globally",
+          "sourceName": "ifr.org",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "korea_genai_experience",
+      "definitionId": "korea_genai_experience",
+      "name": "한국 조사대상자의 생성형 AI 사용 경험률",
+      "entity": "KMCC",
+      "company": null,
+      "region": "한국",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of in-scope respondents",
+      "scope": "Korea, survey of 4,324 smartphone users aged 18–72 who use internet daily",
+      "definition": "Share of in-scope survey respondents reporting generative AI use experience.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Sample is smartphone users aged 18–72 and daily internet users; not all residents.",
+        "Sample size 4,324.",
+        "Experience differs from frequent use or paid adoption.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·조사 대상 응답자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 12.3,
+          "operator": "eq",
+          "period": "2023",
+          "sourceUrl": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "sourceName": "kmcc.go.kr",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 24,
+          "operator": "eq",
+          "period": "2024",
+          "sourceUrl": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "sourceName": "kmcc.go.kr",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 38.9,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "sourceName": "kmcc.go.kr",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 2
+    },
+    {
+      "id": "korea_ai_users_daily_time",
+      "definitionId": "korea_ai_users_daily_time",
+      "name": "한국 AI 이용자의 하루 평균 이용시간",
+      "entity": "KMCC",
+      "company": null,
+      "region": "한국",
+      "group": "industry",
+      "category": "usage",
+      "unit": "minutes per AI user per day",
+      "scope": "Korea, AI-user subset of surveyed smartphone/daily internet users aged 18–72",
+      "definition": "Average daily AI usage time conditional on being an AI user in the survey.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "title": "Primary public statistical or company release",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Conditional on AI users; do not present as average minutes per Korean resident or all respondents.",
+        "Overall survey sample 4,324 smartphone users aged 18–72 who use internet daily.",
+        "Keep user-subset and timing measurement method with the series.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "분/일·AI 이용자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 49.6,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://www.kmcc.go.kr/user.do?boardId=1058&boardSeq=68870&cp=1&mode=view&page=E04010000",
+          "sourceName": "kmcc.go.kr",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "global_private_ai_investment",
+      "definitionId": "global_private_ai_investment",
+      "name": "세계 AI 민간투자",
+      "entity": "Stanford HAI",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "investment",
+      "unit": "USD billion",
+      "scope": "Global",
+      "definition": "Annual private investment in AI under the AI Index/Quid taxonomy.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "compiled_deals_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf",
+          "title": "2026 AI Index",
+          "publishedAt": null,
+          "publicationLabel": "2026 AI Index",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Public report and figures; underlying Quid deal-level data are proprietary.",
+        "AI Index figure 4.2.1; do not add this series to OECD AI venture capital investment.",
+        "Generative AI private investment is a subset.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 344.66,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf",
+          "sourceName": "Stanford HAI",
+          "evidence": "research",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "global_genai_private_investment",
+      "definitionId": "global_genai_private_investment",
+      "name": "세계 생성형 AI 민간투자",
+      "entity": "Stanford HAI",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "investment",
+      "unit": "USD billion",
+      "scope": "Global",
+      "definition": "Annual private investment in generative AI under AI Index/Quid taxonomy.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "compiled_deals_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf",
+          "title": "2026 AI Index",
+          "publishedAt": null,
+          "publicationLabel": "2026 AI Index",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Subset of global private AI investment, not additive.",
+        "Public report and figures; underlying deal-level data proprietary.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 170.87,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf",
+          "sourceName": "Stanford HAI",
+          "evidence": "research",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "ai_share_global_vc",
+      "definitionId": "ai_share_global_vc",
+      "name": "세계 벤처투자 중 AI 비중",
+      "entity": "OECD",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "investment",
+      "unit": "percent",
+      "scope": "Global",
+      "definition": "Share of total venture capital investment attributed to AI under OECD/Preqin taxonomy.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "compiled_deals_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.oecd.org/en/publications/venture-capital-investments-in-artificial-intelligence-through-2025_a13752f5-en/full-report.html",
+          "title": "2026-02",
+          "publishedAt": null,
+          "publicationLabel": "2026-02",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI VC US$258.7bn divided by total VC US$427.1bn, rounded.",
+        "Not interchangeable with Stanford private AI investment.",
+        "Public report and aggregate OECD.AI charts; underlying Preqin deals are licensed.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 61,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://www.oecd.org/en/publications/venture-capital-investments-in-artificial-intelligence-through-2025_a13752f5-en/full-report.html",
+          "sourceName": "OECD",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "eu_enterprise_ai_use",
+      "definitionId": "eu_enterprise_ai_use",
+      "name": "EU 기업 AI 도입률",
+      "entity": "Eurostat",
+      "company": null,
+      "region": "유럽",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of enterprises",
+      "scope": "EU, covered sectors, enterprises with 10+ employees",
+      "definition": "Share of in-scope enterprises using AI technologies.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://ec.europa.eu/eurostat/web/products-eurostat-news/w/ddn-20251211-2",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2025-12-11",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Enterprises with 10 or more employees in covered sectors, not all businesses.",
+        "Public Eurostat isoc_eb_ai dataset supports API/download and country/sector/size breakdowns.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·조사 대상 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 13.5,
+          "operator": "eq",
+          "period": "2024",
+          "sourceUrl": "https://ec.europa.eu/eurostat/web/products-eurostat-news/w/ddn-20251211-2",
+          "sourceName": "Eurostat",
+          "evidence": "estimated",
+          "publishedAt": "2025-12-11",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 20,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://ec.europa.eu/eurostat/web/products-eurostat-news/w/ddn-20251211-2",
+          "sourceName": "Eurostat",
+          "evidence": "estimated",
+          "publishedAt": "2025-12-11",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "us_business_ai_use",
+      "definitionId": "us_business_ai_use",
+      "name": "미국 기업 AI 사용률",
+      "entity": "US Census Bureau",
+      "company": null,
+      "region": "미국",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of businesses",
+      "scope": "United States, BTOS in-scope businesses",
+      "definition": "Share of businesses using AI in any business function in the specified survey window.",
+      "frequency": "biweekly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.census.gov/library/stories/2026/05/ai-use-businesses.html",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-05-26",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "과거 확인값입니다. 현재 최신 관측값으로 해석하지 마세요.",
+        "VERIFIED HISTORICAL SNAPSHOT, NOT LATEST.",
+        "Latest October workbook was not successfully extracted in this research.",
+        "Question wording changed in November 2025; comparisons with earlier production-use wording are discontinuous.",
+        "Official National.xlsx downloads are public; later workbook vintages may revise the article's estimate.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·조사 대상 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 19.8,
+          "operator": "eq",
+          "period": "two weeks ending 2026-05-03",
+          "sourceUrl": "https://www.census.gov/library/stories/2026/05/ai-use-businesses.html",
+          "sourceName": "US Census Bureau",
+          "evidence": "estimated",
+          "publishedAt": "2026-05-26",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "large_enterprise_agent_scaling",
+      "definitionId": "large_enterprise_agent_scaling",
+      "name": "대기업 AI 에이전트 확장 도입률",
+      "entity": "McKinsey",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of respondents at large organizations",
+      "scope": "Survey respondents at organizations with annual revenue above US$1bn",
+      "definition": "Respondents reporting that their organization is scaling AI agents in at least one business function.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-08-25",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Self-report survey, not a census of companies.",
+        "Public article/PDF exhibits; raw responses have no verified public API.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·대기업 소속 응답자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 27,
+          "operator": "eq",
+          "period": "2025 survey",
+          "sourceUrl": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "sourceName": "McKinsey",
+          "evidence": "estimated",
+          "publishedAt": "2026-08-25",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 40,
+          "operator": "eq",
+          "period": "2026 survey",
+          "sourceUrl": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "sourceName": "McKinsey",
+          "evidence": "estimated",
+          "publishedAt": "2026-08-25",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ai_positive_ebit_impact",
+      "definitionId": "ai_positive_ebit_impact",
+      "name": "AI의 EBIT 기여를 보고한 응답 비율",
+      "entity": "McKinsey",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of respondents",
+      "scope": "McKinsey State of AI survey respondents",
+      "definition": "Respondents reporting a positive contribution from AI to enterprise EBIT.",
+      "frequency": "annual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-08-25",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Self-reported contribution, not audited earnings.",
+        "Respondents are the denominator; do not infer share of all global companies.",
+        "Public article/PDF, no verified raw-response API.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·응답자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 37,
+          "operator": "eq",
+          "period": "2026 survey",
+          "sourceUrl": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "sourceName": "McKinsey",
+          "evidence": "estimated",
+          "publishedAt": "2026-08-25",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "software_purchase_foregone_due_ai",
+      "definitionId": "software_purchase_foregone_due_ai",
+      "name": "AI 자체 개발로 소프트웨어 구매를 포기한 기업 응답률",
+      "entity": "McKinsey",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of respondents",
+      "scope": "McKinsey State of AI survey respondents",
+      "definition": "Respondents saying the organization declined to buy at least one software product or feature because it could build it with agentic coding.",
+      "frequency": "annual_survey_limited_question_history",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-08-25",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Does not quantify lost software revenue.",
+        "Question has limited history.",
+        "Public article/PDF, no verified raw-response API.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·응답자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 32,
+          "operator": "eq",
+          "period": "2026 survey",
+          "sourceUrl": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+          "sourceName": "McKinsey",
+          "evidence": "estimated",
+          "publishedAt": "2026-08-25",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "us_workers_delegate_to_ai",
+      "definitionId": "us_workers_delegate_to_ai",
+      "name": "사람에게 맡기던 일을 AI에 위임하는 미국 취업자 비율",
+      "entity": "Epoch AI",
+      "company": null,
+      "region": "미국",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "percent of employed US adults",
+      "scope": "United States, employed adults; survey n=1106",
+      "definition": "Share delegating at least one task to AI that would previously have been delegated to a coworker or contractor.",
+      "frequency": "survey_waves_limited_question_history",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "survey_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://epoch.ai/publications/one-in-five-workers-delegate-work-to-ai",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-08-06",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Not a measure of jobs replaced.",
+        "Public report/charts and polling explorer; full respondent-level extraction not performed.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·미국 취업 성인",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 20,
+          "operator": "eq",
+          "period": "2026-07-10 to 2026-07-19",
+          "sourceUrl": "https://epoch.ai/publications/one-in-five-workers-delegate-work-to-ai",
+          "sourceName": "Epoch AI",
+          "evidence": "estimated",
+          "publishedAt": "2026-08-06",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "fixed_performance_inference_cost_decline",
+      "definitionId": "fixed_performance_inference_cost_decline",
+      "name": "동일 성능 추론비용 분기 하락률",
+      "entity": "Epoch AI",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "economics",
+      "unit": "percent decline per quarter",
+      "scope": "Studied models and five benchmark-performance measures",
+      "definition": "Estimated quarterly rate of decline in inference cost at fixed benchmark performance.",
+      "frequency": "irregular_research_updates",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "research_model_estimate",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://epoch.ai/publications/the-plunging-price-of-thought",
+          "title": "Primary research or statistical release",
+          "publishedAt": "2026-09-22",
+          "publicationLabel": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Not raw token price or any firm's realized operating cost.",
+        "Approximate annual 13x decline is derived and not counted as a separate metric.",
+        "Public article with linked code/data and interactive plots; no standardized live monthly API verified.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·분기당 하락",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 47,
+          "operator": "approx",
+          "period": "approximately three years since 2023",
+          "sourceUrl": "https://epoch.ai/publications/the-plunging-price-of-thought",
+          "sourceName": "Epoch AI",
+          "evidence": "research",
+          "publishedAt": "2026-09-22",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "microsoft_cloud_revenue",
+      "definitionId": "microsoft_cloud_revenue",
+      "name": "Microsoft Cloud 매출",
+      "entity": "Microsoft",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Microsoft Cloud revenue as defined by the company; includes multiple cloud businesses.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Broader than Azure and broader than AI revenue.",
+        "Do not add to Azure revenue or Microsoft consolidated revenue as independent markets.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 59.3,
+          "operator": "eq",
+          "period": "FY2026-Q4",
+          "sourceUrl": "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
+          "sourceName": "microsoft.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "azure_other_cloud_revenue_yoy",
+      "definitionId": "azure_other_cloud_revenue_yoy",
+      "name": "Azure 및 기타 클라우드 서비스 매출 증가율",
+      "entity": "Microsoft",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "percent year over year",
+      "scope": "Company global operations",
+      "definition": "Reported year-over-year revenue growth of Azure and other cloud services.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Growth rate, not a disclosed revenue amount.",
+        "Do not treat reported growth and constant-currency growth as the same series.",
+        "Cloud includes non-AI workloads.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%·전년 동기 대비",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 43,
+          "operator": "eq",
+          "period": "FY2026-Q4",
+          "sourceUrl": "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
+          "sourceName": "microsoft.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "microsoft_365_copilot_paid_seats",
+      "definitionId": "microsoft_365_copilot_paid_seats",
+      "name": "Microsoft 365 Copilot 유료 좌석",
+      "entity": "Microsoft",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "adoption",
+      "unit": "million paid seats",
+      "scope": "Company global operations",
+      "definition": "Paid seats for Microsoft 365 Copilot as disclosed by management.",
+      "frequency": "quarterly_if_disclosed",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Reported as more than 30 million; preserve lower-bound operator.",
+        "Paid seats are not active users or usage volume.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "백만 유료 좌석",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 30,
+          "operator": "gt",
+          "period": "2026-06-end",
+          "sourceUrl": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+          "sourceName": "microsoft.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "microsoft_cash_ppe",
+      "definitionId": "microsoft_cash_ppe",
+      "name": "Microsoft 현금 설비투자",
+      "entity": "Microsoft",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "investment",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Cash paid for property and equipment during the fiscal quarter.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Cash PP&E differs from capex including finance leases, reported as $41bn for this quarter.",
+        "Company-wide capital investment, not pure AI capex.",
+        "Do not mix cash capex with lease-inclusive capex without a bridge.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 35.8,
+          "operator": "eq",
+          "period": "FY2026-Q4",
+          "sourceUrl": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+          "sourceName": "microsoft.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "aws_revenue",
+      "definitionId": "aws_revenue",
+      "name": "AWS 분기 매출",
+      "entity": "Amazon AWS",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Quarterly AWS segment net sales.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://ir.aboutamazon.com/news-release/news-release-details/2026/Amazon-com-Announces-Second-Quarter-Results/",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "AWS includes non-AI cloud services.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 42.2,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://ir.aboutamazon.com/news-release/news-release-details/2026/Amazon-com-Announces-Second-Quarter-Results/",
+          "sourceName": "ir.aboutamazon.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "google_cloud_revenue",
+      "definitionId": "google_cloud_revenue",
+      "name": "Google Cloud 분기 매출",
+      "entity": "Alphabet Google Cloud",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Google Cloud segment revenue, including Google Cloud Platform and Google Workspace.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://abc.xyz/files/doc_financials/2026/q2/2026q2-alphabet-earnings-release.pdf",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Includes Google Workspace and non-AI cloud workloads.",
+        "Not identical in business scope to AWS or Azure.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 24.8,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://abc.xyz/files/doc_financials/2026/q2/2026q2-alphabet-earnings-release.pdf",
+          "sourceName": "abc.xyz",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "cbre_primary_na_dc_capacity",
+      "definitionId": "cbre_primary_na_dc_capacity",
+      "name": "북미 주요시장 데이터센터 운영 용량",
+      "entity": "CBRE",
+      "company": null,
+      "region": "북미",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "MW",
+      "scope": "North American primary markets covered by CBRE",
+      "definition": "Existing data center capacity in the primary-market sample covered by CBRE.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "title": "CBRE North America Data Center Trends H1 2026",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "CBRE primary-market coverage, not all of North America.",
+        "Capacity stock; do not add under-construction capacity and call it operational.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "MW",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 10903,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "sourceName": "cbre.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "cbre_primary_na_dc_vacancy",
+      "definitionId": "cbre_primary_na_dc_vacancy",
+      "name": "북미 주요시장 데이터센터 공실률",
+      "entity": "CBRE",
+      "company": null,
+      "region": "북미",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "percent",
+      "scope": "North American primary markets covered by CBRE",
+      "definition": "Vacancy rate for data center capacity in CBRE's primary-market coverage.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "title": "CBRE North America Data Center Trends H1 2026",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Not a global vacancy rate.",
+        "Keep the market sample and capacity-based definition consistent.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1.4,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "sourceName": "cbre.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "cbre_primary_na_dc_construction",
+      "definitionId": "cbre_primary_na_dc_construction",
+      "name": "북미 주요시장 건설 중 데이터센터 용량",
+      "entity": "CBRE",
+      "company": null,
+      "region": "북미",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "MW",
+      "scope": "North American primary markets covered by CBRE",
+      "definition": "Capacity under construction in the primary-market sample covered by CBRE.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "title": "CBRE North America Data Center Trends H1 2026",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Pipeline under construction, not operational capacity or all announced projects.",
+        "CBRE coverage boundaries must be preserved.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "MW",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 7481.1,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "sourceName": "cbre.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "cbre_primary_na_dc_net_absorption",
+      "definitionId": "cbre_primary_na_dc_net_absorption",
+      "name": "북미 주요시장 데이터센터 순흡수량",
+      "entity": "CBRE",
+      "company": null,
+      "region": "북미",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "MW",
+      "scope": "North American primary markets covered by CBRE",
+      "definition": "Net absorption of data center capacity during the half-year in CBRE's primary-market sample.",
+      "frequency": "semiannual",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "title": "CBRE North America Data Center Trends H1 2026",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Period flow, unlike capacity and construction stocks.",
+        "Not equivalent to all AI compute demand.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "MW",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1456.2,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.cbre.com/insights/books/north-america-data-center-trends-h1-2026",
+          "sourceName": "cbre.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "equinix_affo",
+      "definitionId": "equinix_affo",
+      "name": "Equinix AFFO",
+      "entity": "Equinix",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "profitability",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Company-reported adjusted funds from operations (AFFO).",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://investor.equinix.com/news-events/press-releases/detail/1114/equinix-reports-second-quarter-results-raises-2026",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Non-GAAP company-defined measure; retain reconciliation and definition.",
+        "Not revenue or AI-only profit.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1.168,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://investor.equinix.com/news-events/press-releases/detail/1114/equinix-reports-second-quarter-results-raises-2026",
+          "sourceName": "investor.equinix.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "equinix_cabinet_utilization",
+      "definitionId": "equinix_cabinet_utilization",
+      "name": "Equinix 캐비닛 가동률",
+      "entity": "Equinix",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "infrastructure",
+      "unit": "percent",
+      "scope": "Company global operations as defined in filing",
+      "definition": "Company-reported cabinet utilization.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "data_center_specific",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1101239/000110123926000147/eqix-20260630.htm",
+          "title": "Equinix 10-Q for June 30, 2026",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Cabinet utilization differs from GPU utilization or electricity load factor.",
+        "Keep filing's in-service and capacity definitions consistent.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "%",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 78,
+          "operator": "eq",
+          "period": "2026-Q2-end",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1101239/000110123926000147/eqix-20260630.htm",
+          "sourceName": "sec.gov",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-06-30"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "amd_data_center_revenue",
+      "definitionId": "amd_data_center_revenue",
+      "name": "AMD 데이터센터 매출",
+      "entity": "AMD",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Data Center segment revenue including server CPUs and data-center GPUs.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "proxy",
+      "sources": [
+        {
+          "url": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "AI 전용 통계가 아닐 수 있습니다. 조사 범위와 사업 정의를 확인하세요.",
+        "Includes CPU and GPU revenue; not AI GPU-only sales.",
+        "Fiscal period should be retained as company labels it.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 6.7,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
+          "sourceName": "ir.amd.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "broadcom_ai_semiconductor_revenue",
+      "definitionId": "broadcom_ai_semiconductor_revenue",
+      "name": "Broadcom AI 반도체 매출",
+      "entity": "Broadcom",
+      "company": null,
+      "region": "글로벌",
+      "group": "industry",
+      "category": "supply",
+      "unit": "USD billion",
+      "scope": "Company global operations",
+      "definition": "Company-defined AI semiconductor revenue.",
+      "frequency": "quarterly",
+      "collectionMethod": "reviewed-report",
+      "measurementStatus": "reported_actual",
+      "aiRelationship": "direct",
+      "sources": [
+        {
+          "url": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
+          "title": "Official company release or filing",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "notes": [
+        "Company-defined AI revenue; not total semiconductor solutions or consolidated revenue.",
+        "Preserve management definition and changes.",
+        "공개 자료에서 확인한 관측값과 일부 과거 예시입니다. 전체 이력 자동 수집은 연결하지 않았습니다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 16.7,
+          "operator": "eq",
+          "period": "FY2026-Q3",
+          "sourceUrl": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
+          "sourceName": "investors.broadcom.com",
+          "evidence": "official",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26",
+          "periodEnd": "2026-08-02"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "openai_company_annualized_revenue",
+      "definitionId": "openai_company_annualized_revenue",
+      "name": "OpenAI 회사 전체 연환산 매출",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion per year run rate",
+      "scope": "Company-wide annualized revenue pace; separate from recognized annual revenue and from ChatGPT-only sales.",
+      "definition": "Company-wide annualized revenue pace; separate from recognized annual revenue and from ChatGPT-only sales.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Latest value is a Reuters report, not a public audited filing.",
+        "Do not relabel company-wide revenue as ChatGPT revenue.",
+        "ARR is the historical source's terminology; contracted recurring revenue methodology is not established.",
+        "Do not sum run-rate observations into annual revenue.",
+        "Reuters notes different partner-revenue presentation from Anthropic; do not directly compare or mechanically adjust without primary financial statements.",
+        "Earlier approximately USD70bn claim is not treated as a verified realized run rate."
+      ],
+      "unitLabel": "십억 달러·연환산",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2,
+          "operator": "eq",
+          "period": "2023 year-end ARR as stated",
+          "sourceUrl": "https://openai.com/index/a-business-that-scales-with-the-value-of-intelligence/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-01-18",
+          "verifiedAt": "2026-10-26",
+          "note": "CFO가 2023년 ARR 20억 달러를 제시."
+        },
+        {
+          "value": 6,
+          "operator": "eq",
+          "period": "2024 year-end ARR as stated",
+          "sourceUrl": "https://openai.com/index/a-business-that-scales-with-the-value-of-intelligence/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-01-18",
+          "verifiedAt": "2026-10-26",
+          "note": "CFO가 2024년 ARR 60억 달러를 제시."
+        },
+        {
+          "value": 20,
+          "operator": "gt",
+          "period": "2025 year-end ARR as stated",
+          "sourceUrl": "https://openai.com/index/a-business-that-scales-with-the-value-of-intelligence/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-01-18",
+          "verifiedAt": "2026-10-26",
+          "note": "CFO가 2025년 ARR 200억 달러 초과를 제시."
+        },
+        {
+          "value": 50,
+          "operator": "approx",
+          "period": "2026-09 revenue pace",
+          "sourceUrl": "https://www.reuters.com/business/openais-annualized-revenue-20-billion-less-than-previously-signaled-ft-reports-2026-10-08/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26",
+          "note": "Reuters는 투자자에게 전달한 9월 연환산 매출이 거의 500억 달러라고 보도."
+        }
+      ],
+      "latestIndex": 3
+    },
+    {
+      "id": "openai_company_quarter_revenue",
+      "definitionId": "openai_company_quarter_revenue",
+      "name": "OpenAI 회사 전체 분기 매출",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Revenue attributed to a completed calendar quarter, as reported by Reuters; audited financial statements were not available in this review.",
+      "definition": "Revenue attributed to a completed calendar quarter, as reported by Reuters; audited financial statements were not available in this review.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Press-reported quarterly revenue, not directly examined audited financials.",
+        "Do not multiply by four and label the result actual annual revenue.",
+        "No verified Q3 company revenue supplied in this addendum."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 6.7,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://www.reuters.com/business/openais-annualized-revenue-20-billion-less-than-previously-signaled-ft-reports-2026-10-08/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-10-08",
+          "verifiedAt": "2026-10-26",
+          "note": "Reuters가 2분기 OpenAI 매출 67억 달러를 명시."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "openai_company_monthly_revenue_pace",
+      "definitionId": "openai_company_monthly_revenue_pace",
+      "name": "OpenAI 월 매출 수준",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion per month",
+      "scope": "Company statement of revenue generated per month at the time of a fundraising announcement; exact calendar-month accounting period was not specified.",
+      "definition": "Company statement of revenue generated per month at the time of a fundraising announcement; exact calendar-month accounting period was not specified.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Specific underlying calendar month not provided.",
+        "Keep as a historical company disclosure, not October 2026 monthly revenue.",
+        "Do not use alongside monthly subscription price to back-calculate users."
+      ],
+      "unitLabel": "십억 달러/월",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2,
+          "operator": "eq",
+          "period": "current monthly revenue pace at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "OpenAI는 당시 월 20억 달러 매출을 올린다고 발표."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "chatgpt_ads_annualized_revenue",
+      "definitionId": "chatgpt_ads_annualized_revenue",
+      "name": "ChatGPT 광고 연환산 매출",
+      "entity": "ChatGPT Ads",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion per year run rate",
+      "scope": "Annualized revenue pace for the advertising business only.",
+      "definition": "Annualized revenue pace for the advertising business only.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Subset of OpenAI company revenue; do not add to company total.",
+        "Run rate is not cumulative revenue collected since launch.",
+        "No inference that all weekly users see ads."
+      ],
+      "unitLabel": "십억 달러·연환산",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 0.1,
+          "operator": "gt",
+          "period": "ads pilot at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "광고 시험 사업이 6주 이내 ARR 1억 달러 초과라고 발표."
+        },
+        {
+          "value": 1,
+          "operator": "eq",
+          "period": "current pace at 2026-08-31",
+          "sourceUrl": "https://openai.com/index/expanding-access-to-ai-with-chatgpt-ads/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-08-31",
+          "verifiedAt": "2026-10-26",
+          "note": "광고 출시 200일 이내 연환산 매출 10억 달러를 달성했다고 발표."
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "openai_enterprise_revenue_share",
+      "definitionId": "openai_enterprise_revenue_share",
+      "name": "OpenAI 기업 부문 매출 비중",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "percent of company revenue",
+      "scope": "Company's stated enterprise share of revenue; enterprise scope is broader than ChatGPT Enterprise subscriptions alone.",
+      "definition": "Company's stated enterprise share of revenue; enterprise scope is broader than ChatGPT Enterprise subscriptions alone.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Exact accounting period and segmentation not fully defined.",
+        "Do not label as ChatGPT Enterprise-only share.",
+        "Year-end 50% parity was a forecast, not an actual observation."
+      ],
+      "unitLabel": "%·회사 매출",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 40,
+          "operator": "gt",
+          "period": "current revenue mix at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "기업 부문 매출 비중 40% 초과를 발표."
+        },
+        {
+          "value": 40,
+          "operator": "gt",
+          "period": "current revenue mix at 2026-04-08",
+          "sourceUrl": "https://openai.com/index/next-phase-of-enterprise-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-08",
+          "verifiedAt": "2026-10-26",
+          "note": "CRO는 기업 부문이 매출의 40%를 초과한다고 설명."
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "chatgpt_weekly_active_users",
+      "definitionId": "chatgpt_weekly_active_users",
+      "name": "ChatGPT 주간 사용자",
+      "entity": "ChatGPT",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million weekly users",
+      "scope": "Weekly user count in OpenAI's ChatGPT product disclosures; latest DevDay wording is collective weekly users.",
+      "definition": "Weekly user count in OpenAI's ChatGPT product disclosures; latest DevDay wording is collective weekly users.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "WAU is not MAU, DAU, cumulative registrations, visits or paid subscribers.",
+        "Latest exact underlying week and cross-product deduplication are not detailed.",
+        "Do not divide a February paid subscriber count by September WAU and present it as a current conversion rate."
+      ],
+      "unitLabel": "백만 명·주간",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 800,
+          "operator": "gt",
+          "period": "current at 2025-11-05",
+          "sourceUrl": "https://openai.com/index/1-million-businesses-putting-ai-to-work/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2025-11-05",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 사용자 8억 초과를 제시."
+        },
+        {
+          "value": 900,
+          "operator": "gt",
+          "period": "current at 2026-02-27",
+          "sourceUrl": "https://openai.com/index/scaling-ai-for-everyone/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-27",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 활성 사용자 9억 초과를 제시."
+        },
+        {
+          "value": 900,
+          "operator": "gt",
+          "period": "current at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 활성 사용자 9억 초과를 재확인."
+        },
+        {
+          "value": 1000,
+          "operator": "gt",
+          "period": "current at 2026-08-31",
+          "sourceUrl": "https://openai.com/index/expanding-access-to-ai-with-chatgpt-ads/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-08-31",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 활성 사용자 10억 초과를 제시."
+        },
+        {
+          "value": 1200,
+          "operator": "eq",
+          "period": "week-current at 2026-09-29; exact week unspecified",
+          "sourceUrl": "https://openai.com/index/devday-2026-recap/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-09-29",
+          "verifiedAt": "2026-10-26",
+          "note": "ChatGPT 생태계 설명에서 12억 주간 사용자를 제시."
+        }
+      ],
+      "latestIndex": 4
+    },
+    {
+      "id": "chatgpt_consumer_paid_subscribers",
+      "definitionId": "chatgpt_consumer_paid_subscribers",
+      "name": "ChatGPT 소비자 유료 구독자",
+      "entity": "ChatGPT consumer subscriptions",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "million subscribers",
+      "scope": "Consumer subscription count disclosed by OpenAI, separate from business paid users.",
+      "definition": "Consumer subscription count disclosed by OpenAI, separate from business paid users.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Historical official snapshot; no verified October update in this review.",
+        "Do not equate subscribers with unique active users.",
+        "Plan mix, discounts and monthly revenue per subscriber were not established.",
+        "No latest conversion percentage is computed from mismatched dates."
+      ],
+      "unitLabel": "백만 구독자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 50,
+          "operator": "gt",
+          "period": "current at 2026-02-27",
+          "sourceUrl": "https://openai.com/index/scaling-ai-for-everyone/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-27",
+          "verifiedAt": "2026-10-26",
+          "note": "소비자 구독자 5,000만 초과를 발표."
+        },
+        {
+          "value": 50,
+          "operator": "gt",
+          "period": "current at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "구독자 5,000만 초과를 제시."
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "chatgpt_paying_business_users",
+      "definitionId": "chatgpt_paying_business_users",
+      "name": "ChatGPT 유료 업무 이용자",
+      "entity": "ChatGPT for work",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "million paying business users",
+      "scope": "Paying business user count explicitly disclosed for ChatGPT work usage.",
+      "definition": "Paying business user count explicitly disclosed for ChatGPT work usage.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Individuals/users, not number of organizations.",
+        "Historical snapshot; community reposts in October do not make this an October observation.",
+        "Potential overlap with consumer subscriptions means not safely additive."
+      ],
+      "unitLabel": "백만 명·유료 업무",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 9,
+          "operator": "gt",
+          "period": "current at 2026-02-27",
+          "sourceUrl": "https://openai.com/index/scaling-ai-for-everyone/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-27",
+          "verifiedAt": "2026-10-26",
+          "note": "업무용 유료 이용자 900만 초과를 발표."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "openai_paying_business_organizations",
+      "definitionId": "openai_paying_business_organizations",
+      "name": "OpenAI 유료 기업·조직 고객",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "million organizations",
+      "scope": "Organizations actively paying directly for business use through ChatGPT for Work or direct developer platform consumption.",
+      "definition": "Organizations actively paying directly for business use through ChatGPT for Work or direct developer platform consumption.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Organization count, not users or seats.",
+        "Includes API business consumption; not ChatGPT Enterprise customers alone.",
+        "Explicit definition and date preserved; not presented as a new October 2026 count."
+      ],
+      "unitLabel": "백만 조직",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1,
+          "operator": "gt",
+          "period": "2025-11-05",
+          "sourceUrl": "https://openai.com/index/1-million-businesses-putting-ai-to-work/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2025-11-05",
+          "verifiedAt": "2026-10-26",
+          "note": "ChatGPT 업무용 또는 개발자 플랫폼에 직접 비용을 내는 조직이 100만 초과라고 설명."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "chatgpt_workplace_seats",
+      "definitionId": "chatgpt_workplace_seats",
+      "name": "ChatGPT 업무용 좌석 수",
+      "entity": "ChatGPT for Work",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "million seats",
+      "scope": "Total workplace seats in the November 2025 disclosure, kept under the source's seat terminology.",
+      "definition": "Total workplace seats in the November 2025 disclosure, kept under the source's seat terminology.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Historical count; later paying business user definition is related but not assumed identical.",
+        "Seats are licensed access and do not prove active use.",
+        "Do not sum with paying business users or organizations."
+      ],
+      "unitLabel": "백만 좌석",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 7,
+          "operator": "gt",
+          "period": "2025-11-05",
+          "sourceUrl": "https://openai.com/index/1-million-businesses-putting-ai-to-work/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2025-11-05",
+          "verifiedAt": "2026-10-26",
+          "note": "ChatGPT 업무용 전체 좌석 700만 초과를 발표."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "openai_api_token_processing_rate",
+      "definitionId": "openai_api_token_processing_rate",
+      "name": "OpenAI API 토큰 처리율",
+      "entity": "OpenAI API",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "tokens",
+      "unit": "billion tokens per minute",
+      "scope": "Company-reported current token processing rate across its APIs.",
+      "definition": "Company-reported current token processing rate across its APIs.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Historical disclosed processing rate, not latest daily actual.",
+        "Average measurement window, exact input/output/cache breakdown and scope not specified.",
+        "Do not multiply by 1440 and label it measured daily traffic.",
+        "Different from OpenRouter-routed OpenAI token usage."
+      ],
+      "unitLabel": "십억 토큰/분",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 15,
+          "operator": "gt",
+          "period": "current processing rate at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "API 분당 150억 토큰 초과를 발표."
+        },
+        {
+          "value": 15,
+          "operator": "gt",
+          "period": "current processing rate at 2026-04-08",
+          "sourceUrl": "https://openai.com/index/next-phase-of-enterprise-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-08",
+          "verifiedAt": "2026-10-26",
+          "note": "API가 분당 150억 토큰 초과를 처리한다고 발표."
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "codex_weekly_users",
+      "definitionId": "codex_weekly_users",
+      "name": "Codex 주간 사용자",
+      "entity": "Codex",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million weekly users",
+      "scope": "Weekly Codex user count from dated official OpenAI blog disclosures.",
+      "definition": "Weekly Codex user count from dated official OpenAI blog disclosures.",
+      "frequency": "irregular_company_disclosure_or_reporting",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "July official snapshot; not claimed to be current October active users.",
+        "An August community-embedded executive post says 20M active users but does not specify daily/weekly/monthly window; held separately.",
+        "Do not sum Codex users with ChatGPT users because products/subscriptions overlap."
+      ],
+      "unitLabel": "백만 명·주간",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1.6,
+          "operator": "eq",
+          "period": "current at 2026-02-27",
+          "sourceUrl": "https://openai.com/index/scaling-ai-for-everyone/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-27",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 Codex 사용자 160만을 제시."
+        },
+        {
+          "value": 2,
+          "operator": "gt",
+          "period": "current at 2026-03-31",
+          "sourceUrl": "https://openai.com/index/accelerating-the-next-phase-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-03-31",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 Codex 사용자 200만 초과를 제시."
+        },
+        {
+          "value": 3,
+          "operator": "eq",
+          "period": "current at 2026-04-08",
+          "sourceUrl": "https://openai.com/index/next-phase-of-enterprise-ai/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-08",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 활성 사용자 300만을 제시."
+        },
+        {
+          "value": 5,
+          "operator": "gt",
+          "period": "current at 2026-06-02",
+          "sourceUrl": "https://openai.com/index/codex-for-knowledge-work/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-06-02",
+          "verifiedAt": "2026-10-26",
+          "note": "주간 활성 사용자 500만 초과를 제시."
+        },
+        {
+          "value": 5,
+          "operator": "gt",
+          "period": "current at 2026-07-09",
+          "sourceUrl": "https://openai.com/index/chatgpt-for-your-most-ambitious-work/",
+          "sourceName": "openai.com",
+          "evidence": "official",
+          "publishedAt": "2026-07-09",
+          "verifiedAt": "2026-10-26",
+          "note": "매주 Codex를 사용하는 사람이 500만 초과라고 발표."
+        }
+      ],
+      "latestIndex": 4
+    },
+    {
+      "id": "anthropic_annual_revenue_reported",
+      "definitionId": "anthropic_annual_revenue_reported",
+      "name": "Anthropic 연간 매출·보도",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Anthropic company-wide",
+      "definition": "Anthropic company-wide",
+      "frequency": "annual_when_reported",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "연환산 매출과 별개인 연간 기간 매출이다.",
+        "ChatGPT와 비교할 때 OpenAI 회사 전체 매출과 같은 범위를 사용한다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 4.6,
+          "operator": "approx",
+          "period": "2025",
+          "sourceUrl": "https://www.reuters.com/business/finance/anthropics-ipo-prospectus-shows-sweeping-ai-vision-surging-costs-2026-09-28/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-09-28",
+          "verifiedAt": "2026-10-26",
+          "note": "Reuters가 검토한 비공개 투자설명서의 기간 매출. 회사가 공개한 감사재무제표 원본을 직접 확보한 것은 아님."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "anthropic_quarterly_revenue_reported",
+      "definitionId": "anthropic_quarterly_revenue_reported",
+      "name": "Anthropic 분기 매출·보도",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion",
+      "scope": "Anthropic company-wide",
+      "definition": "Anthropic company-wide",
+      "frequency": "quarterly_when_reported",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "Reuters 원문은 Q2 11.6을 사용한다. 다른 보도의 11.5와 평균하거나 임의로 연결하지 않는다.",
+        "Q3 증가율은 보도상 45%. 반올림한 두 금액으로 계산한 비율과 소폭 차이가 날 수 있다.",
+        "10월 8일 보도의 Q2 11.5bn과 후속 투자자 설명회 보도의 11.6bn이 다르다. 이 지표는 후속 보도의 11.6bn을 보존하며 차이의 회계적 원인을 임의 추정하지 않는다."
+      ],
+      "unitLabel": "십억 달러",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 11.6,
+          "operator": "eq",
+          "period": "2026-Q2",
+          "sourceUrl": "https://www.reuters.com/business/finance/investors-temper-anthropic-ipo-valuation-expectations-over-revenue-growth-2026-10-15/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-10-15",
+          "verifiedAt": "2026-10-26",
+          "corroboratingSourceUrl": "https://www.reuters.com/business/finance/anthropics-q3-revenue-surges-45-nearly-17-billion-2026-10-14/",
+          "corroboratingSourcePublishedAt": "2026-10-14"
+        },
+        {
+          "value": 16.8,
+          "operator": "eq",
+          "period": "2026-Q3",
+          "sourceUrl": "https://www.reuters.com/business/finance/investors-temper-anthropic-ipo-valuation-expectations-over-revenue-growth-2026-10-15/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-10-15",
+          "verifiedAt": "2026-10-26",
+          "note": "2026-10-14 투자자 설명회 내용을 익명 관계자가 전한 보도. 공개 확정 재무제표로 표시하지 않는다.",
+          "corroboratingSourceUrl": "https://www.reuters.com/business/finance/anthropics-q3-revenue-surges-45-nearly-17-billion-2026-10-14/",
+          "corroboratingSourcePublishedAt": "2026-10-14"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "anthropic_company_annualized_revenue",
+      "definitionId": "anthropic_company_annualized_revenue",
+      "name": "Anthropic 회사 전체 연환산 매출",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion annualized",
+      "scope": "Anthropic company-wide",
+      "definition": "Anthropic company-wide",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "현재 매출 속도의 연환산 값이며 실제 연간 누적 매출이 아니다.",
+        "계약상 반복매출 ARR로 재명명하지 않는다.",
+        "회사 전체 범위에 제품별 매출을 더해 합산하지 않는다.",
+        "일부 후속 보도에 더 큰 수치가 있으나 이번 파일은 원문을 확인한 관측치만 수록한다.",
+        "회사 공식치와 보도치의 시리즈·근거 태그를 보존한다.",
+        "공식 발표와 보도는 동일 지표의 근거 수준이 다른 관측이다. 서로 다른 통계로 중복 집계하지 않는다.",
+        "실제 기간 매출과 구분하며, 계약상 반복 매출만으로 구성된 SaaS ARR로 임의 재명명하지 않는다."
+      ],
+      "unitLabel": "십억 달러·연환산",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 9,
+          "operator": "approx",
+          "period": "2025-12-end",
+          "sourceUrl": "https://www.anthropic.com/news/google-broadcom-partnership-compute",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-06",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 14,
+          "operator": "eq",
+          "period": "2026-02-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 30,
+          "operator": "gt",
+          "period": "2026-04-06",
+          "sourceUrl": "https://www.anthropic.com/news/google-broadcom-partnership-compute",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-06",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 47,
+          "operator": "gt",
+          "period": "2026-05 earlier in month",
+          "sourceUrl": "https://www.anthropic.com/news/series-h",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-05-28",
+          "verifiedAt": "2026-10-26",
+          "note": "이번 조사에서 확인한 최근 공식 수치. 10월 현재값을 뜻하지 않음."
+        },
+        {
+          "value": 65,
+          "operator": "gt",
+          "period": "2026-07-end",
+          "sourceUrl": "https://www.reuters.com/technology/anthropic-revenue-run-rate-tops-65-billion-source-says-2026-08-17/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-08-17",
+          "verifiedAt": "2026-10-26",
+          "note": "익명 관계자 인용. 최신 공식 발표 수치와 분리 보관."
+        }
+      ],
+      "latestIndex": 4
+    },
+    {
+      "id": "claude_code_revenue_run_rate_official",
+      "definitionId": "claude_code_revenue_run_rate_official",
+      "name": "Claude Code 연환산 매출·공식",
+      "entity": "Claude Code",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "USD billion annualized",
+      "scope": "Claude Code product; subset of company revenue",
+      "definition": "Claude Code product; subset of company revenue",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "제품 범위이며 회사 매출의 부분집합이다.",
+        "확인된 2월 관측치이고 10월 최신값으로 표시하지 않는다."
+      ],
+      "unitLabel": "십억 달러·연환산",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2.5,
+          "operator": "gt",
+          "period": "2026-02-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "anthropic_business_customers_official",
+      "definitionId": "anthropic_business_customers_official",
+      "name": "Anthropic 기업 고객 수·공식",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "business customers",
+      "scope": "Anthropic company-wide business customers",
+      "definition": "Anthropic company-wide business customers",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "좌석 수나 개인 사용자 수가 아니다.",
+        "활성 고객·유료 고객의 상세 정의와 집계 기준은 이 발표에 충분히 제시되지 않는다."
+      ],
+      "unitLabel": "기업 고객",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 300000,
+          "operator": "gt",
+          "period": "2025-11-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2025-11-12",
+          "verifiedAt": "2026-10-26",
+          "note": "검증된 과거 관측치. 최신 전체 기업 고객 수는 미확인."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "anthropic_large_customers_over_1m",
+      "definitionId": "anthropic_large_customers_over_1m",
+      "name": "연환산 지출 100만 달러 초과 기업 고객",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "customers",
+      "scope": "Business customers spending >USD 1 million on an annualized basis",
+      "definition": "Business customers spending >USD 1 million on an annualized basis",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "기업 수이지 좌석 수가 아니다.",
+        "한 해에 이미 100만 달러를 지출한 고객이라는 뜻으로 바꾸지 않는다."
+      ],
+      "unitLabel": "고객",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 500,
+          "operator": "gt",
+          "period": "2026-02-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 1000,
+          "operator": "gt",
+          "period": "2026-04-06",
+          "sourceUrl": "https://www.anthropic.com/news/google-broadcom-partnership-compute",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-04-06",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "claude_code_wau_growth_multiple",
+      "definitionId": "claude_code_wau_growth_multiple",
+      "name": "Claude Code 주간 활성 사용자 증가 배수",
+      "entity": "Claude Code",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "multiple",
+      "scope": "Claude Code weekly active users",
+      "definition": "Claude Code weekly active users",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "절대 WAU는 공개되지 않은 이 자료에서 계산할 수 없다.",
+        "두 배는 사용자 절대수 200만 명 등을 의미하지 않는다."
+      ],
+      "unitLabel": "배",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 2,
+          "operator": "eq",
+          "period": "2026-01-01 to 2026-02-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "claude_code_business_subscription_growth",
+      "definitionId": "claude_code_business_subscription_growth",
+      "name": "Claude Code 기업 구독 증가 배수",
+      "entity": "Claude Code",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "customers",
+      "unit": "multiple",
+      "scope": "Claude Code business subscriptions",
+      "definition": "Claude Code business subscriptions",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "절대 구독 수는 미공개.",
+        "구독 수·좌석 수·기업 수를 서로 바꿔 쓰지 않는다."
+      ],
+      "unitLabel": "배",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 4,
+          "operator": "eq",
+          "period": "2026 beginning to 2026-02-12",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "claude_code_enterprise_revenue_share",
+      "definitionId": "claude_code_enterprise_revenue_share",
+      "name": "Claude Code 매출 중 기업 사용 비중",
+      "entity": "Claude Code",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "revenue",
+      "unit": "percent",
+      "scope": "Enterprise use as a share of Claude Code revenue",
+      "definition": "Enterprise use as a share of Claude Code revenue",
+      "frequency": "irregular_company_disclosures",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "회사 전체 매출의 기업 비중이 아니다.",
+        "발표는 해당 비중의 정밀한 측정 기간을 제시하지 않는다."
+      ],
+      "unitLabel": "%",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 50,
+          "operator": "gt",
+          "period": "2026-02-12 disclosure",
+          "sourceUrl": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+          "sourceName": "anthropic.com",
+          "evidence": "official",
+          "publishedAt": "2026-02-12",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "anthropic_operating_loss_reported",
+      "definitionId": "anthropic_operating_loss_reported",
+      "name": "Anthropic 영업손실·보도",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "profitability",
+      "unit": "USD billion loss magnitude",
+      "scope": "Anthropic company-wide operating loss as described in prospectus reporting",
+      "definition": "Anthropic company-wide operating loss as described in prospectus reporting",
+      "frequency": "annual_when_reported",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "순손실과 구분한다.",
+        "원문 재무제표의 회계정책·조정 정의를 직접 확보하지 못했다."
+      ],
+      "unitLabel": "십억 달러·손실액",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 8.06,
+          "operator": "eq",
+          "period": "2025",
+          "sourceUrl": "https://www.reuters.com/business/finance/anthropics-ipo-prospectus-shows-sweeping-ai-vision-surging-costs-2026-09-28/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-09-28",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "anthropic_net_loss_reported",
+      "definitionId": "anthropic_net_loss_reported",
+      "name": "Anthropic 순손실·보도",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "profitability",
+      "unit": "USD billion loss magnitude",
+      "scope": "Anthropic company-wide",
+      "definition": "Anthropic company-wide",
+      "frequency": "half_year_when_reported",
+      "collectionMethod": "reviewed-release",
+      "notes": [
+        "이 순손실을 현금 소진액이나 영업손실로 해석하지 않는다.",
+        "회사의 공개 감사재무제표를 직접 확보한 것은 아니며 Reuters의 문서 검토 보도이다."
+      ],
+      "unitLabel": "십억 달러·손실액",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 80.7,
+          "operator": "eq",
+          "period": "2026-H1",
+          "sourceUrl": "https://www.reuters.com/business/anthropic-recorded-net-loss-over-80-billion-first-half-this-year-wsj-reports-2026-10-20/",
+          "sourceName": "reuters.com",
+          "evidence": "reported",
+          "publishedAt": "2026-10-20",
+          "verifiedAt": "2026-10-26",
+          "note": "기사상 약 72bn의 전환가능 채권 공정가치 변동 관련 비현금 회계비용 포함."
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "ramp_paid_ai_adoption_by_provider__anthropic",
+      "definitionId": "ramp_paid_ai_adoption_by_provider",
+      "name": "기업 유료 AI 도입률·Ramp 표본",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "미국",
+      "group": "business",
+      "category": "adoption",
+      "unit": "percent of in-scope Ramp businesses",
+      "scope": "US businesses observed on Ramp corporate card, invoice and ACH platform; more than 85,000 firms. Not all US businesses.",
+      "definition": "Observed positive transaction for a provider's AI product or service during the month. Multiple providers may be paid by the same company.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        },
+        {
+          "url": "https://ramp.com/data/ai-index-oct-2026",
+          "publishedAt": "2026-10-14"
+        }
+      ],
+      "notes": [
+        "Adoption is based on observed payment, not active-user count, paid seats, or market share of revenue.",
+        "Provider percentages are not mutually exclusive and should not sum to 100%.",
+        "Free use and personal-account payments can be missed.",
+        "Historical estimates are revised: the September release's August observations differ from the latest index; keep as-of date and vintage."
+      ],
+      "unitLabel": "%·Ramp 표본 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 43.5,
+          "operator": "eq",
+          "period": "2026-08",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 43.8,
+          "operator": "eq",
+          "period": "2026-09",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_paid_ai_adoption_by_provider__openai",
+      "definitionId": "ramp_paid_ai_adoption_by_provider",
+      "name": "기업 유료 AI 도입률·Ramp 표본",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "미국",
+      "group": "business",
+      "category": "adoption",
+      "unit": "percent of in-scope Ramp businesses",
+      "scope": "US businesses observed on Ramp corporate card, invoice and ACH platform; more than 85,000 firms. Not all US businesses.",
+      "definition": "Observed positive transaction for a provider's AI product or service during the month. Multiple providers may be paid by the same company.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        },
+        {
+          "url": "https://ramp.com/data/ai-index-oct-2026",
+          "publishedAt": "2026-10-14"
+        }
+      ],
+      "notes": [
+        "Adoption is based on observed payment, not active-user count, paid seats, or market share of revenue.",
+        "Provider percentages are not mutually exclusive and should not sum to 100%.",
+        "Free use and personal-account payments can be missed.",
+        "Historical estimates are revised: the September release's August observations differ from the latest index; keep as-of date and vintage."
+      ],
+      "unitLabel": "%·Ramp 표본 기업",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 39.5,
+          "operator": "eq",
+          "period": "2026-08",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 40.6,
+          "operator": "eq",
+          "period": "2026-09",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_token_spend_share_by_provider__anthropic",
+      "definitionId": "ramp_token_spend_share_by_provider",
+      "name": "토큰 지출 점유율·Ramp TSM 표본",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "미국",
+      "group": "business",
+      "category": "tokens",
+      "unit": "percent of observed token spend",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Provider token costs divided by total observed token costs in the TSM sample.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Not all-company revenue, not subscription revenue, and not global market share.",
+        "Do not mix the token-management sample with the full monthly business-adoption sample."
+      ],
+      "unitLabel": "%·관측 토큰 지출",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 53.8,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 60.1,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_token_spend_share_by_provider__openai",
+      "definitionId": "ramp_token_spend_share_by_provider",
+      "name": "토큰 지출 점유율·Ramp TSM 표본",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "미국",
+      "group": "business",
+      "category": "tokens",
+      "unit": "percent of observed token spend",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Provider token costs divided by total observed token costs in the TSM sample.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Not all-company revenue, not subscription revenue, and not global market share.",
+        "Do not mix the token-management sample with the full monthly business-adoption sample."
+      ],
+      "unitLabel": "%·관측 토큰 지출",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 42.4,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 36.4,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_token_volume_share_by_provider__anthropic",
+      "definitionId": "ramp_token_volume_share_by_provider",
+      "name": "토큰 사용량 점유율·Ramp TSM 표본",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "미국",
+      "group": "business",
+      "category": "tokens",
+      "unit": "percent of observed token volume",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Provider token count divided by total observed token count in the TSM sample.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Platform and sample differ from OpenRouter.",
+        "Input/output/cache and tokenizer mix affect meaning; these are volume shares, not spending shares.",
+        "The public page does not provide an exact cross-provider standardized token-equivalence method."
+      ],
+      "unitLabel": "%·관측 토큰 수",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 57.7,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 58.9,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_token_volume_share_by_provider__openai",
+      "definitionId": "ramp_token_volume_share_by_provider",
+      "name": "토큰 사용량 점유율·Ramp TSM 표본",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "미국",
+      "group": "business",
+      "category": "tokens",
+      "unit": "percent of observed token volume",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Provider token count divided by total observed token count in the TSM sample.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Platform and sample differ from OpenRouter.",
+        "Input/output/cache and tokenizer mix affect meaning; these are volume shares, not spending shares.",
+        "The public page does not provide an exact cross-provider standardized token-equivalence method."
+      ],
+      "unitLabel": "%·관측 토큰 수",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 38.9,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 38.2,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_blended_price_per_million_tokens__anthropic",
+      "definitionId": "ramp_blended_price_per_million_tokens",
+      "name": "평균 혼합 토큰 단가·Ramp TSM 표본",
+      "entity": "Anthropic",
+      "company": "Anthropic",
+      "region": "미국",
+      "group": "business",
+      "category": "economics",
+      "unit": "USD per million tokens",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Observed blended token spending per million tokens, across each provider's model and usage mix.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Not a published list price for a specific model.",
+        "Changes combine price changes with model, input/output/cache, and customer mix.",
+        "Use source's reported percentage changes rather than calculating exact changes from rounded displayed prices."
+      ],
+      "unitLabel": "달러/백만 토큰",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 1,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 0.8,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "ramp_blended_price_per_million_tokens__openai",
+      "definitionId": "ramp_blended_price_per_million_tokens",
+      "name": "평균 혼합 토큰 단가·Ramp TSM 표본",
+      "entity": "OpenAI",
+      "company": "OpenAI",
+      "region": "미국",
+      "group": "business",
+      "category": "economics",
+      "unit": "USD per million tokens",
+      "scope": "Subset of Ramp businesses using Token Spend Management and connected AI-provider usage/billing data; not representative of all Ramp AI spending.",
+      "definition": "Observed blended token spending per million tokens, across each provider's model and usage mix.",
+      "frequency": "monthly for adoption; weekly complete-period snapshots for token metrics",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://ramp.com/data/ai-index"
+        }
+      ],
+      "notes": [
+        "Not a published list price for a specific model.",
+        "Changes combine price changes with model, input/output/cache, and customer mix.",
+        "Use source's reported percentage changes rather than calculating exact changes from rounded displayed prices."
+      ],
+      "unitLabel": "달러/백만 토큰",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 0.73,
+          "operator": "eq",
+          "period": "week ending 2026-09-13",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 0.48,
+          "operator": "eq",
+          "period": "week ending 2026-10-11",
+          "sourceUrl": "https://ramp.com/data/ai-index",
+          "sourceName": "ramp.com",
+          "evidence": "estimated",
+          "publishedAt": null,
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "similarweb_average_monthly_web_visits__chatgpt_web",
+      "definitionId": "similarweb_average_monthly_web_visits",
+      "name": "월평균 웹 방문 횟수·Similarweb",
+      "entity": "ChatGPT web",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million visits per month",
+      "scope": "Worldwide desktop and mobile web; chatgpt.com versus claude.ai",
+      "definition": "Average monthly visits during a twelve-month observation window; repeated visits by the same person are counted.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Historical annual-window average, not the latest single month.",
+        "Visits are not unique users, registered users, paid subscribers, or API users.",
+        "Web and app audiences overlap; do not add without deduplication."
+      ],
+      "unitLabel": "백만 회/월·방문",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 5700,
+          "operator": "approx",
+          "period": "2025-06 to 2026-05 monthly average",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "similarweb_average_monthly_web_visits__claude_web",
+      "definitionId": "similarweb_average_monthly_web_visits",
+      "name": "월평균 웹 방문 횟수·Similarweb",
+      "entity": "Claude web",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million visits per month",
+      "scope": "Worldwide desktop and mobile web; chatgpt.com versus claude.ai",
+      "definition": "Average monthly visits during a twelve-month observation window; repeated visits by the same person are counted.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Historical annual-window average, not the latest single month.",
+        "Visits are not unique users, registered users, paid subscribers, or API users.",
+        "Web and app audiences overlap; do not add without deduplication."
+      ],
+      "unitLabel": "백만 회/월·방문",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 331,
+          "operator": "approx",
+          "period": "2025-06 to 2026-05 monthly average",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "similarweb_average_monthly_web_unique_visitors__chatgpt_web",
+      "definitionId": "similarweb_average_monthly_web_unique_visitors",
+      "name": "월평균 웹 순방문자·Similarweb",
+      "entity": "ChatGPT web",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million estimated unique visitors per month",
+      "scope": "Worldwide desktop and mobile web; chatgpt.com versus claude.ai",
+      "definition": "Vendor-estimated average monthly unique website audience during the reported twelve-month window.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Historical vendor estimate, not company-disclosed current MAU or WAU.",
+        "Monthly unique visitors are not the same metric as website visits or app active users.",
+        "Detailed cross-device deduplication methodology is not provided in this article."
+      ],
+      "unitLabel": "백만 명/월·순방문 추정",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 467,
+          "operator": "approx",
+          "period": "2025-06 to 2026-05 monthly average",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "similarweb_average_monthly_web_unique_visitors__claude_web",
+      "definitionId": "similarweb_average_monthly_web_unique_visitors",
+      "name": "월평균 웹 순방문자·Similarweb",
+      "entity": "Claude web",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million estimated unique visitors per month",
+      "scope": "Worldwide desktop and mobile web; chatgpt.com versus claude.ai",
+      "definition": "Vendor-estimated average monthly unique website audience during the reported twelve-month window.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Historical vendor estimate, not company-disclosed current MAU or WAU.",
+        "Monthly unique visitors are not the same metric as website visits or app active users.",
+        "Detailed cross-device deduplication methodology is not provided in this article."
+      ],
+      "unitLabel": "백만 명/월·순방문 추정",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 37,
+          "operator": "approx",
+          "period": "2025-06 to 2026-05 monthly average",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 0
+    },
+    {
+      "id": "similarweb_mobile_app_mau__chatgpt_app",
+      "definitionId": "similarweb_mobile_app_mau",
+      "name": "모바일 앱 월간 활성 이용자·Similarweb",
+      "entity": "ChatGPT app",
+      "company": "OpenAI",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million estimated monthly active app users",
+      "scope": "Worldwide iOS and Android mobile apps",
+      "definition": "Similarweb App Intelligence estimate of monthly active mobile-app audience.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Third-party historical estimate, not a company-confirmed service-wide user count.",
+        "Do not directly compare app MAU with official service-wide WAU.",
+        "Different data vendors and app/device coverage may produce different estimates."
+      ],
+      "unitLabel": "백만 명·앱 MAU 추정",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 853,
+          "operator": "eq",
+          "period": "2025-06",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 1120,
+          "operator": "approx",
+          "period": "2026-05",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "similarweb_mobile_app_mau__claude_app",
+      "definitionId": "similarweb_mobile_app_mau",
+      "name": "모바일 앱 월간 활성 이용자·Similarweb",
+      "entity": "Claude app",
+      "company": "Anthropic",
+      "region": "글로벌",
+      "group": "business",
+      "category": "usage",
+      "unit": "million estimated monthly active app users",
+      "scope": "Worldwide iOS and Android mobile apps",
+      "definition": "Similarweb App Intelligence estimate of monthly active mobile-app audience.",
+      "frequency": "monthly vendor estimates; article contains historical report observations",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "publishedAt": "2026-09-08"
+        }
+      ],
+      "notes": [
+        "Third-party historical estimate, not a company-confirmed service-wide user count.",
+        "Do not directly compare app MAU with official service-wide WAU.",
+        "Different data vendors and app/device coverage may produce different estimates."
+      ],
+      "unitLabel": "백만 명·앱 MAU 추정",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 7.3,
+          "operator": "eq",
+          "period": "2025-06",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 103.9,
+          "operator": "approx",
+          "period": "2026-05",
+          "sourceUrl": "https://aisearch.similarweb.com/blog/claude-vs-chatgpt/",
+          "sourceName": "aisearch.similarweb.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-09-08",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    },
+    {
+      "id": "sensortower_claude_us_mobile_arpu__claude_mobile_us",
+      "definitionId": "sensortower_claude_us_mobile_arpu",
+      "name": "Claude 미국 모바일 이용자당 매출·Sensor Tower",
+      "entity": "Claude mobile US",
+      "company": "Anthropic",
+      "region": "미국",
+      "group": "business",
+      "category": "economics",
+      "unit": "USD per user",
+      "scope": "Claude mobile app in the United States",
+      "definition": "Vendor-reported mobile ARPU for the stated month.",
+      "frequency": "monthly estimates disclosed in a report",
+      "collectionMethod": "reviewed-report",
+      "sources": [
+        {
+          "url": "https://sensortower.com/press/sensor-tower-state-of-ai-2026-report-global-time-spent-on-generative-ai-apps-projected-to-more-than-double-year-over-year",
+          "publishedAt": "2026-06-16"
+        }
+      ],
+      "notes": [
+        "Not Anthropic company-wide ARPU, not API revenue per user, and not revenue per paying subscriber.",
+        "Press release does not specify the exact ARPU denominator or gross-versus-net treatment; retain this limitation.",
+        "No directly comparable ChatGPT ARPU found in the same public release."
+      ],
+      "unitLabel": "달러/이용자",
+      "fullHistory": false,
+      "observations": [
+        {
+          "value": 0.5,
+          "operator": "lt",
+          "period": "2025-09",
+          "sourceUrl": "https://sensortower.com/press/sensor-tower-state-of-ai-2026-report-global-time-spent-on-generative-ai-apps-projected-to-more-than-double-year-over-year",
+          "sourceName": "sensortower.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-06-16",
+          "verifiedAt": "2026-10-26"
+        },
+        {
+          "value": 2.76,
+          "operator": "eq",
+          "period": "2026-05",
+          "sourceUrl": "https://sensortower.com/press/sensor-tower-state-of-ai-2026-report-global-time-spent-on-generative-ai-apps-projected-to-more-than-double-year-over-year",
+          "sourceName": "sensortower.com",
+          "evidence": "estimated",
+          "publishedAt": "2026-06-16",
+          "verifiedAt": "2026-10-26"
+        }
+      ],
+      "latestIndex": 1
+    }
+  ],
+  "gaps": [
+    {
+      "id": "chatgpt_standalone_total_revenue",
+      "name": "ChatGPT 단독 전체 매출",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "ChatGPT만의 전체 매출을 같은 회계 범위로 확인하지 못함. 회사 전체 매출로 대체하지 않음.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "chatgpt_mau",
+      "name": "ChatGPT 공식 월간 활성 이용자",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "회사 전체 글로벌 MAU의 일관된 공식 공시를 이번 조사에서 확보하지 못함.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "chatgpt_dau",
+      "name": "ChatGPT 공식 일간 활성 이용자",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "공식 언급은 있으나 일관된 최신 절대값 미확보.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "chatgpt_current_paid_conversion_rate",
+      "name": "ChatGPT 유료 전환율",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "동일 시점·동일 분모의 유료 및 활성 이용자 수 미확보.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "chatgpt_churn_rate",
+      "name": "ChatGPT 이탈률",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "공식 이탈률 미확보.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "openai_current_arpu",
+      "name": "OpenAI 사용자당 매출",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "매출·사용자 모집단과 기간이 일치하는 자료 미확보.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "openai_company_operating_margin",
+      "name": "OpenAI 공식 영업이익률",
+      "entity": "OpenAI",
+      "value": null,
+      "reason": "본 조사에서 직접 검토한 공식 재무제표 수치 미확보.",
+      "unit": null,
+      "scope": null
+    },
+    {
+      "id": "claude_global_wau",
+      "name": "Claude 공식 주간 활성 이용자",
+      "entity": "Anthropic",
+      "value": null,
+      "reason": "Claude Code WAU 증가 배수나 웹 방문 횟수로 대체하지 않는다.",
+      "unit": "people weekly active",
+      "scope": "Claude consumer product worldwide"
+    },
+    {
+      "id": "claude_global_mau",
+      "name": "Claude 공식 월간 활성 이용자",
+      "entity": "Anthropic",
+      "value": null,
+      "reason": "월 방문 횟수·앱 다운로드·트래픽 추정치를 공식 MAU로 표시하지 않는다.",
+      "unit": "people monthly active",
+      "scope": "Claude consumer product worldwide"
+    },
+    {
+      "id": "claude_paid_subscribers",
+      "name": "Claude 개인 유료 구독자",
+      "entity": "Anthropic",
+      "value": null,
+      "reason": "기업 고객·Claude Code 기업 구독 배수와 별개이다.",
+      "unit": "paid subscriptions or seats as defined",
+      "scope": "Claude consumer paid plans"
+    },
+    {
+      "id": "claude_api_total_tokens_or_active_developers",
+      "name": "Claude 전체 API 토큰·활성 개발자",
+      "entity": "Anthropic",
+      "value": null,
+      "reason": "OpenRouter에서 관측한 일부 트래픽을 회사 전체 토큰 사용량으로 확대하지 않는다.",
+      "unit": null,
+      "scope": "Anthropic direct and cloud-distributed API"
+    }
+  ]
+}

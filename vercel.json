@@ -12,6 +12,15 @@
     },
     "api/snapshot.js": {
       "maxDuration": 30
+    },
+    "api/ai-statistics.js": {
+      "maxDuration": 30
+    },
+    "api/ai-tokens.js": {
+      "maxDuration": 30
+    },
+    "api/ai-disclosures.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -35,6 +44,33 @@
     },
     {
       "source": "/data/industry.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/ai-statistics.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/ai-tokens.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/ai-disclosures.json",
       "headers": [
         {
           "key": "Cache-Control",

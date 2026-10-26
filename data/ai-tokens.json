@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "name": "OpenRouter",
+    "url": "https://openrouter.ai/rankings",
+    "license": "CC BY 4.0"
+  },
+  "timezone": "UTC",
+  "coverage": {
+    "kind": "reviewed-top-model-snapshot",
+    "completePublicTotal": false,
+    "publicOnly": true
+  },
+  "collection": {
+    "method": "api",
+    "status": "not-connected",
+    "lastAttemptAt": null,
+    "lastSuccessAt": null,
+    "message": "공식 API 키 연결 전입니다. 2026-10-25 공식 순위에서 확인한 상위 모델 10개를 표시합니다."
+  },
+  "asOf": "2026-10-26",
+  "rows": [
+    {
+      "date": "2026-10-25",
+      "model": "DeepSeek V4.1 Flash 1017",
+      "author": "deepseek",
+      "totalTokens": "5770000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "GLM 5.3 Flash",
+      "author": "z-ai",
+      "totalTokens": "2120000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "DeepSeek V4.1 Flash",
+      "author": "deepseek",
+      "totalTokens": "1910000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "GPT-6 Luna",
+      "author": "openai",
+      "totalTokens": "1460000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "Hy4 preview",
+      "author": "tencent",
+      "totalTokens": "974000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "Claude Opus 5.5",
+      "author": "anthropic",
+      "totalTokens": "831000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "Step 5 Preview",
+      "author": "stepfun",
+      "totalTokens": "801000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "Nemotron 3 Ultra (free)",
+      "author": "nvidia",
+      "totalTokens": "660000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "GLM 5.3",
+      "author": "z-ai",
+      "totalTokens": "571000000000",
+      "rounded": true
+    },
+    {
+      "date": "2026-10-25",
+      "model": "DeepSeek V4 Flash 0731",
+      "author": "deepseek",
+      "totalTokens": "511000000000",
+      "rounded": true
+    }
+  ],
+  "meta": {
+    "as_of": "2026-10-25",
+    "note": "공식 웹 순위의 반올림 값. 플랫폼 전체 합계 또는 전체 개발사 점유율이 아닙니다."
+  }
+}

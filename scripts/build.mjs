@@ -3,8 +3,12 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveCommunityOrigin } from '../assets/community-ui-core.js'
 import { validateIndustry } from '../assets/industry-core.js'
+import { validateAiStatistics } from '../assets/ai-statistics-core.js'
+import { validateTokenSnapshot } from '../assets/token-core.js'
+import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json']
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -17,6 +21,9 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   const data = JSON.parse(await readFile(join(source, 'data', 'market.json'), 'utf8'))
   if (!Array.isArray(data.quotes)) throw new Error('시세 스냅샷 형식이 올바르지 않습니다.')
   validateIndustry(JSON.parse(await readFile(join(source, 'data', 'industry.json'), 'utf8')))
+  validateAiStatistics(JSON.parse(await readFile(join(source, 'data', 'ai-statistics.json'), 'utf8')))
+  validateTokenSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-tokens.json'), 'utf8')))
+  validateDisclosureSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-disclosures.json'), 'utf8')))
   const assets = (await readdir(join(source, 'assets'), { withFileTypes: true }))
     .filter(entry => entry.isFile() && /\.(?:js|css)$/.test(entry.name))
   await rm(output, { recursive: true, force: true })
@@ -30,7 +37,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   }
   await writeFile(join(output, 'index.html'), html)
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
-  await Promise.all(['market.json','industry.json'].map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  await Promise.all(publicSnapshotFiles.map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
   if (assets.some(entry => entry.name === 'community.js')) await writeFile(join(output, 'assets', 'community-runtime.js'), `export const communityApiOrigin = ${JSON.stringify(communityOrigin)}\n`)
   return output
 }
