@@ -3,10 +3,11 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
+import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url))
 const baseUrl = 'https://khcho9642-sketch.github.io/ai-chain-prototype/data/'
-const definitions = [['ai-tokens.json', validateTokenSnapshot], ['ai-disclosures.json', validateDisclosureSnapshot]]
+const definitions = [['ai-tokens.json', validateTokenSnapshot], ['ai-disclosures.json', validateDisclosureSnapshot], ['company-disclosures.json', validateCompanyDisclosures]]
 
 // Restore only validated collector state; approved statistics remain versioned in Git.
 export async function restoreAiSnapshots({root = projectRoot, fetcher = fetch, now = new Date()} = {}) {

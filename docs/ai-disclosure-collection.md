@@ -10,7 +10,7 @@ Node.js 24에서 저장소 루트를 기준으로 실행한다. 추가 패키지
 node scripts/collect-ai-disclosures.mjs
 node scripts/collect-ai-disclosures.mjs --force
 node scripts/collect-ai-disclosures.mjs --no-discovery
-node scripts/ai-disclosures.test.mjs
+node tests/ai-disclosures.test.mjs
 ```
 
 기본 실행은 `Asia/Seoul` 달력 날짜당 한 번이다. 같은 날 이미 시도한 기록이 있으면 성공 여부와 무관하게 기존 결과를 반환한다. 일시적인 오류를 다시 확인하려면 `--force`를 사용한다. `--no-discovery`는 기존 통계에 연결된 공식 출처만 확인한다. 실행 예약은 저장소의 GitHub Actions가 담당하며 이 스크립트 자체는 스케줄러를 설치하지 않는다.
@@ -112,6 +112,6 @@ node scripts/ai-disclosures.test.mjs
 
 ## 검증과 제한
 
-`scripts/ai-disclosures.test.mjs`는 실제 네트워크 대신 주입한 응답으로 허용 URL, 리디렉션, 크기·형식 제한, 기준선, 본문 변경, 중복 후보, 일부 실패, 실패 시 확인일 보존, 오류 문구 정리, KST 일별 실행, 동시성 제한을 검증한다. RSS·HTML 목록과 차단 응답도 검사한다.
+`tests/ai-disclosures.test.mjs`는 실제 네트워크 대신 주입한 응답으로 허용 URL, 리디렉션, 크기·형식 제한, 기준선, 본문 변경, 중복 후보, 일부 실패, 실패 시 확인일 보존, 오류 문구 정리, KST 일별 실행, 동시성 제한을 검증한다. RSS·HTML 목록과 차단 응답도 검사한다.
 
 테스트 통과는 실제 공식 사이트가 항상 접근 가능하다는 뜻이 아니다. 사이트의 봇 차단, HTML 구조 변경, RSS 누락, 제목 필터, 한 번에 읽는 기사 수 때문에 발견하지 못하는 발표가 생길 수 있다. 이 기능은 모든 발표를 수집하는 통계 데이터베이스나 실시간 사용자·매출 계측 서비스가 아니다. 공개되지 않은 수치를 생성하거나 과거 발표를 오늘의 관측값으로 바꾸지 않는다.

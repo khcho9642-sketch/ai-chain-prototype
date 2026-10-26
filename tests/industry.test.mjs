@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {validateIndustry,yearOnYear,seriesCsv,staleSeries,windowPoints} from '../assets/industry-core.js'
-import {parseTsmcRevenue,collectTsmc} from './collect-tsmc.mjs'
+import {parseTsmcRevenue,collectTsmc} from '../scripts/collect-tsmc.mjs'
 import {instruments} from '../assets/instruments.js'
 import {companyProfiles} from '../assets/company-profiles.js'
 const now=new Date('2026-10-26T00:00:00Z')

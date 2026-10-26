@@ -4,9 +4,10 @@ import { mkdtemp, mkdir, writeFile, readdir, readFile, rm } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { once } from 'node:events'
-import { chart, createChartService, normalize, ranges } from './market.mjs'
+import { chart, createChartService, normalize, ranges } from '../server/market.mjs'
 import { createSiteServer } from '../scripts/serve.mjs'
 import { build } from '../scripts/build.mjs'
+import { createEmptyCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
 function fixture({ range = '1d', symbol = 'NVDA' } = {}) {
   return {
@@ -181,6 +182,7 @@ test('build publishes only the public site; server handles API errors without ex
       collection:{method:'api',status:'not-connected',lastAttemptAt:null,lastSuccessAt:null},rows:[]},
     'ai-disclosures':{schemaVersion:1,collection:{method:'web-monitor',status:'not-run',lastAttemptAt:null,lastSuccessAt:null},
       sources:[],candidates:[],notes:[]},
+    'company-disclosures':createEmptyCompanyDisclosures({now:new Date('2026-10-26T00:00:00Z')}),
   }
   for (const [name,data] of Object.entries(aiSnapshots)) await writeFile(join(source,'data',name+'.json'),JSON.stringify(data))
   await writeFile(join(source,'data','private-research.json'),'PRIVATE')
@@ -189,7 +191,7 @@ test('build publishes only the public site; server handles API errors without ex
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
-  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','industry.json','market.json'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','industry.json','market.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })
@@ -208,6 +210,8 @@ test('build publishes only the public site; server handles API errors without ex
   for (const [name,data] of Object.entries(aiSnapshots)) {
     assert.deepEqual(await (await fetch(origin+'/data/'+name+'.json')).json(),data)
     assert.deepEqual(await (await fetch(origin+'/api/'+name)).json(),data)
+    const head = await fetch(origin+'/api/'+name,{method:'HEAD'})
+    assert.equal(head.status,200); assert.equal(await head.text(),'')
     assert.equal((await fetch(origin+'/api/'+name,{method:'POST'})).status,405)
   }
   const snapshot = await fetch(`${origin}/api/snapshot`)

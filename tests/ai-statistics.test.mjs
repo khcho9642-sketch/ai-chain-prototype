@@ -3,10 +3,11 @@ import assert from 'node:assert/strict'
 import { readFile, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { buildAiStatistics } from './build-ai-statistics.mjs'
+import { buildAiStatistics } from '../scripts/build-ai-statistics.mjs'
 import { validateAiStatistics } from '../assets/ai-statistics-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
-import { restoreAiSnapshots } from './restore-ai-snapshots.mjs'
+import { createEmptyCompanyDisclosures } from '../assets/company-disclosures-core.js'
+import { restoreAiSnapshots } from '../scripts/restore-ai-snapshots.mjs'
 import { aiSnapshotHandler } from '../server/ai-snapshots.mjs'
 
 const root = new URL('../',import.meta.url)
@@ -76,6 +77,8 @@ test('restoration validates remote JSON and retains local data on HTML or networ
     originals[name]=await readFile(new URL('data/'+name,root),'utf8')
     await writeFile(join(dir,'data',name),originals[name])
   }
+  originals['company-disclosures.json']=JSON.stringify(createEmptyCompanyDisclosures({now:new Date('2026-10-26T00:00:00Z')}))
+  await writeFile(join(dir,'data','company-disclosures.json'),originals['company-disclosures.json'])
   const bad=await restoreAiSnapshots({root:dir,fetcher:async()=>new Response('<html>oops</html>')})
   assert.ok(bad.every(r=>r.status==='kept'))
   for (const [name,text] of Object.entries(originals)) assert.equal(await readFile(join(dir,'data',name),'utf8'),text)
@@ -105,4 +108,56 @@ test('public disclosure metadata only accepts official article hosts and review 
   assert.equal(validateDisclosureSnapshot(data),data)
   data.candidates[0].url='https://anthropic.com.evil.example/news/series-g'
   assert.throws(()=>validateDisclosureSnapshot(data))
+})
+
+
+test('company disclosure API uses validated Pages metadata and remains read-only',async () => {
+  const metadata=createEmptyCompanyDisclosures({now:new Date('2026-10-26T00:00:00Z')})
+  const requests=[]
+  const handler=aiSnapshotHandler('company-disclosures',{fetcher:async (url,options)=>{
+    requests.push({url,options})
+    return new Response(JSON.stringify(metadata))
+  }})
+  const response=()=>({headers:{},statusCode:0,setHeader(k,v){this.headers[k]=v},end(v){this.body=v}})
+  const get=response()
+  await handler({method:'GET',url:'/api/company-disclosures?url=http://127.0.0.1/private'},get)
+  assert.equal(get.statusCode,200)
+  assert.deepEqual(JSON.parse(get.body),metadata)
+  assert.equal(get.headers['Content-Type'],'application/json; charset=utf-8')
+  assert.match(get.headers['Cache-Control'],/s-maxage=300/)
+  assert.ok(requests[0].url.startsWith('https://khcho9642-sketch.github.io/ai-chain-prototype/data/company-disclosures.json?t='))
+  assert.equal(requests[0].options.redirect,'error')
+  const head=response(); await handler({method:'HEAD'},head)
+  assert.equal(head.statusCode,200); assert.equal(head.body,undefined)
+  const before=requests.length
+  const post=response(); await handler({method:'POST'},post)
+  assert.equal(post.statusCode,405); assert.equal(post.headers.Allow,'GET, HEAD')
+  assert.equal(requests.length,before)
+  for (const upstream of [new Response('{}'),new Response('upstream internal details',{status:429})]) {
+    const failed=response()
+    await aiSnapshotHandler('company-disclosures',{fetcher:async()=>upstream})({method:'GET'},failed)
+    assert.equal(failed.statusCode,502)
+    assert.equal(failed.headers['Cache-Control'],'no-store')
+    assert.ok(!failed.body.includes('internal details'))
+  }
+})
+
+
+test('restoring company disclosures does not replace a newer successful local snapshot',async t => {
+  const dir=await mkdtemp(join(tmpdir(),'company-restore-'))
+  t.after(()=>rm(dir,{recursive:true,force:true}))
+  await mkdir(join(dir,'data'))
+  const successful=stamp=>{
+    const data=createEmptyCompanyDisclosures()
+    data.collection={status:'ok',lastAttemptAt:stamp,lastSuccessAt:stamp,error:null}
+    data.companies=data.companies.map(company=>({...company,status:'ok',lastAttemptAt:stamp,lastSuccessAt:stamp}))
+    return data
+  }
+  const local=successful('2026-10-26T02:00:00.000Z')
+  const remote=successful('2026-10-26T01:00:00.000Z')
+  await writeFile(join(dir,'data','company-disclosures.json'),JSON.stringify(local))
+  const result=await restoreAiSnapshots({root:dir,now:new Date('2026-10-26T03:00:00Z'),fetcher:async url=>
+    new URL(url).pathname.endsWith('/company-disclosures.json') ? new Response(JSON.stringify(remote)) : new Response('',{status:404})})
+  assert.deepEqual(result.find(item=>item.name==='company-disclosures.json'),{name:'company-disclosures.json',status:'kept',reason:'newer local success'})
+  assert.deepEqual(JSON.parse(await readFile(join(dir,'data','company-disclosures.json'),'utf8')),local)
 })

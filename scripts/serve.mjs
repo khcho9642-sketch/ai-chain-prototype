@@ -8,7 +8,7 @@ import { instruments } from '../assets/instruments.js'
 import { createCommunityHandler } from '../server/community/http.mjs'
 
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json',
-  '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json'}
+  '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json'}
 
 export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null } = {}) {
   return createServer(async (req, res) => {

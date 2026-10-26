@@ -4,7 +4,7 @@ import {
   collectDisclosures, discoverDisclosureLinks, emptyDisclosureSnapshot,
   extractDisclosureDocument, extractKnownDisclosureUrls,
   fetchOfficialDocument, normalizeOfficialUrl, validateDisclosureSnapshot,
-} from './collect-ai-disclosures.mjs'
+} from '../scripts/collect-ai-disclosures.mjs'
 
 const OPENAI = 'https://openai.com/index/business-growth/'
 const ANTHROPIC = 'https://www.anthropic.com/news/business-growth'

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TRADE_SERIES, monthWindows, normalizeEcosRows, withYearlyChanges, collectOfficialTrade } from './official-trade.mjs';
+import { TRADE_SERIES, monthWindows, normalizeEcosRows, withYearlyChanges, collectOfficialTrade } from '../scripts/official-trade.mjs';
 
 test('public ECOS requests never exceed ten monthly records', () => {
   assert.deepEqual(monthWindows(new Date('2023-10-01T00:00:00Z'), new Date('2026-09-01T00:00:00Z')), [['202310', '202407'], ['202408', '202505'], ['202506', '202603'], ['202604', '202609']]);

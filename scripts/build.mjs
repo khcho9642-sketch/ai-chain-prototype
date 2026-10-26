@@ -6,9 +6,10 @@ import { validateIndustry } from '../assets/industry-core.js'
 import { validateAiStatistics } from '../assets/ai-statistics-core.js'
 import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
+import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json']
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json']
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -24,6 +25,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   validateAiStatistics(JSON.parse(await readFile(join(source, 'data', 'ai-statistics.json'), 'utf8')))
   validateTokenSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-tokens.json'), 'utf8')))
   validateDisclosureSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-disclosures.json'), 'utf8')))
+  validateCompanyDisclosures(JSON.parse(await readFile(join(source, 'data', 'company-disclosures.json'), 'utf8')))
   const assets = (await readdir(join(source, 'assets'), { withFileTypes: true }))
     .filter(entry => entry.isFile() && /\.(?:js|css)$/.test(entry.name))
   await rm(output, { recursive: true, force: true })

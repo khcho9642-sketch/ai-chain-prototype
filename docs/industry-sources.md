@@ -2,12 +2,14 @@
 
 Collected and checked on 2026-10-26 KST. All numbers below are from primary sources.
 
-## Ready to integrate
+## Integrated collection and source evidence
 
-- `official-trade.mjs`: `collectOfficialTrade(previous, options)` returns `{sources, series, gaps}` without writing any files. No dependency. `ECOS_API_KEY` is optional; default is the officially exposed public `sample` service. Every request retrieves at most ten monthly rows. Initial history 36 months; subsequent requests refresh 13 months for revisions and YoY. Per-series success timestamps survive failed refreshes. API keys are omitted from public evidence links.
-- `trade-api-seed.json`: eight series with 36 actual monthly observations each, 2023-10 through 2026-09. Eight series comprise semiconductor / transformer / electrical equipment / electronics / total export volume indices, and semiconductor / transformer / total export value indices.
-- `customs-reviewed-seed.json`: three reviewed-release series. Semiconductor exports USD and total exports USD for the current confirmed month, and 13 months of total export net weight. This is a verified release snapshot, not an automated Customs API feed. Keep the source publication date and `automation: reviewed-release` visible.
-- `official-trade.test.mjs`: meaningful offline checks for ten-row windows, response identity/units, invalid or duplicate data, preliminary/final status, YoY, failure preservation, complete history and private-key exclusion.
+- `scripts/official-trade.mjs`: `collectOfficialTrade(previous, options)` returns `{sources, series, gaps}` without writing any files. No dependency. `ECOS_API_KEY` is optional; default is the officially exposed public `sample` service. Every request retrieves at most ten monthly rows. Initial history 36 months; subsequent requests refresh 13 months for revisions and YoY. Per-series success timestamps survive failed refreshes. API keys are omitted from public evidence links.
+- `data/industry.json` contains the integrated public series, collected by `scripts/collect-industry.mjs`: eight ECOS series initially seeded with 36 monthly observations each, 2023-10 through 2026-09. These are semiconductor / transformer / electrical equipment / electronics / total export volume indices, and semiconductor / transformer / total export value indices. Automatic refreshes preserve each series definition and success time.
+- Three reviewed Customs release series are also integrated in `data/industry.json`: semiconductor exports USD and total exports USD for the reviewed confirmed month, and the initially verified 13 months of total export net weight. These are reviewed release observations, not an automated Customs API feed. Keep the original source publication date and `automation: reviewed-release` visible.
+- `tests/official-trade.test.mjs`: meaningful offline checks for ten-row windows, response identity/units, invalid or duplicate data, preliminary/final status, YoY, failure preservation, complete history and private-key exclusion.
+
+Legacy raw seed files and source downloads from the former loose working folder are archived under `.local/archive/education-2026-10-27/industry-stats-work/export/`, including the original `trade-api-seed.json` and `customs-reviewed-seed.json` when retained. They are private working evidence, not runtime inputs or additional public snapshots. The current pipeline uses the integrated `data/industry.json` and collectors under `scripts/`; see [project structure](project-structure.md).
 
 ## Primary sources and exact current figures
 

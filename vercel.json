@@ -21,6 +21,9 @@
     },
     "api/ai-disclosures.js": {
       "maxDuration": 30
+    },
+    "api/company-disclosures.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -71,6 +74,15 @@
     },
     {
       "source": "/data/ai-disclosures.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/company-disclosures.json",
       "headers": [
         {
           "key": "Cache-Control",

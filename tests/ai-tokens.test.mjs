@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { validateTokenSnapshot, tokenDailyTotals, tokenMovingAverage, visibleAuthorTotals, formatTokens, tokenTotalsCsv } from '../assets/token-core.js'
-import { collectAiTokens, collectAiTokenFile, emptyTokenSnapshot, parseRankingsResponse, tokenDateWindow, RANKINGS_ENDPOINT } from './collect-ai-tokens.mjs'
+import { collectAiTokens, collectAiTokenFile, emptyTokenSnapshot, parseRankingsResponse, tokenDateWindow, RANKINGS_ENDPOINT } from '../scripts/collect-ai-tokens.mjs'
 
 const now = new Date('2026-10-26T03:00:00Z')
 const day = '2026-10-25'

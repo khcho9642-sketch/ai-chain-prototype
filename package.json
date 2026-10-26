@@ -11,7 +11,7 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
-    "test": "node --test --test-isolation=none scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs scripts/industry.test.mjs scripts/official-trade.test.mjs scripts/ai-statistics.test.mjs scripts/ai-tokens.test.mjs scripts/ai-disclosures.test.mjs tests/community.test.mjs tests/community-public.test.mjs tests/community-package.test.mjs tests/community-deploy.test.mjs",
+    "test": "node --test --test-isolation=none tests/market.test.mjs tests/peer-comparison.test.mjs tests/market-server.test.mjs tests/industry.test.mjs tests/official-trade.test.mjs tests/ai-statistics.test.mjs tests/ai-tokens.test.mjs tests/ai-disclosures.test.mjs tests/company-disclosures.test.mjs tests/community.test.mjs tests/community-public.test.mjs tests/community-package.test.mjs tests/community-deploy.test.mjs",
     "test:community": "node --test tests/community.test.mjs tests/community-public.test.mjs",
     "ai:worker": "node scripts/ai-worker.mjs",
     "collect": "node scripts/collect-market.mjs",
@@ -24,6 +24,7 @@
     "community:backup": "node scripts/community-backup.mjs",
     "community:package": "node scripts/package-community.mjs",
     "community:check": "node scripts/community-check-public.mjs",
-    "test:community:deploy": "node --test tests/community-package.test.mjs tests/community-deploy.test.mjs"
+    "test:community:deploy": "node --test tests/community-package.test.mjs tests/community-deploy.test.mjs",
+    "collect:company-disclosures": "node scripts/collect-company-disclosures.mjs"
   }
 }

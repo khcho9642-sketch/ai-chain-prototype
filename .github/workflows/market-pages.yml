@@ -37,7 +37,7 @@ jobs:
         env:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
         run: node scripts/collect-industry.mjs
-      - name: Restore validated AI collector state
+      - name: Restore validated public collector state
         run: node scripts/restore-ai-snapshots.mjs
       - name: Collect public OpenRouter token statistics
         continue-on-error: true
@@ -47,6 +47,9 @@ jobs:
       - name: Monitor official OpenAI and Anthropic disclosures
         continue-on-error: true
         run: npm run collect:disclosures
+      - name: Collect official Korean company disclosures
+        continue-on-error: true
+        run: npm run collect:company-disclosures
       - name: Build static site
         env:
           COMMUNITY_API_ORIGIN: ${{ vars.COMMUNITY_API_ORIGIN }}
