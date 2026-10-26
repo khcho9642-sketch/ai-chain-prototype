@@ -1,4 +1,4 @@
-import { copyFile, lstat, mkdir, readFile, readdir, rm } from 'node:fs/promises'
+import { copyFile, lstat, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateIndustry } from '../assets/industry-core.js'
@@ -19,7 +19,13 @@ export async function build(root = projectRoot) {
   await rm(output, { recursive: true, force: true })
   await mkdir(join(output, 'assets'), { recursive: true })
   await mkdir(join(output, 'data'), { recursive: true })
-  await copyFile(join(source, 'index.html'), join(output, 'index.html'))
+  let html = await readFile(join(source, 'index.html'), 'utf8')
+  // Leave the original design source intact; the built site uses the shared discussion module.
+  if (assets.some(entry => entry.name === 'community.js') && !html.includes('src="./assets/community.js"')) {
+    html = html.replace('</head>', '<link rel="stylesheet" href="./assets/community.css">\n</head>')
+      .replace('</body>', '<script type="module" src="./assets/community.js"></script>\n</body>')
+  }
+  await writeFile(join(output, 'index.html'), html)
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
   await Promise.all(['market.json','industry.json'].map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
   return output

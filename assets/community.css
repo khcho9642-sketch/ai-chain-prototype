@@ -1,0 +1,22 @@
+.community { gap:14px; }
+.community label { display:block; font-size:13px; }
+.community select,.community textarea,.community input[type=password] { background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px; font:inherit; max-width:100%; }
+.community select { width:min(100%,440px); }
+.community textarea { width:100%; resize:vertical; margin:8px 0; }
+.community button { border:1px solid var(--line); background:var(--card); border-radius:8px; padding:8px 12px; margin:3px 6px 3px 0; min-height:40px; }
+.community button:disabled { opacity:.45; cursor:not-allowed; }
+.community button:focus-visible,.community textarea:focus-visible,.community select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.community-tabs { display:flex; flex-wrap:wrap; }
+.community-tabs [aria-selected=true] { border-color:var(--accent); color:var(--accent); }
+.community-comment { padding:12px 0; border-top:1px solid var(--line); overflow-wrap:anywhere; }
+.community-comment strong { font-size:13px; }
+.community-comment time { margin-left:12px; color:var(--muted); font-size:11px; }
+.community-comment p { font-size:14px; line-height:1.7; white-space:pre-wrap; margin:8px 0; }
+.community-reply { padding-left:14px; border-left:2px solid var(--line); }
+.community-reference { display:block; font-size:11px; color:var(--muted); text-align:left; }
+.community-reference:empty { display:none; }
+.community details { font-size:12px; margin-top:8px; }
+.community small { display:block; color:var(--muted); }
+.community #community-submit { background:var(--accent); color:var(--bg); font-weight:700; }
+.community #community-admin { border-top:1px solid var(--line); padding-top:12px; }
+@media(max-width:760px){.community-comment time{display:block;margin:4px 0}.community select{width:100%}.community{padding:16px}.community-reply{padding-left:8px}}
