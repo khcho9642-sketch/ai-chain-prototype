@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { build, projectRoot } from './build.mjs'
 import { instruments } from '../assets/instruments.js'
+import { restoreAiSnapshots } from './restore-ai-snapshots.mjs'
 
 // Keep the API deployment aligned with the independently refreshed public snapshot.
 const response=await fetch('https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json?t='+Date.now(),{signal:AbortSignal.timeout(30000)})
@@ -15,4 +16,5 @@ const industryResponse=await fetch('https://khcho9642-sketch.github.io/ai-chain-
 if(!industryResponse.ok)throw new Error('배포용 산업통계 HTTP '+industryResponse.status)
 const industry=await industryResponse.json()
 await writeFile(join(projectRoot,'data','industry.json'),JSON.stringify(industry)+'\n')
+await restoreAiSnapshots()
 await build()

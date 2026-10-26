@@ -174,11 +174,22 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source, 'data', 'market.json'), JSON.stringify({ quotes: [] }))
   const industry={schemaVersion:1,sources:[],series:[]}
   await writeFile(join(source,'data','industry.json'),JSON.stringify(industry))
+  const aiSnapshots = {
+    'ai-statistics':{schemaVersion:1,asOf:'2026-10-26',definitionCount:0,metrics:[],gaps:[]},
+    'ai-tokens':{schemaVersion:1,source:{name:'OpenRouter',url:'https://openrouter.ai/rankings',license:'CC BY 4.0'},
+      timezone:'UTC',coverage:{kind:'reviewed-top-model-snapshot',completePublicTotal:false,publicOnly:true},
+      collection:{method:'api',status:'not-connected',lastAttemptAt:null,lastSuccessAt:null},rows:[]},
+    'ai-disclosures':{schemaVersion:1,collection:{method:'web-monitor',status:'not-run',lastAttemptAt:null,lastSuccessAt:null},
+      sources:[],candidates:[],notes:[]},
+  }
+  for (const [name,data] of Object.entries(aiSnapshots)) await writeFile(join(source,'data',name+'.json'),JSON.stringify(data))
+  await writeFile(join(source,'data','private-research.json'),'PRIVATE')
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','industry.json','market.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })
@@ -194,6 +205,11 @@ test('build publishes only the public site; server handles API errors without ex
   assert.deepEqual(await (await fetch(`${origin}/data/industry.json`)).json(),industry)
   assert.deepEqual(await (await fetch(`${origin}/api/industry`)).json(),industry)
   assert.equal((await fetch(`${origin}/api/industry`,{method:'POST'})).status,405)
+  for (const [name,data] of Object.entries(aiSnapshots)) {
+    assert.deepEqual(await (await fetch(origin+'/data/'+name+'.json')).json(),data)
+    assert.deepEqual(await (await fetch(origin+'/api/'+name)).json(),data)
+    assert.equal((await fetch(origin+'/api/'+name,{method:'POST'})).status,405)
+  }
   const snapshot = await fetch(`${origin}/api/snapshot`)
   assert.equal(snapshot.status, 200)
   assert.equal(snapshot.headers.get('content-type'), 'application/json; charset=utf-8')
@@ -206,7 +222,7 @@ test('build publishes only the public site; server handles API errors without ex
   assert.equal(snapshotPost.status, 405)
   assert.equal(snapshotPost.headers.get('allow'), 'GET, HEAD')
   assert.equal(typeof (await snapshotPost.json()).error, 'string')
-  for (const path of ['/design/notes.md', '/.git/config', '/.env', '/server/market.mjs', '/assets/private.txt', '/assets/%2e%2e%2f.env']) {
+  for (const path of ['/design/notes.md', '/.git/config', '/.env', '/server/market.mjs', '/assets/private.txt', '/assets/%2e%2e%2f.env','/data/private-research.json','/research/ai-statistics-2026-10-26.json']) {
     const response = await fetch(origin + path)
     assert.equal(response.status, 404, path)
     assert.ok(!(await response.text()).includes('PRIVATE'))

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "collection": {
+    "method": "web-monitor",
+    "status": "not-run",
+    "lastAttemptAt": null,
+    "lastSuccessAt": null
+  },
+  "sources": [],
+  "candidates": [],
+  "notes": [
+    "새 공식 발표와 변경 내용을 검토 후보로 모읍니다. 수치의 검토·승인 없이 통계 값을 자동 변경하지 않습니다."
+  ]
+}

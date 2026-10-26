@@ -11,8 +11,11 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
-    "test": "node --test scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs scripts/industry.test.mjs scripts/official-trade.test.mjs",
+    "test": "node --test --test-isolation=none scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs scripts/industry.test.mjs scripts/official-trade.test.mjs scripts/ai-statistics.test.mjs scripts/ai-tokens.test.mjs scripts/ai-disclosures.test.mjs",
     "collect": "node scripts/collect-market.mjs",
-    "collect:industry": "node scripts/collect-industry.mjs"
+    "collect:industry": "node scripts/collect-industry.mjs",
+    "build:statistics": "node scripts/build-ai-statistics.mjs",
+    "collect:tokens": "node scripts/collect-ai-tokens.mjs",
+    "collect:disclosures": "node scripts/collect-ai-disclosures.mjs"
   }
 }
