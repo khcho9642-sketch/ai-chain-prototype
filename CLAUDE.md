@@ -25,7 +25,7 @@ AI Value Chain 8단계를 한 화면에 보여주고, 그 사슬에 걸친 국�
 ## 지켜야 할 원칙
 - 매수·매도 추천, 목표주가, 날짜별 주가 예측 문구를 넣지 않는다. (유사투자자문 규제)
 - 숫자는 반드시 출처와 기준일을 함께 표시한다. 확인 안 된 값은 `[값]`으로 둔다.
-- stock-site와 합쳐 실제 시세는 대표 종목·시장지표 40개를 연결했다. 기존 산업지표와 강세·보통·약세 판정의 예시를 실제 주가와 혼동하지 않는다.
+- stock-site와 합쳐 실제 시세는 대표 종목·시장지표 93개를 연결했다. 기존 산업지표와 강세·보통·약세 판정의 예시를 실제 주가와 혼동하지 않는다.
 
 ## 다음 할 일 (목표를 기준으로 구체화)
 1. 게시판 구성·작성 정책·공용 저장 방식 확정. 보유 인증을 먼저 필수로 정하지 않는다.
@@ -34,7 +34,10 @@ AI Value Chain 8단계를 한 화면에 보여주고, 그 사슬에 걸친 국�
 4. 즐겁게 이용하는지 실제 반응을 확인하고 기능을 개선한다. 재미 요소의 세부 형태는 아직 확정하지 않았다.
 
 ## 통합 구조
-독립 stock-site 앱을 다시 만들지 않는다. assets/instruments.js의 40개 카탈로그와 server/market.mjs의 단일 API를 사용한다. 관심종목·직접 티커·모든 기간 차트·OHLCV·CSV는 assets/dashboard.js에 통합했다. 디자인 원본과 사용자 목표는 보존한다. 실행 방법·배포 차이는 README.md를 따른다.
+독립 stock-site 앱을 다시 만들지 않는다. assets/instruments.js의 93개 카탈로그와 server/market.mjs의 단일 API를 사용한다. 관심종목·직접 티커·모든 기간 차트·OHLCV·CSV는 assets/dashboard.js에 통합했다. 디자인 원본과 사용자 목표는 보존한다. 실행 방법·배포 차이는 README.md를 따른다.
 
 ## 고리별 주가 비교
 assets/peer-comparison-core.js는 공통거래일·기준100·현지통화 종가등락률 동일비중 평균을 계산한다. assets/peer-comparison.js·css가 #compare 8개선·피어목록·CSV를 제공하며 dashboard의 market-snapshot 이벤트를 공유한다. 기존의 예시 산업신호와 비교 주가 지수를 혼동하지 않는다. 세부계산은 README와 scripts/peer-comparison.test.mjs 참고.
+
+## 기업·산업통계 확장
+AI 기업 75개(국내18·해외57), 고리 편입77건을 같은 시세 카탈로그로 제공한다. 기업 역할·국가·공식 출처는 assets/company-profiles.js에 있다. #industry의 공식 통계12개와 수집·오류 처리·단위는 README 및 docs/industry-sources.md 참고. 관세청 발표문 검증 수치는 자동 API 자료로 표현하지 않는다. 품목별 kg API는 미연결이다.

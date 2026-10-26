@@ -172,6 +172,8 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source, 'assets', 'market.css'), 'body { color: black }')
   await writeFile(join(source, 'assets', 'private.txt'), 'PRIVATE')
   await writeFile(join(source, 'data', 'market.json'), JSON.stringify({ quotes: [] }))
+  const industry={schemaVersion:1,sources:[],series:[]}
+  await writeFile(join(source,'data','industry.json'),JSON.stringify(industry))
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
@@ -189,6 +191,9 @@ test('build publishes only the public site; server handles API errors without ex
   assert.match(await (await fetch(origin)).text(), /AI CHAIN/)
   assert.equal((await fetch(`${origin}/assets/market.js`)).headers.get('content-type'), 'text/javascript; charset=utf-8')
   assert.deepEqual(await (await fetch(`${origin}/data/market.json`)).json(), { quotes: [] })
+  assert.deepEqual(await (await fetch(`${origin}/data/industry.json`)).json(),industry)
+  assert.deepEqual(await (await fetch(`${origin}/api/industry`)).json(),industry)
+  assert.equal((await fetch(`${origin}/api/industry`,{method:'POST'})).status,405)
   const snapshot = await fetch(`${origin}/api/snapshot`)
   assert.equal(snapshot.status, 200)
   assert.equal(snapshot.headers.get('content-type'), 'application/json; charset=utf-8')

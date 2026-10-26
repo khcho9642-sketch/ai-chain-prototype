@@ -6,6 +6,12 @@
   "functions": {
     "api/chart.js": {
       "maxDuration": 30
+    },
+    "api/industry.js": {
+      "maxDuration": 30
+    },
+    "api/snapshot.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -20,6 +26,15 @@
     },
     {
       "source": "/data/market.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/industry.json",
       "headers": [
         {
           "key": "Cache-Control",

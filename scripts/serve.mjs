@@ -8,7 +8,7 @@ import { build, projectRoot } from './build.mjs'
 export function createSiteServer({ root = join(projectRoot, 'dist'), chartService } = {}) {
   return createServer(async (req, res) => {
     const pathname = URL.canParse(req.url, 'http://localhost') ? new URL(req.url, 'http://localhost').pathname : ''
-    if (pathname === '/api/snapshot') {
+    if (pathname === '/api/snapshot' || pathname === '/api/industry') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8')
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -18,7 +18,7 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         return res.end(JSON.stringify({ error: 'GET 또는 HEAD 요청만 지원합니다.' }))
       }
       try {
-        const content = await readFile(join(root, 'data', 'market.json'))
+        const content = await readFile(join(root, 'data', pathname === '/api/industry' ? 'industry.json' : 'market.json'))
         res.statusCode = 200
         return res.end(req.method === 'HEAD' ? undefined : content)
       } catch {
@@ -35,7 +35,7 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname)
         const relative = path === '/' ? 'index.html' : path.slice(1)
         // Explicit public-file allowlist keeps source, design notes and Git files private.
-        if (relative !== 'index.html' && relative !== 'data/market.json' && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
+        if (relative !== 'index.html' && !['data/market.json','data/industry.json'].includes(relative) && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
           res.statusCode = 404; return res.end('페이지를 찾을 수 없습니다.')
         }
         const content = await readFile(join(root, relative))

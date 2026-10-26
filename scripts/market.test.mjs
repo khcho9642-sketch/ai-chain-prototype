@@ -2,9 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { instruments } from '../assets/instruments.js'
 import { normalizeSymbol, readSymbols, filterQuotes, snapshotBars } from '../assets/market-core.js'
-test('both projects combine into forty distinct instruments and eight chains',()=>{
-  assert.equal(instruments.length,40)
-  assert.equal(new Set(instruments.map(q=>q.symbol)).size,40)
+test('catalog covers expanded source-backed companies and preserves the merged market tools',()=>{
+  assert.ok(instruments.length>=90)
+  assert.equal(new Set(instruments.map(q=>q.symbol)).size,instruments.length)
   for(let i=1;i<=8;i++)assert.ok(instruments.some(q=>q.chains.includes(i)))
   for(const symbol of ['EQIX','DLR'])assert.deepEqual(instruments.find(q=>q.symbol===symbol).chains,[6])
   for(const symbol of ['AAPL','TSLA','035720.KS','GC=F','CL=F','BTC-USD'])assert.ok(instruments.some(q=>q.symbol===symbol))

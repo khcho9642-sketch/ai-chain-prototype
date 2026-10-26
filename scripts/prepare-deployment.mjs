@@ -11,4 +11,8 @@ if(snapshot.schemaVersion!==1 || !Array.isArray(snapshot.quotes) || !instruments
 await mkdir(join(projectRoot,'data'),{recursive:true})
 await writeFile(join(projectRoot,'data','market.json'),JSON.stringify(snapshot)+'\n')
 console.log('시세 스냅샷 준비:',snapshot.quotes.length)
+const industryResponse=await fetch('https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json?t='+Date.now(),{signal:AbortSignal.timeout(30000)})
+if(!industryResponse.ok)throw new Error('배포용 산업통계 HTTP '+industryResponse.status)
+const industry=await industryResponse.json()
+await writeFile(join(projectRoot,'data','industry.json'),JSON.stringify(industry)+'\n')
 await build()

@@ -139,13 +139,16 @@ aside h2{margin:0;font-size:16px}
 </style>
 <link rel="stylesheet" href="./assets/market.css">
 <link rel="stylesheet" href="./assets/peer-comparison.css">
+<link rel="stylesheet" href="./assets/company-directory.css">
+<link rel="stylesheet" href="./assets/industry.css">
 </head>
 <body>
 <header>
   <div class="wrap top">
     <span class="brand">AI 체인 <small>(가칭)</small></span>
     <nav class="topnav" aria-label="주요 메뉴">
-      <a href="#map" data-r="map" class="on">Value Chain</a><a href="#data" data-r="data">데이터</a><a href="#compare" data-r="compare">고리 비교</a><a href="#talk" data-r="talk">토론</a><a href="#ai" data-r="ai">AI에게 묻기</a>
+      <a href="#map" data-r="map" class="on">Value Chain</a><a href="#data" data-r="data">시세·기업</a><a href="#compare" data-r="compare">고리 비교</a><a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업통계</a>
+  <a href="#talk" data-r="talk">토론</a><a href="#ai" data-r="ai">AI에게 묻기</a>
     </nav>
     <div class="spacer"></div>
     <div class="search">
@@ -166,6 +169,7 @@ aside h2{margin:0;font-size:16px}
     <div class="counts" id="counts"></div>
   </div>
 
+  <section class="panel sec"><div class="industry-heading"><div><h2>기업부터 수출·물량까지</h2><p class="note">국내·해외 기업의 사업과 시세, 공식 월별 산업통계를 함께 확인하세요.</p></div><div class="industry-links"><a href="#data">기업 목록 →</a><a href="#industry">산업통계 →</a></div></div></section>
   <section id="comparison-preview" class="panel sec" aria-label="8개 고리 비교 요약"></section>
   <section id="market-preview" class="panel sec market-section" aria-label="실제 시장 시세"></section>
   <section id="map" class="panel mapbox" aria-label="AI Value Chain">
@@ -195,6 +199,7 @@ aside h2{margin:0;font-size:16px}
 </div>
 <div id="v-data" class="view" hidden></div>
 <div id="v-compare" class="view" hidden></div>
+<div id="v-industry" class="view" hidden></div>
 <div id="v-talk" class="view" hidden></div>
 <div id="v-ai" class="view" hidden></div>
 
@@ -205,6 +210,7 @@ aside h2{margin:0;font-size:16px}
   <a href="#map" data-r="map" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
   <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>데이터</a>
   <a href="#compare" data-r="compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 18L9 11L14 14L21 5M3 10L9 15L14 7L21 11"/></svg>고리 비교</a>
+  <a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업통계</a>
   <a href="#talk" data-r="talk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>토론</a>
   <a href="#ai" data-r="ai"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>AI</a>
 </nav>
@@ -261,7 +267,7 @@ var rooms=[{n:'이슈방 (전체)'}].concat(S.map(function(s){return {n:s.name+'
 function renderData(){
   var rows=[];S.forEach(function(s){if(dataF&&s.id!==dataF)return;s.m.forEach(function(m){rows.push([s,m]);});});
   var ok=0;rows.forEach(function(r){if(r[1][1].charAt(0)!=='[')ok++;});
-  document.getElementById('v-data').innerHTML='<section class="panel sec"><div><h2>고리별 데이터</h2><p class="note">모든 숫자는 출처와 함께 표시합니다. 확인되지 않은 값은 [값]으로 비워 두었어요. 확인된 값 '+ok+' / '+rows.length+'개</p></div>'+
+  document.getElementById('v-data').innerHTML='<div id="company-directory"></div><section class="panel sec"><div><h2>고리별 추가 지표 · 연결 현황</h2><p class="note"><a href="#industry">실제 수출금액·수출물량지수·TSMC 월매출 통계 보기 →</a></p><p class="note">모든 숫자는 출처와 함께 표시합니다. 확인되지 않은 값은 [값]으로 비워 두었어요. 확인된 값 '+ok+' / '+rows.length+'개</p></div>'+
    '<div class="filters">'+['전체'].concat(S.map(function(s){return s.name;})).map(function(n,i){return '<button class="f'+(i===dataF?' on':'')+'" data-df="'+i+'">'+esc(n)+'</button>';}).join('')+'</div>'+
    '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>고리</th><th>지표</th><th>값</th><th class="hide-m">변화</th><th>출처·기준일</th></tr></thead><tbody>'+
    rows.map(function(r){var m=r[1],c=m[1].charAt(0)!=='[';return '<tr><td>'+esc(r[0].name)+'</td><td>'+esc(m[0])+'</td><td class="v mono">'+esc(m[1])+'<br>'+(c?'<span class="ok">확인</span>':'<span class="no">미확인</span>')+'</td><td class="hide-m" style="color:var(--accent)">'+esc(m[2])+'</td><td class="muted">'+esc(m[3])+'</td></tr>';}).join('')+
@@ -297,11 +303,11 @@ function renderAI(){
 }
 function ask(q){document.getElementById('aq').value=q;document.getElementById('ansBox').innerHTML='<b>Q. '+esc(q)+'</b>'+answer(q);}
 function route(){
-  var h=location.hash.replace('#','').split('/'),r=['map','data','compare','talk','ai'].indexOf(h[0])>-1?h[0]:'map';
+  var h=location.hash.replace('#','').split('/'),r=['map','data','compare','industry','talk','ai'].indexOf(h[0])>-1?h[0]:'map';
   if(r==='talk'&&h[1])room=+h[1]||0;
-  ['map','data','compare','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
+  ['map','data','compare','industry','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
   document.querySelectorAll('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===r);});
-  if(r==='compare')window.renderComparison?.();if(r==='data')renderData();if(r==='talk')renderTalk();if(r==='ai')renderAI();
+  if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='data')renderData();if(r==='talk')renderTalk();if(r==='ai')renderAI();
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
@@ -315,5 +321,7 @@ route();
 </script>
 <script type="module" src="./assets/dashboard.js"></script>
 <script type="module" src="./assets/peer-comparison.js"></script>
+<script type="module" src="./assets/company-directory.js"></script>
+<script type="module" src="./assets/industry.js"></script>
 </body>
 </html>

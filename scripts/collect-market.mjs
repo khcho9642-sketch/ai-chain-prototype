@@ -22,7 +22,7 @@ export async function collect(output = 'data/market.json') {
         }
         quotes.push({...item,...yearly,name:item.name,histories,historyErrors,status:'ok',error:null})
       } catch(error) {
-        quotes.push({...item,...(old || {}),status:old?'stale':'error',error:error.message})
+        quotes.push({...(old || {}),...item,status:old?'stale':'error',error:error.message})
         console.error(item.symbol,error.message)
       }
     }

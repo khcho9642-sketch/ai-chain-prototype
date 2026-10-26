@@ -112,7 +112,7 @@ async function add(event){
   const message=value=>{formError=value;const el=document.getElementById('market-form-status');if(el)el.textContent=value}
   if(!validSymbol(symbol)){message('올바른 티커를 입력하세요. 코스닥 종목은 .KQ를 붙이세요.');return}
   if(quotes().some(q=>q.symbol===symbol)){search='';filter=0;group='전체';choose(symbol);mount();return}
-  if(!apiAvailable){message('이 정적 배포에서는 자동 수집한 40개 종목을 조회할 수 있습니다. 임의 티커는 통합 프로젝트의 npm run dev 또는 Vercel API에서 조회할 수 있습니다.');return}
+  if(!apiAvailable){message(`이 정적 배포에서는 자동 수집한 ${instruments.length}개 종목을 조회할 수 있습니다. 임의 티커는 통합 프로젝트의 npm run dev 또는 Vercel API에서 조회할 수 있습니다.`);return}
   message('실제 종목을 확인하고 있습니다…')
   try{const q=await request(symbol,'1mo',AbortSignal.timeout(30000));rememberQuote(symbol,q);live.set(`${symbol}:1mo`,q);extra=[...new Set([...extra,symbol])].slice(-100);write('ai-chain.symbols.v1',extra);range='1mo';search='';filter=0;group='전체';message('');choose(symbol);mount()}
   catch(error){message(`종목 조회 실패: ${error.message}`)}

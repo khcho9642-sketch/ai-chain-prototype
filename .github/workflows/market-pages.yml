@@ -29,6 +29,14 @@ jobs:
         id: collect
         continue-on-error: true
         run: node scripts/collect-market.mjs
+      - name: Restore previous industry statistics for failure fallback
+        run: |
+          curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json -o data/industry-previous.json && mv data/industry-previous.json data/industry.json || true
+      - name: Collect official monthly industry statistics
+        continue-on-error: true
+        env:
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+        run: node scripts/collect-industry.mjs
       - name: Build static site
         run: |
           npm run build

@@ -11,7 +11,8 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
-    "test": "node --test scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs",
-    "collect": "node scripts/collect-market.mjs"
+    "test": "node --test scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs scripts/industry.test.mjs scripts/official-trade.test.mjs",
+    "collect": "node scripts/collect-market.mjs",
+    "collect:industry": "node scripts/collect-industry.mjs"
   }
 }
