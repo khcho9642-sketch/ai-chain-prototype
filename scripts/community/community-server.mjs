@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { isAbsolute } from 'node:path'
 import { instruments } from '../../assets/instruments.js'
 import { createPublicCommunityHandler } from '../../server/community/public-http.mjs'
+import { createEvidenceSource } from '../../server/community/evidence.mjs'
 
 // Deploy this service once on a persistent host, independently of the local CLI PC.
 // Does not create/provision a server or change Vercel/GitHub Pages deployments.
@@ -20,7 +21,7 @@ if (!tls && (!trustLoopbackProxy || !['127.0.0.1','::1','localhost'].includes(ho
   throw new Error('Use TLS certificates or bind to loopback behind an explicitly trusted HTTPS reverse proxy.')
 }
 const handler = createPublicCommunityHandler({
-  catalog: instruments.filter(x => x.chains.some(n => n > 0)), path,
+  catalog: instruments.filter(x => x.chains.some(n => n > 0)), path, evidenceSource: createEvidenceSource(),
   origin: process.env.COMMUNITY_PUBLIC_ORIGIN,
   browserOrigins: (process.env.COMMUNITY_BROWSER_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean),
   workerToken: process.env.COMMUNITY_WORKER_TOKEN, trustLoopbackProxy,

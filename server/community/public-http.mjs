@@ -35,15 +35,15 @@ async function readJson(req) {
  * Browser members and the operator's CLI worker have different credentials.
  */
 export function createPublicCommunityHandler({ catalog, path, origin, browserOrigins = [], workerToken,
-  trustLoopbackProxy = false, allowRegistration = false, allowAutoPublish = false, store: suppliedStore } = {}) {
+  trustLoopbackProxy = false, allowRegistration = false, allowAutoPublish = false, evidenceSource, store: suppliedStore } = {}) {
   const publicOrigin = canonicalOrigin(origin), publicHost = new URL(publicOrigin).host
   const allowed = new Set([publicOrigin, ...browserOrigins.map(canonicalOrigin)])
   ensure(typeof workerToken === 'string' && workerToken.length >= 32, 'worker_token_required')
   if (path && path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
-  const store = suppliedStore || new CommunityStore({ catalog, path: path || ':memory:' })
+  const store = suppliedStore || new CommunityStore({ catalog, path: path || ':memory:', evidenceSource })
   const auth = new CommunityAuth(store, { allowRegistration })
-  // An old DB must not keep auto-publish enabled when the process disallows it.
-  if (!allowAutoPublish && store.settings().mode === 'auto') store.configure({ mode: 'review_only' })
+  // Every service start requires a fresh administrator choice, even on an opted-in host.
+  if (store.settings().mode === 'auto') store.configure({ mode: 'review_only' })
   const streams = new Map()
   const broadcast = message => {
     for (const [res] of streams) if (!res.write(`event: wake\ndata: ${JSON.stringify({ symbol: message.symbol || null })}\n\n`)) res.end()
@@ -127,6 +127,7 @@ export function createPublicCommunityHandler({ catalog, path, origin, browserOri
       }
       if (route === '/admin/invite') return json(res, 201, auth.invite())
       if (route === '/admin/request') return json(res, 200, store.request(input.symbol))
+      if (route === '/admin/opinions') return json(res, 200, store.requestOpinions(input))
       if (route === '/admin/approve') return json(res, 200, store.approve(input.id))
       if (route === '/admin/reject') return json(res, 200, store.reject(input.id))
       if (route === '/admin/hide') return json(res, 200, store.hide(input.id))

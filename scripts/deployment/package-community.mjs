@@ -13,6 +13,10 @@ export const COMMUNITY_RELEASE_FILES = Object.freeze([
   'server/community/store.mjs',
   'server/community/auth.mjs',
   'server/community/policy.mjs',
+  'server/community/evidence.mjs',
+  'data/market.json',
+  'data/company-disclosures.json',
+  'data/ai-statistics.json',
   'deploy/community-api.service.example',
   'deploy/Caddyfile.community.example',
   'docs/community/ai-community-public.md',
@@ -69,7 +73,7 @@ COMMUNITY_ALLOW_AUTO_PUBLISH=0
 
 const RELEASE_README = `# AI Chain shared community API release
 
-This is source prepared for one persistent Linux host with Node.js 24 and its built-in SQLite. No npm dependencies, web frontend, database contents, AI credentials or local worker are included.
+This is source prepared for one persistent Linux host with Node.js 24 and its built-in SQLite. The explicit existing public market/company/statistics snapshots are included for dated opinion context. No new collector, npm dependencies, web frontend, database contents, AI credentials or local worker are included.
 
 1. Check manifest.json and the source revision before transfer. Keep the source release directory separate from the writable database and backup directories.
 2. Install the source at the reviewed server path (the service example uses /srv/ai-chain). Use one API process with one persistent local SQLite volume.
