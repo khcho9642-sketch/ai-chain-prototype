@@ -38,7 +38,7 @@ switch ($Action) {
     if (-not $PSCmdlet.ShouldProcess($Root, 'Install development login task and two-hour watchdog')) { return }
     New-Item -ItemType Directory -Path $Local -Force | Out-Null
     # No secrets in task arguments. Node reads the operator-owned private env file.
-    $workerAction = New-ScheduledTaskAction -Execute $NodePath -Argument "--env-file=`"$EnvFile`" `"$WorkerPath`" --managed" -WorkingDirectory $Root
+    $workerAction = New-ScheduledTaskAction -Execute $NodePath -Argument "--env-file=`"$EnvFile`" `"$WorkerPath`" --managed --development" -WorkingDirectory $Root
     $login = New-ScheduledTaskTrigger -AtLogOn -User $CurrentUser
     $principal = New-ScheduledTaskPrincipal -UserId $CurrentUser -LogonType Interactive -RunLevel Limited
     $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero)

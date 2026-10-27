@@ -30,3 +30,36 @@
 #market-community > .community { border-top:1px solid var(--line); margin-top:16px; }
 .community [hidden] { display:none !important; }
 @media(max-width:760px){.community-login input{width:100%;margin:4px 0}.community-heading h2{font-size:17px}}
+
+.community-opinions { min-width:0; }
+.community-opinions h3,.community-conversation-heading { margin:0 0 8px; font-size:17px; }
+.community-opinion-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:12px; }
+.community-opinion-card { min-width:0; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--card); overflow-wrap:anywhere; }
+.community-opinion-card h4 { margin:0; font-size:15px; }
+.community-opinion-card .community-heading { align-items:flex-start; gap:6px; }
+.community-opinion-state { color:var(--muted); font-size:11px; }
+.community-opinion-state[data-status=running],.community-opinion-state[data-status=awaiting_approval] { color:var(--accent); }
+.community-opinion-text { font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.community-opinion-card > time { display:block; color:var(--muted); font-size:11px; margin-bottom:5px; }
+.community-opinion-card small { line-height:1.6; }
+.community-opinion-history { border-top:1px solid var(--line); padding-top:10px; }
+.community-opinion-history summary,.community-provenance summary { cursor:pointer; overflow-wrap:anywhere; }
+.community-opinion-history .community-comment time { display:block; margin:0; }
+.community-provenance dl { display:grid; grid-template-columns:minmax(65px,auto) minmax(0,1fr); gap:5px 9px; color:var(--muted); }
+.community-provenance dt,.community-provenance dd { margin:0; min-width:0; overflow-wrap:anywhere; }
+.community-evidence { margin-top:10px; padding-top:10px; border-top:1px solid var(--line); overflow-wrap:anywhere; }
+.community-evidence a { display:inline-block; margin-top:6px; }
+.community-opinion-card .community-reference { margin:10px 0; }
+.community-admin-form { padding:14px; margin:14px 0; border:1px solid var(--line); border-radius:10px; min-width:0; }
+.community-admin-form h4,.community-admin-usage h4 { margin:0 0 8px; font-size:14px; }
+.community-admin-form label { margin:8px 0; }
+.community-admin-form select { display:block; margin-top:6px; }
+.community-agent-choice { display:flex; flex-wrap:wrap; gap:8px 18px; border:1px solid var(--line); border-radius:8px; margin:12px 0; padding:8px 10px; min-width:0; }
+.community-agent-choice legend { font-size:12px; color:var(--muted); }
+.community-agent-choice label { display:flex; align-items:center; gap:5px; margin:3px 0; }
+.community-limit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 14px; }
+.community input[type=number] { display:block; width:100%; min-width:0; max-width:100%; margin-top:6px; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; }
+.community input[type=number]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.community-admin-report,.community-admin-usage { min-width:0; padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.community-admin-report p,.community-admin-usage p { margin:7px 0; }
+@media(max-width:900px){.community-opinion-grid{grid-template-columns:1fr}.community-limit-grid{grid-template-columns:1fr}}

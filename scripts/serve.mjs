@@ -6,6 +6,7 @@ import { middleware } from '../server/market.mjs'
 import { build, projectRoot, publicSnapshotFiles } from './build.mjs'
 import { instruments } from '../assets/instruments.js'
 import { createCommunityHandler } from '../server/community/http.mjs'
+import { createEvidenceSource } from '../server/community/evidence.mjs'
 
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json',
   '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json'}
@@ -69,7 +70,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   let community = null
   if (process.env.COMMUNITY_DEV_ENABLED === '1') {
     if (!['127.0.0.1','localhost'].includes(host)) throw new Error('댓글 개발 서버는 loopback에서만 실행합니다.')
-    community = createCommunityHandler({ catalog: instruments.filter(x => x.chains.some(n => n > 0)), path: join(projectRoot,'.local','community.sqlite'), workerToken: process.env.COMMUNITY_WORKER_TOKEN, adminToken: process.env.COMMUNITY_ADMIN_TOKEN })
+    community = createCommunityHandler({ catalog: instruments.filter(x => x.chains.some(n => n > 0)), evidenceSource: createEvidenceSource(), path: join(projectRoot,'.local','community.sqlite'), workerToken: process.env.COMMUNITY_WORKER_TOKEN, adminToken: process.env.COMMUNITY_ADMIN_TOKEN })
   }
   const server = createSiteServer({ root, community })
   server.once('close', () => community?.close())

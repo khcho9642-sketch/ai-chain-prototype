@@ -24,6 +24,9 @@
 | 문서 | 내용 |
 | --- | --- |
 | [커뮤니티 구현 현황](community/ai-community.md) | 현재 구현·테스트와 운영 미완료 범위 |
+| [AI 의견·댓글 PRD v4](community/AI_Chat_Opinion_PRD_v4.md) | 사용자 제공 요구사항 원본 |
+| [v4 구현·검수·마이그레이션](community/v4-implementation.md) | 의견·이력·근거·큐 변경과 검증 범위 |
+| [제공사 CLI 확인](community/cli-verification.md) | 기술 지원·인증·이용 조건·활성화 차단 상태 |
 | [공유 API 운영 가이드](community/ai-community-public.md) | 서버·인증·계정·AI 워커·백업 |
 | [Oracle 서버 준비](community/oracle-community-quickstart.md) | 계정 준비부터 API 연결 확인까지 |
 | [1차 로컬 구현 기록](community/history/ai-community-local-v1.md) | 과거 CLI 설정·격리 방식의 참고 기록 |

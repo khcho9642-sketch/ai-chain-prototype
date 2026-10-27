@@ -1,7 +1,10 @@
-# AI 3대장 댓글 — 2차 구현 현황
+# AI 종목 의견·댓글 구현 현황
 
-2026-10-26. 기존 `ai-chain-prototype`와 같은 개발 브랜치에서 이어서 구현했다.
-**main 병합·운영 배포·서버 구매·사용자 PC 설정 변경은 수행하지 않았다.**
+기존 커뮤니티는 PR #1을 통해 main `2f79942dad6ba71d419c461054b0cd75acb893d8`에 병합됐다.
+2026-10-27 v4 추가 개발은 최신 main의 새 브랜치에서 진행한다. 요구사항 원본은
+[PRD v4](AI_Chat_Opinion_PRD_v4.md), 변경별 구현·검증·마이그레이션과 남은 활성화 조건은
+[v4 구현 및 검수](v4-implementation.md)에 기록한다.
+**코드 병합·정적 화면 배포와 공유 댓글 서버·실제 제공사 CLI 운영은 각각 다른 상태다.**
 
 ## 이번 추가 구현
 
@@ -57,6 +60,6 @@ HTTPS 도메인은 아직 지정·배포하지 않았다.** SQLite를 Vercel 함
 
 ## Oracle 운영 준비 추가
 
-최신 main의 산업통계·AI 통계·토큰·공시 기능을 이 커뮤니티 브랜치에 병합하여 함께 보존했다. PR을 운영 main으로 병합한 것은 아니다.
+산업통계·AI 통계·토큰·공시 기능과 기존 커뮤니티 코드는 PR #1을 통해 함께 main에 병합됐다. 아래 Oracle 준비 기록이 공유 API의 실제 운영 개시를 뜻하지는 않는다.
 
 API 전용 소스 패키지와 SHA-256 manifest 생성은 `npm run community:package`, 실제 HTTPS 서버의 읽기 전용 연결 검사는 `npm run community:check -- API_ORIGIN SITE_ORIGIN`이다. 검사는 초대 가입·관리자 승인 모드와 CORS를 확인하며 실제 AI 호출을 실행하지 않는다. [Oracle 시작 안내](oracle-community-quickstart.md)를 따른다. 현재 Oracle 계정·서버·API 도메인은 없으며 Gemini CLI도 설치가 확인되지 않았다. 새 계정·VM·유료 서비스·PC 자동 시작을 만들거나 운영 배포하지 않았다.

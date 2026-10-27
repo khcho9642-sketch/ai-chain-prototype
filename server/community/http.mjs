@@ -17,10 +17,10 @@ async function body(req) {
   for await (const chunk of req) { size += chunk.length; ensure(size <= 16384, 'body_too_large', 413); chunks.push(chunk) }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')) } catch { throw new CommunityError('invalid_json') }
 }
-export function createCommunityHandler({ catalog, path, workerToken, adminToken, store: suppliedStore } = {}) {
+export function createCommunityHandler({ catalog, path, workerToken, adminToken, evidenceSource, store: suppliedStore } = {}) {
   ensure(typeof workerToken === 'string' && workerToken.length >= 32 && typeof adminToken === 'string' && adminToken.length >= 32 && workerToken !== adminToken, 'separate_tokens_required')
   if (path && path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
-  const store = suppliedStore || new CommunityStore({ catalog, path: path || ':memory:' })
+  const store = suppliedStore || new CommunityStore({ catalog, path: path || ':memory:', evidenceSource })
   const streams = new Set()
   const broadcast = message => { for (const res of streams) { if (!res.write(`event: wake\ndata: ${JSON.stringify(message)}\n\n`)) res.end() } }
   store.on('wake', broadcast)
@@ -63,6 +63,7 @@ export function createCommunityHandler({ catalog, path, workerToken, adminToken,
       if (route === '/worker/fail') return json(res, 200, store.fail(input))
       if (route === '/admin/settings') return json(res, 200, store.configure(input))
       if (route === '/admin/request') return json(res, 200, store.request(input.symbol))
+      if (route === '/admin/opinions') return json(res, 200, store.requestOpinions(input))
       if (route === '/admin/approve') return json(res, 200, store.approve(input.id))
       if (route === '/admin/reject') return json(res, 200, store.reject(input.id))
       if (route === '/admin/hide') return json(res, 200, store.hide(input.id))
