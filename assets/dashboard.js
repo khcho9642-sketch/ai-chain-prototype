@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, snapshotBars, chooseBars, newestQuote } from './market-core.js'
+import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, chooseBars, newestQuote } from './market-core.js'
 
 const ranges={'1d':'1일','5d':'5일','1mo':'1개월','3mo':'3개월','1y':'1년','5y':'5년'}
 const staticHost=location.hostname.endsWith('.github.io') || location.protocol==='file:'

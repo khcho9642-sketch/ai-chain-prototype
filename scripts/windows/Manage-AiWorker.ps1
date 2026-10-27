@@ -24,7 +24,7 @@ if (-not $EnvFile) { $EnvFile = Join-Path $Local 'worker.env' }
 $EnvFile = [IO.Path]::GetFullPath($EnvFile)
 if (-not $NodePath) { $NodePath = (Get-Command node.exe -ErrorAction Stop).Source }
 $NodePath = [IO.Path]::GetFullPath($NodePath)
-$WorkerPath = Join-Path $Root 'scripts/ai-worker.mjs'
+$WorkerPath = Join-Path $Root 'scripts/community/ai-worker.mjs'
 
 function Get-WorkerTask { Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue }
 function Assert-ManagedTask($Task) {
