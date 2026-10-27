@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from playwright.sync_api import sync_playwright
 
 parser = argparse.ArgumentParser()
@@ -19,6 +20,21 @@ root = Path(__file__).resolve().parents[1]
 output = (root / args.output).resolve()
 output.mkdir(parents=True, exist_ok=True)
 errors = []
+
+@contextmanager
+def capture_failure_pages():
+    pages = []
+    try:
+        yield pages
+    except Exception:
+        for index, current in enumerate(pages):
+            try:
+                if not current.is_closed():
+                    current.screenshot(path=str(output / f'failure-page-{index + 1}.png'), full_page=True, timeout=5000)
+            except Exception:
+                pass  # Keep the original assertion or browser error as the failure.
+        raise
+
 with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
     key, cert = Path(temp) / 'key.pem', Path(temp) / 'cert.pem'
     subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(key), '-out', str(cert), '-days', '1', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -27,10 +43,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
     try:
         endpoints = json.loads(fixture.stdout.readline())
         origin = endpoints['siteOrigin']
-        with sync_playwright() as p:
+        with sync_playwright() as p, capture_failure_pages() as captured_pages:
             browser = p.chromium.launch(executable_path=args.browser or shutil.which('google-chrome') or shutil.which('chromium') or p.chromium.executable_path, headless=True, args=['--no-sandbox'])
             context = browser.new_context(ignore_https_errors=True, viewport={'width': 1440, 'height': 1000})
             page = context.new_page()
+            captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"browser fixture: external quote lookup disabled"}'))
             page.goto(origin + '/#talk/NVDA')
@@ -54,7 +71,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             latest_provenance.get_by_text('공시 제목만 확인한 자료입니다. 본문이나 재무 수치를 읽은 자료가 아닙니다.', exact=True).wait_for()
             latest_provenance.get_by_text('이전 자료입니다. 현재 시점의 값으로 해석하지 마세요.', exact=True).wait_for()
             assert board.locator('[data-role=list] [data-comment-id="' + latest_gpt['id'] + '"]').count() == 1
-            board.locator('[data-opinion-agent=claude]').get_by_text('생성 실패', exact=True).wait_for()
+            board.locator('[data-opinion-agent=claude]').get_by_text('생성 차단', exact=True).wait_for()
             board.locator('[data-opinion-agent=gemini]').get_by_text('현재 참여 중지', exact=True).wait_for()
             gpt_card.locator('[data-opinion-history] > summary').click()
             old_opinion = gpt_card.locator('[data-opinion-history-id="' + previous_gpt['id'] + '"]')
@@ -134,6 +151,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             # Independent browser context reads the same durable shared API, no login needed.
             phone = browser.new_context(ignore_https_errors=True, viewport={'width': 390, 'height': 844}, is_mobile=True, device_scale_factor=1)
             mobile = phone.new_page(); mobile.on('pageerror', lambda error: errors.append(str(error)))
+            captured_pages.append(mobile)
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))
             mobile.goto(origin + '/#talk/NVDA')
             mobile.get_by_text('다른 브라우저에서도 보이는 검증 댓글', exact=True).wait_for()
@@ -154,7 +172,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.get_by_role('button', name='이 종목 AI 끄기', exact=True).wait_for()
             mobile.get_by_label('모델별 하루 생성 한도', exact=True).fill('151')
             mobile.get_by_role('button', name='일일 한도 저장', exact=True).click()
-            mobile.wait_for_function("document.querySelector('[data-admin-limits] input[aria-label=\"모델별 하루 생성 한도\"]').value === '151' && !document.querySelector('[data-admin-limits] input').disabled")
+            mobile.wait_for_function("() => { const input = document.querySelector('[data-admin-limits] input[aria-label=\"모델별 하루 생성 한도\"]'); return input?.value === '151' && !input.disabled }")
             mobile.get_by_role('region', name='운영 측정값', exact=True).get_by_text('운영 측정값', exact=True).wait_for()
             assert '미수집' in mobile.get_by_role('region', name='운영 측정값', exact=True).inner_text()
             mobile.get_by_label('Claude 의견 생성', exact=True).uncheck()
@@ -169,16 +187,16 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 route.abort('failed')
             mobile.route('**/api/community/admin/opinions', lose_opinion_response)
             mobile.get_by_role('button', name='의견 생성 작업 등록', exact=True).click()
-            mobile.wait_for_function("!document.querySelector('[data-admin-opinions] button[type=submit]').disabled")
+            mobile.wait_for_function("() => { const button = document.querySelector('[data-admin-opinions] button[type=submit]'); return !!button && !button.disabled }")
             mobile.unroute('**/api/community/admin/opinions', lose_opinion_response)
             mobile.get_by_role('button', name='의견 생성 작업 등록', exact=True).click()
-            mobile.wait_for_function("!document.querySelector('[data-admin-opinions] button[type=submit]').disabled")
+            mobile.wait_for_function("() => { const button = document.querySelector('[data-admin-opinions] button[type=submit]'); return !!button && !button.disabled }")
             assert len(opinion_requests) == 2
             assert opinion_requests[0]['requestId'] == opinion_requests[1]['requestId']
             assert opinion_requests[1]['symbols'] == ['NVDA'] and opinion_requests[1]['agents'] == ['gpt']
             mobile.get_by_label('의견 생성 대상', exact=True).select_option('all')
             mobile.get_by_role('button', name='의견 생성 작업 등록', exact=True).click()
-            mobile.wait_for_function("!document.querySelector('[data-admin-opinions] button[type=submit]').disabled")
+            mobile.wait_for_function("() => { const button = document.querySelector('[data-admin-opinions] button[type=submit]'); return !!button && !button.disabled }")
             mobile.locator('.community-admin-report').wait_for()
             assert len(opinion_requests) == 3 and opinion_requests[2]['all'] is True
             mobile_gpt = mobile.locator('[data-opinion-agent=gpt]')

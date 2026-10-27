@@ -505,7 +505,7 @@ export class CommunityStore extends EventEmitter {
     this.tx(() => this.recover())
     const day = kstDay(this.now())
     const attempts = this.db.prepare('SELECT outcome,COUNT(*) AS count FROM community_generation_attempts GROUP BY outcome').all()
-    const attemptCounts = Object.fromEntries(attempts.map(row => [row.outcome, row.count]))
+    const attemptCounts = { success: 0, failure: 0, unknown: 0, running: 0, ...Object.fromEntries(attempts.map(row => [row.outcome, row.count])) }
     const known = (attemptCounts.success || 0) + (attemptCounts.failure || 0)
     const humanReplies = this.db.prepare("SELECT COUNT(*) AS n FROM community_comments c JOIN community_comments p ON p.id=c.parent WHERE c.kind='human' AND p.kind='ai' AND c.hidden=0 AND p.hidden=0").get().n
     const aiMessages = this.db.prepare("SELECT COUNT(*) AS n FROM community_comments WHERE kind='ai' AND hidden=0").get().n

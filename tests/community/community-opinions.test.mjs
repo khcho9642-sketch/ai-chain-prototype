@@ -146,6 +146,8 @@ test('user+symbol and symbol attempt limits persist independently of model daily
   assert.ok(admin.jobs.some(row => row.reason === 'symbol_daily_limit'))
   assert.equal(admin.usage.agents.find(row => row.agent === 'gpt').attempts, 2)
   assert.equal(admin.metrics.generationFailureRate, 0.5)
+  assert.equal(admin.metrics.generationAttempts.unknown, 0)
+  assert.equal(admin.metrics.generationAttempts.running, 0)
   assert.equal(admin.metrics.reportReasons, null)
 })
 
