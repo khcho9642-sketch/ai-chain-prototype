@@ -21,14 +21,18 @@ export function validateAdapter(agent, config) {
 }
 export async function runAdapter(agent, config, job, signal) {
   validateAdapter(agent, config)
-  const cwd = await mkdtemp(join(tmpdir(), 'ai-chain-comment-'))
   // Only the provided public task context is passed; worker/site/database credentials are not.
   const validationContext = {
     symbol:job.symbol, messageType: job.messageType, parent: job.parent, allowedReplyIds: job.allowedReplyIds,
     previousOpinionId: job.previousOpinionId, context: (job.context || []).map(row => ({id:row.id})),
     snapshot: job.snapshot ? {evidence:job.snapshot.evidence} : undefined,
+    ...(job.task === 'daily-pick' ? { task: job.task, date: job.date,
+      candidates: job.candidates?.map(row => ({ symbol: row.symbol, snapshot: {symbol:row.snapshot?.symbol, evidence:row.snapshot?.evidence} })) } : {}),
   }
   const input = JSON.stringify({ provider: agent, model: config.model, requestedModel: config.model, cliVersion: config.cliVersion, prompt: makePrompt(job), validationContext })
+  // Match the official bridge limit before launching a process or making any model call.
+  ensure(Buffer.byteLength(input) <= 65536, 'prompt_too_large')
+  const cwd = await mkdtemp(join(tmpdir(), 'ai-chain-comment-'))
   // Do not inherit SITE/DB/WORKER tokens or model API billing keys into the child.
   const env = { PATH: process.env.PATH || '', HOME: config.runnerHome, USERPROFILE: config.runnerHome, TMPDIR: cwd, TEMP: cwd, TMP: cwd, LANG: 'C.UTF-8' }
   for (const key of ['SystemRoot', 'WINDIR', 'COMSPEC']) if (process.env[key]) env[key] = process.env[key]
@@ -67,10 +71,16 @@ export async function runAdapter(agent, config, job, signal) {
     // Old reviewed wrappers only emitted `model`; that field represents a request, not a report.
     const reportedModel = result.reportedModel ?? null
     ensure(reportedModel === null || (typeof reportedModel === 'string' && reportedModel === requestedModel), 'unexpected_model_fallback')
+    let technical = null
+    if (result.technical !== undefined) {
+      ensure(result.technical && result.technical.actualVersion === config.cliVersion && Array.isArray(result.technical.supportedFlags) &&
+        result.technical.supportedFlags.length <= 40 && result.technical.supportedFlags.every(flag => typeof flag === 'string' && flag.length <= 80), 'cli_help_not_verified')
+      technical = { actualVersion: result.technical.actualVersion, supportedFlags: result.technical.supportedFlags }
+    }
     const valid = validateOutput(result.output,job)
     return {
       output: { ...result.output,text:valid.text,reason:valid.reason }, provider: agent,
-      model: requestedModel, requestedModel, reportedModel, cliVersion: result.cliVersion,
+      model: requestedModel, requestedModel, reportedModel, cliVersion: result.cliVersion, technical,
     }
   } finally { await rm(cwd, { recursive: true, force: true }) }
 }

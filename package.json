@@ -11,8 +11,8 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
-    "test": "node --test --test-isolation=none tests/market/market.test.mjs tests/market/peer-comparison.test.mjs tests/market/market-server.test.mjs tests/data/industry.test.mjs tests/data/official-trade.test.mjs tests/data/ai-statistics.test.mjs tests/data/ai-tokens.test.mjs tests/data/ai-disclosures.test.mjs tests/data/company-disclosures.test.mjs tests/community/community.test.mjs tests/community/community-public.test.mjs tests/community/community-package.test.mjs tests/community/community-deploy.test.mjs tests/community/evidence.test.mjs tests/community/community-opinions.test.mjs tests/community/community-cli-v4.test.mjs tests/community/community-ui-v4.test.mjs",
-    "test:community": "node --test tests/community/community.test.mjs tests/community/community-public.test.mjs tests/community/evidence.test.mjs tests/community/community-opinions.test.mjs tests/community/community-cli-v4.test.mjs tests/community/community-ui-v4.test.mjs",
+    "test": "node --test --test-isolation=none tests/market/market.test.mjs tests/market/peer-comparison.test.mjs tests/market/market-server.test.mjs tests/data/industry.test.mjs tests/data/official-trade.test.mjs tests/data/ai-statistics.test.mjs tests/data/ai-tokens.test.mjs tests/data/ai-disclosures.test.mjs tests/data/company-disclosures.test.mjs tests/community/community.test.mjs tests/community/community-public.test.mjs tests/community/community-package.test.mjs tests/community/community-deploy.test.mjs tests/community/evidence.test.mjs tests/community/community-opinions.test.mjs tests/community/community-cli-v4.test.mjs tests/community/community-ui-v4.test.mjs tests/community/today.test.mjs tests/community/today-selection.test.mjs tests/community/today-cli.test.mjs",
+    "test:community": "node --test tests/community/community.test.mjs tests/community/community-public.test.mjs tests/community/evidence.test.mjs tests/community/community-opinions.test.mjs tests/community/community-cli-v4.test.mjs tests/community/community-ui-v4.test.mjs tests/community/today.test.mjs tests/community/today-selection.test.mjs tests/community/today-cli.test.mjs",
     "ai:worker": "node scripts/community/ai-worker.mjs",
     "collect": "node scripts/data/collect-market.mjs",
     "collect:industry": "node scripts/data/collect-industry.mjs",
@@ -25,6 +25,8 @@
     "community:package": "node scripts/deployment/package-community.mjs",
     "community:check": "node scripts/deployment/community-check-public.mjs",
     "test:community:deploy": "node --test tests/community/community-package.test.mjs tests/community/community-deploy.test.mjs",
-    "collect:company-disclosures": "node scripts/data/collect-company-disclosures.mjs"
+    "collect:company-disclosures": "node scripts/data/collect-company-disclosures.mjs",
+    "today:generate": "node scripts/community/today-picks.mjs --generate",
+    "today:publish": "node scripts/community/today-picks.mjs --publish"
   }
 }

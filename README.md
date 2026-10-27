@@ -2,6 +2,10 @@
 
 AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글과 의견을 나누는 사이트다. 제품 목표와 첫 출시 기준은 [PLAN.md](PLAN.md)를 따른다. 이 저장소의 AI 밸류체인 사이트만 개발하며, 통합된 시세·차트·관심종목 기능을 계속 사용한다.
 
+첫 화면은 **AI Value Chain Today**다. GPT·Claude·Gemini가 각각 고른 종목 하나와 댓글 하나를 표시한다.
+현재 실제 제공사 검증·발행을 마친 추천은 없으며, 세 슬롯은 미발행 상태로 시작한다. 가상 추천이나 다른 모델의 대필을 채우지 않는다.
+기존 지도·시세·통계는 상세 메뉴와 기존 주소에서 계속 제공한다. [Today 실행·검토·발행](docs/community/today-picks.md)을 따른다.
+
 ## 바로 실행
 
 Node.js 24에서 추가 패키지 설치 없이 실행한다.
@@ -23,6 +27,7 @@ npm run build
 
 | 영역 | 현재 범위 |
 | --- | --- |
+| Today | AI별 종목 1개·댓글 1개, KST 발행일·근거·실제 작성 출처, 검증 전 미발행 |
 | 밸류체인·시세 | 8개 고리 지도, 93개 종목·시장지표, AI 기업 75개, 관심종목·직접 티커·차트·OHLCV·CSV |
 | 기업·비교 | 기업 역할·국가·공식 출처, 8개 고리 피어 비교 |
 | 데이터 | 공식 산업통계, 검토한 AI 사업·산업 지표, OpenRouter 토큰 집계, 공식 발표문 변경 감시, 국내 18개 기업 DART RSS |
@@ -48,6 +53,8 @@ npm run build
 | `npm run community:account` | 운영자 계정 관리 |
 | `npm run community:backup -- 절대경로` | SQLite 온라인 백업 |
 | `npm run ai:worker` | 설정된 로컬 CLI 워커 실행 |
+| `npm run today:generate` | 목적·이용 조건·격리가 승인된 CLI만 비공개 검토 원고 생성; 기본 비활성 |
+| `npm run today:publish -- 후보파일 --approve` | 검토한 실제 생성 원고를 공개 스냅샷으로 저장; 운영 배포는 별도 |
 | `npm run community:package` | API 소스·SHA-256 manifest 패키지 준비 |
 | `npm run community:check -- API_ORIGIN SITE_ORIGIN` | 실제 HTTPS API 연결의 읽기 전용 검사 |
 
@@ -58,7 +65,7 @@ npm run build
 - [프로젝트 구조](docs/project-structure.md): 소스·스크립트·테스트·검토 근거·비공개 작업물 배치
 - [데이터·운영 문서 목록](docs/README.md): 시세·통계·공시·배포·커뮤니티 상세 정의
 - [작업 규칙](AGENTS.md): 개발 위치·원본 보존·공개 데이터 허용목록
-- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 6종
+- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 7종
 
 ## 기존 사이트
 

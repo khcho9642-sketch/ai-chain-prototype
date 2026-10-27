@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Seoul",
+  "editionDate": null,
+  "publishedAt": null,
+  "picks": [],
+  "providerStates": {
+    "gpt": { "status": "disabled", "reason": "verification_pending" },
+    "claude": { "status": "disabled", "reason": "usage_review_required" },
+    "gemini": { "status": "disabled", "reason": "cli_unavailable" }
+  }
+}

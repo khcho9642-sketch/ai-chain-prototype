@@ -17,13 +17,14 @@
 
 ## 사이트 배포
 
-[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 6종 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
+[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 7종 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
 
 ## 커뮤니티와 운영
 
 | 문서 | 내용 |
 | --- | --- |
 | [커뮤니티 구현 현황](community/ai-community.md) | 현재 구현·테스트와 운영 미완료 범위 |
+| [Today 추천·댓글](community/today-picks.md) | 모델별 하루 한 종목·한 댓글, 목적 승인·검수·수동 발행 |
 | [AI 의견·댓글 PRD v4](community/AI_Chat_Opinion_PRD_v4.md) | 사용자 제공 요구사항 원본 |
 | [v4 구현·검수·마이그레이션](community/v4-implementation.md) | 의견·이력·근거·큐 변경과 검증 범위 |
 | [제공사 CLI 확인](community/cli-verification.md) | 기술 지원·인증·이용 조건·활성화 차단 상태 |

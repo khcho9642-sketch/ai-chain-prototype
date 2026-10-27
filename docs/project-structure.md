@@ -26,7 +26,7 @@ ai-chain-prototype/
 │  ├─ community/                회원·댓글·AI·패키징·운영 연결
 │  ├─ browser-smoke.py          브라우저 통합 검사
 │  └─ helpers/                  테스트 전용 서버 등 보조 코드
-├─ data/                         검증된 공개 스냅샷 6종
+├─ data/                         검증된 공개 스냅샷 7종 (Today 포함)
 ├─ research/                     검토 통계 원본·공식 출처 확인 근거
 │  └─ dart/                     DART 회사 연결 근거·RSS 형식 샘플
 ├─ docs/                         기능별 정의·수집 방식·운영 안내
@@ -75,7 +75,7 @@ ai-chain-prototype/
 
 ## 공개 데이터와 비공개 작업물
 
-`data/`의 공개 파일은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`이다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
+`data/`의 공개 파일은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`, `today-picks.json`이다. Today 파일은 실제 제공사 실행·수동 검토를 마친 종목별 추천·댓글만 담으며 초기값은 빈 미발행 상태다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
 
 `research/ai-statistics-2026-10-26.json`은 검토 통계의 재생성·테스트 입력이다. `research/dart/`는 공식 회사 연결 검증 근거와 당시 RSS 형식 샘플이다. 샘플의 날짜·공시 수를 현재 수집 상태로 읽지 않는다. 공개 스냅샷과 연구 원본을 구분하고 확인되지 않은 자료를 자동 승인하지 않는다. 예전 산업통계 작업의 원본 seed·다운로드는 `.local/archive/education-2026-10-27/industry-stats-work/export/`에 보관하며, 현재 실행은 통합된 `data/industry.json`과 공식 수집 모듈을 사용한다.
 
