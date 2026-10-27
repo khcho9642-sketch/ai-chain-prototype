@@ -6,3 +6,6 @@ _site/
 .env.*
 *.tmp
 *-확인.png
+.local/
+*.sqlite
+*.sqlite-*

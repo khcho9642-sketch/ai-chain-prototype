@@ -28,7 +28,7 @@ jobs:
       - name: Collect actual quotes
         id: collect
         continue-on-error: true
-        run: node scripts/collect-market.mjs
+        run: node scripts/data/collect-market.mjs
       - name: Restore previous industry statistics for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json -o data/industry-previous.json && mv data/industry-previous.json data/industry.json || true
@@ -36,9 +36,9 @@ jobs:
         continue-on-error: true
         env:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
-        run: node scripts/collect-industry.mjs
-      - name: Restore validated AI collector state
-        run: node scripts/restore-ai-snapshots.mjs
+        run: node scripts/data/collect-industry.mjs
+      - name: Restore validated public collector state
+        run: node scripts/deployment/restore-ai-snapshots.mjs
       - name: Collect public OpenRouter token statistics
         continue-on-error: true
         env:
@@ -47,7 +47,12 @@ jobs:
       - name: Monitor official OpenAI and Anthropic disclosures
         continue-on-error: true
         run: npm run collect:disclosures
+      - name: Collect official Korean company disclosures
+        continue-on-error: true
+        run: npm run collect:company-disclosures
       - name: Build static site
+        env:
+          COMMUNITY_API_ORIGIN: ${{ vars.COMMUNITY_API_ORIGIN }}
         run: |
           npm run build
           touch dist/.nojekyll

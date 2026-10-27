@@ -98,20 +98,13 @@ aside h2{margin:0;font-size:16px}
 .tbl td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .tbl .v{font-weight:700}
 .ok{color:#7FD4FF;font-size:11px;font-weight:700}.no{color:var(--muted);font-size:11px}
-.tgrid{display:grid;grid-template-columns:240px 1fr;gap:24px}
-.rooms{display:flex;flex-direction:column;gap:6px}
-.room{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
-.room.on{border-color:var(--accent);background:var(--card-on);font-weight:700}
-.warn{font-size:11px;font-weight:700;color:#FFB07A;background:rgba(255,138,61,.16);padding:3px 8px;border-radius:6px;white-space:nowrap}
-.compose{display:flex;gap:8px}
-.compose input,.ask input{flex:1;min-width:0;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 16px;font:inherit;font-size:14px}
-.compose button,.ask button{height:44px;padding:0 18px;border-radius:22px;border:0;background:var(--accent);color:var(--bg);font-weight:700}
-.compose button:disabled{opacity:.4;cursor:not-allowed}
+.ask input{flex:1;min-width:0;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 16px;font:inherit;font-size:14px}
+.ask button{height:44px;padding:0 18px;border-radius:22px;border:0;background:var(--accent);color:var(--bg);font-weight:700}
 .ask{display:flex;gap:8px}
 .qs{display:flex;gap:8px;flex-wrap:wrap}
 .ans{background:var(--card);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.7}
 .ans p{margin:0}
-@media (max-width:760px){.tgrid{grid-template-columns:1fr}.rooms{flex-direction:row;overflow-x:auto}.room{white-space:nowrap}.sec{padding:16px}.tbl .hide-m{display:none}}
+@media (max-width:760px){.sec{padding:16px}.tbl .hide-m{display:none}}
 .tabbar{display:none}
 @media (max-width:760px){
   .wrap{padding:0 16px}
@@ -265,8 +258,7 @@ document.addEventListener('click',function(e){
 pick(2,false);
 
 var NOREC=/(살까|팔까|사야|팔아야|매수|매도|추천|목표가|목표주가|오를까|내릴까|전망|예측)/;
-var dataF=0,room=0;
-var rooms=[{n:'이슈방 (전체)'}].concat(S.map(function(s){return {n:s.name+' 토론방',id:s.id};}));
+var dataF=0;
 function renderData(){
   var rows=[];S.forEach(function(s){if(dataF&&s.id!==dataF)return;s.m.forEach(function(m){rows.push([s,m]);});});
   var ok=0;rows.forEach(function(r){if(r[1][1].charAt(0)!=='[')ok++;});
@@ -275,16 +267,6 @@ function renderData(){
    '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>고리</th><th>지표</th><th>값</th><th class="hide-m">변화</th><th>출처·기준일</th></tr></thead><tbody>'+
    rows.map(function(r){var m=r[1],c=m[1].charAt(0)!=='[';return '<tr><td>'+esc(r[0].name)+'</td><td>'+esc(m[0])+'</td><td class="v mono">'+esc(m[1])+'<br>'+(c?'<span class="ok">확인</span>':'<span class="no">미확인</span>')+'</td><td class="hide-m" style="color:var(--accent)">'+esc(m[2])+'</td><td class="muted">'+esc(m[3])+'</td></tr>';}).join('')+
    '</tbody></table></div></section>';
-}
-function renderTalk(){
-  var nm=room?S[room-1].name:'';
-  var posts=room?['['+nm+' 인기 분석 글 제목]','['+nm+' 질문 글 제목]','[출처 없는 단정적 예측 글 예시 - 경고 라벨이 붙어요]']:['[오늘의 이슈 글 제목]','[실적 발표 직후 토론 글 제목]','[출처 없는 단정적 예측 글 예시 - 경고 라벨이 붙어요]'];
-  var meta=['인증 주주 · 출처 포함 · 추천 [수]','인증 주주 · 질문','미인증 · 출처 없음'];
-  document.getElementById('v-talk').innerHTML='<section class="panel sec"><div><h2>토론</h2><p class="note">토론방은 2단계에서 열려요. 지금은 화면 예시입니다. 인증·추천·출처 가중 정렬, AI 1차 검수, 외부 유료방 링크 금지를 적용할 예정이에요.</p></div>'+
-   '<div class="tgrid"><div class="rooms">'+rooms.map(function(r,i){return '<button class="room'+(i===room?' on':'')+'" data-room="'+i+'">'+esc(r.n)+'</button>';}).join('')+'</div>'+
-   '<div><h3 style="margin:0 0 8px">'+esc(rooms[room].n)+'</h3>'+
-   posts.map(function(t,i){return '<div class="post"><span>'+esc(t)+(i===2?' <span class="warn">단정적 예측 주의</span>':'')+'</span><span class="muted" style="font-size:12px">'+meta[i]+'</span></div>';}).join('')+
-   '<div class="compose" style="margin-top:16px"><input disabled placeholder="주주 인증 후 글을 쓸 수 있어요 (2단계)"><button disabled>등록</button></div></div></div></section>';
 }
 function answer(q){
   if(NOREC.test(q))return '<p>이 서비스는 매수·매도 추천, 목표주가, 주가 예측을 제공하지 않아요. 대신 해당 고리의 공개 지표와 출처를 보여드릴 수 있어요. 고리 이름으로 다시 물어보세요.</p>';
@@ -307,16 +289,14 @@ function renderAI(){
 function ask(q){document.getElementById('aq').value=q;document.getElementById('ansBox').innerHTML='<b>Q. '+esc(q)+'</b>'+answer(q);}
 function route(){
   var h=location.hash.replace('#','').split('/'),r=['map','data','compare','industry','ai-stats','talk','ai'].indexOf(h[0])>-1?h[0]:'map';
-  if(r==='talk'&&h[1])room=+h[1]||0;
   ['map','data','compare','industry','ai-stats','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
   document.querySelectorAll('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===r);});
-  if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='ai-stats')window.renderAiStatistics?.();if(r==='data')renderData();if(r==='talk')renderTalk();if(r==='ai')renderAI();
+  if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='ai-stats')window.renderAiStatistics?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
 document.addEventListener('click',function(e){
   var f=e.target.closest('[data-df]');if(f){dataF=+f.dataset.df;renderData();return;}
-  var r=e.target.closest('[data-room]');if(r){room=+r.dataset.room;renderTalk();return;}
   var q=e.target.closest('[data-q]');if(q){ask(q.dataset.q);}
 });
 document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});

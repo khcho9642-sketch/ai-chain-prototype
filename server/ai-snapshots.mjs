@@ -1,10 +1,11 @@
 import { validateAiStatistics } from '../assets/ai-statistics-core.js'
 import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
+import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
-const validators = {'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot}
+const validators = {'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot, 'company-disclosures':validateCompanyDisclosures}
 export function aiSnapshotHandler(name, {fetcher = fetch} = {}) {
-  if (!Object.hasOwn(validators, name)) throw new Error('지원하지 않는 AI 통계입니다.')
+  if (!Object.hasOwn(validators, name)) throw new Error('지원하지 않는 공개 자료입니다.')
   return async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -21,7 +22,7 @@ export function aiSnapshotHandler(name, {fetcher = fetch} = {}) {
       return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(data))
     } catch {
       res.statusCode = 502; res.setHeader('Cache-Control','no-store')
-      return res.end(JSON.stringify({error:'최신 AI 통계를 확인하지 못했습니다.'}))
+      return res.end(JSON.stringify({error:'최신 공개 자료를 확인하지 못했습니다.'}))
     }
   }
 }

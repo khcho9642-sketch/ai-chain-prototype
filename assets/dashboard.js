@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, snapshotBars, chooseBars, newestQuote } from './market-core.js'
+import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, chooseBars, newestQuote } from './market-core.js'
 
 const ranges={'1d':'1일','5d':'5일','1mo':'1개월','3mo':'3개월','1y':'1년','5y':'5년'}
 const staticHost=location.hostname.endsWith('.github.io') || location.protocol==='file:'
@@ -24,6 +24,7 @@ function quotes(){
   return catalog.map(item=>({...item,...newestQuote(snapshotQuotes.get(item.symbol),customQuotes.get(item.symbol))}))
 }
 const current=()=>quotes().find(q=>q.symbol===selected)
+function notifyCommunity(){window.aiChainSelectedSymbol=selected;window.dispatchEvent(new CustomEvent('community-detail-change',{detail:{symbol:selected}}))}
 const barsFor=q=>chooseBars(snapshotQuotes.get(selected),range,live.get(`${selected}:${range}`))
 const note=()=>apiAvailable?'선택한 종목은 서버에서 60초마다 조회합니다. 목록은 자동 수집된 스냅샷과 조회한 시세를 함께 표시합니다.':'약 30분마다 자동 수집·배포한 시세를 표시합니다. 브라우저는 60초마다 최신 배포값을 확인합니다.'
 function status(){
@@ -67,15 +68,16 @@ function result(){
   const rows=filterQuotes(quotes(),{group,chain:filter,search,watch})
   return `<p class="market-status" role="status">${status()}</p><p class="market-note">관심종목은 이 브라우저에 저장됩니다. ★를 눌러 추가·해제하세요.</p><div class="market-scroll"><table class="tbl market-table"><thead><tr><th>관심</th><th>종목</th><th>가격</th><th>전일 대비</th><th>시세 기준·출처</th></tr></thead><tbody>${rows.map(q=>`<tr><td>${star(q)}</td><td><button class="market-pick" data-market-symbol="${text(q.symbol)}"><b>${text(q.name)}</b><small>${text(q.symbol)} · ${text(q.group)}</small></button></td><td class="mono">${fmt(q.price)} ${text(q.currency)}</td><td class="mono ${color(q)}">${pct(q)}</td><td class="market-time">${date(q.marketTime)} KST<br>${source(q)}${q.status&&q.status!=='ok'?`<br><span class="market-error">${text(q.error||'조회 실패')} · 이전값</span>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="market-empty">검색 결과가 없습니다. 관심종목이 없다면 ★로 추가하세요.</td></tr>'}</tbody></table></div><div id="market-selected">${detail()}</div>`
 }
-function renderSelected(){const el=document.getElementById('market-selected');if(el)el.innerHTML=detail()}
+function renderSelected(){const el=document.getElementById('market-selected');if(el)el.innerHTML=detail();notifyCommunity()}
 function mount(){
   const parent=document.getElementById('v-data');if(!parent||parent.hidden)return
   document.getElementById('market-data')?.remove()
   const el=document.createElement('section');el.id='market-data';el.className='panel sec market-section'
-  el.innerHTML=`<div class="market-top"><h2>종목 · 시세 · 관심종목</h2><button class="f" data-market-refresh>다시 조회</button></div><p class="note">${note()} Yahoo Finance 공개 조회 경로로 지연·호출 제한이 있을 수 있습니다.</p><form id="market-add-form" class="market-controls"><input id="market-add" aria-label="추가할 티커" placeholder="직접 티커 조회: AAPL / 005930.KS / 247540.KQ" maxlength="24"><button class="f" type="submit">종목 조회</button></form><p id="market-form-status" class="market-error" role="status">${text(formError)}</p><div class="market-controls"><input id="market-search" aria-label="실제 시세 종목 검색" placeholder="종목명 또는 티커 검색" value="${text(search)}"><select id="market-group" aria-label="시장 선택">${['전체','국내','해외','시장','관심','직접추가'].map(g=>`<option${g===group?' selected':''}>${g}</option>`).join('')}</select><select id="market-filter" aria-label="시세 고리 선택"><option value="0">모든 고리</option>${window.S.map(s=>`<option value="${s.id}"${filter===s.id?' selected':''}>${text(s.name)}</option>`).join('')}</select></div><div id="market-results">${result()}</div>`
+  el.innerHTML=`<div class="market-top"><h2>종목 · 시세 · 관심종목</h2><button class="f" data-market-refresh>다시 조회</button></div><p class="note">${note()} Yahoo Finance 공개 조회 경로로 지연·호출 제한이 있을 수 있습니다.</p><form id="market-add-form" class="market-controls"><input id="market-add" aria-label="추가할 티커" placeholder="직접 티커 조회: AAPL / 005930.KS / 247540.KQ" maxlength="24"><button class="f" type="submit">종목 조회</button></form><p id="market-form-status" class="market-error" role="status">${text(formError)}</p><div class="market-controls"><input id="market-search" aria-label="실제 시세 종목 검색" placeholder="종목명 또는 티커 검색" value="${text(search)}"><select id="market-group" aria-label="시장 선택">${['전체','국내','해외','시장','관심','직접추가'].map(g=>`<option${g===group?' selected':''}>${g}</option>`).join('')}</select><select id="market-filter" aria-label="시세 고리 선택"><option value="0">모든 고리</option>${window.S.map(s=>`<option value="${s.id}"${filter===s.id?' selected':''}>${text(s.name)}</option>`).join('')}</select></div><div id="market-results">${result()}</div><div id="market-community"></div>`
   parent.prepend(el)
+  notifyCommunity()
 }
-function update(){preview();chainQuotes();const el=document.getElementById('market-results');if(el)el.innerHTML=result()}
+function update(){preview();chainQuotes();const el=document.getElementById('market-results');if(el)el.innerHTML=result();notifyCommunity()}
 async function loadSnapshot(){
   if(snapshotBusy)return
   snapshotBusy=true;update()

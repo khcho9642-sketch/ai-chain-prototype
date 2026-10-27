@@ -1,6 +1,6 @@
 {
   "name": "ai-chain-prototype",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,11 +11,20 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
-    "test": "node --test --test-isolation=none scripts/market.test.mjs scripts/peer-comparison.test.mjs server/market.test.mjs scripts/industry.test.mjs scripts/official-trade.test.mjs scripts/ai-statistics.test.mjs scripts/ai-tokens.test.mjs scripts/ai-disclosures.test.mjs",
-    "collect": "node scripts/collect-market.mjs",
-    "collect:industry": "node scripts/collect-industry.mjs",
-    "build:statistics": "node scripts/build-ai-statistics.mjs",
-    "collect:tokens": "node scripts/collect-ai-tokens.mjs",
-    "collect:disclosures": "node scripts/collect-ai-disclosures.mjs"
+    "test": "node --test --test-isolation=none tests/market/market.test.mjs tests/market/peer-comparison.test.mjs tests/market/market-server.test.mjs tests/data/industry.test.mjs tests/data/official-trade.test.mjs tests/data/ai-statistics.test.mjs tests/data/ai-tokens.test.mjs tests/data/ai-disclosures.test.mjs tests/data/company-disclosures.test.mjs tests/community/community.test.mjs tests/community/community-public.test.mjs tests/community/community-package.test.mjs tests/community/community-deploy.test.mjs",
+    "test:community": "node --test tests/community/community.test.mjs tests/community/community-public.test.mjs",
+    "ai:worker": "node scripts/community/ai-worker.mjs",
+    "collect": "node scripts/data/collect-market.mjs",
+    "collect:industry": "node scripts/data/collect-industry.mjs",
+    "build:statistics": "node scripts/data/build-ai-statistics.mjs",
+    "collect:tokens": "node scripts/data/collect-ai-tokens.mjs",
+    "collect:disclosures": "node scripts/data/collect-ai-disclosures.mjs",
+    "community:serve": "node scripts/community/community-server.mjs",
+    "community:account": "node scripts/community/community-account.mjs",
+    "community:backup": "node scripts/community/community-backup.mjs",
+    "community:package": "node scripts/deployment/package-community.mjs",
+    "community:check": "node scripts/deployment/community-check-public.mjs",
+    "test:community:deploy": "node --test tests/community/community-package.test.mjs tests/community/community-deploy.test.mjs",
+    "collect:company-disclosures": "node scripts/data/collect-company-disclosures.mjs"
   }
 }

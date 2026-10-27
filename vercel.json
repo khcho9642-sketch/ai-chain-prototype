@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "node scripts/prepare-deployment.mjs",
+  "buildCommand": "node scripts/deployment/prepare-deployment.mjs",
   "outputDirectory": "dist",
   "functions": {
     "api/chart.js": {
@@ -20,6 +20,9 @@
       "maxDuration": 30
     },
     "api/ai-disclosures.js": {
+      "maxDuration": 30
+    },
+    "api/company-disclosures.js": {
       "maxDuration": 30
     }
   },
@@ -71,6 +74,15 @@
     },
     {
       "source": "/data/ai-disclosures.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/company-disclosures.json",
       "headers": [
         {
           "key": "Cache-Control",

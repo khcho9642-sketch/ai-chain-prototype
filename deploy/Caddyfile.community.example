@@ -1,0 +1,13 @@
+# Replace the example domain only after reviewing DNS/server placement.
+# The Node API binds to loopback. Do not expose its unencrypted port publicly.
+community-api.example.com {
+  @community path /api/community/*
+  handle @community {
+    reverse_proxy 127.0.0.1:5180 {
+      flush_interval -1
+    }
+  }
+  handle {
+    respond "Not found" 404
+  }
+}

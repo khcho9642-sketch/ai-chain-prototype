@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "name": "금융감독원 DART",
+    "url": "https://dart.fss.or.kr/introduction/content6.do"
+  },
+  "coverage": {
+    "kind": "dart-company-rss",
+    "businessDays": 5,
+    "retentionDays": 90,
+    "historyComplete": false
+  },
+  "collection": {
+    "status": "ok",
+    "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+    "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+    "error": null
+  },
+  "companies": [
+    {
+      "symbol": "042700.KS",
+      "stockCode": "042700",
+      "corpCode": "00161383",
+      "companyName": "한미반도체",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00161383",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "039030.KQ",
+      "stockCode": "039030",
+      "corpCode": "00246417",
+      "companyName": "이오테크닉스",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00246417",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "036930.KQ",
+      "stockCode": "036930",
+      "corpCode": "00252135",
+      "companyName": "주성엔지니어링",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00252135",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "240810.KQ",
+      "stockCode": "240810",
+      "corpCode": "01135941",
+      "companyName": "원익IPS",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=01135941",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "005290.KQ",
+      "stockCode": "005290",
+      "corpCode": "00118804",
+      "companyName": "동진쎄미켐",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00118804",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "357780.KQ",
+      "stockCode": "357780",
+      "corpCode": "01489648",
+      "companyName": "솔브레인",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=01489648",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "166090.KQ",
+      "stockCode": "166090",
+      "corpCode": "00660750",
+      "companyName": "하나머티리얼즈",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00660750",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 2,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261026000336",
+          "title": "주식등의대량보유상황보고서(일반)",
+          "publishedAt": "2026-10-26T08:06:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026000336"
+        },
+        {
+          "receiptNumber": "20261023900755",
+          "title": "[기재정정]최대주주변경을수반하는주식담보제공계약체결",
+          "publishedAt": "2026-10-23T07:03:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261023900755"
+        }
+      ]
+    },
+    {
+      "symbol": "007660.KS",
+      "stockCode": "007660",
+      "corpCode": "00107613",
+      "companyName": "이수페타시스",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00107613",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "222800.KQ",
+      "stockCode": "222800",
+      "corpCode": "01095722",
+      "companyName": "심텍",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=01095722",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "005930.KS",
+      "stockCode": "005930",
+      "corpCode": "00126380",
+      "companyName": "삼성전자",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00126380",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 4,
+      "excludedItemCount": 1,
+      "items": [
+        {
+          "receiptNumber": "20261026000017",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-26T00:13:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026000017"
+        },
+        {
+          "receiptNumber": "20261023000484",
+          "title": "주식등의대량보유상황보고서(일반)",
+          "publishedAt": "2026-10-23T08:43:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261023000484"
+        },
+        {
+          "receiptNumber": "20261023000478",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-23T08:34:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261023000478"
+        }
+      ]
+    },
+    {
+      "symbol": "000990.KS",
+      "stockCode": "000990",
+      "corpCode": "00160843",
+      "companyName": "DB하이텍",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00160843",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    },
+    {
+      "symbol": "000660.KS",
+      "stockCode": "000660",
+      "corpCode": "00164779",
+      "companyName": "SK하이닉스",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00164779",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 5,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261026000273",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-26T07:23:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026000273"
+        },
+        {
+          "receiptNumber": "20261026800524",
+          "title": "[기재정정]주식소각결정",
+          "publishedAt": "2026-10-26T07:22:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026800524"
+        },
+        {
+          "receiptNumber": "20261026000259",
+          "title": "자기주식취득결과보고서",
+          "publishedAt": "2026-10-26T07:16:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026000259"
+        },
+        {
+          "receiptNumber": "20261026800118",
+          "title": "풍문또는보도에대한해명(미확정)",
+          "publishedAt": "2026-10-26T00:59:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026800118"
+        },
+        {
+          "receiptNumber": "20261023800002",
+          "title": "풍문또는보도에대한해명",
+          "publishedAt": "2026-10-22T22:33:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261023800002"
+        }
+      ]
+    },
+    {
+      "symbol": "267260.KS",
+      "stockCode": "267260",
+      "corpCode": "01205851",
+      "companyName": "HD현대일렉트릭",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=01205851",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 1,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261026800468",
+          "title": "타인에대한채무보증결정",
+          "publishedAt": "2026-10-26T07:12:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026800468"
+        }
+      ]
+    },
+    {
+      "symbol": "010120.KS",
+      "stockCode": "010120",
+      "corpCode": "00105855",
+      "companyName": "엘에스일렉트릭",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00105855",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 3,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261021800162",
+          "title": "기업설명회(IR)개최(안내공시)",
+          "publishedAt": "2026-10-21T02:17:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021800162"
+        },
+        {
+          "receiptNumber": "20261021800160",
+          "title": "기업설명회(IR)개최(안내공시)",
+          "publishedAt": "2026-10-21T02:16:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021800160"
+        },
+        {
+          "receiptNumber": "20261021800151",
+          "title": "연결재무제표기준영업(잠정)실적(공정공시)",
+          "publishedAt": "2026-10-21T02:11:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021800151"
+        }
+      ]
+    },
+    {
+      "symbol": "298040.KS",
+      "stockCode": "298040",
+      "corpCode": "01316245",
+      "companyName": "효성중공업",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=01316245",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 2,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261026800489",
+          "title": "최대주주등소유주식변동신고서",
+          "publishedAt": "2026-10-26T07:11:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026800489"
+        },
+        {
+          "receiptNumber": "20261026000231",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-26T07:07:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026000231"
+        }
+      ]
+    },
+    {
+      "symbol": "001440.KS",
+      "stockCode": "001440",
+      "corpCode": "00113207",
+      "companyName": "대한전선",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00113207",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 2,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261021800180",
+          "title": "공정거래자율준수프로그램운영현황(안내공시)",
+          "publishedAt": "2026-10-21T02:46:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021800180"
+        },
+        {
+          "receiptNumber": "20261021800158",
+          "title": "대표이사(대표집행임원)변경(안내공시)",
+          "publishedAt": "2026-10-21T02:16:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021800158"
+        }
+      ]
+    },
+    {
+      "symbol": "035420.KS",
+      "stockCode": "035420",
+      "corpCode": "00266961",
+      "companyName": "NAVER",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00266961",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 6,
+      "excludedItemCount": 0,
+      "items": [
+        {
+          "receiptNumber": "20261021000270",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:56:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000270"
+        },
+        {
+          "receiptNumber": "20261021000251",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:45:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000251"
+        },
+        {
+          "receiptNumber": "20261021000245",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:43:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000245"
+        },
+        {
+          "receiptNumber": "20261021000232",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:36:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000232"
+        },
+        {
+          "receiptNumber": "20261021000229",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:33:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000229"
+        },
+        {
+          "receiptNumber": "20261021000225",
+          "title": "임원ㆍ주요주주특정증권등소유상황보고서",
+          "publishedAt": "2026-10-21T06:31:00.000Z",
+          "sourceUrl": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000225"
+        }
+      ]
+    },
+    {
+      "symbol": "035720.KS",
+      "stockCode": "035720",
+      "corpCode": "00258801",
+      "companyName": "카카오",
+      "feedUrl": "https://dart.fss.or.kr/api/companyRSS.xml?crpCd=00258801",
+      "status": "ok",
+      "lastAttemptAt": "2026-10-26T16:27:48.307Z",
+      "lastSuccessAt": "2026-10-26T16:27:48.307Z",
+      "error": null,
+      "feedItemCount": 0,
+      "excludedItemCount": 0,
+      "items": []
+    }
+  ]
+}

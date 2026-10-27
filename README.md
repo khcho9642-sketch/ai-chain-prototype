@@ -1,144 +1,67 @@
-# AI 체인 — 통합 프로젝트
+# AI 체인
 
-AI 밸류체인 정보를 주주에게 제공하고, 주주들이 재미있게 소통하며 게시판에 글을 쓸 수 있는 사이트를 만든다. 사용자 지정 목표와 첫 출시 기준은 PLAN.md를 따른다.
+AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글과 의견을 나누는 사이트다. 제품 목표와 첫 출시 기준은 [PLAN.md](PLAN.md)를 따른다. 이 저장소의 AI 밸류체인 사이트만 개발하며, 통합된 시세·차트·관심종목 기능을 계속 사용한다.
 
-2026-10-26: Claude의 AI 체인 화면을 기준으로 stock-site의 주식 대시보드를 합쳤다. 원본 디자인과 기획 문서는 유지하고, 별도 React/Vite 화면을 운영하던 중복 구조를 하나의 화면·데이터 처리·저장소로 정리했다.
+## 바로 실행
 
-## 실행
+Node.js 24에서 추가 패키지 설치 없이 실행한다.
 
-Node.js 24에서:
-
-```
+```sh
 npm run dev
 ```
 
-http://127.0.0.1:5175 접속. 추가 패키지 설치 없이 실행할 수 있다.
+개발 주소는 `http://127.0.0.1:5175`다. `npm run preview`와 `npm start`도 같은 화면·시세 API를 실행한다.
 
-- npm run build: 배포 파일을 dist에 생성
-- npm run preview 또는 npm start: 같은 화면과 시세 API 실행
-- npm run collect: 93개 종목·시장지표와 1일·5일·1년·5년 차트 수집
-- npm run collect:industry: ECOS·TWSE 공식 산업통계 수집
-- npm run build:statistics: 검토한 연구 원본을 공개 AI 통계 JSON으로 변환·검증
-- npm run collect:tokens: OpenRouter 공식 API의 공개 토큰 통계 수집
-- npm run collect:disclosures: OpenAI·Anthropic 공식 발표자료 변경·신규 문서 감시
-- npm test: 데이터·관심종목·API·빌드 검사
+```sh
+npm test
+npm run build
+```
 
-## 통합 기능
+빌드는 검증된 공개 파일만 `dist/`에 만든다. `dist/`가 없으면 개발 서버 시작 때 다시 생성한다.
 
-- Claude 원본 8단계 밸류체인 지도, 고리 연결, 데이터·토론·AI 탭, 반응형 화면
-- AI 기업 75개와 시장·기타 지표를 합쳐 93개(고유 티커), 인프라에는 EQIX·DLR·Keppel DC REIT·Iron Mountain 포함
-- 종목 검색, 국내·해외·시장·관심 필터, 고리별 필터
-- 관심종목 추가·해제·브라우저 저장, 지도와 관심종목 수 연동
-- 직접 티커 조회와 추가 종목 저장(API 서버에서 제공), 숫자 6자리는 .KS로 처리하며 코스닥은 .KQ 명시
-- 1일·5일·1개월·3개월·1년·5년 실제 차트, 최근 OHLCV 표, CSV
-- 가격·등락률·거래량·당일 고가/저가·52주 범위·출처·시세 기준시각
-- AI 통계(#ai-stats): OpenAI·Anthropic 사업 지표, 중국·일본·한국을 포함한 산업 지표, 공개 토큰 통계를 검색·필터·CSV로 제공
-- 토론은 현재 예시 화면이다. 실제 공용 게시판 저장과 다른 이용자 열람은 아직 구현하지 않았다. AI 답변도 현재 규칙 기반 예시다.
+## 현재 기능과 남은 작업
 
-## 데이터와 배포
-
-출처는 Yahoo Finance의 비공식 공개 chart 조회 경로다. 실제 거래소 실시간 데이터가 아니며 지연·호출 제한·제공처 변경이 발생할 수 있다. 실패를 임의 가격으로 채우지 않는다. 휴장 중 장중 차트가 없으면 실제 가격과 기준시각만 표시한다. TSM은 미국 상장 ADR(USD)이다.
-
-- GitHub 저장소: https://github.com/khcho9642-sketch/ai-chain-prototype
-- GitHub Pages: https://khcho9642-sketch.github.io/ai-chain-prototype/
-- GitHub Actions가 약 30분마다 같은 시세 모듈로 수집해 Pages에 배포한다. 예약 실행은 지연될 수 있다. 브라우저의 다시 조회는 배포된 최신 파일을 읽는다.
-- 로컬 및 Vercel에서는 같은 코드의 /api/chart가 임의 티커와 선택한 종목의 최신 시세를 조회한다. 서버 캐시 60초, 요청 중복 제거, 제한시간과 보조 호스트 재시도가 있다.
-- Pages는 정적 호스팅이므로 수집된 93개 종목·모든 기간 차트·관심종목 기능을 제공한다. 카탈로그 밖 임의 티커 조회는 로컬/API 배포에서 제공하며 화면에 이 차이를 안내한다.
-- Vercel 설정은 API와 dist를 함께 배포한다. prepare-deployment.mjs가 Pages의 최신 93종목 스냅샷을 가져온 뒤 빌드한다. 저장소에 넣은 JSON은 초기 스냅샷이고 이후 예약 수집 결과는 배포 아티팩트에 담긴다.
-- 데이터의 기준시각·개별 수집시각·전체 수집시각을 구분한다. 개별 실패 시 이전 값과 원래 시각을 유지한다. 오래된 수집·조회 실패를 표시한다.
-- Vercel의 /api/snapshot은 Pages에서 갱신된 최신 파일을 프록시하므로 재배포 없이 목록의 예약 갱신도 반영된다. Vercel GitHub 앱 권한이 없어 최초 API 배포는 검증한 소스 파일을 직접 업로드한다.
-- 관심종목·추가 종목은 동일 브라우저·동일 사이트 주소에 저장한다. stock-site의 기존 watch 키는 같은 주소에서 가능한 경우 읽어온다. 서로 다른 localhost 포트·도메인의 저장값은 자동으로 공유되지 않는다.
-- API 키·토큰·환경 파일은 코드나 배포 파일에 포함하지 않는다.
-
-## 구조
-
-- index.html: Claude 원본 UI와 밸류체인 화면
-- assets/dashboard.js, market-core.js, market.css: 통합 종목·차트·관심종목
-- assets/instruments.js: 화면과 수집기가 함께 사용하는 93개 카탈로그
-- assets/ai-statistics.js·css, ai-statistics-core.js: #ai-stats 화면과 검토 통계 검증
-- assets/token-core.js, ai-disclosure-core.js: 토큰 집계와 발표자료 감시 상태 검증
-- server/market.mjs: 단일 시세 조회·정규화·캐시
-- server/ai-snapshots.mjs: Pages의 AI 통계 스냅샷을 검증해 제공하는 API 공통 처리
-- api/chart.js: Vercel 함수 진입점
-- scripts/: 실행·빌드·수집·테스트
-- data/market.json: 실제 시세 스냅샷
-- data/ai-statistics.json, ai-tokens.json, ai-disclosures.json: 검토 통계·토큰·발표자료 감시 상태
-- research/ai-statistics-2026-10-26.json: 출처·범위·한계를 보존한 연구 원본(공개 정적 빌드에서는 제외)
-- design/: Claude 디자인 원본(보존, 배포에서는 제외)
-- PLAN.md / CLAUDE.md: 제품 목표와 후속 작업
-
-공유 게시판, DART, 관세청 HS 품목별 수출 순중량 API, 리츠 AFFO·임대율·배당의 자동 수집은 다음 작업이다. 현재 예시 산업지표와 신호 판정은 실제 주가 데이터와 구분한다.
-
-## 8개 고리 피어 주가 비교
-
-상단 고리 비교 메뉴(#compare)에서 소부장·파운드리·메모리·AI 칩·전력·인프라·모델·애플리케이션 8개를 한 차트로 비교한다. 1개월(30일)·3개월(90일)·6개월(180일)·1년(365일) 중 선택하며, 실제 공통 기준일·종료일을 표시한다.
-
-각 종목의 현지 통화 종가를 공통 기준일100으로 정규화한 뒤 고리별 동일 비중으로 평균한다. 평균 주가 금액이나 시가총액 가중·일별 리밸런싱·배당 포함·환율 환산 성과가 아니다. 현재 75개 고유 피어를 77개 고리 소속으로 사용하며 삼성전자(파운드리·메모리)와 NAVER(모델·애플리케이션)는 각각 두 고리에 포함된다. 혼합사업·범용 메모리 업체의 사업 범위는 기업 목록에 표시한다. 등록 피어는 과거 기간에도 같은 목록을 적용한다.
-
-각국 거래소의 현지 날짜를 교차 정렬하며 모든 유효 피어에 종가가 있는 날만 비교한다. 미래 관측·유효하지 않은 종가를 제외하고 결측일 보간이나 일별 분모 변경은 하지 않는다. 제외 피어·실제 기간 단축·오래된 수집값은 표시한다. 최신 일봉은 장중 값일 수 있다.
-
-8개 선은 범례로 숨기거나 다시 표시할 수 있다. 날짜 슬라이더/마우스로 동일 날짜 수치를 조회하고, 아래 카드에서 피어별 등락률·기준 종가·마지막 종가·출처를 확인한다. CSV는 선택 기간의 전체8개 고리 지수 또는 전체피어 수익률이다. 비교는 기존과 동일한 시세 스냅샷을 공유한다.
-
-## 기업 목록과 공식 산업통계
-
-- 시세·기업(#data): AI 기업 75개의 사업·국가·공식 자료와 실제 시세를 함께 제공한다. 8개 고리, 국내·해외, 기업명·티커·사업 검색을 지원한다. 목록과 비교는 같은 카탈로그를 쓴다.
-- 산업통계(#industry): 한국은행 ECOS 수출물량지수 5개와 수출금액지수 3개(각 36개월), 관세청 반도체·전체 수출액 및 전체 수출 순중량, TSMC 월매출 등 총 12개다. 기준월·단위·출처·확정 여부·성공 확인일을 표시하며 달력 기준 12/24/36개월 차트와 원자료 CSV를 제공한다.
-- 물량지수(2020=100), 실제 금액(백만 달러), 전체 중량(만 톤), 매출(백만 TWD)은 서로 구분한다. 가격·제품 구성·통계 조사범위가 달라 이들 수치가 직접 일치하지 않는다. 관세청 전체 중량은 반도체나 변압기만의 중량이 아니다.
-- ECOS와 TWSE는 npm run collect:industry로 수집한다. GitHub Actions의 기존 예약 배포에서 하루 한 번 확인하고 실패 시 이전 성공값·시각을 유지한다. ECOS는 공식 sample의 요청당 10개 제한을 지킨다. 선택적으로 GitHub Actions Secret ECOS_API_KEY를 등록할 수 있으며 키는 공개 JSON에 넣지 않는다.
-- 관세청 세 지표는 공식 발표문을 검증해 수록한 자료(automation: reviewed-release)다. 기준월을 자동으로 바꾸지 않는다. HS 품목별 kg·달러 API는 해당 데이터에 승인된 serviceKey가 없어 미연결로 표시한다.
-- TSMC 이력은 공식 IR의 월별 연결 매출이며, 최신 월은 TWSE 공식 API의 당월 필드에서 갱신한다. 누적 매출을 월별 매출로 사용하지 않는다.
-- Vercel의 /api/industry는 Pages의 검증된 산업 JSON을 읽는다. 정적 빌드가 공개하는 JSON 5종은 아래 허용목록을 따른다. 산업통계의 소스 증거와 정의는 docs/industry-sources.md를 따른다.
-
-## AI 수요·매출·토큰 통계
-
-상단 AI 통계 메뉴(#ai-stats)는 사업 수요·산업 지표·토큰을 구분한다. 2026-10-26 검토본의 범위는 다음과 같다. 기존 #industry의 월별 공식 통계 12개는 별도로 유지한다.
-
-| 구분 | 지표 정의 | 화면 표시 행 |
-| --- | ---: | ---: |
-| 산업·투자·공급·전력·도입 지표 | 50 | 50 |
-| OpenAI·ChatGPT·Codex 사업 지표 | 12 | 12 |
-| Anthropic·Claude 사업 지표 | 11 | 11 |
-| Ramp·Similarweb·Sensor Tower 외부 비교 | 8 | 15 |
-| 합계 | 81 | 88 |
-
-외부 비교는 하나의 정의를 회사·제품별로 나누어 15행에 표시하므로, 표시 행 수를 독립 통계 수로 세지 않는다. 검증된 관측은 중복 제거 후 145개이고, 확인하지 못한 지표는 사유와 함께 11개다. 산업 지표에는 중국 8개·일본 4개·한국 2개가 포함된다. 이는 국가별 지표 수이며 기업 수가 아니다. Alibaba의 중국 표시는 기업 본거지이고, 매출·투자 범위는 해당 회사·사업부의 정의를 따른다.
-
-각 관측은 값·단위·대상 범위·관측기간·발표일·검증일·출처와 공식/보도/추정/연구 구분을 보존한다. 과거 발표를 현재 사용자 수로 바꾸지 않으며, 미확인 값은 `null`로 저장한다. 회사 전체와 제품 매출, 실제 기간 매출과 연환산 매출, WAU·앱 MAU·웹 방문·유료 좌석·기업 고객을 구분한다. 손실액은 양수 크기와 손실 표기를 함께 사용한다. 모집단이나 기간이 다른 수치로 전환율·ARPU·성장률을 자동 계산하지 않는다.
-
-### 공개 문서의 검토와 일일 변경 감시
-
-매출·사용자·산업 수치는 공개 발표문·통계·보고서를 수동 검토한 자료다. `research/ai-statistics-2026-10-26.json`이 검토 원본이며, `npm run build:statistics`가 이를 `data/ai-statistics.json`으로 정규화하고 검증한다. 이 명령은 새 수치를 인터넷에서 수집하지 않는다. 원본에는 일부 과거 관측과 한계를 기록했으며, 전체 시계열을 내려받거나 연속 이력 수집을 연결한 상태는 아니다.
-
-`npm run collect:disclosures`는 별도의 웹 모니터다. 검토 통계에 연결된 OpenAI·Anthropic 공식 문서와 공식 RSS·뉴스 목록을 확인해 새 문서나 본문 해시 변경을 `data/ai-disclosures.json`에 기록한다. 기본적으로 한국 시간 날짜당 한 번 시도하며, 같은 날 재확인은 `npm run collect:disclosures -- --force`로 실행한다. 결과의 `needs-review`는 검토 후보이며 숫자의 자동 승인이나 공개 통계의 자동 변경을 뜻하지 않는다. 원문·측정 범위·단위·기간을 확인한 뒤 연구 원본과 검토 통계를 별도 변경으로 반영한다.
-
-실패한 문서의 이전 해시·성공 확인일은 유지하고 오류를 표시한다. 일부 성공은 `partial`로 기록하며 전체 성공 시각을 갱신하지 않는다. 본문 전문과 수치 추출 결과는 공개 JSON에 저장하지 않는다. 허용 URL·발견 범위·오류 처리의 상세 내용은 [발표자료 감시 문서](docs/ai-disclosure-collection.md)를 따른다.
-
-### OpenRouter 공식 토큰 API
-
-저장소의 초기 토큰 자료는 2026-10-25 공개 순위에서 검토한 모델 10개의 반올림 스냅샷이다. 상위 10개 합계를 플랫폼 전체 사용량으로 표시하지 않는다. API 연결 여부·마지막 시도·마지막 성공과 자료의 관측일을 따로 표시한다.
-
-`npm run collect:tokens`는 [OpenRouter 공식 Data API](https://openrouter.ai/docs/cookbook/administration/data-api)의 `GET /api/v1/datasets/rankings-daily`를 사용한다. 기본 범위는 현재 UTC 날짜를 제외한 완료된 90일이며, `npm run collect:tokens -- --force --days 90` 형태로 강제 재수집과 1~366일 범위를 지정할 수 있다. 같은 UTC 날짜에 이미 성공했으면 기본 실행은 건너뛴다.
-
-GitHub Actions는 Secret `OPENROUTER_API_KEY`를 수집기 환경변수로 전달한다. 로컬 수집기도 같은 환경변수를 읽는다. 브라우저, 코드, 공개 JSON과 로그에는 키를 포함하지 않는다. 키가 없으면 외부 요청 없이 이전 자료를 보존하고 `missing-key` 상태로 정상 종료한다. 초기 저장소 상태는 API 미연결이며, 성공 수집이 확인되기 전에는 실시간 자료로 표시하지 않는다.
-
-성공 시 API의 일별 상위 50개 모델과 `other`가 초기 검토 스냅샷을 대체한다. API 집계에서만 공개 플랫폼 합계를 계산하며, 개발사 합계는 화면에 식별된 모델 범위다. 비공개·Zero Data Retention 트래픽은 공개 집계 범위에 포함되지 않으므로 이를 회사 전체 토큰 사용량으로 확대하지 않는다. 입력·출력 토큰 합계는 정수 문자열과 `BigInt`로 보존하고, 7일 이동평균은 연속한 UTC 날짜 7개가 있을 때만 계산한다. 서로 다른 모델의 토크나이저 차이도 고려해야 한다. 출처와 기준시점, CC BY 4.0 표시를 유지한다.
-
-API 오류·호출 제한·유효하지 않은 응답은 이전 관측과 `lastSuccessAt`을 유지한 채 `error`로 기록한다. 재수집한 날짜는 모델별 덧붙이기가 아니라 날짜 단위로 교체해 상위권 이탈 모델과 `other`의 중복을 막는다. 응답에 빠진 이전 API 관측일은 보존하고 관련 메타데이터를 남기며, 결측일을 0으로 만들지 않는다.
-
-### Pages 배포와 읽기 전용 스냅샷 API
-
-`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 다음 5개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
-
-| 공개 JSON | 내용 |
+| 영역 | 현재 범위 |
 | --- | --- |
-| `market.json` | 93개 종목·시장지표 시세 |
-| `industry.json` | 기존 공식 산업통계 12개 |
-| `ai-statistics.json` | 검토한 AI 통계 81개 정의·88개 표시 행 |
-| `ai-tokens.json` | OpenRouter 검토 스냅샷 또는 공식 API 수집 결과와 상태 |
-| `ai-disclosures.json` | 공식 문서 확인 상태와 검토 후보 |
+| 밸류체인·시세 | 8개 고리 지도, 93개 종목·시장지표, AI 기업 75개, 관심종목·직접 티커·차트·OHLCV·CSV |
+| 기업·비교 | 기업 역할·국가·공식 출처, 8개 고리 피어 비교 |
+| 데이터 | 공식 산업통계, 검토한 AI 사업·산업 지표, OpenRouter 토큰 집계, 공식 발표문 변경 감시, 국내 18개 기업 DART RSS |
+| 커뮤니티 | 종목별 공유 댓글·회원 인증·영속 SQLite API·AI 워커 초안/승인 코드와 테스트 구현 |
 
-`.github/workflows/market-pages.yml`은 기존 약 30분 간격 Pages 작업에서 이전 토큰·문서 감시 상태를 검증해 복원하고 두 수집기를 실행한다. 실제 일일 호출 제한은 각 수집기가 관리한다. 수집 오류 시 이전 자료를 배포할 수 있도록 수집 단계는 실패 후에도 진행하며, 최종 빌드의 자료 검증은 유지한다. 승인된 `ai-statistics.json`은 Git에서 관리하고, 배포된 과거 파일로 덮어쓰거나 문서 감시 결과로 자동 승인하지 않는다. 예약 실행은 지연될 수 있다.
+커뮤니티의 운영 API 연결·다른 기기에서의 운영 검증·실제 모델 작동 검증은 아직 완료하지 않았다. 자유게시판의 글 목록·본문 등 첫 출시 전체 범위와 이용자의 재미·재방문도 별도로 확인해야 한다. [커뮤니티 현황](docs/community/ai-community.md)과 [PLAN](PLAN.md)의 남은 작업을 따른다.
 
-새 읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter를 직접 호출하거나 매출·사용자 수를 새로 수집하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
+실제 시세와 예시 산업신호를 구분한다. DART 재무제표 API, 관세청 HS 품목별 수출 순중량 API, 리츠 AFFO·임대율·배당 자동 수집은 아직 미연결이다. 공개 자료의 단위·범위·기준시각·오류 상태를 보존하며 실패나 결측을 임의 값으로 채우지 않는다.
 
-배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 5종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+## 명령
+
+모든 명령은 저장소 루트에서 실행한다. 외부 수집은 아래 명령으로 수행하며 화면의 다시 읽기와 구분한다.
+
+| 명령 | 역할 |
+| --- | --- |
+| `npm run collect` | 시세·차트 스냅샷 수집 |
+| `npm run collect:industry` | ECOS·TWSE 공식 산업통계 수집 |
+| `npm run build:statistics` | 검토 원본을 공개 AI 통계로 변환·검증 |
+| `npm run collect:tokens` | OpenRouter 공식 공개 토큰 통계 수집 |
+| `npm run collect:disclosures` | OpenAI·Anthropic 공식 발표문 변경·신규 문서 감시 |
+| `npm run collect:company-disclosures` | 국내 기업 DART 회사 RSS 메타데이터 수집 |
+| `npm run community:serve` | 별도 공유 댓글 API 실행 |
+| `npm run community:account` | 운영자 계정 관리 |
+| `npm run community:backup -- 절대경로` | SQLite 온라인 백업 |
+| `npm run ai:worker` | 설정된 로컬 CLI 워커 실행 |
+| `npm run community:package` | API 소스·SHA-256 manifest 패키지 준비 |
+| `npm run community:check -- API_ORIGIN SITE_ORIGIN` | 실제 HTTPS API 연결의 읽기 전용 검사 |
+
+수집 주기·키·강제 재시도·실패 보존·운영 설정은 각 [전문 문서](docs/README.md)를 따른다. API 키·토큰·환경 파일은 코드와 공개 배포에 넣지 않는다.
+
+## 파일과 문서 찾기
+
+- [프로젝트 구조](docs/project-structure.md): 소스·스크립트·테스트·검토 근거·비공개 작업물 배치
+- [데이터·운영 문서 목록](docs/README.md): 시세·통계·공시·배포·커뮤니티 상세 정의
+- [작업 규칙](AGENTS.md): 개발 위치·원본 보존·공개 데이터 허용목록
+- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 6종
+
+## 기존 사이트
+
+[GitHub 저장소](https://github.com/khcho9642-sketch/ai-chain-prototype) · [GitHub Pages](https://khcho9642-sketch.github.io/ai-chain-prototype/)
+
+Pages는 수집된 정적 파일을 제공하며, 카탈로그 밖 임의 티커 조회는 로컬/API 배포에서 제공한다. 공개 시세의 출처·지연과 비교 계산은 [시세 안내](docs/data/market.md)를 따른다.
