@@ -1,7 +1,7 @@
 import { instruments } from './instruments.js'
 import { communityApiOrigin } from './community-runtime.js'
 import { resolveCommunityOrigin, resolveDiscussionSymbol, mergeComments, opinionEntry, communityStateLabel, communityReasonLabel, messageProvenance, communityEvidenceUrl } from './community-ui-core.js'
-import { validateTodaySnapshot } from './today-core.js'
+import { validateTodaySnapshot, getTodayComment } from './today-core.js'
 
 const catalog = instruments.filter(x => x.chains.some(n => n > 0))
 const names = { gpt: 'GPT', claude: 'Claude', gemini: 'Gemini' }
@@ -278,12 +278,13 @@ function createView(root, symbol, selector = false) {
     const reports = publishedReportsForSymbol(state.publishedReports, state.symbol, state.tab)
     area.replaceChildren(); area.hidden = !reports.length
     if (!reports.length) return
-    area.append(node('h3', '검토 후 발행한 AI 댓글'), node('p', 'AI 의견서 원문에서 발췌해 발행한 읽기 전용 댓글입니다. 생성 시각과 발행 시각을 따로 표시합니다.', { class: 'note' }))
+    area.append(node('h3', 'AI 댓글'))
     for (const report of reports) {
       const item = node('article', null, { class: 'community-comment', 'data-published-report-id': report.id, 'data-report-agent': report.agent })
-      const factual = report.kind === 'earnings-review'
-      item.append(node('strong', `${names[report.agent]} · AI · ${factual ? '실적 검토' : '종목 의견'}`), node('p', report.comment))
-      item.append(node('time', '생성 ' + timeLabel(report.provenance.generatedAt), { datetime: report.provenance.generatedAt }), node('time', '발행 ' + timeLabel(report.createdAt), { datetime: report.createdAt }))
+      const factual = report.kind === 'earnings-review', comment = getTodayComment(report)
+      item.dataset.aiCommentId = comment.id
+      item.append(node('strong', `${names[report.agent]} · AI`), node('p', comment.text))
+      item.append(node('time', '생성 ' + timeLabel(comment.provenance.generatedAt), { datetime: comment.provenance.generatedAt }), node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
       if (factual) item.append(node('p', '운영자가 지정한 종목의 실적 검토입니다. 종목 선정·적정가격 평가는 포함하지 않습니다.', { class: 'note' }))
       for (const note of report.reviewNotes) item.append(node('p', note, { class: 'note' }))
       item.append(node('a', '의견서 원문·모델·근거 보기 →', { href: '#today', class: 'community-reference' }))

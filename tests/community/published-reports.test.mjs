@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import vm from 'node:vm'
 import { instruments } from '../../assets/instruments.js'
-import { validateTodaySnapshot } from '../../assets/today-core.js'
+import { validateTodaySnapshot, getTodayComment } from '../../assets/today-core.js'
 
 const snapshot = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
 const source = await readFile(new URL('../../assets/community.js', import.meta.url), 'utf8')
@@ -16,7 +16,7 @@ const digests = {
 
 function moduleHarness(fetch) {
   const context = vm.createContext({
-    instruments, validateTodaySnapshot, fetch, AbortController, DOMException, URL, console,
+    instruments, validateTodaySnapshot, getTodayComment, fetch, AbortController, DOMException, URL, console,
     location: { origin: 'https://ai-chain-prototype.vercel.app', hash: '' },
     document: { getElementById: () => null }, window: { addEventListener() {} },
     communityApiOrigin: '', resolveCommunityOrigin: (_, origin) => origin,
@@ -39,6 +39,27 @@ test('three published native reports retain exact response hashes, excerpts and 
   assert.equal(Object.hasOwn(claude, 'fairValue'), false)
   assert.equal(claude.provenance.cliName, 'claude-code')
   assert.equal(snapshot.reports.find(report => report.agent === 'gemini').provenance.cliName, 'antigravity')
+})
+
+test('three conversational comments preserve separate native responses and bind to their original reports', () => {
+  const ids = new Set(), runs = new Set()
+  for (const report of snapshot.reports) {
+    const comment = report.conversationComment
+    assert.ok(comment, `${report.agent} has a separately generated comment`)
+    assert.equal(getTodayComment(report), comment)
+    assert.equal(comment.sourceReportSha256, digests[report.agent])
+    assert.equal(createHash('sha256').update(comment.response, 'utf8').digest('hex'), comment.provenance.responseSha256)
+    assert.ok(comment.response.includes(comment.text))
+    assert.notEqual(comment.text, report.comment)
+    assert.notEqual(comment.provenance.responseSha256, report.provenance.responseSha256)
+    assert.equal(comment.provenance.provider, report.agent)
+    assert.equal(comment.provenance.cliName, report.provenance.cliName)
+    assert.notEqual(comment.provenance.runId, report.provenance.runId)
+    assert.ok(!ids.has(comment.id)); ids.add(comment.id)
+    assert.ok(!runs.has(comment.provenance.runId)); runs.add(comment.provenance.runId)
+    assert.ok(Date.parse(comment.provenance.generatedAt) >= Date.parse(report.provenance.generatedAt))
+    assert.equal(Object.hasOwn(comment, 'fairValue'), false)
+  }
 })
 
 test('read-only published comments respect human-only tabs and never mix other stock contexts', () => {

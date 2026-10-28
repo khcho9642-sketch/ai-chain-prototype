@@ -76,8 +76,20 @@ def reviewed_reports_browser_fixture():
         report.pop('fairValue', None)
         if agent != 'claude':
             report['fairValue'] = {**value['picks'][0]['fairValue'], 'price': 216.48 if agent == 'gpt' else 222}
+        fresh_text = f'{agent} 새 댓글 화면 검증입니다. 분기 성적표 한 장으로 연간 졸업앨범 만들지는 말자ㅋㅋ.'
+        fresh_response = fresh_text + '\r\n'
+        stamp = value['publishedAt']
+        report['conversationComment'] = {
+            'id': f'conversation-comment-{agent}-browser', 'text': fresh_text, 'response': fresh_response,
+            'sourceReportSha256': report['provenance']['responseSha256'],
+            'createdAt': stamp.replace('Z', '.150Z'),
+            'provenance': {**report['provenance'], 'runId': f'conversation-comment-run-{agent}-browser',
+                           'generatedAt': stamp.replace('Z', '.050Z'), 'reviewedAt': stamp.replace('Z', '.100Z'),
+                           'promptVersion': 'owner-conversation-v1',
+                           'responseSha256': hashlib.sha256(fresh_response.encode('utf-8')).hexdigest()}}
         reports.append(report)
-    value.update(schemaVersion=3, reports=reports, picks=value['picks'][:1], responses=[])
+    value.update(schemaVersion=3, reports=reports, picks=value['picks'][:1], responses=[],
+                 publishedAt=value['publishedAt'].replace('Z', '.200Z'))
     return value
 
 @contextmanager
@@ -221,14 +233,17 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert today.locator('[data-today-cards] [data-today-response]').count() == 0
             for report in today_fixture['value']['reports']:
                 card = today.locator('[data-today-agent="' + report['agent'] + '"]')
-                card.get_by_text(report['comment'], exact=True).wait_for()
+                fresh_comment = report['conversationComment']
+                assert card.locator('[data-today-comment]').inner_text() == fresh_comment['text']
+                assert card.locator('[data-today-comment]').inner_text() != report['comment']
                 assert card.locator('.today-review-notes').is_visible()
                 card.get_by_text(report['reviewNotes'][0], exact=True).wait_for()
-                assert 'AI' in card.locator('.today-message-label').first.inner_text()
+                assert card.locator('.today-message-label').first.inner_text() == {'gpt': 'GPT', 'claude': 'Claude', 'gemini': 'Gemini'}[report['agent']] + ' · AI'
+                assert not any(label in card.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
                 card.locator('.today-report-original > summary').click()
                 assert card.locator('[data-today-report-original]').inner_text() == report['report']
-                assert card.locator('.today-initial-comment time').first.get_attribute('datetime') == report['provenance']['generatedAt']
-                assert card.locator('.today-initial-comment time').nth(1).get_attribute('datetime') == report['createdAt']
+                assert card.locator('.today-initial-comment time').first.get_attribute('datetime') == fresh_comment['provenance']['generatedAt']
+                assert card.locator('.today-initial-comment time').nth(1).get_attribute('datetime') == fresh_comment['createdAt']
                 assert card.locator('[data-today-fair-value]').inner_text() == {
                     'gpt': '216.48 USD', 'claude': '가격 평가 없음', 'gemini': '222 USD'}[report['agent']]
                 if report['agent'] == 'claude':
@@ -237,6 +252,9 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 card.locator('.today-initial-comment > .today-sources > summary').click()
                 cli_label = {'gpt': 'Codex', 'claude': 'Claude Code', 'gemini': 'Antigravity'}[report['agent']]
                 card.get_by_text('CLI ' + cli_label + ' cli-1.0.0', exact=True).wait_for()
+                card.get_by_text('댓글 작성 출처', exact=True).wait_for()
+                card.get_by_text('CLI ' + fresh_comment['provenance']['cliName'] + ' · cli-1.0.0', exact=True).wait_for()
+                card.get_by_text('댓글 SHA-256 ' + fresh_comment['provenance']['responseSha256'], exact=True).wait_for()
             assert today.locator('[data-today-archive]').is_visible()
             if today.locator('[data-today-archive]').get_attribute('open') is None:
                 today.locator('[data-today-archive] > summary').click()
@@ -252,7 +270,12 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert published_comments.locator('[data-comment-id]').count() == 0
             for report in today_fixture['value']['reports']:
                 comment = published_comments.locator('[data-report-agent="' + report['agent'] + '"]')
-                comment.get_by_text(report['comment'], exact=True).wait_for()
+                fresh_comment = report['conversationComment']
+                comment.get_by_text(fresh_comment['text'], exact=True).wait_for()
+                assert comment.get_attribute('data-ai-comment-id') == fresh_comment['id']
+                assert comment.locator('time').first.get_attribute('datetime') == fresh_comment['provenance']['generatedAt']
+                assert comment.locator('time').nth(1).get_attribute('datetime') == fresh_comment['createdAt']
+                assert not any(label in comment.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
                 assert comment.get_by_role('button').count() == 0
             page.locator('#v-talk [data-tab=human]').click()
             assert published_comments.is_hidden()
@@ -387,6 +410,10 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.locator('#v-today [data-today-refresh]').click()
             mobile.locator('#v-today').get_by_text('AI 댓글 3개 발행', exact=False).wait_for()
             assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
+            for report in mobile_today_fixture['reports']:
+                mobile_card = mobile.locator('#v-today [data-today-agent="' + report['agent'] + '"]')
+                assert mobile_card.locator('[data-today-comment]').inner_text() == report['conversationComment']['text']
+                assert not any(label in mobile_card.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
             mobile.locator('#v-today [data-today-agent=gemini] .today-report-original > summary').click()
             assert mobile.locator('#v-today [data-today-agent=gemini] [data-today-report-original]').is_visible()
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
