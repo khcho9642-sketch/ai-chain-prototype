@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "timezone": "Asia/Seoul",
   "editionDate": "2026-10-28",
-  "publishedAt": "2026-10-28T09:45:34.371Z",
+  "publishedAt": "2026-10-28T13:40:03.649Z",
   "picks": [
     {
       "id": "4898311e-54b3-45f1-afbc-a003baad41b3",
@@ -108,6 +108,26 @@
           "nvda-fy2027-q2-input",
           "nvda-quote-20261027"
         ]
+      },
+      "conversationComment": {
+        "id": "comment-91891e6d-4a56-4311-984a-f53e37839844",
+        "text": "엔비디아는 AI에 필요한 장비를 팔고 실제 이익도 나니 눈길은 가는데, 맛집이라고 메뉴판 가격까지 착한 건 아니잖아. 지금 계산으론 딱히 싸 보이진 않고, 이익이 꾸준히 나고 현금도 따라오는지 더 봐야겠음.",
+        "response": "엔비디아는 AI에 필요한 장비를 팔고 실제 이익도 나니 눈길은 가는데, 맛집이라고 메뉴판 가격까지 착한 건 아니잖아. 지금 계산으론 딱히 싸 보이진 않고, 이익이 꾸준히 나고 현금도 따라오는지 더 봐야겠음.",
+        "sourceReportSha256": "877b8fc3c09a9f5dd522b0cd4a7d35ca5bff5ebf30fd4591f5dcfdc43eba040d",
+        "createdAt": "2026-10-28T13:40:03.649Z",
+        "provenance": {
+          "provider": "gpt",
+          "requestedModel": "gpt-6.1-sol",
+          "reportedModel": null,
+          "cliName": "codex",
+          "cliVersion": "codex-cli 0.164.0-alpha.11.1",
+          "generatedAt": "2026-10-28T13:37:07.898Z",
+          "reviewedAt": "2026-10-28T13:40:03.649Z",
+          "promptVersion": "opinion-conversation-2026-10-28",
+          "runId": "91891e6d-4a56-4311-984a-f53e37839844",
+          "execution": "owner-reviewed-one-off",
+          "responseSha256": "246640ec450b2c4ca7d9e35a5e971206bca7f82ffd70f65768fb4e1cad4f7566"
+        }
       }
     },
     {
@@ -154,7 +174,27 @@
         "운영자가 지정한 NVDA의 제공 실적 검토입니다. Claude의 종목 선정·가격 평가는 없으며 원문 URL을 직접 방문하지 않았습니다.",
         "정정: FY2027에는 GAAP와 non-GAAP 모두 주식기준보상 비용을 포함합니다. 두 이익의 차이는 주로 지분증권 순이익 7,771백만 USD 제외에서 발생합니다.",
         "정정: Q1 non-GAAP EPS 1.87 USD는 2026-05-20 원래 발표에도 있었습니다. Q2에서 바뀐 값이라는 원문 설명은 근거가 없습니다. 아래 원문은 오류를 포함해 보존했습니다."
-      ]
+      ],
+      "conversationComment": {
+        "id": "comment-26f974c2-f6ce-4e7c-8c3a-de4970f82e87",
+        "text": "FY2027 Q1이랑 Q2 EPS 숫자들, 연간 합산이나 TTM 아니고 각각 딱 그 분기 하나 숫자임 — 사과 네 개 중 한 개 가격 물어봤는데 네 개 합계 대답하면 곤란하잖아.",
+        "response": "FY2027 Q1이랑 Q2 EPS 숫자들, 연간 합산이나 TTM 아니고 각각 딱 그 분기 하나 숫자임 — 사과 네 개 중 한 개 가격 물어봤는데 네 개 합계 대답하면 곤란하잖아.",
+        "sourceReportSha256": "6ac72def4b6908f4f8fd70fc589e35824b5a58625848142cd9b7b8223141d928",
+        "createdAt": "2026-10-28T13:40:03.649Z",
+        "provenance": {
+          "provider": "claude",
+          "requestedModel": "claude-sonnet-4-6",
+          "reportedModel": "claude-sonnet-4-6",
+          "cliName": "claude-code",
+          "cliVersion": "2.1.295 (Claude Code)",
+          "generatedAt": "2026-10-28T13:36:25.860Z",
+          "reviewedAt": "2026-10-28T13:40:03.649Z",
+          "promptVersion": "factual-conversation-2026-10-28",
+          "runId": "26f974c2-f6ce-4e7c-8c3a-de4970f82e87",
+          "execution": "owner-reviewed-one-off",
+          "responseSha256": "779ecd5a41956e634488ebde6c99ba60961de6e73356b106edb48fe417a222c4"
+        }
+      }
     },
     {
       "id": "report-04f0a3e0-a5e1-40e2-a08a-3e7810b75f85",
@@ -214,6 +254,26 @@
           "nvda-fy2027-q2-input",
           "nvda-quote-20261027"
         ]
+      },
+      "conversationComment": {
+        "id": "comment-09b6959f-6ff0-4da7-9b5f-c84b3ba304b2",
+        "text": "AI 판에서 모두가 찾는 핵심 공구점이라 지금은 문전성시지만, 단골 큰손들이 자체 연장을 직접 깎아 쓰거나 공장 증설을 늦추면 언제든 찬바람이 불 수 있습니다. 지금 장사가 잘된다고 마냥 안심하기엔 전력 부족이나 고객사 설비투자 축소 같은 복병도 꽤 만만치 않으니까요.",
+        "response": "AI 판에서 모두가 찾는 핵심 공구점이라 지금은 문전성시지만, 단골 큰손들이 자체 연장을 직접 깎아 쓰거나 공장 증설을 늦추면 언제든 찬바람이 불 수 있습니다. 지금 장사가 잘된다고 마냥 안심하기엔 전력 부족이나 고객사 설비투자 축소 같은 복병도 꽤 만만치 않으니까요.\n",
+        "sourceReportSha256": "90f768add01d36ab29c75979233be4ac17171b8dc902c1a918abe34f19cb7449",
+        "createdAt": "2026-10-28T13:40:03.649Z",
+        "provenance": {
+          "provider": "gemini",
+          "requestedModel": "gemini-3.8-flash-high",
+          "reportedModel": null,
+          "cliName": "antigravity",
+          "cliVersion": "1.4.8",
+          "generatedAt": "2026-10-28T13:37:37.087Z",
+          "reviewedAt": "2026-10-28T13:40:03.649Z",
+          "promptVersion": "opinion-conversation-2026-10-28",
+          "runId": "09b6959f-6ff0-4da7-9b5f-c84b3ba304b2",
+          "execution": "owner-reviewed-one-off",
+          "responseSha256": "bb5b169be26b59a5e698b532bf55d0ff0313fe034eb78fd2271051fb1538aab4"
+        }
       }
     }
   ]

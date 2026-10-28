@@ -2,7 +2,7 @@
 
 이 기능은 기존 AI 밸류체인 사이트에서 GPT·Claude·Gemini가 각각 종목 하나와 짧은 의견 하나를 선택하는 수동 편집 도구다. 종목은 기존 `assets/instruments.js`를, 자료는 기존 공개 스냅샷의 종목별 근거를 재사용한다. 사람 댓글·회원·커뮤니티 DB에 쓰지 않는다. 페이지 조회로 모델을 호출하거나 정기 실행을 예약하지 않는다.
 
-2026-10-28 사용자의 세 결과 발행 요청에 따라 GPT·Gemini의 실제 NVDA 의견서와 Claude의 NVDA 실적 검토를 v3 공개 스냅샷에 추가했다. 각각 실제 원문에서 발췌한 AI 댓글 1개와 전체 원문을 표시한다. Claude는 운영자가 지정한 실적 검토이며 종목 선정·가격 평가가 아니다. 이전 GPT 버티브 발행 원문도 유지한다. 기본 AI 워커는 비활성 상태이고 어느 모델의 답도 다른 모델로 대필하지 않는다.
+2026-10-28 사용자의 세 결과 발행 요청에 따라 GPT·Gemini의 실제 NVDA 의견서와 Claude의 NVDA 실적 검토를 v3 공개 스냅샷에 추가했다. 이어 말투 수정 요청에 따라 각 AI가 직접 다시 쓴 짧은 댓글 1개와 전체 의견서 원문을 표시한다. 기존 발췌도 데이터에 보존한다. Claude는 운영자가 지정한 실적 검토이며 종목 선정·가격 평가가 아니다. 이전 GPT 버티브 발행 원문도 유지한다. 기본 AI 워커는 비활성 상태이고 어느 모델의 답도 다른 모델로 대필하지 않는다.
 
 ## 카드에 표시하는 정보
 
@@ -16,7 +16,11 @@ AI 추정 적정가격은 최초 의견의 선택 필드 `fairValue`가 있을 �
 
 ## 일회성 의견서와 발행 댓글
 
-v3는 기존 `picks`, `responses`, `providerStates`를 보존하고 `reports[]`를 추가한다. `stock-opinion`은 GPT·Gemini의 실제 종목 의견, `earnings-review`는 Claude의 제공 실적 검토다. Claude 검토에는 `fairValue`를 허용하지 않는다. `comment`는 `report` 원문에 그대로 존재하는 발췌여야 하며, 전체 원문의 끝 줄바꿈도 보존한다. SHA-256은 원래 응답 UTF-8 바이트와 일치하는지 별도 테스트한다. 체크섬은 변조 탐지 자료이며 제공사 서명이 아니다.
+v3는 기존 `picks`, `responses`, `providerStates`를 보존하고 `reports[]`를 추가한다. `stock-opinion`은 GPT·Gemini의 실제 종목 의견, `earnings-review`는 Claude의 제공 실적 검토다. Claude 검토에는 `fairValue`를 허용하지 않는다. 기존 `comment`는 `report` 원문에 그대로 존재하는 발췌로 보존한다. 전체 원문의 끝 줄바꿈도 유지하고 SHA-256은 원래 응답 UTF-8 바이트와 일치하는지 별도 테스트한다. 체크섬은 변조 탐지 자료이며 제공사 서명이 아니다.
+
+화면용 댓글은 선택 필드 `conversationComment`가 있으면 그 `text`를 사용한다. 이번에는 GPT·Claude·Gemini가 각자의 기존 의견 또는 실적 사실을 대화체로 한 번씩 직접 다시 작성했다. GPT는 짧은 유머와 공감, Claude는 직설적인 비유, Gemini는 생활 비유를 사용하되 낙관·비관을 고정하지 않는다. 말투 지침 이름과 ‘원문 발췌’ 같은 편집 설명은 댓글 제목에 표시하지 않는다.
+
+새 댓글 구조는 `{id, text, response, sourceReportSha256, createdAt, provenance}`다. `response`는 새 CLI 응답 원문 그대로이며 `text`는 그 안의 정확한 문자열이다. 기존 의견서 해시를 연결하고 같은 제공사·CLI, 별도 실행 ID·실제 생성 시각·응답 해시·이번 발행 시각을 검증한다. 기존 의견서·발췌·가격·시각을 새 댓글의 원문이나 생성 시각으로 바꾸지 않는다. 댓글과 원래 의견서 출처는 근거 상세에서 따로 보여준다. Claude는 단위·관측기간의 사실 설명만 다시 썼으며 추천·가격 평가를 추가하지 않았다.
 
 출처는 `execution: owner-reviewed-one-off`, `cliName`, 원래 요청·보고 모델, CLI 버전, 생성 시각·실행 ID·응답 해시를 기록한다. 이번 Gemini는 정식 Gemini CLI가 아닌 **Antigravity CLI 1.4.8** 결과다. 실제 모델 식별자가 없는 GPT·Gemini의 `reportedModel`은 `null`이다. CLI 실행 성공을 공개 자동 댓글 용도의 허용이나 완전한 격리 검증으로 확대 해석하지 않는다.
 

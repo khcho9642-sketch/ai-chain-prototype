@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards } from './today-core.js'
+import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 
 const root = document.getElementById('v-today')
@@ -59,6 +59,19 @@ function sourceDetails(pick) {
   const details = node('details', null, { class: 'today-sources' })
   details.append(node('summary', '근거 · 작성 출처'))
   const provenance = pick.provenance || {}, info = node('div', null, { class: 'today-source-content' })
+  if (pick.conversationComment) {
+    const comment = pick.conversationComment, author = comment.provenance
+    const detail = node('article', null, { class: 'today-evidence' })
+    detail.append(node('strong', '댓글 작성 출처'),
+      node('p', '기존 의견을 같은 AI가 짧은 대화체로 다시 작성했습니다.'),
+      node('p', '요청 모델 ' + author.requestedModel),
+      node('p', author.reportedModel ? '실제 응답 모델 ' + author.reportedModel : '실제 모델명 미확인'),
+      node('p', 'CLI ' + author.cliName + ' · ' + author.cliVersion),
+      node('p', '댓글 생성 ' + timeLabel(author.generatedAt)),
+      node('p', '댓글 발행 ' + timeLabel(comment.createdAt)),
+      node('p', '댓글 SHA-256 ' + author.responseSha256, { class: 'today-response-digest mono' }))
+    info.append(detail, node('strong', '원래 의견서 작성 출처'))
+  }
   info.append(node('p', '제공사 ' + (TODAY_AGENTS[provenance.provider]?.name || provenance.provider || '미확인')),
     node('p', '요청 모델 ' + (provenance.requestedModel || '미확인')),
     node('p', provenance.reportedModel ? '실제 응답 모델 ' + provenance.reportedModel : '실제 모델명 미확인'),
@@ -98,11 +111,12 @@ function sourceDetails(pick) {
 
 function messageMeta(message) {
   const meta = node('div', null, { class: 'today-pick-meta' })
-  const generatedAt = message.kind ? message.provenance.generatedAt : message.createdAt
+  const comment = getTodayComment(message)
+  const generatedAt = message.kind ? comment.provenance.generatedAt : message.createdAt
   meta.append(node('time', '작성 ' + timeLabel(generatedAt), { datetime: generatedAt }))
-  if (message.kind) meta.append(node('time', '발행 ' + timeLabel(message.createdAt), { datetime: message.createdAt }))
+  if (message.kind) meta.append(node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
   meta.append(node('span', '자료 기준 ' + timeLabel(message.dataAsOf)))
-  if (!message.provenance?.reportedModel) meta.append(node('span', '실제 모델명 미확인'))
+  if (!comment.provenance?.reportedModel) meta.append(node('span', '실제 모델명 미확인'))
   return meta
 }
 
@@ -155,8 +169,8 @@ function renderCard(card, { archived = false } = {}) {
   article.append(title, priceFields(pick))
   const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
-  initial.append(node('p', pick.kind ? `${card.name} · AI ${factualReview ? '실적 검토' : '의견'} 댓글 · 원문 발췌` : '의견', { class: 'today-message-label' }),
-    node('p', pick.comment, { class: 'today-comment', 'data-today-comment': '' }))
+  initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }),
+    node('p', getTodayComment(pick).text, { class: 'today-comment', 'data-today-comment': '' }))
   if (pick.kind) initial.append(reportReviewNotes(pick), reportDetails(pick))
   initial.append(messageMeta(pick), sourceDetails(pick))
   thread.append(initial, ...(!card.report ? card.responses || [] : []).map(response => renderResponse(response, pick)))

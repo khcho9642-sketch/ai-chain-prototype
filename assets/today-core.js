@@ -10,6 +10,7 @@ const ROOT_KEYS = ['schemaVersion', 'timezone', 'editionDate', 'publishedAt', 'p
 const PICK_KEYS = ['id', 'agent', 'symbol', 'comment', 'createdAt', 'dataAsOf', 'evidence', 'provenance']
 const RESPONSE_KEYS = [...PICK_KEYS, 'parentId']
 const REPORT_KEYS = [...PICK_KEYS, 'kind', 'report', 'reviewNotes']
+const CONVERSATION_COMMENT_KEYS = ['id', 'text', 'response', 'sourceReportSha256', 'createdAt', 'provenance']
 const PROVENANCE_KEYS = ['provider', 'requestedModel', 'reportedModel', 'cliVersion', 'generatedAt', 'promptVersion', 'runId', 'execution', 'reviewedAt']
 const REPORT_PROVENANCE_KEYS = [...PROVENANCE_KEYS, 'cliName', 'responseSha256']
 const REPORT_CLI_NAMES = Object.freeze({ gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' })
@@ -45,7 +46,7 @@ function publicSource(value) {
 }
 
 function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, error, fairValueAllowed = false, reviewedReport = false }) {
-    if (!keysAre(pick, keys, ['businessProfile', ...(fairValueAllowed ? ['fairValue'] : [])]) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
+    if (!keysAre(pick, keys, ['businessProfile', ...(fairValueAllowed ? ['fairValue'] : []), ...(reviewedReport ? ['conversationComment'] : [])]) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
       !cleanText(pick.id, 1, 160) || ids.has(pick.id) || SIMULATION.test(pick.id) || !cleanText(pick.symbol, 1, 40) || !eligible.has(pick.symbol) ||
       !cleanText(pick.comment, min, max) || /<\/?[a-z]|https?:\/\/|www\./iu.test(pick.comment) ||
       /수익\s*보장|무조건\s*(?:매수|사라)|내부\s*정보/iu.test(pick.comment) ||
@@ -100,6 +101,23 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
   ids.add(pick.id); runs.add(provenance.runId)
 }
 
+function validateConversationComment(report, context) {
+  const comment = report.conversationComment
+  if (!keysAre(comment, CONVERSATION_COMMENT_KEYS) || comment.sourceReportSha256 !== report.provenance.responseSha256 ||
+      !time(comment.provenance?.generatedAt) || Date.parse(comment.provenance.generatedAt) < Date.parse(report.provenance.generatedAt)) fail('invalid_today_conversation_comment')
+  // Reuse the report boundary without changing the original report, excerpt or source metadata.
+  const message = { id: comment.id, agent: report.agent, symbol: report.symbol, comment: comment.text,
+    report: comment.response, createdAt: comment.createdAt, dataAsOf: report.dataAsOf,
+    evidence: report.evidence, provenance: comment.provenance, kind: report.kind, reviewNotes: report.reviewNotes }
+  validateMessage(message, { ...context, keys: REPORT_KEYS, min: 2, max: 300,
+    error: 'invalid_today_conversation_comment', reviewedReport: true })
+}
+
+/** A separately generated comment never replaces its source report or original excerpt. */
+export function getTodayComment(message) {
+  return message.conversationComment || { id: message.id, text: message.comment, createdAt: message.createdAt, provenance: message.provenance }
+}
+
 /** Validate reviewed public records. This does not verify facts or activate a model. */
 export function validateTodaySnapshot(value, { catalog = instruments, now = Date.now() } = {}) {
   const nowMs = clock(now)
@@ -141,6 +159,7 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
     validateMessage(report, { ...context, keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: report?.agent !== 'claude', reviewedReport: true })
     if (reportAgents.has(report.agent)) fail('invalid_today_report_limit')
     reportAgents.add(report.agent)
+    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, context)
   }
   return value
 }

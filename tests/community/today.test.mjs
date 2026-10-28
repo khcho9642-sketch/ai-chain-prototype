@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { kstDate, validateTodaySnapshot, todayCards } from '../../assets/today-core.js'
+import { kstDate, validateTodaySnapshot, todayCards, getTodayComment } from '../../assets/today-core.js'
 
 const now = Date.parse('2026-10-27T03:00:00Z')
 const catalog = [{ symbol: 'NVDA', name: '엔비디아', chains: [4] }, { symbol: '005930.KS', name: '삼성전자', chains: [2, 3] }, { symbol: 'BTC-USD', name: '비트코인', chains: [0] }]
@@ -34,6 +34,17 @@ const reviewedReport = (agent = 'gpt') => {
       cliName: { gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' }[agent], responseSha256: 'a'.repeat(64) } }
 }
 const reportsEdition = (reports = [reviewedReport()]) => ({ ...threaded([pick()], []), schemaVersion: 3, reports })
+const conversationComment = report => ({ id: `conversation-comment-${report.agent}`,
+  text: '분기 성적표 한 장으로 연간 졸업앨범 만들지는 말자ㅋㅋ.',
+  response: '분기 성적표 한 장으로 연간 졸업앨범 만들지는 말자ㅋㅋ.\r\n',
+  sourceReportSha256: report.provenance.responseSha256, createdAt: '2026-10-27T02:10:00Z',
+  provenance: { ...report.provenance, runId: `conversation-comment-run-${report.agent}`, generatedAt: '2026-10-27T02:08:30Z',
+    reviewedAt: '2026-10-27T02:09:00Z', promptVersion: 'owner-conversation-v1', responseSha256: 'b'.repeat(64) } })
+const conversationalEdition = (agent = 'gpt') => {
+  const report = reviewedReport(agent)
+  report.conversationComment = conversationComment(report)
+  return reportsEdition([report])
+}
 
 test('committed public snapshot validates against the real catalog and preserves three author slots', async () => {
   const value = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
@@ -369,4 +380,71 @@ test('reports cannot duplicate an agent, original message or actual inference ru
   assert.throws(() => validate(messageCollision), /invalid_today_report/)
   const runCollision = reportsEdition(); runCollision.reports[0].provenance.runId = pick().provenance.runId
   assert.throws(() => validate(runCollision), /invalid_today_provenance/)
+})
+
+test('a fresh native conversation comment preserves the original report, excerpt and actual source metadata', () => {
+  const value = conversationalEdition(), source = reviewedReport(), report = value.reports[0]
+  assert.equal(validate(value), value)
+  assert.equal(report.report, source.report)
+  assert.equal(report.comment, source.comment)
+  assert.deepEqual(report.provenance, source.provenance)
+  assert.equal(report.createdAt, source.createdAt)
+  assert.equal(getTodayComment(report), report.conversationComment)
+  assert.equal(getTodayComment(report).response.endsWith('\r\n'), true)
+  assert.deepEqual(getTodayComment(source), { id: source.id, text: source.comment, createdAt: source.createdAt, provenance: source.provenance })
+  assert.deepEqual(getTodayComment(pick()), { id: pick().id, text: pick().comment, createdAt: pick().createdAt, provenance: pick().provenance })
+})
+
+test('conversation comments bind their exact native response to the correct original report', () => {
+  for (const patch of [{ sourceReportSha256: 'c'.repeat(64) }, { response: '이 댓글은 다른 원문이다.' },
+    { response: '<script>alert(1)</script>' }, { response: '가'.repeat(16001) }, { text: '가' },
+    { text: '가'.repeat(301) }, { text: '보러 가 https://www.nvidia.com/' }, { text: '수익 보장' },
+    { text: ' 분기 성적표 한 장으로 연간 졸업앨범 만들지는 말자ㅋㅋ.' }, { symbol: 'AMD' }, { fairValue: fairValue() }]) {
+    const value = conversationalEdition(); Object.assign(value.reports[0].conversationComment, patch)
+    assert.throws(() => validate(value), /invalid_today_(?:conversation_comment|report)/)
+  }
+  const missing = conversationalEdition(); delete missing.reports[0].conversationComment.response
+  assert.throws(() => validate(missing), /invalid_today_conversation_comment/)
+  const old = edition([pick()]); old.picks[0].conversationComment = conversationComment(reviewedReport())
+  assert.throws(() => validate(old), /invalid_today_pick/)
+})
+
+test('fresh comments require their own matching provider, CLI and complete execution provenance', () => {
+  for (const patch of [{ provider: 'claude' }, { cliName: 'antigravity' }, { execution: 'official-cli' },
+    { reportedModel: 'other-model' }, { responseSha256: 'ABC' }, { requestedModel: 'fixture-only' },
+    { runId: reviewedReport().provenance.runId }]) {
+    const value = conversationalEdition(); Object.assign(value.reports[0].conversationComment.provenance, patch)
+    assert.throws(() => validate(value), /invalid_today_provenance/)
+  }
+  const missing = conversationalEdition(); delete missing.reports[0].conversationComment.provenance.responseSha256
+  assert.throws(() => validate(missing), /invalid_today_conversation_comment/)
+  const idCollision = conversationalEdition(); idCollision.reports[0].conversationComment.id = pick().id
+  assert.throws(() => validate(idCollision), /invalid_today_conversation_comment/)
+  const nextReportCollision = conversationalEdition()
+  const claude = reviewedReport('claude')
+  nextReportCollision.reports[0].conversationComment.provenance.runId = claude.provenance.runId
+  nextReportCollision.reports.push(claude)
+  assert.throws(() => validate(nextReportCollision), /invalid_today_provenance/)
+})
+
+test('fresh conversation chronology cannot backdate source generation or future-date publication', () => {
+  const early = conversationalEdition(); early.reports[0].conversationComment.provenance.generatedAt = '2026-10-27T01:29:59Z'
+  assert.throws(() => validate(early), /invalid_today_conversation_comment/)
+  for (const patch of [{ generatedAt: '2026-10-27T02:09:30Z' }, { reviewedAt: '2026-10-27T02:11:00Z' },
+    { reviewedAt: '2026-10-26T02:09:00Z' }]) {
+    const value = conversationalEdition(); Object.assign(value.reports[0].conversationComment.provenance, patch)
+    assert.throws(() => validate(value), /invalid_today_chronology/)
+  }
+  const late = conversationalEdition(); late.reports[0].conversationComment.createdAt = '2026-10-27T02:10:01Z'
+  assert.throws(() => validate(late), /invalid_today_chronology/)
+})
+
+test('factual Claude comments retain the existing review scope and cannot add a new attributed valuation', () => {
+  const value = conversationalEdition('claude')
+  assert.equal(validate(value).reports[0].kind, 'earnings-review')
+  assert.equal(getTodayComment(value.reports[0]).provenance.cliName, 'claude-code')
+  for (const patch of [{ kind: 'stock-opinion' }, { selected: true }, { fairValue: fairValue() }]) {
+    const bad = clone(value); Object.assign(bad.reports[0].conversationComment, patch)
+    assert.throws(() => validate(bad), /invalid_today_conversation_comment/)
+  }
 })
