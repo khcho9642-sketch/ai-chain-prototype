@@ -248,6 +248,15 @@ test('publication backs up the previous bytes and atomically writes only reviewe
   assert.equal((await readdir(join(root, 'data'))).some(name => name.endsWith('.tmp')), false)
 })
 
+test('legacy candidate publication cannot erase a reviewed report edition', async t => {
+  const root = await directory(t)
+  const previous = JSON.stringify({ ...empty(), schemaVersion: 3, responses: [], reports: [] }) + '\n'
+  await writeFile(join(root, 'data', 'today-picks.json'), previous)
+  const candidate = await stageTodayCandidate(await reviewedReceiptCandidate(), { root })
+  await assert.rejects(publishTodayCandidate(candidate, { root, catalog, now: NOW, approve: true }), /reviewed_reports_require_editorial_review/)
+  assert.equal(await readFile(join(root, 'data', 'today-picks.json'), 'utf8'), previous)
+})
+
 test('peer publication requires non-fixture receipts and emits only reviewed public v2 fields', async t => {
   const root = await directory(t), candidate = await peerCandidate()
   // A real-looking initial receipt must never hide simulated peer responses.

@@ -240,6 +240,8 @@ export async function publishTodayCandidate(candidatePath, { approve = false, ro
     try { previous = await regularFile(destination) } catch (error) { if (error.code !== 'ENOENT') throw error }
     if (previous) {
       const old = JSON.parse(previous.toString('utf8'))
+      // The legacy candidate publisher cannot replace reviewed reports or their history.
+      ensure(old.schemaVersion !== 3, 'reviewed_reports_require_editorial_review')
       validateTodaySnapshot(old, { catalog, now: at })
       ensure(!old.editionDate || old.editionDate <= date, 'newer_edition_exists')
       for (const agent of AGENTS) {

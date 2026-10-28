@@ -3,6 +3,7 @@ Requires Python playwright, a local Chromium/Chrome and openssl. No service depl
 Run: python tests/browser-smoke.py --browser /usr/bin/chromium
 """
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -50,8 +51,34 @@ def today_browser_fixture(day_offset=0):
                           'comment': f'{name} 화면 검증용 답글입니다. 실제 모델의 응답이 아니며, 원래 종목의 댓글 아래에 다른 AI의 답글을 표시하는지 확인합니다.',
                           'provenance': {**parent['provenance'], 'provider': agent, 'requestedModel': agent + '-pinned',
                                          'runId': f'response-run-{agent}-browser'}})
+    picks[0]['fairValue'] = {'price': 150, 'currency': 'USD', 'asOf': stamp,
+                             'method': '브라우저 표시 검증용 가정입니다. 실제 AI의 가격 산정이 아닙니다.',
+                             'assumptions': ['브라우저 검증용 가정이며 실제 투자 판단에 사용하지 않습니다.'],
+                             'evidenceIds': ['nvda-source']}
     return {'schemaVersion': 2, 'timezone': 'Asia/Seoul', 'editionDate': edition, 'publishedAt': stamp,
             'picks': picks, 'responses': responses, 'providerStates': {agent: {'status': 'ready', 'reason': 'published'} for agent in ['gpt', 'claude', 'gemini']}}
+
+def reviewed_reports_browser_fixture():
+    # Isolated display fixture. Never an inference receipt or public publication.
+    value = today_browser_fixture()
+    reports = []
+    for agent, cli_name in [('gpt', 'codex'), ('claude', 'claude-code'), ('gemini', 'antigravity')]:
+        original = next(pick for pick in value['picks'] if pick['agent'] == agent)
+        comment = f'{agent} 실제 생성이 아닌 브라우저 검증용 원문 발췌입니다. 수치와 의견의 표시 범위를 확인합니다.'
+        report_text = comment + '\n전체 원문 표시 검증용 문단입니다. 자동 댓글이나 모델 호출을 하지 않습니다.'
+        report = {**original, 'id': f'report-{agent}-browser',
+                  'kind': 'earnings-review' if agent == 'claude' else 'stock-opinion',
+                  'comment': comment, 'report': report_text,
+                  'reviewNotes': ['운영자 검토용 정정 문구입니다. 모델 원문과 편집자의 설명을 구분합니다.'],
+                  'provenance': {**original['provenance'], 'runId': f'report-run-{agent}-browser',
+                                 'cliName': cli_name, 'execution': 'owner-reviewed-one-off',
+                                 'responseSha256': hashlib.sha256(report_text.encode('utf-8')).hexdigest()}}
+        report.pop('fairValue', None)
+        if agent != 'claude':
+            report['fairValue'] = {**value['picks'][0]['fairValue'], 'price': 216.48 if agent == 'gpt' else 222}
+        reports.append(report)
+    value.update(schemaVersion=3, reports=reports, picks=value['picks'][:1], responses=[])
+    return value
 
 @contextmanager
 def capture_failure_pages():
@@ -71,7 +98,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
     key, cert = Path(temp) / 'key.pem', Path(temp) / 'cert.pem'
     subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(key), '-out', str(cert), '-days', '1', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     env = dict(os.environ, COMMUNITY_BROWSER_FIXTURE='1', SMOKE_TLS_KEY=str(key), SMOKE_TLS_CERT=str(cert))
-    fixture = subprocess.Popen(['node', 'tests/helpers/browser-server.mjs'], cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    fixture = subprocess.Popen(['node', 'tests/helpers/browser-server.mjs'], cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
     try:
         endpoints = json.loads(fixture.stdout.readline())
         origin = endpoints['siteOrigin']
@@ -82,6 +109,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"browser fixture: external quote lookup disabled"}'))
+            market_fixture = {'status': 200, 'value': json.loads((root / 'data/market.json').read_text(encoding='utf-8'))}
+            market_quote = next(quote for quote in market_fixture['value']['quotes'] if quote['symbol'] == 'NVDA')
+            market_quote.update(price=123.45, currency='USD', marketTime=int(datetime.now(timezone.utc).timestamp()) - 60,
+                                delayed=True, status='ok', source='Yahoo Finance', error=None)
+            page.route('**/api/snapshot?*', lambda route: route.fulfill(status=market_fixture['status'], content_type='application/json', body=json.dumps(market_fixture['value'])))
             page.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             home_requests = []
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
@@ -91,6 +123,8 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             today.get_by_text('추천 미발행', exact=True).first.wait_for()
             assert today.locator('[data-today-agent]').count() == 3
             assert today.locator('[data-today-comment]').count() == 0
+            assert today.locator('.today-agent-style').count() == 0
+            assert not any(style in today.inner_text() for style in ['펨코 느낌', '디시 느낌', '블라인드 느낌'])
             assert page.locator('#v-map').is_hidden()
             today.locator('[data-today-refresh]').click()
             page.wait_for_function("!document.querySelector('[data-today-refresh]').disabled")
@@ -108,8 +142,25 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 assert card.locator('[data-today-comment]').count() == 1
                 assert card.get_attribute('data-pick-id') == pick['id']
                 assert card.locator('.today-initial-comment time').get_attribute('datetime') == pick['createdAt']
+                card.get_by_text('123.45 USD', exact=True).wait_for()
+                assert '지연 시세' in card.locator('[data-today-field=price]').inner_text()
+                assert 'KST' in card.locator('[data-today-price-as-of]').inner_text()
+                assert card.locator('.today-price-fields dt').all_inner_texts() == ['현재 시가', '시가 기준일', 'AI 추정 적정가격']
+                assert card.locator('[data-today-fair-value]').inner_text() == ('150 USD' if pick['agent'] == 'gpt' else '미산정')
+                assert card.locator('.today-initial-comment > .today-message-label').inner_text() == '의견'
             assert today.locator('[data-today-comment]').count() == 3
             assert today.locator('[data-today-response]').count() == 3
+            # Shared market updates change the displayed price, not the AI's historical source or opinion.
+            market_quote['price'] = 124.56
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('124.56 USD', exact=True).wait_for()
+            market_fixture['status'] = 503
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('이전 확인값 · 조회 실패 · 지연 시세 · Yahoo Finance', exact=True).wait_for()
+            assert today.locator('[data-today-agent=gpt] [data-today-price]').inner_text() == '124.56 USD'
+            market_fixture['status'] = 200
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.wait_for_function("!document.querySelector('[data-today-agent=gpt] [data-today-field=price]').textContent.includes('조회 실패')")
             for response in today_fixture['value']['responses']:
                 parent_card = today.locator('[data-pick-id="' + response['parentId'] + '"]')
                 reply = parent_card.locator('[data-today-response="' + response['id'] + '"]')
@@ -162,6 +213,58 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert today.locator('[data-today-comment]').count() == 0
             assert today.locator('[data-today-response]').count() == 0
             assert today.locator('[data-today-archive]').is_hidden()
+            # One-off reports share existing cards and retain earlier publications.
+            today_fixture.update(status=200, value=reviewed_reports_browser_fixture())
+            today.locator('[data-today-refresh]').click()
+            today.get_by_text('AI 댓글 3개 발행', exact=False).wait_for()
+            assert today.locator('[data-today-cards] [data-today-comment]').count() == 3
+            assert today.locator('[data-today-cards] [data-today-response]').count() == 0
+            for report in today_fixture['value']['reports']:
+                card = today.locator('[data-today-agent="' + report['agent'] + '"]')
+                card.get_by_text(report['comment'], exact=True).wait_for()
+                assert card.locator('.today-review-notes').is_visible()
+                card.get_by_text(report['reviewNotes'][0], exact=True).wait_for()
+                assert 'AI' in card.locator('.today-message-label').first.inner_text()
+                card.locator('.today-report-original > summary').click()
+                assert card.locator('[data-today-report-original]').inner_text() == report['report']
+                assert card.locator('.today-initial-comment time').first.get_attribute('datetime') == report['provenance']['generatedAt']
+                assert card.locator('.today-initial-comment time').nth(1).get_attribute('datetime') == report['createdAt']
+                assert card.locator('[data-today-fair-value]').inner_text() == {
+                    'gpt': '216.48 USD', 'claude': '가격 평가 없음', 'gemini': '222 USD'}[report['agent']]
+                if report['agent'] == 'claude':
+                    assert card.locator('.today-pick-kicker').inner_text() == '검토 대상 · 실적 검토'
+                    assert '고른 종목' not in card.inner_text()
+                card.locator('.today-initial-comment > .today-sources > summary').click()
+                cli_label = {'gpt': 'Codex', 'claude': 'Claude Code', 'gemini': 'Antigravity'}[report['agent']]
+                card.get_by_text('CLI ' + cli_label + ' cli-1.0.0', exact=True).wait_for()
+            assert today.locator('[data-today-archive]').is_visible()
+            if today.locator('[data-today-archive]').get_attribute('open') is None:
+                today.locator('[data-today-archive] > summary').click()
+            assert today.locator('[data-today-archive] [data-today-comment]').count() == 1
+            assert today.locator('[data-today-archive-agent=gpt] [data-today-comment]').inner_text() == today_fixture['value']['picks'][0]['comment']
+            page.screenshot(path=str(output / 'today-reviewed-reports-fixture-desktop.png'), full_page=True)
+            # The same reviewed comments appear by symbol without becoming shared DB messages.
+            page.goto(origin + '/#talk/NVDA')
+            page.reload()
+            published_comments = page.locator('#v-talk [data-role=published-reports]')
+            published_comments.locator('[data-published-report-id]').first.wait_for()
+            assert published_comments.locator('[data-published-report-id]').count() == 3
+            assert published_comments.locator('[data-comment-id]').count() == 0
+            for report in today_fixture['value']['reports']:
+                comment = published_comments.locator('[data-report-agent="' + report['agent'] + '"]')
+                comment.get_by_text(report['comment'], exact=True).wait_for()
+                assert comment.get_by_role('button').count() == 0
+            page.locator('#v-talk [data-tab=human]').click()
+            assert published_comments.is_hidden()
+            page.locator('#v-talk [data-tab=ai]').click()
+            assert published_comments.is_visible()
+            page.goto(origin + '/#talk/AMD')
+            page.locator('#v-talk h2').wait_for()
+            assert page.locator('#v-talk [data-published-report-id]').count() == 0
+            page.goto(origin + '/#talk/NVDA')
+            page.locator('#v-talk [data-published-report-id]').first.wait_for()
+            assert page.locator('#v-talk [data-published-report-id]').count() == 3
+            page.locator('#v-talk [data-tab=mixed]').click()
             page.unroute('**/data/today-picks.json', serve_today_fixture)
             page.goto(origin + '/#talk/NVDA')
             board = page.locator('#v-talk .community')
@@ -280,6 +383,14 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile.locator('#v-today [data-today-response-comment]').count() == 3
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-populated-fixture-mobile.png'), full_page=True)
+            mobile_today_fixture = reviewed_reports_browser_fixture()
+            mobile.locator('#v-today [data-today-refresh]').click()
+            mobile.locator('#v-today').get_by_text('AI 댓글 3개 발행', exact=False).wait_for()
+            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
+            mobile.locator('#v-today [data-today-agent=gemini] .today-report-original > summary').click()
+            assert mobile.locator('#v-today [data-today-agent=gemini] [data-today-report-original]').is_visible()
+            assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+            mobile.screenshot(path=str(output / 'today-reviewed-reports-fixture-mobile.png'), full_page=True)
             mobile.goto(origin + '/#talk/NVDA')
             mobile.get_by_text('다른 브라우저에서도 보이는 검증 댓글', exact=True).wait_for()
             mobile.locator('[data-opinion-agent=gpt]').get_by_text(latest_gpt['text'], exact=True).wait_for()
