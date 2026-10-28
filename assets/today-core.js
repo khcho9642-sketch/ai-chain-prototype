@@ -1,9 +1,9 @@
 import { instruments } from './instruments.js'
 
 export const TODAY_AGENTS = Object.freeze({
-  gpt: Object.freeze({ name: 'GPT', style: '펨코 느낌 · 짧은 유머와 공감, 티키타카' }),
-  claude: Object.freeze({ name: 'Claude', style: '디시 느낌 · 짧고 직설적인 표현과 풍자' }),
-  gemini: Object.freeze({ name: 'Gemini', style: '블라인드 느낌 · 현실적인 대화와 생활 비유' }),
+  gpt: Object.freeze({ name: 'GPT' }),
+  claude: Object.freeze({ name: 'Claude' }),
+  gemini: Object.freeze({ name: 'Gemini' }),
 })
 
 const ROOT_KEYS = ['schemaVersion', 'timezone', 'editionDate', 'publishedAt', 'picks', 'providerStates']
@@ -11,6 +11,7 @@ const PICK_KEYS = ['id', 'agent', 'symbol', 'comment', 'createdAt', 'dataAsOf', 
 const RESPONSE_KEYS = [...PICK_KEYS, 'parentId']
 const PROVENANCE_KEYS = ['provider', 'requestedModel', 'reportedModel', 'cliVersion', 'generatedAt', 'promptVersion', 'runId', 'execution', 'reviewedAt']
 const EVIDENCE_KEYS = ['id', 'label', 'sourceUrl', 'observedAt', 'collectedAt']
+const FAIR_VALUE_KEYS = ['price', 'currency', 'asOf', 'method', 'assumptions', 'evidenceIds']
 const FUTURE_ALLOWANCE = 5 * 60 * 1000
 const SIMULATION = /(?:fixture|(?:^|[\s_-])test(?:$|[\s_-])|test[\s_-]*only|not[\s_-]*real|mock|synthetic|demo[\s_-]*only)/iu
 const fail = code => { throw new Error(code) }
@@ -38,8 +39,8 @@ function publicSource(value) {
   } catch { return false }
 }
 
-function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, error }) {
-    if (!keysAre(pick, keys, ['businessProfile']) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
+function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, error, fairValueAllowed = false }) {
+    if (!keysAre(pick, keys, ['businessProfile', ...(fairValueAllowed ? ['fairValue'] : [])]) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
       !cleanText(pick.id, 1, 160) || ids.has(pick.id) || SIMULATION.test(pick.id) || !cleanText(pick.symbol, 1, 40) || !eligible.has(pick.symbol) ||
       !cleanText(pick.comment, min, max) || /<\/?[a-z]|https?:\/\/|www\./iu.test(pick.comment) ||
       /수익\s*보장|무조건\s*(?:매수|사라)|내부\s*정보/iu.test(pick.comment) ||
@@ -71,6 +72,18 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
   }
   // A new fetch or publication must never turn old observations into today's data.
   if (Date.parse(pick.dataAsOf) !== Math.max(...pick.evidence.map(row => Date.parse(row.observedAt))) || Date.parse(pick.dataAsOf) > generated + FUTURE_ALLOWANCE) fail('invalid_today_data_as_of')
+  if (Object.hasOwn(pick, 'fairValue')) {
+    const estimate = pick.fairValue
+    if (!keysAre(estimate, FAIR_VALUE_KEYS) || !Number.isFinite(estimate.price) || estimate.price <= 0 ||
+        typeof estimate.currency !== 'string' || !/^[A-Z]{3}$/u.test(estimate.currency) ||
+        !time(estimate.asOf) || Date.parse(estimate.asOf) > generated ||
+        !cleanText(estimate.method, 1, 1000) ||
+        !Array.isArray(estimate.assumptions) || !estimate.assumptions.length || estimate.assumptions.length > 12 ||
+        estimate.assumptions.some(item => !cleanText(item, 1, 400)) || new Set(estimate.assumptions).size !== estimate.assumptions.length ||
+        !Array.isArray(estimate.evidenceIds) || !estimate.evidenceIds.length || estimate.evidenceIds.length > 12 ||
+        estimate.evidenceIds.some(id => !cleanText(id, 1, 160) || !evidenceIds.has(id)) || new Set(estimate.evidenceIds).size !== estimate.evidenceIds.length ||
+        pick.evidence.some(row => estimate.evidenceIds.includes(row.id) && Date.parse(row.observedAt) > Date.parse(estimate.asOf))) fail('invalid_today_fair_value')
+  }
   ids.add(pick.id); runs.add(provenance.runId)
 }
 
@@ -93,7 +106,7 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
   const agents = new Set(), ids = new Set(), runs = new Set()
   const context = { value, eligible, ids, runs }
   for (const pick of value.picks) {
-    validateMessage(pick, { ...context, keys: PICK_KEYS, min: 30, max: 160, error: 'invalid_today_pick' })
+    validateMessage(pick, { ...context, keys: PICK_KEYS, min: 30, max: 160, error: 'invalid_today_pick', fairValueAllowed: true })
     if (agents.has(pick.agent)) fail('invalid_today_pick')
     agents.add(pick.agent)
   }

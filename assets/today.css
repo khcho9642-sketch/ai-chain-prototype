@@ -3,6 +3,14 @@
 @media(max-width:1080px){.topnav{gap:13px;font-size:12px}.today-guide{align-items:flex-start;flex-direction:column;gap:16px}.today-card{padding:19px}.today-card-grid{gap:13px}.today-company h3{font-size:23px}.today-comment{font-size:14px}.today-agent-name{font-size:20px}}
 @media(max-width:760px){main{padding-bottom:140px}#v-today{gap:25px;padding-top:5px}.today-intro{padding-top:8px}.today-date{font-size:11px;margin-bottom:14px}.today-description{font-size:13px;max-width:310px}.today-card-grid{grid-template-columns:1fr;gap:16px}.today-card{padding:22px}.today-agent-style{min-height:0}.today-company{padding:22px 0 16px}.today-company h3{font-size:27px}.today-comment{font-size:16px}.today-empty{padding:22px 0}.today-empty h3{font-size:23px}.today-section-head h2{font-size:20px}.today-guide{padding:19px}.today-guide-links{gap:12px}.today-guide-links a{font-size:11px}.today-archive{padding:14px}.tabbar>a:first-child>span{font-size:21px;line-height:22px}}
 .today-comment-thread{margin-bottom:16px;flex:1}
+.today-price-fields{display:flex;flex-direction:column;gap:15px;margin:0 0 24px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.today-price-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:12px;align-items:baseline;font-size:12px;line-height:1.6}
+.today-price-field dt{color:var(--muted)}
+.today-price-field dd{margin:0;min-width:0;text-align:right;display:flex;flex-direction:column;gap:4px}
+.today-price-value{font-weight:600;font-variant-numeric:tabular-nums}
+.today-price-note{color:var(--muted);font-size:10px;font-weight:400;line-height:1.5}
+.today-empty .today-price-fields{margin:20px 0 24px}
+.today-empty .today-message-label{margin-bottom:8px;font-size:11px}
 .today-initial-comment{min-width:0}
 .today-message-label{font-size:11px;line-height:1.6;color:var(--muted);margin:0 0 10px}
 .today-response{--agent-color:var(--accent);border-left:2px solid var(--agent-color);background:var(--card-on);padding:15px 14px;margin:8px 0 0 10px;border-radius:0 9px 9px 0;min-width:0}

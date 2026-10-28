@@ -23,6 +23,8 @@ const response = (parent = pick(), agent = 'claude', overrides = {}) => {
     createdAt: '2026-10-27T02:02:00Z', provenance: { ...base.provenance, runId: `response-run-${agent}-${parent.agent}`, generatedAt: '2026-10-27T02:01:00Z' }, ...overrides }
 }
 const threaded = (picks = [pick()], responses = [response(picks[0])]) => ({ ...edition(picks), schemaVersion: 2, responses })
+const fairValue = () => ({ price: 220, currency: 'USD', asOf: '2026-10-27T01:30:00Z',
+  method: '확인한 주당 이익에 가정한 이익 배수를 적용한다.', assumptions: ['배수는 검토용 가정이며 실현을 보장하지 않는다.'], evidenceIds: ['quote-nvda-close'] })
 
 test('committed public snapshot validates against the real catalog and preserves three author slots', async () => {
   const value = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
@@ -46,6 +48,50 @@ test('business context preserves an official source and review date without cros
     const bad = clone(value); Object.assign(bad.picks[0].businessProfile, changes)
     assert.throws(() => validate(bad),/invalid_today_business_source/)
   }
+})
+
+test('reviewed initial picks may preserve an explicit fair-value estimate without changing old records', () => {
+  const older = edition([pick()])
+  assert.equal(validate(older), older)
+  assert.equal(Object.hasOwn(older.picks[0], 'fairValue'), false)
+  for (const value of [edition([pick('gpt', { fairValue: fairValue() })]), threaded([pick('gpt', { fairValue: fairValue() })], [])]) {
+    assert.equal(validate(value), value)
+    assert.equal(todayCards(value, { now, catalog })[0].pick.fairValue.price, 220)
+    assert.deepEqual(value.picks[0].fairValue.evidenceIds, ['quote-nvda-close'])
+  }
+})
+
+test('fair-value estimates reject invalid prices, currencies, missing fields and unapproved additions', () => {
+  for (const changes of [{ price: 0 }, { price: -1 }, { price: NaN }, { price: Infinity }, { price: '220' },
+    { currency: 'usd' }, { currency: 'US' }, { currency: 'USD/share' }, { method: '' }, { method: '가'.repeat(1001) }, { confidence: 100 }]) {
+    const value = edition([pick('gpt', { fairValue: { ...fairValue(), ...changes } })])
+    assert.throws(() => validate(value), /invalid_today_fair_value/)
+  }
+  for (const estimate of [null, undefined, {}, { ...fairValue(), assumptions: undefined }]) {
+    assert.throws(() => validate(edition([pick('gpt', { fairValue: estimate })])), /invalid_today_fair_value/)
+  }
+})
+
+test('fair-value assumptions and cited evidence must be bounded, nonempty and distinct', () => {
+  for (const changes of [{ assumptions: [] }, { assumptions: [''] }, { assumptions: ['공통 가정', '공통 가정'] },
+    { assumptions: [' 가정'] }, { assumptions: ['가'.repeat(401)] }, { assumptions: Array.from({ length: 13 }, (_, i) => `가정 ${i}`) },
+    { evidenceIds: [] }, { evidenceIds: ['unknown-financial-source'] }, { evidenceIds: ['quote-nvda-close', 'quote-nvda-close'] }, { evidenceIds: [null] }]) {
+    assert.throws(() => validate(edition([pick('gpt', { fairValue: { ...fairValue(), ...changes } })])), /invalid_today_fair_value/)
+  }
+  const foreign = edition([pick('gpt', { fairValue: fairValue() })]); foreign.picks[0].evidence[0].symbol = '005930.KS'
+  assert.throws(() => validate(foreign), /invalid_today_evidence/)
+})
+
+test('fair-value as-of dates cannot follow actual generation or precede their cited observations', () => {
+  for (const asOf of ['2026-02-30T01:00:00Z', '2026-10-27', '2026-10-27T01:30:01Z', '2026-10-26T19:59:59Z']) {
+    assert.throws(() => validate(edition([pick('gpt', { fairValue: { ...fairValue(), asOf } })])), /invalid_today_fair_value/)
+  }
+  const value = edition([pick('gpt', { fairValue: { ...fairValue(), asOf: '2026-10-26T20:00:00Z' } })])
+  assert.equal(validate(value), value)
+})
+
+test('replies cannot attach a separate valuation or reuse the initial-pick extension', () => {
+  assert.throws(() => validate(threaded([pick()], [response(pick(), 'claude', { fairValue: fairValue() })])), /invalid_today_response/)
 })
 
 test('KST edition changes at local midnight rather than UTC midnight', () => {

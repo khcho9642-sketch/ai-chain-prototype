@@ -4,7 +4,7 @@ import { communityEvidenceUrl } from './community-ui-core.js'
 
 const root = document.getElementById('v-today')
 const chains = ['소부장', '파운드리·패키징', '메모리', 'AI 칩', '전력', '인프라', '모델', '애플리케이션']
-const state = { snapshot: null, busy: false, loaded: false, error: false }
+const state = { snapshot: null, marketSnapshot: window.aiChainSnapshot || null, marketError: false, busy: false, loaded: false, error: false }
 let controller, generation = 0, dayTimer
 const node = (tag, content, attrs = {}) => {
   const element = document.createElement(tag)
@@ -15,7 +15,33 @@ const node = (tag, content, attrs = {}) => {
 const active = () => root && !root.hidden
 const timeLabel = value => {
   if (!value || !Number.isFinite(Date.parse(value))) return '기준 시각 미확인'
-  return new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) + ' KST'
+  return new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) + ' KST'
+}
+const priceLabel = (price, currency) => Number.isFinite(price) && price > 0 && /^[A-Z]{3}$/u.test(currency || '')
+  ? price.toLocaleString('ko-KR', { maximumFractionDigits: 2 }) + ' ' + currency : null
+const quoteFor = symbol => {
+  const quote = state.marketSnapshot?.quotes?.find(item => item.symbol === symbol)
+  if (!quote || !priceLabel(quote.price, quote.currency) || !Number.isFinite(quote.marketTime) || quote.marketTime <= 0 || quote.marketTime * 1000 > Date.now() + 300000) return null
+  return quote
+}
+
+function priceFields(pick) {
+  const fields = node('dl', null, { class: 'today-price-fields' })
+  const quote = pick ? quoteFor(pick.symbol) : null
+  const field = (label, value, key, note) => {
+    const row = node('div', null, { class: 'today-price-field', 'data-today-field': key })
+    const description = node('dd', null)
+    description.append(node('span', value, { class: 'today-price-value', [`data-today-${key}`]: '' }))
+    if (note) description.append(node('small', note, { class: 'today-price-note' }))
+    row.append(node('dt', label), description)
+    fields.append(row)
+  }
+  const failed = state.marketError || (quote?.status && quote.status !== 'ok')
+  const quoteNote = quote ? [failed ? '이전 확인값 · 조회 실패' : null, quote.delayed ? '지연 시세' : null, quote.source].filter(Boolean).join(' · ') : null
+  field('현재 시가', quote ? priceLabel(quote.price, quote.currency) : pick ? '시세 미확인' : '—', 'price', quoteNote)
+  field('시가 기준일', quote ? timeLabel(new Date(quote.marketTime * 1000).toISOString()) : '—', 'price-as-of')
+  field('AI 추정 적정가격', pick?.fairValue ? priceLabel(pick.fairValue.price, pick.fairValue.currency) : '미산정', 'fair-value', pick?.fairValue ? 'AI 추정 · ' + timeLabel(pick.fairValue.asOf) : null)
+  return fields
 }
 const reasonLabel = value => ({
   verification_pending: '실제 응답 검증 대기', provider_verification_pending: '실제 응답 검증 대기',
@@ -53,6 +79,16 @@ function sourceDetails(pick) {
     if (url) item.append(node('a', '기업 역할 공식 자료 ↗', { href: url, target: '_blank', rel: 'noopener noreferrer' }))
     info.append(item)
   }
+  if (pick.fairValue) {
+    const valuation = pick.fairValue, item = node('article', null, { class: 'today-evidence' })
+    item.append(node('strong', 'AI 적정가격 산정 근거'), node('small', '산정 기준 ' + timeLabel(valuation.asOf)), node('p', valuation.method))
+    for (const assumption of valuation.assumptions) item.append(node('small', assumption))
+    for (const evidenceId of valuation.evidenceIds) {
+      const evidence = pick.evidence.find(item => item.id === evidenceId), url = communityEvidenceUrl(evidence?.sourceUrl)
+      if (url) item.append(node('a', evidence.label + ' ↗', { href: url, target: '_blank', rel: 'noopener noreferrer' }))
+    }
+    info.append(item)
+  }
   info.append(node('p', '근거 링크가 내용 전체의 사실 검증을 뜻하지는 않습니다.', { class: 'note' }))
   details.append(info)
   return details
@@ -79,25 +115,25 @@ function renderCard(card, { archived = false } = {}) {
   const article = node('article', null, { class: `today-card today-agent-${card.agent}`, [archived ? 'data-today-archive-agent' : 'data-today-agent']: card.agent })
   const header = node('div', null, { class: 'today-agent-heading' })
   header.append(node('div', card.name || TODAY_AGENTS[card.agent]?.name, { class: 'today-agent-name' }), node('span', 'AI', { class: 'today-ai-label' }))
-  article.append(header, node('p', card.style || TODAY_AGENTS[card.agent]?.style || '', { class: 'today-agent-style' }))
+  article.append(header)
   const pick = card.pick, published = !!pick && (archived || card.state === 'published')
   article.dataset.state = card.state
   if (!published) {
     const empty = node('div', null, { class: 'today-empty' })
-    empty.append(node('span', '아직 발행되지 않았어요', { class: 'today-pick-kicker' }), node('h3', '추천 미발행'),
-      node('p', state.error ? '발행 자료를 확인할 수 없습니다.' : card.state === 'previous-edition' ? '오늘의 추천은 아직 없습니다.' : reasonLabel(card.reason)))
+    empty.append(node('span', '고른 종목', { class: 'today-pick-kicker' }), node('h3', '추천 미발행'), priceFields(null),
+      node('p', '의견', { class: 'today-message-label' }), node('p', state.error ? '발행 자료를 확인할 수 없습니다.' : card.state === 'previous-edition' ? '오늘의 추천은 아직 없습니다.' : reasonLabel(card.reason)))
     article.append(empty, node('p', card.state === 'previous-edition' && pick ? '이전 추천은 아래 지난 발행에서 확인할 수 있습니다.' : '검증된 실제 응답만 이 자리에 표시합니다.', { class: 'today-empty-note' }))
     return article
   }
   const company = instruments.find(item => item.symbol === pick.symbol)
   article.dataset.pickId = pick.id
   const title = node('div', null, { class: 'today-company' })
-  title.append(node('p', archived ? '지난 추천 종목' : '오늘 고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
+  title.append(node('p', '고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
   if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
-  article.append(title)
-  const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 추천 댓글과 답글` })
+  article.append(title, priceFields(pick))
+  const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 의견과 답글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
-  initial.append(node('p', `${card.name} · AI 추천 댓글`, { class: 'today-message-label' }),
+  initial.append(node('p', '의견', { class: 'today-message-label' }),
     node('p', pick.comment, { class: 'today-comment', 'data-today-comment': '' }), messageMeta(pick), sourceDetails(pick))
   thread.append(initial, ...(card.responses || []).map(response => renderResponse(response, pick)))
   article.append(thread)
@@ -162,6 +198,8 @@ if (root) {
   root.querySelector('[data-today-refresh]').addEventListener('click', readEdition)
   window.renderToday = mount
   window.addEventListener('hashchange', mount)
+  window.addEventListener('market-snapshot', event => { state.marketSnapshot = event.detail; state.marketError = false; render() })
+  window.addEventListener('market-snapshot-error', () => { state.marketError = true; render() })
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render() })
   window.addEventListener('pagehide', () => { clearTimeout(dayTimer); controller?.abort() })
   window.addEventListener('pageshow', mount)

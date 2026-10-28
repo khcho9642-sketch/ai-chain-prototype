@@ -50,6 +50,10 @@ def today_browser_fixture(day_offset=0):
                           'comment': f'{name} 화면 검증용 답글입니다. 실제 모델의 응답이 아니며, 원래 종목의 댓글 아래에 다른 AI의 답글을 표시하는지 확인합니다.',
                           'provenance': {**parent['provenance'], 'provider': agent, 'requestedModel': agent + '-pinned',
                                          'runId': f'response-run-{agent}-browser'}})
+    picks[0]['fairValue'] = {'price': 150, 'currency': 'USD', 'asOf': stamp,
+                             'method': '브라우저 표시 검증용 가정입니다. 실제 AI의 가격 산정이 아닙니다.',
+                             'assumptions': ['브라우저 검증용 가정이며 실제 투자 판단에 사용하지 않습니다.'],
+                             'evidenceIds': ['nvda-source']}
     return {'schemaVersion': 2, 'timezone': 'Asia/Seoul', 'editionDate': edition, 'publishedAt': stamp,
             'picks': picks, 'responses': responses, 'providerStates': {agent: {'status': 'ready', 'reason': 'published'} for agent in ['gpt', 'claude', 'gemini']}}
 
@@ -71,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
     key, cert = Path(temp) / 'key.pem', Path(temp) / 'cert.pem'
     subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(key), '-out', str(cert), '-days', '1', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     env = dict(os.environ, COMMUNITY_BROWSER_FIXTURE='1', SMOKE_TLS_KEY=str(key), SMOKE_TLS_CERT=str(cert))
-    fixture = subprocess.Popen(['node', 'tests/helpers/browser-server.mjs'], cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    fixture = subprocess.Popen(['node', 'tests/helpers/browser-server.mjs'], cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
     try:
         endpoints = json.loads(fixture.stdout.readline())
         origin = endpoints['siteOrigin']
@@ -82,6 +86,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"browser fixture: external quote lookup disabled"}'))
+            market_fixture = {'status': 200, 'value': json.loads((root / 'data/market.json').read_text(encoding='utf-8'))}
+            market_quote = next(quote for quote in market_fixture['value']['quotes'] if quote['symbol'] == 'NVDA')
+            market_quote.update(price=123.45, currency='USD', marketTime=int(datetime.now(timezone.utc).timestamp()) - 60,
+                                delayed=True, status='ok', source='Yahoo Finance', error=None)
+            page.route('**/api/snapshot?*', lambda route: route.fulfill(status=market_fixture['status'], content_type='application/json', body=json.dumps(market_fixture['value'])))
             page.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             home_requests = []
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
@@ -91,6 +100,8 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             today.get_by_text('추천 미발행', exact=True).first.wait_for()
             assert today.locator('[data-today-agent]').count() == 3
             assert today.locator('[data-today-comment]').count() == 0
+            assert today.locator('.today-agent-style').count() == 0
+            assert not any(style in today.inner_text() for style in ['펨코 느낌', '디시 느낌', '블라인드 느낌'])
             assert page.locator('#v-map').is_hidden()
             today.locator('[data-today-refresh]').click()
             page.wait_for_function("!document.querySelector('[data-today-refresh]').disabled")
@@ -108,8 +119,25 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 assert card.locator('[data-today-comment]').count() == 1
                 assert card.get_attribute('data-pick-id') == pick['id']
                 assert card.locator('.today-initial-comment time').get_attribute('datetime') == pick['createdAt']
+                card.get_by_text('123.45 USD', exact=True).wait_for()
+                assert '지연 시세' in card.locator('[data-today-field=price]').inner_text()
+                assert 'KST' in card.locator('[data-today-price-as-of]').inner_text()
+                assert card.locator('.today-price-fields dt').all_inner_texts() == ['현재 시가', '시가 기준일', 'AI 추정 적정가격']
+                assert card.locator('[data-today-fair-value]').inner_text() == ('150 USD' if pick['agent'] == 'gpt' else '미산정')
+                assert card.locator('.today-initial-comment > .today-message-label').inner_text() == '의견'
             assert today.locator('[data-today-comment]').count() == 3
             assert today.locator('[data-today-response]').count() == 3
+            # Shared market updates change the displayed price, not the AI's historical source or opinion.
+            market_quote['price'] = 124.56
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('124.56 USD', exact=True).wait_for()
+            market_fixture['status'] = 503
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('이전 확인값 · 조회 실패 · 지연 시세 · Yahoo Finance', exact=True).wait_for()
+            assert today.locator('[data-today-agent=gpt] [data-today-price]').inner_text() == '124.56 USD'
+            market_fixture['status'] = 200
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.wait_for_function("!document.querySelector('[data-today-agent=gpt] [data-today-field=price]').textContent.includes('조회 실패')")
             for response in today_fixture['value']['responses']:
                 parent_card = today.locator('[data-pick-id="' + response['parentId'] + '"]')
                 reply = parent_card.locator('[data-today-response="' + response['id'] + '"]')
