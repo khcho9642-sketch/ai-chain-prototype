@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, isAbsolute } from 'node:path'
-import { AGENTS, ensure, makePrompt, validateOutput } from '../../server/community/policy.mjs'
+import { AGENTS, ensure, makePrompt, validateOutput, MAX_CLI_INPUT_BYTES } from '../../server/community/policy.mjs'
 
 const safeFailures = new Set(['cli_version_not_verified','cli_help_not_verified','unsupported_cli_flag','unexpected_model_fallback','provider_execution_failed','unsafe_policy_directory','native_executable_required','absolute_cli_command_required','invalid_output','needs_verified_evidence','provider_mismatch','invalid_message_type','message_type_mismatch','message_too_short','private_information','invalid_evidence_ids','unknown_evidence_id','invalid_reply_target','invalid_previous_opinion','unknown_message_reference','unsupported_evidence_date','unsupported_numeric_claim','missing_evidence_unit','missing_evidence_date','stale_current_claim','title_only_claim'])
 
@@ -17,6 +17,7 @@ export function validateAdapter(agent, config) {
   ensure(typeof config.model === 'string' && config.model.trim().length > 0 && config.model.length <= 120 && !/[\r\n\x00-\x1f]/.test(config.model), 'model_required')
   ensure(typeof config.cliVersion === 'string' && config.cliVersion.trim().length > 0 && config.cliVersion.length <= 120 && !/[\r\n\x00-\x1f]/.test(config.cliVersion), 'cli_version_required')
   ensure(typeof config.runnerHome === 'string' && isAbsolute(config.runnerHome), 'isolated_home_required')
+  if (config.codexHome !== undefined) ensure(agent === 'gpt' && typeof config.codexHome === 'string' && isAbsolute(config.codexHome), 'invalid_codex_auth_home')
   return config
 }
 export async function runAdapter(agent, config, job, signal) {
@@ -31,10 +32,12 @@ export async function runAdapter(agent, config, job, signal) {
   }
   const input = JSON.stringify({ provider: agent, model: config.model, requestedModel: config.model, cliVersion: config.cliVersion, prompt: makePrompt(job), validationContext })
   // Match the official bridge limit before launching a process or making any model call.
-  ensure(Buffer.byteLength(input) <= 65536, 'prompt_too_large')
+  ensure(Buffer.byteLength(input) <= MAX_CLI_INPUT_BYTES, 'prompt_too_large')
   const cwd = await mkdtemp(join(tmpdir(), 'ai-chain-comment-'))
   // Do not inherit SITE/DB/WORKER tokens or model API billing keys into the child.
   const env = { PATH: process.env.PATH || '', HOME: config.runnerHome, USERPROFILE: config.runnerHome, TMPDIR: cwd, TEMP: cwd, TMP: cwd, LANG: 'C.UTF-8' }
+  // Explicit native-CLI auth location only; never inherit it or copy its credential bytes.
+  if (agent === 'gpt' && config.codexHome) env.CODEX_HOME = config.codexHome
   for (const key of ['SystemRoot', 'WINDIR', 'COMSPEC']) if (process.env[key]) env[key] = process.env[key]
   try {
     const raw = await new Promise((resolve, reject) => {

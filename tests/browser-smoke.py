@@ -39,8 +39,15 @@ def today_browser_fixture(day_offset=0):
                            'cliVersion': 'cli-1.0.0', 'generatedAt': stamp, 'promptVersion': 'today-v1',
                            'runId': f'run-{agent}-browser', 'execution': 'official-cli', 'reviewedAt': stamp},
         })
-    return {'schemaVersion': 1, 'timezone': 'Asia/Seoul', 'editionDate': edition, 'publishedAt': stamp,
-            'picks': picks, 'providerStates': {agent: {'status': 'ready', 'reason': 'published'} for agent in ['gpt', 'claude', 'gemini']}}
+    responses = []
+    for index, parent in enumerate(picks):
+        agent, name = [('gpt', 'GPT'), ('claude', 'Claude'), ('gemini', 'Gemini')][(index + 1) % 3]
+        responses.append({**parent, 'id': f'response-{agent}-browser', 'parentId': parent['id'], 'agent': agent,
+                          'comment': f'{name} 화면 검증용 답글입니다. 실제 모델의 응답이 아니며, 원래 종목의 댓글 아래에 다른 AI의 답글을 표시하는지 확인합니다.',
+                          'provenance': {**parent['provenance'], 'provider': agent, 'requestedModel': agent + '-pinned',
+                                         'runId': f'response-run-{agent}-browser'}})
+    return {'schemaVersion': 2, 'timezone': 'Asia/Seoul', 'editionDate': edition, 'publishedAt': stamp,
+            'picks': picks, 'responses': responses, 'providerStates': {agent: {'status': 'ready', 'reason': 'published'} for agent in ['gpt', 'claude', 'gemini']}}
 
 @contextmanager
 def capture_failure_pages():
@@ -95,16 +102,30 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 card.get_by_text(pick['comment'], exact=True).wait_for()
                 assert card.locator('[data-today-comment]').count() == 1
                 assert card.get_attribute('data-pick-id') == pick['id']
-                assert card.locator('time').get_attribute('datetime') == pick['createdAt']
+                assert card.locator('.today-initial-comment time').get_attribute('datetime') == pick['createdAt']
             assert today.locator('[data-today-comment]').count() == 3
+            assert today.locator('[data-today-response]').count() == 3
+            for response in today_fixture['value']['responses']:
+                parent_card = today.locator('[data-pick-id="' + response['parentId'] + '"]')
+                reply = parent_card.locator('[data-today-response="' + response['id'] + '"]')
+                reply.get_by_text(response['comment'], exact=True).wait_for()
+                assert reply.get_attribute('data-parent-id') == response['parentId']
+                assert reply.locator('[data-today-response-comment]').count() == 1
+                assert reply.locator('time').get_attribute('datetime') == response['createdAt']
+                assert reply.locator('[data-today-response]').count() == 0
+                assert 'AI' in reply.locator('.today-agent-heading strong').inner_text()
             today_gpt = today.locator('[data-today-agent=gpt]')
-            today_gpt.locator('.today-sources > summary').click()
+            today_gpt.locator('.today-initial-comment > .today-sources > summary').click()
             today_gpt.get_by_text('요청 모델 gpt-pinned', exact=True).wait_for()
-            today_gpt.locator('.today-source-content').get_by_text('실제 모델명 미확인', exact=True).wait_for()
-            today_source = today_gpt.get_by_role('link', name='근거 원문 ↗', exact=True)
+            today_gpt.locator('.today-initial-comment .today-source-content').get_by_text('실제 모델명 미확인', exact=True).wait_for()
+            today_source = today_gpt.locator('.today-initial-comment').get_by_role('link', name='근거 원문 ↗', exact=True)
             assert today_source.get_attribute('href') == 'https://finance.yahoo.com/quote/NVDA/'
             assert today_source.get_attribute('target') == '_blank'
             assert {'noopener', 'noreferrer'} <= set(today_source.get_attribute('rel').split())
+            today_reply = today_gpt.locator('[data-today-response]')
+            today_reply.locator('.today-sources > summary').click()
+            today_reply.get_by_text('요청 모델 claude-pinned', exact=True).wait_for()
+            today_reply.locator('.today-source-content').get_by_text('실제 모델명 미확인', exact=True).wait_for()
             page.screenshot(path=str(output / 'today-populated-fixture-desktop.png'), full_page=True)
             today_gpt.get_by_role('button', name='종목 · 차트', exact=False).click()
             page.wait_for_url(origin + '/#data')
@@ -115,17 +136,26 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.wait_for_url(origin + '/#talk/NVDA')
             page.locator('#v-talk .community').get_by_text('브라우저 검증용 원문입니다.', exact=True).wait_for()
             page.goto(origin + '/#today')
+            today_fixture['value'] = today_browser_fixture()
+            today_fixture['value']['responses'][0]['parentId'] = 'not-a-published-parent'
+            today.locator('[data-today-refresh]').click()
+            today.get_by_text('발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.', exact=True).wait_for()
+            assert today.locator('[data-today-comment]').count() == 0
+            assert today.locator('[data-today-response]').count() == 0
             today_fixture['value'] = today_browser_fixture(day_offset=-1)
             today.locator('[data-today-refresh]').click()
             today.locator('[data-today-agent=gpt]').get_by_text('오늘의 추천은 아직 없습니다.', exact=True).wait_for()
             assert today.locator('[data-today-cards] [data-today-comment]').count() == 0
+            assert today.locator('[data-today-cards] [data-today-response]').count() == 0
             today.locator('[data-today-archive] > summary').click()
             assert today.locator('[data-today-archive-agent]').count() == 3
             assert today.locator('[data-today-archive] [data-today-comment]').count() == 3
+            assert today.locator('[data-today-archive] [data-today-response]').count() == 3
             today_fixture['status'] = 503
             today.locator('[data-today-refresh]').click()
             today.get_by_text('발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.', exact=True).wait_for()
             assert today.locator('[data-today-comment]').count() == 0
+            assert today.locator('[data-today-response]').count() == 0
             assert today.locator('[data-today-archive]').is_hidden()
             page.unroute('**/data/today-picks.json', serve_today_fixture)
             page.goto(origin + '/#talk/NVDA')
@@ -241,6 +271,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.locator('#v-today [data-today-refresh]').click()
             mobile.get_by_text(mobile_today_fixture['picks'][2]['comment'], exact=True).wait_for()
             assert mobile.locator('#v-today [data-today-comment]').count() == 3
+            assert mobile.locator('#v-today [data-today-response-comment]').count() == 3
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-populated-fixture-mobile.png'), full_page=True)
             mobile.goto(origin + '/#talk/NVDA')
@@ -298,7 +329,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today source and unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

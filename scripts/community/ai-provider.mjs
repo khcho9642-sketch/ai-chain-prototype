@@ -4,20 +4,20 @@ import { chmodSync, lstatSync, mkdirSync, unlinkSync, writeFileSync } from 'node
 import { randomUUID } from 'node:crypto'
 import { resolve, isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ensure, validateOutput } from '../../server/community/policy.mjs'
+import { ensure, validateOutput, MAX_CLI_INPUT_BYTES } from '../../server/community/policy.mjs'
 
 export function providerArgs(provider, model) {
   ensure(typeof model === 'string' && model.length > 0, 'model_required')
-  if (provider === 'gpt') return ['exec','--ignore-user-config','--ephemeral','--skip-git-repo-check','--sandbox','read-only','--json','--model',model,'-c','features.shell_tool=false','-c','features.unified_exec=false','-c','web_search="disabled"','-c','mcp_servers={}','-']
-  if (provider === 'claude') return ['-p','--safe-mode','--tools','','--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--disallowedTools','mcp__*','--no-session-persistence','--output-format','json','--model',model]
+  if (provider === 'gpt') return ['exec','--ignore-user-config','--ignore-rules','--ephemeral','--skip-git-repo-check','--sandbox','read-only','--json','--model',model,'-c','forced_login_method="chatgpt"','-c','features.shell_tool=false','-c','features.unified_exec=false','-c','features.apps=false','-c','features.multi_agent=false','-c','features.hooks=false','-c','features.remote_plugin=false','-c','tools.view_image=false','-c','web_search="disabled"','-c','mcp_servers={}','-']
+  if (provider === 'claude') return ['-p','--restricted','--safe-mode','--tools','','--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--disallowedTools','mcp__*','--disable-slash-commands','--no-chrome','--no-session-persistence','--output-format','json','--model',model]
   // Current official policy documentation loads user TOML files from HOME/.gemini/policies.
   // --policy is not a documented CLI option and must not be assumed to work.
   if (provider === 'gemini') return ['--prompt','Follow the JSON-only comment instruction supplied on stdin.','--output-format','json','--approval-mode','default','--sandbox','--model',model]
   throw new Error('unknown_provider')
 }
 export function requiredProviderFlags(provider) {
-  if (provider === 'gpt') return ['--ignore-user-config','--ephemeral','--skip-git-repo-check','--sandbox','--json','--model','--config']
-  if (provider === 'claude') return ['--print','--safe-mode','--tools','--strict-mcp-config','--mcp-config','--disallowedTools','--no-session-persistence','--output-format','--model']
+  if (provider === 'gpt') return ['--ignore-user-config','--ignore-rules','--ephemeral','--skip-git-repo-check','--sandbox','--json','--model','--config']
+  if (provider === 'claude') return ['--print','--restricted','--safe-mode','--tools','--strict-mcp-config','--mcp-config','--disallowedTools','--disable-slash-commands','--no-chrome','--no-session-persistence','--output-format','--model']
   if (provider === 'gemini') return ['--prompt','--output-format','--approval-mode','--sandbox','--model']
   throw new Error('unknown_provider')
 }
@@ -36,13 +36,14 @@ export function decodeProviderResult(provider, raw, requestedModel, context) {
   let value, reported = []
   if (provider === 'gpt') {
     const events = raw.trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
-    ensure(!events.some(e => e.type === 'error' || e.type === 'turn.failed' || ['command_execution','mcp_tool_call','web_search','file_change'].includes(e.item?.type)), 'cli_error_or_tool_use')
+    ensure(!events.some(e => e.type === 'error' || e.type === 'turn.failed' || (e.item?.type && !['agent_message','reasoning'].includes(e.item.type))), 'cli_error_or_tool_use')
     reported = events.filter(e => ['thread.started','turn.started','response.completed'].includes(e.type)).map(e => e.model ?? e.response?.model).filter(model => typeof model === 'string' && model.length > 0)
     const messages = events.filter(e => e.type === 'item.completed' && e.item?.type === 'agent_message')
     ensure(messages.length > 0, 'missing_model_response'); value = JSON.parse(messages.at(-1).item.text)
   } else {
     const envelope = JSON.parse(raw)
     ensure(!envelope.is_error && !envelope.error, 'cli_error')
+    ensure(!(envelope.num_turns > 1) && !(envelope.stats?.tools?.totalCalls > 0), 'cli_error_or_tool_use')
     if (provider === 'claude') { value = JSON.parse(envelope.result); reported = Object.keys(envelope.modelUsage || {}) }
     else { value = JSON.parse(envelope.response); reported = Object.keys(envelope.stats?.models || {}) }
   }
@@ -84,7 +85,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     ensure(command.length >= 1 && command.length <= 2 && command.every(isAbsolute), 'absolute_cli_command_required')
     ensure(!/\.(cmd|bat|ps1)$/i.test(command[0]), 'native_executable_required')
     let raw = ''
-    for await (const chunk of process.stdin) { raw += chunk; ensure(Buffer.byteLength(raw) <= 65536, 'prompt_too_large') }
+    for await (const chunk of process.stdin) { raw += chunk; ensure(Buffer.byteLength(raw) <= MAX_CLI_INPUT_BYTES, 'prompt_too_large') }
     const input = JSON.parse(raw)
     const model = input.requestedModel ?? input.model
     const version = spawnSync(command[0], [...command.slice(1),'--version'], { encoding:'utf8',timeout:10000,maxBuffer:8192,windowsHide:true,shell:false })

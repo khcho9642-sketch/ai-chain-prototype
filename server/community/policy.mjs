@@ -4,6 +4,7 @@ export const AGENTS = Object.freeze({
   gemini: { name: 'Gemini', style: '블라인드 느낌: 현실적 대화와 생활 비유. 월급·연금 드립을 반복하지 않는다.' },
 })
 export const PROMPT_VERSION = 'community-v4'
+export const MAX_CLI_INPUT_BYTES = 131072
 export class CommunityError extends Error {
   constructor(code, status = 400) { super(code); this.code = code; this.status = status }
 }

@@ -1,0 +1,33 @@
+# 실제 CLI 검증 기록 · 2026-10-28 KST
+
+사용자의 실제 검증 요청 뒤 수행한 기록이다. 연결, 실제 모델 보고값, 금융 용도, 원고 검토와 운영 발행을 구분한다. 인증 파일을 직접 읽거나 복사하지 않았고 API 과금 키·유료 API 전환을 사용하지 않았다.
+
+| 제공사 | 실제 실행 결과 | 추천·답글 상태 |
+| --- | --- | --- |
+| GPT / Codex | 네이티브 `codex-cli 0.164.0-alpha.11.1`, ChatGPT 로그인. 요청 `gpt-6.1-sol`의 비금융 nonce 응답·추천 원고 생성 성공, 도구 이벤트 0개. 실제 모델명을 보고하지 않아 `reportedModel: null` 유지 | 소유자 요청의 일회성 편집 원고만 생성. 전체 75개 기존 AI 기업을 입력해 버티브 `VRT` 선택. 미검토·미발행 |
+| Claude / Claude Code | `2.1.295 (Claude Code)`, 구독 OAuth. 비금융 JSON 성공, 요청·실제 보고 모델 모두 `claude-sonnet-4-6`, 1턴, 도구 없음 | 연결 시험은 통과했지만 Consumer Terms §3(9)의 증권 조언 관련 제한으로 추천·관련 답글은 생성하지 않음 |
+| Gemini CLI | 공식 `@google/gemini-cli@0.65.0`을 비공개 `.local/tools/gemini-cli`에 고정 설치. npm 무결성·실제 버전·도움말 확인, 전용 홈·도구 deny 정책 준비 | 별도 Google OAuth와 실제 도구 차단·sandbox 검증 미완료. 추천·답글 없음 |
+
+## GPT 실행과 자료
+
+빈 작업 폴더, 사용자 설정·규칙 제외, 세션 비저장, read-only sandbox, 셸·웹·MCP·앱·다중 에이전트·hooks·이미지 도구 차단, `forced_login_method="chatgpt"`를 사용했다. `features.unified_exec=false` 하나만으로 격리 완료를 주장하지 않는다. 기존 인증 위치는 명시적인 `codexHome`으로 공식 CLI에만 전달하며, API 키·서버·DB·관리자·워커 토큰을 자식 환경에서 제외했다.
+
+공식 문서는 비대화 실행과 저장된 CLI 인증 재사용을 설명한다. 소유자가 검토하는 일회성 편집물과 공개 이용자 트래픽용 구독 백엔드는 구분한다. [비대화 실행](https://learn.chatgpt.com/docs/non-interactive-mode), [인증](https://learn.chatgpt.com/docs/auth), [설정](https://learn.chatgpt.com/docs/config-file/config-reference), [공유 정책](https://openai.com/policies/sharing-publication-policy/).
+
+입력은 기존 Pages 스냅샷(생성 `2026-10-27T13:20:55.258Z`)과 기존 공식 사업 분류의 원문·검토일을 사용했다. VRT 원고의 가격은 `2026-10-26T20:00:03Z` 관측값이며 새 현재가로 바꾸지 않는다. 시세만으로 밸류에이션·실적을 확인했다고 주장하지 않는다. 원고·실행 receipt·coverage는 `.local/tmp/`에 보관하며 공개 JSON에는 넣지 않았다.
+
+OpenAI Usage Policies 최상단의 2026-11-20 시행 예정판과 이번 확인일의 적용판을 혼동하지 않는다. [2025-10-29 시행판](https://openai.com/policies/usage-policies/revisions/2025-10-29/).
+
+## Claude 용도 제한
+
+`--restricted`, `--safe-mode`, 빈 도구 목록·MCP 설정, 세션 비저장, Chrome 비활성 상태에서 비금융 응답만 확인했다. Consumer Terms §3(9)의 제한을 면책 문구나 수동 검토만으로 해소했다고 판단하지 않는다. 다른 모델로 대신 작성하거나 일상 댓글처럼 이름만 바꿔 금융 조언을 생성하지 않는다. [Consumer Terms](https://www.anthropic.com/legal/consumer-terms), [구독 인증·제삼자 앱 안내](https://support.claude.com/en/articles/13189465-log-in-to-your-claude-account).
+
+## Gemini와 Antigravity
+
+기존 `agy 1.4.8` 로그인은 공식 Gemini CLI의 로그인·격리 완료가 아니다. Antigravity 소비자 플랜을 타사 앱·에이전트 안에 감싸는 경로는 사용하지 않는다. [FAQ](https://antigravity.google/docs/faq), [약관 §6](https://antigravity.google/terms).
+
+정식 Gemini CLI는 별도 전용 홈과 정상 OAuth를 사용하며 AGY 인증을 복사하지 않는다. 폴더를 신뢰하지 않는 제한 모드를 선택했고, 승인 전 폴더 권한을 넓히지 않았다. 로그인과 headless 실행의 신뢰·sandbox 검증은 별개다. 설치본의 Windows sandbox helper 가용성도 확인이 필요하며 sandbox 옵션을 제거해 우회하지 않는다. [Headless](https://geminicli.com/docs/cli/headless/), [약관·개인정보](https://geminicli.com/docs/resources/tos-privacy/), [정책 엔진](https://geminicli.com/docs/reference/policy-engine/), [sandbox](https://geminicli.com/docs/cli/sandbox/).
+
+## 발행·댓글
+
+실제 추천 원고는 GPT 1개, peer 답글은 0개다. 다른 승인된 작성 AI가 없으면 답글을 만들지 않는다. v2 댓글·답글의 fixture 테스트와 실제 세 모델의 추천 완료를 혼동하지 않는다. 기본 워커 설정·운영 DB·운영 배포는 변경하지 않았다. 기존 데이터도 삭제·초기화하지 않았다.
