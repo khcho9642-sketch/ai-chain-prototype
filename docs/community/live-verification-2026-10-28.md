@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | GPT / Codex | 네이티브 `codex-cli 0.164.0-alpha.11.1`, ChatGPT 로그인. 요청 `gpt-6.1-sol`의 비금융 nonce 응답·추천 원고 생성 성공, 도구 이벤트 0개. 실제 모델명을 보고하지 않아 `reportedModel: null` 유지 | 소유자 요청의 일회성 편집 원고만 생성. 전체 75개 기존 AI 기업을 입력해 버티브 `VRT` 선택. 미검토·미발행 |
 | Claude / Claude Code | `2.1.295 (Claude Code)`, 구독 OAuth. 비금융 JSON 성공, 요청·실제 보고 모델 모두 `claude-sonnet-4-6`, 1턴, 도구 없음 | 연결 시험은 통과했지만 Consumer Terms §3(9)의 증권 조언 관련 제한으로 추천·관련 답글은 생성하지 않음 |
-| Gemini CLI | 공식 `@google/gemini-cli@0.65.0`을 비공개 `.local/tools/gemini-cli`에 고정 설치. npm 무결성·실제 버전·도움말 확인, 전용 홈·도구 deny 정책 준비 | 별도 Google OAuth와 실제 도구 차단·sandbox 검증 미완료. 추천·답글 없음 |
+| Gemini CLI | 공식 `@google/gemini-cli@0.65.0` 설치·버전·옵션 확인 뒤 실제 인증 시 개인용 클라이언트 지원 종료 오류 수신 (`2026-10-28T01:16:04Z`) | `consumer_client_retired`로 차단. 로그인 성공·실제 추론 확인 없음. 추천·답글 없음 |
 
 ## GPT 실행과 자료
 
@@ -26,7 +26,11 @@ OpenAI Usage Policies 최상단의 2026-11-20 시행 예정판과 이번 확인�
 
 기존 `agy 1.4.8` 로그인은 공식 Gemini CLI의 로그인·격리 완료가 아니다. Antigravity 소비자 플랜을 타사 앱·에이전트 안에 감싸는 경로는 사용하지 않는다. [FAQ](https://antigravity.google/docs/faq), [약관 §6](https://antigravity.google/terms).
 
-정식 Gemini CLI는 별도 전용 홈과 정상 OAuth를 사용하며 AGY 인증을 복사하지 않는다. 폴더를 신뢰하지 않는 제한 모드를 선택했고, 승인 전 폴더 권한을 넓히지 않았다. 로그인과 headless 실행의 신뢰·sandbox 검증은 별개다. 설치본의 Windows sandbox helper 가용성도 확인이 필요하며 sandbox 옵션을 제거해 우회하지 않는다. [Headless](https://geminicli.com/docs/cli/headless/), [약관·개인정보](https://geminicli.com/docs/resources/tos-privacy/), [정책 엔진](https://geminicli.com/docs/reference/policy-engine/), [sandbox](https://geminicli.com/docs/cli/sandbox/).
+정식 Gemini CLI의 전용 홈과 정상 OAuth를 사용했으며 AGY 인증을 복사하지 않았다. 네이티브 CLI는 개인용 Code Assist 클라이언트를 더 이상 지원하지 않으니 Antigravity 제품군으로 이전하라는 오류를 반환했다. 인증 성공·실제 추론은 확인하지 못했고, 기존 인증 URL은 완료 경로로 재사용하지 않는다. 인증 파일·토큰·코드를 읽거나 복사하지 않았으며 API 전환·추가 자동 재시도를 하지 않는다.
+
+Google 공식 지원 문서는 **2026-06-18부터 개인 무료·AI Pro·AI Ultra 계정의 Gemini CLI 요청과 Login with Google 접근이 종료**됐다고 설명한다(확인한 지원 문서 갱신일 2026-10-09). 따라서 단순 로그인 미완료로 표시하거나 재로그인·재설치를 반복하도록 안내하면 안 된다. [공식 지원 종료 안내](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals), [Google 이전 발표](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/).
+
+폴더를 신뢰하지 않는 제한 모드를 선택했고, 승인 전 권한을 넓히지 않았다. 사용자는 이후 정확한 검증용 빈 폴더만 승인했다. 실제 도구 차단·Windows sandbox 검증은 완료하지 못했으며 옵션을 제거해 우회하지 않는다. [정책 엔진](https://geminicli.com/docs/reference/policy-engine/), [sandbox](https://geminicli.com/docs/cli/sandbox/).
 
 ## 발행·댓글
 

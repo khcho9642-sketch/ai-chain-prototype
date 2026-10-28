@@ -8,6 +8,6 @@
   "providerStates": {
     "gpt": { "status": "ready", "reason": "awaiting_manual_review" },
     "claude": { "status": "disabled", "reason": "terms_not_cleared" },
-    "gemini": { "status": "disabled", "reason": "authentication_required" }
+    "gemini": { "status": "blocked", "reason": "consumer_client_retired" }
   }
 }

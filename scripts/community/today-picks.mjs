@@ -19,7 +19,7 @@ const instant = now => typeof now === 'function' ? now() : now
 const approvedBridge = fileURLToPath(new URL('./ai-provider.mjs', import.meta.url))
 const selectedFields = ['id', 'label', 'sourceUrl', 'observedAt', 'collectedAt', 'symbol']
 const adapterFailures = new Set(['cli_version_not_verified', 'cli_help_not_verified', 'unsupported_cli_flag', 'unexpected_model_fallback', 'provider_execution_failed', 'unsafe_policy_directory', 'native_executable_required', 'absolute_cli_command_required', 'cancelled', 'cli_timeout', 'output_too_large', 'cli_launch_failed', 'cli_failed', 'invalid_cli_json'])
-const disabledReasons = new Set(['usage_review_required', 'terms_not_cleared', 'authentication_required', 'cli_unavailable', 'isolation_unverified', 'provider_disabled'])
+const disabledReasons = new Set(['usage_review_required', 'terms_not_cleared', 'authentication_required', 'consumer_client_retired', 'cli_unavailable', 'isolation_unverified', 'provider_disabled'])
 const safeReason = error => typeof error?.code === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(error.code) ? error.code : adapterFailures.has(error?.message) ? error.message : 'generation_failed'
 function fail(code) { const error = new Error(code); error.code = code; throw error }
 function inside(base, target) { const part = relative(base, target); return part !== '' && !isAbsolute(part) && part !== '..' && !part.startsWith('..' + sep) }
@@ -50,6 +50,7 @@ export function dailyCandidatePool({ catalog = instruments, evidenceSource, now 
 }
 
 async function approvedDailyAdapter(agent, config) {
+  if (config?.disabledReason === 'consumer_client_retired') fail('consumer_client_retired')
   if (!config?.enabled) fail(disabledReasons.has(config?.disabledReason) ? config.disabledReason : 'provider_disabled')
   validateAdapter(agent, config)
   ensure(config.dailyPicksApproved === true, 'daily_pick_use_not_approved')
@@ -126,7 +127,7 @@ export async function generateTodayPicks({ adapters = {}, catalog = instruments,
       result.providerStates[agent] = { status: 'ready', reason: 'awaiting_manual_review' }
     } catch (error) {
       const reason = safeReason(error)
-      result.providerStates[agent] = { status: !config?.enabled ? 'disabled' : 'blocked', reason }
+      result.providerStates[agent] = { status: reason === 'consumer_client_retired' || config?.enabled ? 'blocked' : 'disabled', reason }
     }
   }
   // Only initial picks are parents. No generated response is ever eligible for another response.
@@ -241,6 +242,12 @@ export async function publishTodayCandidate(candidatePath, { approve = false, ro
       const old = JSON.parse(previous.toString('utf8'))
       validateTodaySnapshot(old, { catalog, now: at })
       ensure(!old.editionDate || old.editionDate <= date, 'newer_edition_exists')
+      for (const agent of AGENTS) {
+        if (old.providerStates[agent]?.reason === 'consumer_client_retired' &&
+            !next.picks.some(message => message.agent === agent) && !next.responses.some(message => message.agent === agent)) {
+          next.providerStates[agent] = old.providerStates[agent]
+        }
+      }
       if (old.editionDate === date) {
         for (const published of old.picks) {
           const incomingIndex = next.picks.findIndex(pick => pick.agent === published.agent)

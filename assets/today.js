@@ -22,6 +22,7 @@ const reasonLabel = value => ({
   terms_unverified: '이용 조건 확인 대기', terms_pending: '이용 조건 확인 대기',
   usage_review_required: '이번 추천 용도의 이용 조건 확인 대기',
   terms_not_cleared: '현재 이용 조건으로 추천 참여 불가', authentication_required: 'Google 로그인 대기',
+  consumer_client_retired: '개인용 Gemini CLI 지원 종료로 참여 불가',
   isolation_unverified: '도구 차단·격리 검증 대기',
   awaiting_manual_review: '실제 원고 검토·발행 대기',
   cli_unavailable: '공식 CLI 실행 환경 확인 대기', cli_not_installed: '공식 CLI 실행 환경 확인 대기',

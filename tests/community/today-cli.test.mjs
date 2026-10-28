@@ -86,6 +86,15 @@ test('disabled model reasons preserve only known status codes without invoking a
   }
 })
 
+test('a retired personal client stays blocked even if enabled is accidentally set', async () => {
+  const candidate = await generateTodayPicks({ adapters: {gemini:config('gemini',{disabledReason:'consumer_client_retired'})}, catalog, evidenceSource:source, now:NOW,
+    includeResponses:true, run:async()=>assert.fail('retired client called') })
+  assert.equal(candidate.attempted,0)
+  assert.deepEqual(candidate.providerStates.gemini,{status:'blocked',reason:'consumer_client_retired'})
+  assert.deepEqual(candidate.picks,[])
+  assert.deepEqual(candidate.responses,[])
+})
+
 test('all agents receive the same bounded evidence pool and each can emit only one selected symbol', async () => {
   const pools = [], adapters = Object.fromEntries(['gpt', 'claude', 'gemini'].map(agent => [agent, config(agent)]))
   const candidate = await generateTodayPicks({ adapters, catalog, evidenceSource: source, now: () => NOW, run: async (agent, adapter, job) => { pools.push(JSON.stringify(job.candidates)); return response(agent, adapter, job) } })
@@ -211,6 +220,16 @@ test('manual approval, same-day generation and non-fixture execution receipts ar
   const reviewed = await stageTodayCandidate(await reviewedReceiptCandidate(), { root })
   await assert.rejects(publishTodayCandidate(reviewed, { root, catalog, now: NOW + 86400000, approve: true }), /candidate_not_current_edition/)
   assert.equal(JSON.parse(await readFile(join(root, 'data', 'today-picks.json'), 'utf8')).picks.length, 0)
+})
+
+test('publishing an older draft cannot replace a known retired-client state with a login prompt', async t => {
+  const root = await directory(t), previous = empty()
+  previous.providerStates.gemini = {status:'blocked',reason:'consumer_client_retired'}
+  await writeFile(join(root,'data','today-picks.json'),JSON.stringify(previous)+'\n')
+  const candidate = await stageTodayCandidate(await reviewedReceiptCandidate(),{root})
+  const result = await publishTodayCandidate(candidate,{root,catalog,now:NOW,approve:true})
+  assert.deepEqual(result.snapshot.providerStates.gemini,previous.providerStates.gemini)
+  assert.equal(result.snapshot.picks.length,1)
 })
 
 test('publication backs up the previous bytes and atomically writes only reviewed public fields', async t => {
