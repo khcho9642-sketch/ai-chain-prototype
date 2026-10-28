@@ -24,11 +24,15 @@ const response = (parent = pick(), agent = 'claude', overrides = {}) => {
 }
 const threaded = (picks = [pick()], responses = [response(picks[0])]) => ({ ...edition(picks), schemaVersion: 2, responses })
 
-test('empty public initial snapshot contains no invented recommendations or AI responses', async () => {
+test('committed public snapshot validates against the real catalog and preserves three author slots', async () => {
   const value = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
-  assert.equal(validate(value), value)
-  const cards = todayCards(value, { now, catalog })
+  assert.equal(validateTodaySnapshot(value), value)
+  const cards = todayCards(value)
   assert.deepEqual(cards.map(card => card.agent), ['gpt', 'claude', 'gemini'])
+})
+
+test('empty initial snapshot contains no invented recommendations or AI responses', () => {
+  const value = initial(), cards = todayCards(value, { now, catalog })
   assert.equal(cards.every(card => card.pick === null && card.state !== 'published'), true)
   assert.equal(cards.every(card => card.responses.length === 0), true)
   assert.equal(value.editionDate, null)

@@ -22,6 +22,10 @@ output = (root / args.output).resolve()
 output.mkdir(parents=True, exist_ok=True)
 errors = []
 
+def empty_today_fixture():
+    return {'schemaVersion': 2, 'timezone': 'Asia/Seoul', 'editionDate': None, 'publishedAt': None,
+            'picks': [], 'responses': [], 'providerStates': {agent: {'status': 'disabled', 'reason': 'provider_disabled'} for agent in ['gpt', 'claude', 'gemini']}}
+
 def today_browser_fixture(day_offset=0):
     # In-memory schema-valid UI fixture only; never write this to public snapshots.
     at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=day_offset)
@@ -78,6 +82,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"browser fixture: external quote lookup disabled"}'))
+            page.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             home_requests = []
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
             page.goto(origin + '/')
@@ -261,6 +266,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile = phone.new_page(); mobile.on('pageerror', lambda error: errors.append(str(error)))
             captured_pages.append(mobile)
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))
+            mobile.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             mobile.goto(origin + '/')
             mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
             assert mobile.locator('#v-today [data-today-agent]').count() == 3
