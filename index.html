@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 체인 · AI Value Chain</title>
-<meta name="description" content="AI Value Chain 8단계를 한 화면에. AI 관련 종목 주주를 위한 정보·커뮤니티 플랫폼 프로토타입.">
-<meta property="og:title" content="AI 체인 · AI Value Chain">
-<meta property="og:description" content="소부장부터 애플리케이션까지, AI Value Chain 8단계를 한 화면에.">
+<title>AI Value Chain Today</title>
+<meta name="description" content="GPT·Claude·Gemini가 각각 고른 AI 밸류체인 종목 하나와 한마디. 실제 발행된 추천과 근거를 확인하세요.">
+<meta property="og:title" content="AI Value Chain Today">
+<meta property="og:description" content="세 AI가 각각 한 종목, 한마디씩. 실제 발행 시각과 근거를 함께 확인하세요.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
@@ -135,14 +135,15 @@ aside h2{margin:0;font-size:16px}
 <link rel="stylesheet" href="./assets/company-directory.css">
 <link rel="stylesheet" href="./assets/industry.css">
 <link rel="stylesheet" href="./assets/ai-statistics.css">
+<link rel="stylesheet" href="./assets/today.css">
 </head>
 <body>
 <header>
   <div class="wrap top">
-    <span class="brand">AI 체인 <small>(가칭)</small></span>
+    <a class="brand today-brand" href="#today">AI Value Chain <small>Today</small></a>
     <nav class="topnav" aria-label="주요 메뉴">
-      <a href="#map" data-r="map" class="on">Value Chain</a><a href="#data" data-r="data">시세·기업</a><a href="#compare" data-r="compare">고리 비교</a><a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업통계</a>
-  <a href="#ai-stats" data-r="ai-stats">AI 통계</a><a href="#talk" data-r="talk">토론</a><a href="#ai" data-r="ai">AI에게 묻기</a>
+      <a href="#today" data-r="today" class="on">오늘의 추천</a><a href="#map" data-r="map">밸류체인 지도</a><a href="#data" data-r="data">시세·기업</a><a href="#talk" data-r="talk">토론</a>
+      <details class="nav-more"><summary>데이터 더보기</summary><div><a href="#compare" data-r="compare">고리 비교</a><a href="#industry" data-r="industry">산업통계</a><a href="#ai-stats" data-r="ai-stats">AI 통계</a><a href="#ai" data-r="ai">AI에게 묻기</a></div></details>
     </nav>
     <div class="spacer"></div>
     <div class="search">
@@ -154,11 +155,27 @@ aside h2{margin:0;font-size:16px}
 </header>
 
 <main class="wrap">
-<div id="v-map" class="view">
+<div id="v-today" class="view">
+  <section class="today-intro" aria-labelledby="today-title">
+    <p class="today-date" data-today-date>한국 시간 기준</p>
+    <h1 id="today-title">AI Value Chain <span>Today</span></h1>
+    <p class="today-subtitle">세 AI가 각각 한 종목, 한마디씩.</p>
+    <p class="today-description">추천 종목과 AI의 생각을 읽고, 궁금한 종목의 대화에 참여하세요.</p>
+  </section>
+  <section class="today-picks" aria-labelledby="today-picks-title">
+    <div class="today-section-head"><div><p class="today-eyebrow">DAILY PICKS</p><h2 id="today-picks-title">오늘의 추천 종목</h2></div><button class="f" data-today-refresh type="button">다시 읽기</button></div>
+    <p class="today-status" data-today-status role="status">발행된 추천을 확인하고 있습니다.</p>
+    <div class="today-card-grid" data-today-cards aria-live="polite"></div>
+    <details class="today-archive panel" data-today-archive hidden><summary>지난 발행 보기</summary><div class="today-card-grid" data-today-archive-cards></div></details>
+  </section>
+  <section class="today-guide panel"><div><h2>종목 하나에서 대화로</h2><p>같은 종목을 골라도 생각은 다를 수 있습니다. AI의 선택은 수익 보장이나 세 독립 전문가의 검증을 뜻하지 않습니다.</p></div><div class="today-guide-links"><a href="#data">기업·시세 보기 →</a><a href="#map">밸류체인 지도 →</a><a href="#talk">종목 토론 →</a></div></section>
+</div>
+<div id="v-map" class="view" hidden>
+  <p class="note">지도 내 신호 판정과 [값]은 과거 디자인의 예시입니다. 실제 시세·관측 자료는 각 출처와 기준 시각을 확인하세요.</p>
   <div class="hero">
     <div>
-      <div class="muted" style="font-size:13px;margin-bottom:6px">10월 26일 (월) 기준</div>
-      <h1>AI Value Chain <span>Today</span></h1>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">AI 산업의 연결 구조</div>
+      <h1>AI Value Chain <span>지도</span></h1>
     </div>
     <div class="counts" id="counts"></div>
   </div>
@@ -198,11 +215,12 @@ aside h2{margin:0;font-size:16px}
 <div id="v-talk" class="view" hidden></div>
 <div id="v-ai" class="view" hidden></div>
 
-  <p class="note">프로토타입입니다. 신호 판정과 [값]은 예시이며 실제 데이터가 아닙니다. 이 서비스는 데이터를 모아 보여줄 뿐 매수·매도를 추천하지 않습니다.</p>
+  <p class="note">AI 선정은 제공된 자료에 대한 견해이며 수익 보장이나 개인별 매매 지시가 아닙니다.</p>
 </main>
 
 <nav class="tabbar" aria-label="주요 메뉴">
-  <a href="#map" data-r="map" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
+  <a href="#today" data-r="today" class="on"><span aria-hidden="true">◈</span>오늘의 추천</a>
+  <a href="#map" data-r="map"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
   <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>데이터</a>
   <a href="#compare" data-r="compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 18L9 11L14 14L21 5M3 10L9 15L14 7L21 11"/></svg>고리 비교</a>
   <a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업통계</a>
@@ -288,10 +306,10 @@ function renderAI(){
 }
 function ask(q){document.getElementById('aq').value=q;document.getElementById('ansBox').innerHTML='<b>Q. '+esc(q)+'</b>'+answer(q);}
 function route(){
-  var h=location.hash.replace('#','').split('/'),r=['map','data','compare','industry','ai-stats','talk','ai'].indexOf(h[0])>-1?h[0]:'map';
-  ['map','data','compare','industry','ai-stats','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
+  var h=location.hash.replace('#','').split('/'),r=['today','map','data','compare','industry','ai-stats','talk','ai'].indexOf(h[0])>-1?h[0]:'today';
+  ['today','map','data','compare','industry','ai-stats','talk','ai'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
   document.querySelectorAll('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===r);});
-  if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='ai-stats')window.renderAiStatistics?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
+  if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='ai-stats')window.renderAiStatistics?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
@@ -307,5 +325,6 @@ route();
 <script type="module" src="./assets/company-directory.js"></script>
 <script type="module" src="./assets/industry.js"></script>
 <script type="module" src="./assets/ai-statistics.js"></script>
+<script type="module" src="./assets/today.js"></script>
 </body>
 </html>

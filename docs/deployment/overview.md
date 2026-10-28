@@ -18,7 +18,7 @@
 
 ## 공개 파일과 예약 갱신
 
-`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 다음 6개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
+`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 기존 6개와 Today 1개를 합한 7개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
 
 | 공개 JSON | 내용 |
 | --- | --- |
@@ -28,12 +28,17 @@
 | `ai-tokens.json` | OpenRouter 검토 스냅샷 또는 공식 API 수집 결과와 상태 |
 | `ai-disclosures.json` | 공식 문서 확인 상태와 검토 후보 |
 | `company-disclosures.json` | 국내 18개 기업의 DART 공시 메타데이터·수집 상태 |
+| `today-picks.json` | 검토한 실제 AI별 추천·댓글 또는 미발행 상태 |
 
 `.github/workflows/market-pages.yml`은 기존 약 30분 간격 Pages 작업에서 이전 토큰·문서 감시·국내 기업 공시 상태를 검증해 복원하고 세 수집기를 실행한다. 토큰·AI 발표문 감시는 각각의 일일 호출 기준을, 국내 기업 공시는 15분 재시도 간격을 관리한다. 수집 오류 시 이전 자료를 배포할 수 있도록 수집 단계는 실패 후에도 진행하며, 최종 빌드의 자료 검증은 유지한다. 승인된 `ai-statistics.json`은 Git에서 관리하고, 배포된 과거 파일로 덮어쓰거나 문서 감시 결과로 자동 승인하지 않는다. 예약 실행은 지연될 수 있다.
 
 읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`, `/api/company-disclosures`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter·DART를 직접 호출하거나 매출·사용자 수를 새로 수집하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
 
-배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 6종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 7종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+
+Today는 `data/today-picks.json`을 읽는 정적 발행 화면이다. 조회·다시 읽기는 모델을 호출하지 않는다.
+이 파일은 기존 시세 수집·복원 작업에서 덮어쓰지 않으며, 승인된 공식 CLI 원고를 사람이 검토한 뒤 수동 발행한다.
+원고 생성·로컬 공개 파일 저장·운영 배포는 각각 다른 단계다. 미설치·이용 조건/격리 미확인 모델은 비활성 상태를 유지한다.
 
 ## 커뮤니티 서버 배포 준비
 

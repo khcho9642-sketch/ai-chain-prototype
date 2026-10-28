@@ -44,6 +44,16 @@ test('provider provenance records an unknown actual model instead of copying the
   ]) assert.throws(() => decodeProviderResult(provider,raw,'fixture-only'),/unexpected_model_fallback/)
 })
 
+test('model output with any tool execution or hidden extra turn cannot be published', () => {
+  const message = JSON.stringify({type:'item.completed',item:{type:'agent_message',text:JSON.stringify(output())}})
+  for (const type of ['command_execution','mcp_tool_call','web_search','file_change','image_view','collab_tool_call','unknown_tool']) {
+    const raw = JSON.stringify({type:'item.completed',item:{type}})+'\n'+message
+    assert.throws(() => decodeProviderResult('gpt',raw,'fixture-only'),/cli_error_or_tool_use/)
+  }
+  assert.throws(() => decodeProviderResult('claude',JSON.stringify({result:JSON.stringify(output()),num_turns:2}),'fixture-only'),/cli_error_or_tool_use/)
+  assert.throws(() => decodeProviderResult('gemini',JSON.stringify({response:JSON.stringify(output()),stats:{tools:{totalCalls:1}}}),'fixture-only'),/cli_error_or_tool_use/)
+})
+
 test('official bridge checks exact versions and required flags while Gemini never assumes --policy support', () => {
   for (const provider of ['gpt','claude','gemini']) {
     const help = requiredProviderFlags(provider).join('\n')
@@ -54,7 +64,21 @@ test('official bridge checks exact versions and required flags while Gemini neve
   assert.ok(!providerArgs('gemini','fixture-only').includes('--policy'))
   assert.ok(providerArgs('gemini','fixture-only').includes('--sandbox'))
   assert.ok(providerArgs('claude','fixture-only').includes('mcp__*'))
+  assert.ok(providerArgs('claude','fixture-only').includes('--restricted'))
+  assert.ok(providerArgs('gpt','fixture-only').includes('--ignore-rules'))
+  assert.ok(providerArgs('gpt','fixture-only').includes('forced_login_method="chatgpt"'))
   assert.throws(() => validateAdapter('gpt',{provider:'gpt'}),/adapter_not_approved/)
+})
+
+test('Codex native auth home is explicit and unavailable to another provider', async t => {
+  const directory = await temporary(t), script = join(directory,'auth-home-cli.mjs')
+  for (const authHome of [undefined, directory]) {
+    await writeFile(script, `let raw='';for await(const chunk of process.stdin)raw+=chunk;const input=JSON.parse(raw);if(process.env.CODEX_HOME!==${JSON.stringify(authHome)})process.exit(7);if(process.env.OPENAI_API_KEY||process.env.CODEX_API_KEY||process.env.COMMUNITY_WORKER_TOKEN)process.exit(8);console.log(JSON.stringify({provider:input.provider,requestedModel:input.model,cliVersion:input.cliVersion,output:{action:'skip',reason:'검증 전용 응답'}}));`)
+    const result = await runAdapter('gpt',adapter(directory,{args:[script],...(authHome ? {codexHome:authHome} : {})}),job())
+    assert.equal(result.output.action,'skip')
+  }
+  assert.throws(() => validateAdapter('gpt',adapter(directory,{codexHome:'relative'})),/invalid_codex_auth_home/)
+  assert.throws(() => validateAdapter('claude',adapter(directory,{provider:'claude',codexHome:directory})),/invalid_codex_auth_home/)
 })
 
 test('Gemini deny policy uses the approved isolated home, blocks all tools and never overwrites existing files', async t => {
