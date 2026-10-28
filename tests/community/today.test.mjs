@@ -25,6 +25,15 @@ const response = (parent = pick(), agent = 'claude', overrides = {}) => {
 const threaded = (picks = [pick()], responses = [response(picks[0])]) => ({ ...edition(picks), schemaVersion: 2, responses })
 const fairValue = () => ({ price: 220, currency: 'USD', asOf: '2026-10-27T01:30:00Z',
   method: '확인한 주당 이익에 가정한 이익 배수를 적용한다.', assumptions: ['배수는 검토용 가정이며 실현을 보장하지 않는다.'], evidenceIds: ['quote-nvda-close'] })
+const reviewedReport = (agent = 'gpt') => {
+  const base = pick(agent)
+  return { ...base, id: `reviewed-report-${agent}`, kind: agent === 'claude' ? 'earnings-review' : 'stock-opinion',
+    comment: '자료의 분기와 주당 단위를 구분해야 한다.', report: '자료의 분기와 주당 단위를 구분해야 한다.\n공식 출처: https://www.nvidia.com/en-us/',
+    createdAt: '2026-10-27T02:08:00Z', reviewNotes: ['수동 검토한 실제 원문의 일부를 댓글로 표시한다.'],
+    provenance: { ...base.provenance, runId: `reviewed-report-run-${agent}`, execution: 'owner-reviewed-one-off',
+      cliName: { gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' }[agent], responseSha256: 'a'.repeat(64) } }
+}
+const reportsEdition = (reports = [reviewedReport()]) => ({ ...threaded([pick()], []), schemaVersion: 3, reports })
 
 test('committed public snapshot validates against the real catalog and preserves three author slots', async () => {
   const value = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
@@ -258,4 +267,106 @@ test('reply bodies allow agreement or disagreement without fake reactions or nes
   for (const patch of [{ comment: '가' }, { comment: '가'.repeat(301) }, { comment: '<b>가짜 HTML 댓글</b>' }, { likes: 10 }, { parent: pick().id }, { responses: [] }]) {
     assert.throws(() => validate(threaded([pick()], [response(pick(), 'claude', patch)])), /invalid_today_response/)
   }
+})
+
+test('v3 displays independently reviewed reports while retaining the original publication and worker states', () => {
+  const reports = ['gpt', 'claude', 'gemini'].map(agent => reviewedReport(agent)), value = reportsEdition(reports)
+  const original = clone(value.picks[0]), providerStates = clone(value.providerStates)
+  assert.equal(validate(value), value)
+  const cards = todayCards(value, { now, catalog })
+  assert.deepEqual(cards.map(card => card.report.agent), ['gpt', 'claude', 'gemini'])
+  assert.equal(cards.every(card => card.state === 'published' && card.reason === 'reviewed_one_off_publication'), true)
+  assert.deepEqual(cards[0].pick, original)
+  assert.deepEqual(value.providerStates, providerStates)
+  assert.equal(cards[2].report.provenance.cliName, 'antigravity')
+  assert.equal(cards[2].report.provenance.reportedModel, null)
+})
+
+test('v3 requires an explicit bounded report array and does not silently relax v2', () => {
+  const missing = reportsEdition(); delete missing.reports
+  assert.throws(() => validate(missing), /invalid_today_snapshot/)
+  assert.throws(() => validate(reportsEdition(Array(4).fill(reviewedReport()))), /invalid_today_snapshot/)
+  const older = threaded(); older.reports = []
+  assert.throws(() => validate(older), /invalid_today_snapshot/)
+  assert.equal(validate(reportsEdition([])).reports.length, 0)
+  const empty = { ...initial(), schemaVersion: 3, responses: [], reports: [] }
+  assert.equal(validate(empty), empty)
+  empty.reports.push(reviewedReport())
+  assert.throws(() => validate(empty), /invalid_today_edition/)
+})
+
+test('Claude factual reviews cannot masquerade as a selected stock or contain an attributed fair value', () => {
+  const value = reportsEdition([reviewedReport('claude')])
+  assert.equal(validate(value).reports[0].kind, 'earnings-review')
+  for (const patch of [{ kind: 'stock-opinion' }, { kind: 'recommendation' }, { fairValue: fairValue() }, { selected: true }]) {
+    const bad = clone(value); Object.assign(bad.reports[0], patch)
+    assert.throws(() => validate(bad), /invalid_today_report/)
+  }
+  const gpt = reportsEdition(); gpt.reports[0].fairValue = fairValue()
+  assert.equal(validate(gpt).reports[0].fairValue.price, 220)
+  gpt.reports[0].fairValue.evidenceIds = ['another-stock-evidence']
+  assert.throws(() => validate(gpt), /invalid_today_fair_value/)
+})
+
+test('a displayed report comment is an exact excerpt with explicit editorial notes and bounded plaintext', () => {
+  const value = reportsEdition()
+  assert.equal(validate(value).reports[0].report.includes(value.reports[0].comment), true)
+  value.reports[0].report += '\r\n'
+  assert.equal(validate(value).reports[0].report.endsWith('\r\n'), true)
+  for (const patch of [{ comment: '원문에 없는 다른 모델의 대필 문장' }, { report: '<script>alert(1)</script>' },
+    { report: '가'.repeat(16001) }, { reviewNotes: [] }, { reviewNotes: ['수정', '수정'] }, { reviewNotes: ['<b>수정</b>'] },
+    { likes: 100 }, { parentId: pick().id }]) {
+    const bad = clone(value); Object.assign(bad.reports[0], patch)
+    assert.throws(() => validate(bad), /invalid_today_report/)
+  }
+})
+
+test('one-off reports require the actual CLI family and complete source metadata without enabling old pick execution', () => {
+  for (const patch of [{ cliName: 'gemini' }, { execution: 'official-cli' }, { responseSha256: 'A'.repeat(64) },
+    { responseSha256: 'abc' }, { reportedModel: 'some-other-model' }, { provider: 'claude' }]) {
+    const value = reportsEdition(); Object.assign(value.reports[0].provenance, patch)
+    assert.throws(() => validate(value), /invalid_today_provenance/)
+  }
+  const missing = reportsEdition(); delete missing.reports[0].provenance.responseSha256
+  assert.throws(() => validate(missing), /invalid_today_report/)
+  const old = edition([pick()]); old.picks[0].provenance.execution = 'owner-reviewed-one-off'
+  assert.throws(() => validate(old), /invalid_today_provenance/)
+})
+
+test('reports publish at the actual new date while preserving earlier generation and original pick dates', () => {
+  const value = reportsEdition(), nextDay = Date.parse('2026-10-28T03:00:00Z')
+  value.editionDate = '2026-10-28'; value.publishedAt = '2026-10-28T02:10:00Z'
+  value.reports[0].createdAt = '2026-10-28T02:08:00Z'
+  value.reports[0].provenance.reviewedAt = '2026-10-28T02:05:00Z'
+  assert.equal(validateTodaySnapshot(value, { now: nextDay, catalog }), value)
+  const cards = todayCards(value, { now: nextDay, catalog })
+  assert.equal(cards[0].state, 'published')
+  assert.equal(cards[0].report.provenance.generatedAt, '2026-10-27T01:30:00Z')
+  assert.equal(cards[0].pick.createdAt, '2026-10-27T02:00:00Z')
+  assert.equal(todayCards(value, { now: nextDay + 86400000, catalog })[0].state, 'previous-edition')
+  for (const patch of [{ reviewedAt: '2026-10-28T02:09:00Z' }, { reviewedAt: '2026-10-27T02:05:00Z' },
+    { generatedAt: '2026-10-28T02:06:00Z' }]) {
+    const bad = clone(value); Object.assign(bad.reports[0].provenance, patch)
+    assert.throws(() => validateTodaySnapshot(bad, { now: nextDay, catalog }), /invalid_today_chronology/)
+  }
+})
+
+test('post-generation independent source review remains dated separately from model valuation inputs', () => {
+  const value = reportsEdition(), report = value.reports[0]
+  report.evidence.push({ id: 'official-earnings-review', symbol: 'NVDA', label: '공식 실적의 사후 검토',
+    sourceUrl: 'https://investor.nvidia.com/', observedAt: '2026-10-27T02:03:00Z', collectedAt: '2026-10-27T02:04:00Z' })
+  report.dataAsOf = '2026-10-27T02:03:00Z'; report.fairValue = fairValue()
+  assert.equal(validate(value), value)
+  report.fairValue.evidenceIds.push('official-earnings-review')
+  assert.throws(() => validate(value), /invalid_today_fair_value/)
+  report.fairValue.evidenceIds.pop(); report.evidence[1].collectedAt = '2026-10-27T02:20:00Z'
+  assert.throws(() => validate(value), /invalid_today_evidence/)
+})
+
+test('reports cannot duplicate an agent, original message or actual inference run', () => {
+  assert.throws(() => validate(reportsEdition([reviewedReport(), { ...reviewedReport(), id: 'another-report', provenance: { ...reviewedReport().provenance, runId: 'another-report-run' } }])), /invalid_today_report_limit/)
+  const messageCollision = reportsEdition(); messageCollision.reports[0].id = pick().id
+  assert.throws(() => validate(messageCollision), /invalid_today_report/)
+  const runCollision = reportsEdition(); runCollision.reports[0].provenance.runId = pick().provenance.runId
+  assert.throws(() => validate(runCollision), /invalid_today_provenance/)
 })

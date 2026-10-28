@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "timezone": "Asia/Seoul",
   "editionDate": "2026-10-28",
-  "publishedAt": "2026-10-28T01:51:03.467Z",
+  "publishedAt": "2026-10-28T09:45:34.371Z",
   "picks": [
     {
       "id": "4898311e-54b3-45f1-afbc-a003baad41b3",
@@ -48,5 +48,173 @@
       "status": "blocked",
       "reason": "consumer_client_retired"
     }
-  }
+  },
+  "reports": [
+    {
+      "id": "report-3083de50-d655-417b-8af9-ec9158bb0b5a",
+      "agent": "gpt",
+      "kind": "stock-opinion",
+      "symbol": "NVDA",
+      "comment": "단순 연율화와 주관적 배수를 적용하면 관측 주가는 대표 추정값과 비슷해, 이 계산에서 뚜렷한 가격 여유는 보이지 않는다. 반대 논거는 현재 분기 이익이 반복되지 않거나 투자자의 기대 배수가 낮아질 때 평가액도 크게 내려간다는 것이다.",
+      "report": "1. **고른 종목:** 엔비디아(NVDA)\n\n2. **현재 확인 가능한 시가:** **217.94 USD/주**, 지연 시세(`delayed=true`). 제공 자료에 담긴 과거 관측값이며, 응답 시점의 실시간 가격은 아닙니다.\n\n3. **시가 기준일:** 미국 거래일 2026-10-27의 관측값입니다.\n   - UTC: 2026-10-27 20:00:01\n   - KST: 2026-10-28 05:00:01\n   - sourceUrl: https://finance.yahoo.com/quote/NVDA/\n\n   스냅샷 생성 시각과 시세 관측 시각은 구분했습니다.\n\n4. **AI 추정 적정가격:** 조건부 대표값 **216.48 USD/주**, 배수 민감도 범위 **177.12~255.84 USD/주**입니다. 단일 분기 GAAP EPS를 단순 연율화한 비교값이므로 신뢰도는 제한적입니다. 미래 목표가격이나 통계적 신뢰구간이 아닙니다.\n\n5. **의견:**\n\n엔비디아를 관심 종목으로 고른 이유는 AI 연산과 연결을 담당하는 사업 역할에 더해, 제공 자료에서 실제 주당이익까지 확인할 수 있기 때문이다. 확인된 사실은 데이터센터 GPU·AI 가속기·네트워크 사업을 영위하며, FY2027 2분기 GAAP 희석 EPS가 2.46달러로 직전 분기 2.39달러보다 높았다는 점이다. 내 해석은 AI 투자라는 주제를 실제 이익과 연결해 검토할 출발점이 있다는 것이다. 다만 두 분기의 EPS만으로 성장 지속성이나 현금창출력을 입증할 수는 없다. 단순 연율화와 주관적 배수를 적용하면 관측 주가는 대표 추정값과 비슷해, 이 계산에서 뚜렷한 가격 여유는 보이지 않는다. 반대 논거는 현재 분기 이익이 반복되지 않거나 투자자의 기대 배수가 낮아질 때 평가액도 크게 내려간다는 것이다. 향후 같은 회계기준의 EPS 지속성, 영업현금흐름과 이익의 일치 여부, 일회성 항목을 확인하면 판단을 바꾸겠다. 현재 의견은 사업에는 관심을 두되 가격 매력 판단은 유보한다는 것이다.\n\n6. **계산과 핵심 가정:**\n\n   - **사용 기간·기준:** 2026-07-26 종료 FY2027 2분기 **GAAP 희석 EPS 2.46 USD/주**. 직전 1분기 GAAP EPS 2.39 USD/주는 의견의 비교에만 사용했습니다.\n   - **단순 연율화:** `2.46 × 4 = 9.84 USD/주`. 이는 **TTM 실적이나 공식 연간 전망이 아니라, 같은 분기 수익력이 네 분기 계속된다는 가정**입니다.\n   - **대표값:** `9.84 × 22배 = 216.48 USD/주`.\n   - **민감도:** `9.84 × 18배 = 177.12`, `9.84 × 26배 = 255.84 USD/주`. 18·22·26배는 제가 정한 주관적 비교 가정이며 회사 가이던스·시장 컨센서스·검증한 과거 밴드가 아닙니다. 이 배수들을 뒷받침할 추가 근거도 제공되지 않았습니다.\n   - **시가 비교:** `216.48 ÷ 217.94 − 1 ≈ −0.67%`. 이 차이는 추정의 불확실성보다 작아 저평가·고평가를 확정할 근거로 보기 어렵습니다.\n   - **기준별 차이:** 같은 자료의 non-GAAP EPS는 2분기 2.22, 1분기 1.87 USD/주이며 계산에 섞지 않았습니다. FY2027 1분기부터 non-GAAP에도 주식기준보상 비용이 포함되고 비교 기간도 재작성됐으므로, 이를 주식기준보상 제외 수치로 해석하지 않습니다.\n   - **한계:** 분기 변동·계절성·일회성 항목의 영향을 분리할 자료가 부족합니다. 연율화 EPS 자체가 10% 달라지면 같은 배수의 평가액도 10% 달라집니다. 후속 실적·현금흐름·주식 수 변동은 확인하지 못했습니다. 미래 연도 추정치를 사용하지 않아 할인 계산은 적용하지 않았습니다.\n\n7. **출처:** 아래 제공 자료만 사용했으며 이번 실행에서 링크를 직접 열어 확인하지 않았습니다.\n\n   - 가격: https://finance.yahoo.com/quote/NVDA/\n   - 사업 역할: https://www.nvidia.com/en-us/data-center/\n   - EPS 및 Non-GAAP Measures: https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx",
+      "createdAt": "2026-10-28T09:45:34.371Z",
+      "dataAsOf": "2026-10-28T06:40:50.515Z",
+      "evidence": [
+        {
+          "id": "nvda-fy2027-q2-input",
+          "symbol": "NVDA",
+          "label": "입력자료 기록 · 실적 종료 2026-07-26 / 발표 2026-08-26（기록 시각은 발표 시각 아님）",
+          "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx",
+          "observedAt": "2026-10-28T06:40:50.515Z",
+          "collectedAt": "2026-10-28T06:40:50.515Z"
+        },
+        {
+          "id": "nvda-quote-20261027",
+          "symbol": "NVDA",
+          "label": "217.94 USD/주 · Yahoo Finance 지연 시세 · 실제 관측 시각",
+          "sourceUrl": "https://finance.yahoo.com/quote/NVDA/",
+          "observedAt": "2026-10-27T20:00:01.000Z",
+          "collectedAt": "2026-10-28T02:23:22.067Z"
+        }
+      ],
+      "provenance": {
+        "provider": "gpt",
+        "requestedModel": "gpt-6.1-sol",
+        "reportedModel": null,
+        "cliVersion": "codex-cli 0.164.0-alpha.11.1",
+        "cliName": "codex",
+        "generatedAt": "2026-10-28T06:41:55.168Z",
+        "promptVersion": "owner-stock-opinion-2026-10-28",
+        "runId": "3083de50-d655-417b-8af9-ec9158bb0b5a",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-10-28T09:45:34.371Z",
+        "responseSha256": "877b8fc3c09a9f5dd522b0cd4a7d35ca5bff5ebf30fd4591f5dcfdc43eba040d"
+      },
+      "reviewNotes": [
+        "조건부 계산: 분기 GAAP EPS 2.46 × 4 × 가정 PER 22배. GAAP 이익에는 지분증권 순이익 7,771백만 USD가 포함되어 반복 가능성이 미확인입니다. 배수는 주관적 가정이며 TTM·미래 목표주가가 아닙니다.",
+        "75개 후보 중 실적 수치를 제공한 기업은 NVDA뿐입니다. 모델은 제공 자료를 검토했습니다. 실적 종료 2026-07-26·발표 2026-08-26이며 근거의 입력자료 기록 시각과 구분합니다."
+      ],
+      "fairValue": {
+        "price": 216.48,
+        "currency": "USD",
+        "asOf": "2026-10-28T06:40:50.515Z",
+        "method": "FY2027 2분기 GAAP 희석 EPS 2.46 USD × 4 × 가정 PER 22배 = 216.48 USD/주. PER 18~26배 민감도 177.12~255.84 USD/주.",
+        "assumptions": [
+          "단일 분기의 수익력이 네 분기 계속된다고 가정하며 계절성·일회성 항목을 정상화하지 않았습니다.",
+          "적용 PER는 모델의 주관적 가정이며 회사 전망·시장 컨센서스·검증한 과거 밴드가 아닙니다.",
+          "GAAP 이익에 포함된 지분증권 순이익의 반복 여부가 확인되지 않았습니다."
+        ],
+        "evidenceIds": [
+          "nvda-fy2027-q2-input",
+          "nvda-quote-20261027"
+        ]
+      }
+    },
+    {
+      "id": "report-051ba683-4799-4120-a484-9f6e0b5f2467",
+      "agent": "claude",
+      "kind": "earnings-review",
+      "symbol": "NVDA",
+      "comment": "네 개 EPS 값 모두 USD/주·단일분기 기준으로 통일되어 있어 연간·TTM 수치와 혼용된 흔적은 없습니다.",
+      "report": "## NVIDIA FY2027 Q2 실적 수치 일관성 검토\n\n> **방법 한계**: 이번 실행에서 도구가 비활성화되어 있으므로, 아래는 제공된 요약 자료 내부의 수치·단위·기간 일관성 검토입니다. 원문 IR 페이지를 직접 열어 독립 검증한 결과가 아닙니다. 원문 확인이 필요한 항목은 별도 구분합니다.\n\n---\n\n### 1. 보고 수치·단위·관측기간 표\n\n| 항목 | 제공된 값 | 단위 | 관측기간 | 비고 |\n|---|---|---|---|---|\n| 발표일 | 2026-08-26 | — | — | 분기 종료 후 약 31일 |\n| 분기 종료일 | 2026-07-26 | — | FY2027 Q2 마지막일 | 일요일 종료(NVDA 52/53주 회계연도와 부합) |\n| 회계 기간 명칭 | FY2027 Q2 | — | 단일 분기 | NVDA 회계연도 기준(FY 시작 ≈ 1월 말) |\n| GAAP 희석 EPS (당기) | 2.46 | USD/주 | FY2027 Q2 | 분기 단일값 |\n| non-GAAP 희석 EPS (당기) | 2.22 | USD/주 | FY2027 Q2 | 방법론 변경 적용 후 |\n| GAAP 희석 EPS (전분기) | 2.39 | USD/주 | FY2027 Q1 | 직전 분기 비교값 |\n| non-GAAP 희석 EPS (전분기) | 1.87 | USD/주 | FY2027 Q1 | 재작성 후 비교값 |\n\n**단위·기간 면에서 내부 일관성**: 네 개 EPS 값 모두 USD/주·단일분기 기준으로 통일되어 있어 연간·TTM 수치와 혼용된 흔적은 없습니다.\n\n---\n\n### 2. GAAP / non-GAAP 혼용 여부\n\n제공 자료 내에서 두 기준은 명시적으로 구분되어 있습니다. 혼용 오류는 없습니다.\n\n다만 **구조적 이례(異例)** 가 있습니다.\n\n- 일반적으로 non-GAAP EPS는 주식기준보상(SBC) 등을 제외하므로 **GAAP보다 높게** 나옵니다.\n- 제공 자료에서는 **GAAP(2.46) > non-GAAP(2.22)** 입니다. 전분기도 동일한 방향(GAAP 2.39 > non-GAAP 1.87)입니다.\n\n이 역전은 회사가 명시한 방법론 변경으로 설명될 수 있습니다.  \n\"FY2027 Q1부터 non-GAAP에도 SBC를 포함한다\"는 것은 SBC를 non-GAAP에서 **다시 추가(가산)**한다는 의미가 됩니다. 이 경우 SBC가 비용이므로 포함하면 non-GAAP이 낮아지는 방향이 되어 GAAP > non-GAAP 역전이 가능합니다.\n\n그러나 이 해석이 정확한지, 즉 \"포함\"이 비용 인식인지 다른 처리인지는 **원문 press release의 non-GAAP 조정 내역 표(Reconciliation)에서 직접 확인이 필요합니다.**\n\n---\n\n### 3. 분기 EPS와 연간/TTM 구분\n\n| 구분 | 판단 |\n|---|---|\n| 제공된 값이 분기 단일값인가 | 예 — 분기 종료일과 기간 명칭이 단일 분기를 지정 |\n| 연간·TTM 수치와 혼용 가능성 | 없음 — 제공 자료에서 연간 또는 TTM 언급 없음 |\n| 주의 필요 사항 | 이 수치를 연간화(×4)하거나 TTM으로 외삽하는 것은 제공 자료 범위 밖입니다 |\n\n---\n\n### 4. 원문 확인이 추가로 필요한 항목\n\n아래 항목은 제공 자료 요약만으로는 판단할 수 없으며, 위 출처 URL의 원문 press release에서 직접 확인해야 합니다.\n\n1. **GAAP > non-GAAP 역전의 근거**: non-GAAP Reconciliation 표에서 SBC가 어느 방향으로 조정되는지 (비용 인식 vs. 기타 처리).\n2. **전분기 non-GAAP 재작성 범위**: FY2027 Q1 non-GAAP 1.87 USD가 원래 발표된 값인지, 이번 방법론 변경에 따라 재작성된 값인지, 그리고 그 차이가 얼마인지.\n3. **희석 주식수**: 두 분기의 희석 주식수(분모)가 제공 자료에 없어 EPS 산출 근거를 검증할 수 없습니다.\n4. **분기 종료일 2026-07-26**: NVIDIA의 52/53주 회계연도 패턴과 실제로 일치하는지 (2026년 7월 26일이 실제로 회사 공식 종료일인지).\n5. **발표일 2026-08-26**: press release 상단의 실제 날짜와 일치하는지.\n\n---\n\n**요약**: 제공 자료 내 단위와 기간 기재는 일관되고, GAAP/non-GAAP 구분도 명시적입니다. 핵심 검증 과제는 GAAP > non-GAAP 역전의 non-GAAP Reconciliation 근거와 전분기 수치 재작성 내역으로, 두 항목 모두 원문 press release의 조정 내역 표에서 확인이 필요합니다.",
+      "createdAt": "2026-10-28T09:45:34.371Z",
+      "dataAsOf": "2026-10-28T06:56:19.206Z",
+      "evidence": [
+        {
+          "id": "nvda-fy2027-q2-input",
+          "symbol": "NVDA",
+          "label": "입력자료 기록 · 실적 종료 2026-07-26 / 발표 2026-08-26（기록 시각은 발표 시각 아님）",
+          "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx",
+          "observedAt": "2026-10-28T06:51:35.903Z",
+          "collectedAt": "2026-10-28T06:51:35.903Z"
+        },
+        {
+          "id": "nvda-fy2027-q1-editorial-check",
+          "symbol": "NVDA",
+          "label": "편집자 정정 확인 · Q1 원발표 2026-05-20 / non-GAAP EPS 1.87 USD/주",
+          "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027/default.aspx",
+          "observedAt": "2026-10-28T06:56:19.206Z",
+          "collectedAt": "2026-10-28T06:56:19.206Z"
+        }
+      ],
+      "provenance": {
+        "provider": "claude",
+        "requestedModel": "claude-sonnet-4-6",
+        "reportedModel": "claude-sonnet-4-6",
+        "cliVersion": "2.1.295 (Claude Code)",
+        "cliName": "claude-code",
+        "generatedAt": "2026-10-28T06:52:30.442Z",
+        "promptVersion": "owner-factual-review-2026-10-28",
+        "runId": "051ba683-4799-4120-a484-9f6e0b5f2467",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-10-28T09:45:34.371Z",
+        "responseSha256": "6ac72def4b6908f4f8fd70fc589e35824b5a58625848142cd9b7b8223141d928"
+      },
+      "reviewNotes": [
+        "운영자가 지정한 NVDA의 제공 실적 검토입니다. Claude의 종목 선정·가격 평가는 없으며 원문 URL을 직접 방문하지 않았습니다.",
+        "정정: FY2027에는 GAAP와 non-GAAP 모두 주식기준보상 비용을 포함합니다. 두 이익의 차이는 주로 지분증권 순이익 7,771백만 USD 제외에서 발생합니다.",
+        "정정: Q1 non-GAAP EPS 1.87 USD는 2026-05-20 원래 발표에도 있었습니다. Q2에서 바뀐 값이라는 원문 설명은 근거가 없습니다. 아래 원문은 오류를 포함해 보존했습니다."
+      ]
+    },
+    {
+      "id": "report-04f0a3e0-a5e1-40e2-a08a-3e7810b75f85",
+      "agent": "gemini",
+      "kind": "stock-opinion",
+      "symbol": "NVDA",
+      "comment": "[반대 논거] 그러나 주요 하이퍼스케일러의 자체 맞춤형 AI ASIC 도입 가속화, 데이터센터 전력 공급 제약에 따른 물리적 증설 지연, 또는 빅테크 기업들의 인프라 투자(CapEx) 주기 둔화가 현실화될 경우 실적 성장세가 급격히 꺾일 위험이 존재합니다.",
+      "report": "### 1. 고른 종목\n- 기업명: 엔비디아\n- 심볼: NVDA\n\n---\n\n### 2. 현재 확인 가능한 시가\n- 가격: 217.94 USD/1주\n- 지연 여부: 지연 시세 (`delayed=true`)\n- 상태: 수집 성공 (`status=ok`, 시세 수집 자체의 성공을 의미하며 적정가격 검증이나 실적 보증을 뜻하지 않음)\n\n---\n\n### 3. 시가 기준일\n- 실제 시세 관측 시각(UTC): 2026-10-27T20:00:01.000Z\n- 실제 시세 관측 시각(KST): 2026-10-28 05:00:01 KST\n- 시세 출처 URL: https://finance.yahoo.com/quote/NVDA/\n- 구분 안내: 상기 관측 시각은 당일 확인 가능한 지연 시세의 관측 시각이며, 데이터 스냅샷 생성 시각(generatedAt: 2026-10-28T02:23:22.067Z)이나 현재 실시간 시각과 다릅니다.\n\n---\n\n### 4. AI 추정 적정가격\n- 대표 추정값: 222.00 USD/주\n- 민감도 범위: 177.60 USD/주 ~ 266.40 USD/주\n- 산정 안내: 상기 수치는 직전 분기 non-GAAP 실적의 단순 연율화와 주관적으로 설정한 주가수익비율(PER) 가설에 기초한 기계적 비교치이며, 미래 목표가격이나 수익 보장 가격이 아닙니다.\n\n---\n\n### 5. 의견\n[확인된 사실] 엔비디아의 공식 사업 역할은 데이터센터 GPU, AI 가속기 및 네트워크 솔루션 공급이며, 공시된 FY2027 2분기(2026-07-26 종료) 실적에서 GAAP 희석 EPS 2.46 USD, non-GAAP 희석 EPS 2.22 USD를 기록했습니다. 관측된 지연 시가는 217.94 USD입니다.\n\n[해석] 인공지능 인프라 구축의 핵심 연산 장비로서 동사 제품군에 대한 시장 수요가 유지되고 있다는 관점에서 관심 종목으로 선정했습니다. 관측 시가 217.94 USD는 non-GAAP 2분기 실적의 단순 연율화 주당순이익(8.88 USD) 기준 약 24.5배 수준으로, 인프라 소프트웨어 및 플랫폼 성격을 감안할 때 과도한 고평가 구간은 아니라고 해석할 여지가 있습니다.\n\n[반대 논거] 그러나 주요 하이퍼스케일러의 자체 맞춤형 AI ASIC 도입 가속화, 데이터센터 전력 공급 제약에 따른 물리적 증설 지연, 또는 빅테크 기업들의 인프라 투자(CapEx) 주기 둔화가 현실화될 경우 실적 성장세가 급격히 꺾일 위험이 존재합니다.\n\n[판단을 바꿀 관찰 조건] 향후 분기 희석 EPS가 전분기 대비 정체되거나 하락세로 반전되는 경우, 또는 대형 클라우드 고객사들의 설비투자 축소 발표가 가시화되는 경우에는 현재의 수익력 유지 및 배수 가정을 전면 재검토해야 합니다. (공백 포함 668자)\n\n---\n\n### 6. 계산과 핵심 가정\n1. 사용 실적 및 기준\n   - 실적 기간: FY2027 2분기 (분기 종료일: 2026-07-26)\n   - 원문 수치: GAAP 희석 EPS 2.46 USD/주, non-GAAP 희석 EPS 2.22 USD/주\n   - 참고 수치(FY2027 1분기): GAAP 희석 EPS 2.39 USD/주, non-GAAP 희석 EPS 1.87 USD/주\n   - 기준 구분: GAAP과 non-GAAP은 주식기준보상 등 비용 반영 범위가 상이하므로 혼용하지 않고 분리 적용했습니다.\n\n2. 연율화 방식 및 한계\n   - 본 계산에서는 FY2027 2분기 non-GAAP 희석 EPS(2.22 USD)에 단순 4배를 곱한 연율화 주당순이익(Run-rate EPS = 2.22 × 4 = 8.88 USD)을 비교 기준으로 채택했습니다.\n   - (GAAP 기준 단순 연율화 시: 2.46 × 4 = 9.84 USD)\n   - 한계 명시: 이 단순 연율화는 회사의 공식 연간 가이던스나 실제 12개월 누적(TTM) 실적이 아니며, 단지 해당 분기의 수익 창출력이 향후 1년간 일정하게 지속된다고 가정한 단순 비교 모델에 불과합니다. 분기별 실적 변동, 계절성, 공급망 및 일회성 요인은 반영되지 않았습니다.\n\n3. 배수(PER) 가정 및 민감도 산출\n   - 적용 배수: 기준 PER 25배 (민감도 구간: 20배 ~ 30배)\n   - 주관적 성격: 적용된 PER 배수는 시장 컨센서스나 과거 공인 밴드가 아니며, 대형 기술주의 성장성과 리스크를 감안하여 필자가 주관적으로 설정한 가설적 기준입니다.\n   - 대표 추정값: 8.88 USD × 25배 = 222.00 USD/주\n   - 민감도 범위:\n     - 보수적(PER 20배): 8.88 USD × 20배 = 177.60 USD/주\n     - 낙관적(PER 30배): 8.88 USD × 30배 = 266.40 USD/주\n   - (참고: GAAP 연율화 EPS 9.84 USD 기준 적용 시 PER 20배는 196.80 USD, 25배는 246.00 USD, 30배는 295.20 USD가 산출됩니다.)\n\n4. 가치 산정 성격\n   - 본 산정은 미래 현금흐름을 할인한 목표주가가 아니라, 현 시점의 분기 실적 런레이트와 관측 시가를 주관적 배수로 비교 분석한 현행 가치 평가입니다.\n   - FY2027 3분기 이후의 최신 실적 수치는 제공된 자료에 포함되어 있지 않아 확인하지 못했습니다.\n\n---\n\n### 7. 출처\n- 시세 자료: https://finance.yahoo.com/quote/NVDA/ (제공된 스냅샷 원본: https://ai-chain-prototype.vercel.app/api/snapshot)\n- 사업 분류 참고: https://www.nvidia.com/en-us/data-center/ (검토일: 2026-10-26)\n- 실적 보도자료 원문: https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx\n- SEC 제출 실적 보도자료 첨부 원문: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm (Form 10-Q 본문이 아닌 실적 보도자료의 첨부물임)\n\n*(주의: 상기 링크는 프롬프트에 제공된 근거 자료의 식별용이며, 이번 단일 실행 중 외부 웹페이지를 직접 접속하여 확인한 것이 아닙니다. 또한 독점 여부나 시장 점유율 등 자료 외 미확인 사실은 단정하지 않았습니다.)*\n",
+      "createdAt": "2026-10-28T09:45:34.371Z",
+      "dataAsOf": "2026-10-28T05:51:38.563Z",
+      "evidence": [
+        {
+          "id": "nvda-fy2027-q2-input",
+          "symbol": "NVDA",
+          "label": "입력자료 기록 · 실적 종료 2026-07-26 / 발표 2026-08-26（기록 시각은 발표 시각 아님）",
+          "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx",
+          "observedAt": "2026-10-28T05:51:38.563Z",
+          "collectedAt": "2026-10-28T05:51:38.563Z"
+        },
+        {
+          "id": "nvda-quote-20261027",
+          "symbol": "NVDA",
+          "label": "217.94 USD/주 · Yahoo Finance 지연 시세 · 실제 관측 시각",
+          "sourceUrl": "https://finance.yahoo.com/quote/NVDA/",
+          "observedAt": "2026-10-27T20:00:01.000Z",
+          "collectedAt": "2026-10-28T02:23:22.067Z"
+        }
+      ],
+      "provenance": {
+        "provider": "gemini",
+        "requestedModel": "gemini-3.8-flash-high",
+        "reportedModel": null,
+        "cliVersion": "1.4.8",
+        "cliName": "antigravity",
+        "generatedAt": "2026-10-28T05:52:28.368Z",
+        "promptVersion": "owner-stock-opinion-2026-10-28",
+        "runId": "04f0a3e0-a5e1-40e2-a08a-3e7810b75f85",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-10-28T09:45:34.371Z",
+        "responseSha256": "90f768add01d36ab29c75979233be4ac17171b8dc902c1a918abe34f19cb7449"
+      },
+      "reviewNotes": [
+        "정정: FY2027에는 GAAP와 non-GAAP 모두 주식기준보상 비용을 포함합니다. 원문의 보상 반영 범위 설명은 부정확하지만 EPS 2.22 × 4 × 가정 PER 25배 = 222 USD 계산은 일치합니다.",
+        "단일 분기 수익력 유지와 주관적 배수를 가정한 비교값으로 TTM·미래 목표주가가 아닙니다. 75개 후보 중 실적 수치는 NVDA만 제공했고, 모델은 원문 URL을 직접 방문하지 않았습니다."
+      ],
+      "fairValue": {
+        "price": 222,
+        "currency": "USD",
+        "asOf": "2026-10-28T05:51:38.563Z",
+        "method": "FY2027 2분기 non-GAAP 희석 EPS 2.22 USD × 4 × 가정 PER 25배 = 222.00 USD/주. PER 20~30배 민감도 177.60~266.40 USD/주.",
+        "assumptions": [
+          "단일 분기의 수익력이 네 분기 계속된다고 가정하며 계절성·일회성 항목을 정상화하지 않았습니다.",
+          "적용 PER는 모델의 주관적 가정이며 회사 전망·시장 컨센서스·검증한 과거 밴드가 아닙니다.",
+          "자체 AI칩·전력 제약·고객 설비투자 둔화가 수익력 가정을 바꿀 수 있습니다."
+        ],
+        "evidenceIds": [
+          "nvda-fy2027-q2-input",
+          "nvda-quote-20261027"
+        ]
+      }
+    }
+  ]
 }

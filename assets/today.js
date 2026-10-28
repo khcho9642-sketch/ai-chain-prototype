@@ -40,7 +40,7 @@ function priceFields(pick) {
   const quoteNote = quote ? [failed ? '이전 확인값 · 조회 실패' : null, quote.delayed ? '지연 시세' : null, quote.source].filter(Boolean).join(' · ') : null
   field('현재 시가', quote ? priceLabel(quote.price, quote.currency) : pick ? '시세 미확인' : '—', 'price', quoteNote)
   field('시가 기준일', quote ? timeLabel(new Date(quote.marketTime * 1000).toISOString()) : '—', 'price-as-of')
-  field('AI 추정 적정가격', pick?.fairValue ? priceLabel(pick.fairValue.price, pick.fairValue.currency) : '미산정', 'fair-value', pick?.fairValue ? 'AI 추정 · ' + timeLabel(pick.fairValue.asOf) : null)
+  field('AI 추정 적정가격', pick?.kind === 'earnings-review' ? '가격 평가 없음' : pick?.fairValue ? priceLabel(pick.fairValue.price, pick.fairValue.currency) : '미산정', 'fair-value', pick?.fairValue ? 'AI 추정 · ' + timeLabel(pick.fairValue.asOf) : null)
   return fields
 }
 const reasonLabel = value => ({
@@ -62,9 +62,11 @@ function sourceDetails(pick) {
   info.append(node('p', '제공사 ' + (TODAY_AGENTS[provenance.provider]?.name || provenance.provider || '미확인')),
     node('p', '요청 모델 ' + (provenance.requestedModel || '미확인')),
     node('p', provenance.reportedModel ? '실제 응답 모델 ' + provenance.reportedModel : '실제 모델명 미확인'),
-    node('p', 'CLI ' + (provenance.cliVersion || '미확인')),
+    node('p', 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
     node('p', '실제 생성 ' + timeLabel(provenance.generatedAt)),
     node('p', '검수 ' + timeLabel(provenance.reviewedAt)))
+  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', '실제 CLI 1회 실행 원문 · 운영자 검토 후 수동 발행'))
+  if (provenance.responseSha256) info.append(node('p', '원문 SHA-256 ' + provenance.responseSha256, { class: 'today-response-digest mono' }))
   for (const evidence of pick.evidence || []) {
     const item = node('article', null, { class: 'today-evidence' })
     item.append(node('strong', evidence.label || '원문 자료'), node('small', '자료 기준 ' + timeLabel(evidence.observedAt)), node('small', '수집 ' + timeLabel(evidence.collectedAt)))
@@ -96,9 +98,28 @@ function sourceDetails(pick) {
 
 function messageMeta(message) {
   const meta = node('div', null, { class: 'today-pick-meta' })
-  meta.append(node('time', '작성 ' + timeLabel(message.createdAt), { datetime: message.createdAt }), node('span', '자료 기준 ' + timeLabel(message.dataAsOf)))
+  const generatedAt = message.kind ? message.provenance.generatedAt : message.createdAt
+  meta.append(node('time', '작성 ' + timeLabel(generatedAt), { datetime: generatedAt }))
+  if (message.kind) meta.append(node('time', '발행 ' + timeLabel(message.createdAt), { datetime: message.createdAt }))
+  meta.append(node('span', '자료 기준 ' + timeLabel(message.dataAsOf)))
   if (!message.provenance?.reportedModel) meta.append(node('span', '실제 모델명 미확인'))
   return meta
+}
+
+function reportDetails(report) {
+  const details = node('details', null, { class: 'today-report-original' })
+  details.append(node('summary', report.kind === 'earnings-review' ? '실적 검토 원문 전체 보기' : '의견서 원문 전체 보기'),
+    node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
+  return details
+}
+
+function reportReviewNotes(report) {
+  const section = node('section', null, { class: 'today-review-notes', 'aria-label': '운영자 검토와 정정' })
+  section.append(node('h4', '운영자 검토 · 정정'))
+  const notes = node('ul', null)
+  for (const note of report.reviewNotes) notes.append(node('li', note))
+  section.append(notes)
+  return section
 }
 
 function renderResponse(response, parent) {
@@ -116,7 +137,7 @@ function renderCard(card, { archived = false } = {}) {
   const header = node('div', null, { class: 'today-agent-heading' })
   header.append(node('div', card.name || TODAY_AGENTS[card.agent]?.name, { class: 'today-agent-name' }), node('span', 'AI', { class: 'today-ai-label' }))
   article.append(header)
-  const pick = card.pick, published = !!pick && (archived || card.state === 'published')
+  const pick = card.report || card.pick, published = !!pick && (archived || card.state === 'published')
   article.dataset.state = card.state
   if (!published) {
     const empty = node('div', null, { class: 'today-empty' })
@@ -128,14 +149,17 @@ function renderCard(card, { archived = false } = {}) {
   const company = instruments.find(item => item.symbol === pick.symbol)
   article.dataset.pickId = pick.id
   const title = node('div', null, { class: 'today-company' })
-  title.append(node('p', '고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
+  const factualReview = pick.kind === 'earnings-review'
+  title.append(node('p', factualReview ? '검토 대상 · 실적 검토' : '고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
   if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
   article.append(title, priceFields(pick))
-  const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 의견과 답글` })
+  const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
-  initial.append(node('p', '의견', { class: 'today-message-label' }),
-    node('p', pick.comment, { class: 'today-comment', 'data-today-comment': '' }), messageMeta(pick), sourceDetails(pick))
-  thread.append(initial, ...(card.responses || []).map(response => renderResponse(response, pick)))
+  initial.append(node('p', pick.kind ? `${card.name} · AI ${factualReview ? '실적 검토' : '의견'} 댓글 · 원문 발췌` : '의견', { class: 'today-message-label' }),
+    node('p', pick.comment, { class: 'today-comment', 'data-today-comment': '' }))
+  if (pick.kind) initial.append(reportReviewNotes(pick), reportDetails(pick))
+  initial.append(messageMeta(pick), sourceDetails(pick))
+  thread.append(initial, ...(!card.report ? card.responses || [] : []).map(response => renderResponse(response, pick)))
   article.append(thread)
   const actions = node('div', null, { class: 'today-card-actions' })
   actions.append(node('button', '종목 · 차트', { type: 'button', 'data-market-symbol': pick.symbol, 'aria-label': `${company?.name || pick.symbol} 종목 · 차트` }),
@@ -158,15 +182,22 @@ function render() {
   root.querySelector('[data-today-date]').textContent = new Date(now).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · KST'
   const cards = cardsForSnapshot(), grid = root.querySelector('[data-today-cards]')
   grid.replaceChildren(...cards.map(card => renderCard(card)))
-  const published = cards.filter(card => card.state === 'published' && card.pick).length
+  const published = cards.filter(card => card.state === 'published' && (card.report || card.pick)).length
+  const publishedReports = cards.filter(card => card.state === 'published' && card.report)
+  const stockOpinions = publishedReports.filter(card => card.report.kind === 'stock-opinion').length
+  const earningsReviews = publishedReports.filter(card => card.report.kind === 'earnings-review').length
   root.querySelector('[data-today-status]').textContent = state.error ? '발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.' :
-    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : published ? `${currentDate} · ${published}개 AI의 추천 발행 · 실제 작성 시각과 근거를 확인하세요.` : '검증된 실제 응답이 발행되면 각 AI의 추천과 한마디가 표시됩니다.'
+    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : publishedReports.length ? `${currentDate} · AI 댓글 ${publishedReports.length}개 발행 · 종목 의견 ${stockOpinions}개 · 실적 검토 ${earningsReviews}개` : published ? `${currentDate} · ${published}개 AI의 추천 발행 · 실제 작성 시각과 근거를 확인하세요.` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
   const refresh = root.querySelector('[data-today-refresh]')
   refresh.disabled = state.busy; refresh.textContent = state.busy ? '읽는 중…' : '다시 읽기'
-  const older = cards.filter(card => card.state === 'previous-edition' && card.pick), archive = root.querySelector('[data-today-archive]')
+  const older = cards.filter(card => card.state === 'previous-edition' && (card.report || card.pick))
+  for (const card of cards) {
+    if (card.report && card.pick) older.push({ ...card, report: null, state: 'published' })
+  }
+  const archive = root.querySelector('[data-today-archive]')
   archive.hidden = !older.length
   if (older.length) {
-    archive.querySelector('summary').textContent = `지난 발행 보기 · ${state.snapshot.editionDate} · 오늘의 추천이 아닙니다`
+    archive.querySelector('summary').textContent = `이전 발행 보기 · 원래 작성·발행 시각 보존 · ${older.length}개`
     archive.querySelector('[data-today-archive-cards]').replaceChildren(...older.map(card => renderCard(card, { archived: true })))
   } else root.querySelector('[data-today-archive-cards]').replaceChildren()
 }

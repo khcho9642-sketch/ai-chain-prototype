@@ -1,11 +1,52 @@
 import { instruments } from './instruments.js'
 import { communityApiOrigin } from './community-runtime.js'
 import { resolveCommunityOrigin, resolveDiscussionSymbol, mergeComments, opinionEntry, communityStateLabel, communityReasonLabel, messageProvenance, communityEvidenceUrl } from './community-ui-core.js'
+import { validateTodaySnapshot } from './today-core.js'
 
 const catalog = instruments.filter(x => x.chains.some(n => n > 0))
 const names = { gpt: 'GPT', claude: 'Claude', gemini: 'Gemini' }
 const drafts = new Map(), views = new Set()
 const auth = { token: '', user: null, localAdmin: '' }
+let publishedReportsRequest
+
+// Published editorial comments remain a read-only snapshot, separate from server messages.
+export function publishedReportsForSymbol(snapshot, symbol, tab = 'mixed') {
+  if (!snapshot || tab === 'human') return []
+  validateTodaySnapshot(snapshot)
+  return (snapshot.reports || []).filter(report => report.symbol === symbol)
+}
+
+function readPublishedReports(signal) {
+  if (signal.aborted) return Promise.reject(new DOMException('View disposed', 'AbortError'))
+  if (!publishedReportsRequest) {
+    const entry = { controller: new AbortController(), readers: new Set(), settled: false }
+    publishedReportsRequest = entry
+    entry.promise = fetch('./data/today-picks.json', { cache: 'no-store', credentials: 'same-origin', redirect: 'error', signal: entry.controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error('published_reports_unavailable')
+        return validateTodaySnapshot(await response.json())
+      }).catch(error => {
+        if (publishedReportsRequest === entry) publishedReportsRequest = undefined
+        throw error
+      }).finally(() => { entry.settled = true })
+  }
+  const entry = publishedReportsRequest
+  entry.readers.add(signal)
+  return new Promise((resolve, reject) => {
+    const release = () => {
+      signal.removeEventListener('abort', abort)
+      entry.readers.delete(signal)
+      if (!entry.settled && !entry.readers.size) {
+        entry.controller.abort()
+        if (publishedReportsRequest === entry) publishedReportsRequest = undefined
+      }
+    }
+    const abort = () => { release(); reject(new DOMException('View disposed', 'AbortError')) }
+    if (signal.aborted) { abort(); return }
+    signal.addEventListener('abort', abort, { once: true })
+    entry.promise.then(value => { release(); if (!signal.aborted) resolve(value) }, error => { release(); reject(error) })
+  })
+}
 const timeLabel = value => {
   const date = value ? new Date(value) : null
   return date && Number.isFinite(date.getTime()) ? date.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) + ' KST' : '미확인'
@@ -38,7 +79,8 @@ async function api(path, input, { admin = false, signal } = {}) {
 function refreshAuth() { for (const view of views) { view.renderAuth(); view.renderComments(); view.renderOpinions() } }
 function createView(root, symbol, selector = false) {
   const previous = drafts.get(symbol) || {}
-  const state = { symbol, tab: previous.tab || 'mixed', allowAi: previous.allowAi !== false, comments: [], opinions: null, hiddenIds: new Set(), historyOpen: new Set(), provenanceOpen: new Set(), deepLinkHandled: false, parent: previous.parent || null, next: null, status: null, request: previous.request || null, disposed: false }
+  const state = { symbol, tab: previous.tab || 'mixed', allowAi: previous.allowAi !== false, comments: [], opinions: null, publishedReports: null, hiddenIds: new Set(), historyOpen: new Set(), provenanceOpen: new Set(), deepLinkHandled: false, parent: previous.parent || null, next: null, status: null, request: previous.request || null, disposed: false }
+  const publishedController = new AbortController()
   const adminDraft = { agents: null, scope: 'selected', request: null, pending: false, limitsPending: false, limits: {}, report: null }
   let events, controller, refreshTimer, generation = 0, adminGeneration = 0, busy = false, suppressFirstWake = false
   root.innerHTML = `<section class="panel sec community">
@@ -50,6 +92,7 @@ function createView(root, symbol, selector = false) {
     <div class="community-tabs" role="tablist" aria-label="댓글 유형">
       <button type="button" role="tab" data-tab="ai">AI</button><button type="button" role="tab" data-tab="human">인간</button><button type="button" role="tab" data-tab="mixed">AI + 인간</button>
     </div><p data-role="message" role="status" class="note">연결 확인 중…</p>
+    <section data-role="published-reports" class="community-published-reports" aria-label="검토 후 발행한 AI 댓글" hidden></section>
     <div data-role="auth"></div><button data-role="older" type="button" hidden>이전 댓글 더 보기</button><div data-role="list"></div>
     <form data-role="form"><button data-role="parent" type="button" class="community-reference"></button>
       <label>댓글 (개인정보를 입력하지 마세요)<textarea data-role="text" aria-label="댓글 내용" maxlength="1000" rows="3" required></textarea></label>
@@ -118,7 +161,11 @@ function createView(root, symbol, selector = false) {
     }
   }
   function renderOpinions() {
-    const area = el('opinions'); area.hidden = state.tab === 'human'; area.replaceChildren()
+    const area = el('opinions')
+    const hasServerOpinions = Object.values(state.opinions || {}).some(value => { const entry = opinionEntry(value); return entry.latest || entry.history.length })
+    area.hidden = state.tab === 'human' || (!hasServerOpinions && publishedReportsForSymbol(state.publishedReports, state.symbol, state.tab).length > 0)
+    area.replaceChildren()
+    if (area.hidden) return
     area.append(node('h3', 'AI 최신 의견'), node('p', '같은 종목에 대한 AI의 짧은 의견입니다. 모델 수는 검증 확률이나 신뢰도를 뜻하지 않습니다.', { class: 'note' }))
     const grid = node('div', null, { class: 'community-opinion-grid' })
     for (const agent of Object.keys(names)) {
@@ -194,6 +241,7 @@ function createView(root, symbol, selector = false) {
     box.append(form)
   }
   function renderComments() {
+    renderPublishedReports()
     const list = el('list'); list.replaceChildren()
     const visible = state.comments.filter(c => state.tab === 'mixed' || c.kind === (state.tab === 'human' ? 'human' : 'ai'))
     if (!visible.length) list.append(node('p', '아직 표시할 댓글이 없습니다.', { class: 'note' }))
@@ -223,6 +271,24 @@ function createView(root, symbol, selector = false) {
       list.append(item)
     }
     el('older').hidden = !state.next
+  }
+  function renderPublishedReports() {
+    if (state.disposed) return
+    const area = el('published-reports')
+    const reports = publishedReportsForSymbol(state.publishedReports, state.symbol, state.tab)
+    area.replaceChildren(); area.hidden = !reports.length
+    if (!reports.length) return
+    area.append(node('h3', '검토 후 발행한 AI 댓글'), node('p', 'AI 의견서 원문에서 발췌해 발행한 읽기 전용 댓글입니다. 생성 시각과 발행 시각을 따로 표시합니다.', { class: 'note' }))
+    for (const report of reports) {
+      const item = node('article', null, { class: 'community-comment', 'data-published-report-id': report.id, 'data-report-agent': report.agent })
+      const factual = report.kind === 'earnings-review'
+      item.append(node('strong', `${names[report.agent]} · AI · ${factual ? '실적 검토' : '종목 의견'}`), node('p', report.comment))
+      item.append(node('time', '생성 ' + timeLabel(report.provenance.generatedAt), { datetime: report.provenance.generatedAt }), node('time', '발행 ' + timeLabel(report.createdAt), { datetime: report.createdAt }))
+      if (factual) item.append(node('p', '운영자가 지정한 종목의 실적 검토입니다. 종목 선정·적정가격 평가는 포함하지 않습니다.', { class: 'note' }))
+      for (const note of report.reviewNotes) item.append(node('p', note, { class: 'note' }))
+      item.append(node('a', '의견서 원문·모델·근거 보기 →', { href: '#today', class: 'community-reference' }))
+      area.append(item)
+    }
   }
   function setTab(tab) {
     if (state.tab !== 'human') state.allowAi = el('allow').checked
@@ -434,9 +500,13 @@ function createView(root, symbol, selector = false) {
     renderComments(); renderOpinions()
   }, dispose() {
     if (state.disposed) return
-    saveDraft(); state.disposed = true; events?.close(); controller?.abort(); clearTimeout(refreshTimer); generation++; views.delete(view)
+    saveDraft(); state.disposed = true; events?.close(); controller?.abort(); publishedController.abort(); clearTimeout(refreshTimer); generation++; views.delete(view)
   } }
   views.add(view); setTab(state.tab); parentLabel()
+  readPublishedReports(publishedController.signal).then(snapshot => {
+    if (state.disposed) return
+    state.publishedReports = snapshot; renderPublishedReports(); renderOpinions()
+  }).catch(() => { /* Snapshot failure must not block connected server comments. */ })
   ;(async () => {
     try {
       state.status = await api('/status'); if (state.disposed) return
