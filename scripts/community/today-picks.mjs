@@ -103,7 +103,7 @@ export async function generateTodayPicks({ adapters = {}, catalog = instruments,
     omittedForSize: pool.omittedForSize, coverage: { eligibleCount: pool.eligibleCount, includedCount: pool.candidates.length,
       excludedWithoutFreshEvidence: pool.eligibleCount - pool.availableCount, excludedForSize: pool.omittedForSize },
     picks: [], responses: [], receipts: {}, responseReceipts: {}, providerStates: {}, responseStates: {}, attempted: 0 }
-  const verifiedAgents = new Set()
+  const verifiedAgents = new Set(), selectedSymbols = new Set()
   for (const agent of AGENTS) {
     const config = adapters[agent]
     try {
@@ -111,7 +111,13 @@ export async function generateTodayPicks({ adapters = {}, catalog = instruments,
       ensure(pool.candidates.length > 0, 'insufficient_fresh_evidence')
       ensure(!signal?.aborted, 'generation_cancelled')
       ensure(kstDate(instant(now)) === date, 'edition_changed_during_generation')
-      const job = { agent, task: 'daily-pick', date, messageType: 'opinion', candidates: clone(pool.candidates), context: [], parent: null, previousOpinionId: null }
+      const candidates = pool.candidates.filter(row => !selectedSymbols.has(row.symbol))
+      if (!candidates.length) {
+        result.providerStates[agent] = { status: 'unavailable', reason: 'no_distinct_candidates' }
+        continue
+      }
+      // Send only the remaining source records and excluded symbols, never earlier AI opinions.
+      const job = { agent, task: 'daily-pick', date, messageType: 'opinion', candidates: clone(candidates), excludedSymbols: [...selectedSymbols], context: [], parent: null, previousOpinionId: null }
       result.attempted++
       const generated = await run(agent, config, job, signal)
       const verified = verifiedGeneration(agent, config, generated)
@@ -119,10 +125,12 @@ export async function generateTodayPicks({ adapters = {}, catalog = instruments,
       verifiedAgents.add(agent)
       if (valid.action === 'skip') { result.providerStates[agent] = { status: 'unavailable', reason: 'model_skipped' }; continue }
       ensure(kstDate(instant(now)) === date, 'edition_changed_during_generation')
-      const symbol = generated.output.symbol, selected = pool.candidates.find(row => row.symbol === symbol)
+      const symbol = generated.output.symbol, selected = candidates.find(row => row.symbol === symbol)
+      ensure(!selectedSymbols.has(symbol), 'duplicate_daily_pick_symbol')
       ensure(selected, 'invalid_daily_pick_symbol')
       const pick = generatedMessage({ agent, generated, verified, valid, snapshot: selected.snapshot, now })
       result.picks.push(pick)
+      selectedSymbols.add(symbol)
       result.receipts[agent] = generationReceipt(pick, job, generated, verified, run)
       result.providerStates[agent] = { status: 'ready', reason: 'awaiting_manual_review' }
     } catch (error) {
@@ -227,6 +235,7 @@ export async function publishTodayCandidate(candidatePath, { approve = false, ro
   const candidateResponses = candidate.responses ?? []
   ensure(Array.isArray(candidate.picks) && candidate.picks.length <= 3 && Array.isArray(candidateResponses) && candidateResponses.length <= 3 && candidate.picks.length + candidateResponses.length > 0, 'no_generated_picks')
   ensure(new Set(candidate.picks.map(pick => pick.agent)).size === candidate.picks.length, 'duplicate_daily_agent')
+  ensure(new Set(candidate.picks.map(pick => pick.symbol)).size === candidate.picks.length, 'duplicate_daily_pick_symbol')
   const picks = candidate.picks.map(pick => reviewedMessage(pick, candidate.receipts?.[pick.agent], publishedAt))
   const responses = candidateResponses.map(response => reviewedMessage(response, candidate.responseReceipts?.[response.id], publishedAt))
   const providerStates = Object.fromEntries(AGENTS.map(agent => [agent, candidate.providerStates?.[agent] || { status: 'disabled', reason: 'provider_disabled' }]))
@@ -272,6 +281,7 @@ export async function publishTodayCandidate(candidatePath, { approve = false, ro
           }
         }
       }
+      ensure(new Set(next.picks.map(pick => pick.symbol)).size === next.picks.length, 'duplicate_daily_pick_symbol')
       validateTodaySnapshot(next, { catalog, now: at })
       backupPath = join(backupDirectory, `today-picks-${old.editionDate || 'empty'}-${randomUUID()}.json`)
       await writeFile(backupPath, previous, { flag: 'wx', mode: 0o600 })

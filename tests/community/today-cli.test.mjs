@@ -7,9 +7,10 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { dailyCandidatePool, generateTodayPicks, publishTodayCandidate, sealTodayCandidate, stageTodayCandidate } from '../../scripts/community/today-picks.mjs'
 import { requiredProviderFlags } from '../../scripts/community/ai-provider.mjs'
+import { makePrompt, validateOutput } from '../../server/community/policy.mjs'
 
 const NOW = Date.parse('2026-10-27T15:30:00Z')
-const catalog = [{ symbol: 'NVDA', name: '엔비디아', chains: [4] }, { symbol: 'AMD', name: 'AMD', chains: [4] }, { symbol: 'INDEX', name: '시장지표', chains: [0] }]
+const catalog = [{ symbol: 'NVDA', name: '엔비디아', chains: [4] }, { symbol: 'AMD', name: 'AMD', chains: [4] }, { symbol: 'TSM', name: 'TSMC ADR', chains: [2] }, { symbol: 'INDEX', name: '시장지표', chains: [0] }]
 const observedAt = '2026-10-27T14:00:00.000Z', collectedAt = '2026-10-27T15:00:00.000Z'
 const source = symbol => ({ id: `ctx-${symbol}`, symbol, createdAt: collectedAt, dataAsOf: observedAt, evidence: [
   { id: `price-${symbol}`, symbol, kind: 'quote', label: '관측 자료', value: 100, unit: 'USD', observedAt, collectedAt, sourceUrl: `https://finance.yahoo.com/quote/${symbol}/`, stale: false },
@@ -95,14 +96,18 @@ test('a retired personal client stays blocked even if enabled is accidentally se
   assert.deepEqual(candidate.responses,[])
 })
 
-test('all agents receive the same bounded evidence pool and each can emit only one selected symbol', async () => {
+test('each agent receives the bounded source pool minus symbols already selected, without other AI opinions', async () => {
   const pools = [], adapters = Object.fromEntries(['gpt', 'claude', 'gemini'].map(agent => [agent, config(agent)]))
-  const candidate = await generateTodayPicks({ adapters, catalog, evidenceSource: source, now: () => NOW, run: async (agent, adapter, job) => { pools.push(JSON.stringify(job.candidates)); return response(agent, adapter, job) } })
+  const candidate = await generateTodayPicks({ adapters, catalog, evidenceSource: source, now: () => NOW, run: async (agent, adapter, job) => { pools.push(JSON.parse(JSON.stringify(job))); return response(agent, adapter, job) } })
   assert.equal(candidate.picks.length, 3)
   assert.equal(candidate.attempted, 3)
-  assert.equal(new Set(pools).size, 1)
+  assert.deepEqual(pools.map(job => job.candidates.map(row => row.symbol)), [['AMD', 'NVDA', 'TSM'], ['NVDA', 'TSM'], ['TSM']])
+  assert.deepEqual(pools.map(job => job.excludedSymbols), [[], ['AMD'], ['AMD', 'NVDA']])
+  assert.equal(pools.every(job => job.context.length === 0 && !Object.hasOwn(job, 'comments')), true)
+  assert.equal(pools[1].candidates[0].snapshot.evidence[0].id, 'price-NVDA')
+  assert.equal(JSON.stringify(pools[1]).includes(candidate.picks[0].comment), false)
   assert.equal(candidate.editionDate, '2026-10-28')
-  assert.equal(candidate.picks.every(pick => pick.symbol === 'AMD'), true)
+  assert.deepEqual(candidate.picks.map(pick => pick.symbol), ['AMD', 'NVDA', 'TSM'])
   assert.equal(candidate.picks.every(pick => pick.provenance.reportedModel === null), true)
   assert.equal(candidate.picks.every(pick => pick.dataAsOf === observedAt), true)
   assert.equal(Object.values(candidate.receipts).every(receipt => receipt.fixture), true)
@@ -118,6 +123,49 @@ test('a model may skip and a mismatched provider or unsupported CLI cannot imper
   assert.equal(candidate.providerStates.gemini.reason, 'cli_not_verified')
 })
 
+test('exhausted distinct candidates stop without calling a later model or inventing a replacement', async () => {
+  const calls = []
+  const candidate = await generateTodayPicks({ adapters: allAdapters(), catalog: catalog.filter(row => row.symbol === 'NVDA'), evidenceSource: source, now: NOW,
+    run: async (agent, adapter, job) => { calls.push(agent); return response(agent, adapter, job) } })
+  assert.deepEqual(calls, ['gpt'])
+  assert.equal(candidate.attempted, 1)
+  assert.deepEqual(candidate.picks.map(row => row.symbol), ['NVDA'])
+  for (const agent of ['claude', 'gemini']) assert.deepEqual(candidate.providerStates[agent], { status: 'unavailable', reason: 'no_distinct_candidates' })
+})
+
+test('a skipped model does not reserve a symbol and later agents still receive the untouched evidence', async () => {
+  const jobs = []
+  const candidate = await generateTodayPicks({ adapters: allAdapters(), catalog, evidenceSource: source, now: NOW,
+    run: async (agent, adapter, job) => {
+      jobs.push(JSON.parse(JSON.stringify(job)))
+      return agent === 'gpt' ? { ...response(agent, adapter, job), output: { action: 'skip', reason: '선정 근거가 충분하지 않다.' } } : response(agent, adapter, job)
+    } })
+  assert.deepEqual(jobs[0].candidates, jobs[1].candidates)
+  assert.deepEqual(jobs[1].excludedSymbols, [])
+  assert.deepEqual(candidate.picks.map(row => row.symbol), ['AMD', 'NVDA'])
+})
+
+test('an excluded-symbol model output fails closed once without a reroll or a silently changed ticker', async () => {
+  const calls = [], jobs = []
+  const candidate = await generateTodayPicks({ adapters: allAdapters(), catalog, evidenceSource: source, now: NOW,
+    run: async (agent, adapter, job) => {
+      calls.push(agent); jobs.push(JSON.parse(JSON.stringify(job)))
+      if (agent !== 'claude') return response(agent, adapter, job)
+      const value = response(agent, adapter, job)
+      return { ...value, output: { ...value.output, symbol: 'AMD', evidence_ids: ['price-AMD'] } }
+    } })
+  assert.deepEqual(calls, ['gpt', 'claude', 'gemini'])
+  assert.equal(candidate.attempted, 3)
+  assert.equal(candidate.providerStates.claude.reason, 'duplicate_daily_pick_symbol')
+  assert.equal(candidate.picks.some(row => row.agent === 'claude'), false)
+  assert.deepEqual(candidate.picks.map(row => row.symbol), ['AMD', 'NVDA'])
+  const prompt = makePrompt(jobs[1])
+  assert.match(prompt, /중복 선택하지/)
+  assert.match(prompt, /"excludedSymbols":\["AMD"\]/)
+  assert.equal(prompt.includes(candidate.picks[0].comment), false)
+  assert.throws(() => validateOutput({ ...response('claude', config('claude'), jobs[1]).output, symbol: 'AMD' }, jobs[1]), /duplicate_daily_pick_symbol/)
+})
+
 test('stale or missing evidence prevents generation and bounded coverage is explicit', async () => {
   let calls = 0
   const candidate = await generateTodayPicks({ adapters: { gpt: config() }, catalog, evidenceSource: symbol => ({ ...source(symbol), evidence: source(symbol).evidence.map(item => ({ ...item, stale: true })) }), now: () => NOW, run: async () => { calls++ } })
@@ -125,8 +173,8 @@ test('stale or missing evidence prevents generation and bounded coverage is expl
   assert.equal(candidate.providerStates.gpt.reason, 'insufficient_fresh_evidence')
   const pool = dailyCandidatePool({ catalog, evidenceSource: source, now: NOW, maxBytes: 10 })
   assert.equal(pool.candidates.length, 0)
-  assert.equal(pool.eligibleCount, 2)
-  assert.equal(pool.omittedForSize, 2)
+  assert.equal(pool.eligibleCount, 3)
+  assert.equal(pool.omittedForSize, 3)
 })
 
 test('responses are opt-in and bounded to one other verified agent per parent and responding agent', async () => {
@@ -137,7 +185,7 @@ test('responses are opt-in and bounded to one other verified agent per parent an
   const candidate = await peerCandidate({ run: async (agent, adapter, job) => {
     calls.push({ agent, job: JSON.parse(JSON.stringify(job)) })
     if (job.messageType === 'reply') return peerResponse(agent, adapter, job)
-    const selected = job.candidates.find(row => row.symbol === (agent === 'claude' ? 'NVDA' : 'AMD'))
+    const selected = job.candidates.find(row => row.symbol === ({ gpt: 'AMD', claude: 'NVDA', gemini: 'TSM' }[agent]))
     return { ...response(agent, adapter, job), output: { ...response(agent, adapter, job).output, symbol: selected.symbol, evidence_ids: [selected.snapshot.evidence[0].id] } }
   } })
   assert.equal(candidate.schemaVersion, 2)
@@ -315,10 +363,21 @@ test('same-day picks cannot be replaced; an independently reviewed different age
   assert.deepEqual(repeated.snapshot.picks[0], published.snapshot.picks[0])
   const replacement = await stageTodayCandidate(await reviewedReceiptCandidate(), { root })
   await assert.rejects(publishTodayCandidate(replacement, { root, catalog, now: NOW + 60000, approve: true }), /daily_pick_already_published/)
-  const addition = await stageTodayCandidate(await reviewedReceiptCandidate(['claude']), { root })
+  const distinct = await reviewedReceiptCandidate(['gpt', 'claude'])
+  const addition = await stageTodayCandidate(sealTodayCandidate({ ...distinct, picks: distinct.picks.filter(row => row.agent === 'claude'), receipts: { claude: distinct.receipts.claude } }), { root })
   const result = await publishTodayCandidate(addition, { root, catalog, now: NOW + 60000, approve: true })
   assert.deepEqual(result.agents.sort(), ['claude', 'gpt'])
   assert.deepEqual(result.snapshot.picks.find(pick => pick.agent === 'gpt'), published.snapshot.picks[0])
+})
+
+test('publication refuses a different agent selecting an already published symbol and preserves public bytes', async t => {
+  const root = await directory(t)
+  const first = await stageTodayCandidate(await reviewedReceiptCandidate(), { root })
+  const published = await publishTodayCandidate(first, { root, catalog, now: NOW, approve: true })
+  const previous = await readFile(published.path)
+  const duplicate = await stageTodayCandidate(await reviewedReceiptCandidate(['claude']), { root })
+  await assert.rejects(publishTodayCandidate(duplicate, { root, catalog, now: NOW + 60000, approve: true }), /duplicate_daily_pick_symbol/)
+  assert.deepEqual(await readFile(published.path), previous)
 })
 
 test('duplicate agents and edited private candidate bytes are rejected before public writes', async t => {

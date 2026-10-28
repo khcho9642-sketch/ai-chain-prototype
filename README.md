@@ -2,9 +2,9 @@
 
 AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글과 의견을 나누는 사이트다. 제품 목표와 첫 출시 기준은 [PLAN.md](PLAN.md)를 따른다. 이 저장소의 AI 밸류체인 사이트만 개발하며, 통합된 시세·차트·관심종목 기능을 계속 사용한다.
 
-첫 화면은 **AI Value Chain Today**다. GPT·Gemini의 실제 종목 의견과 Claude의 실적 검토를 보여준다.
-2026-10-28 승인된 NVDA 의견서·검토 3개를 발행했고, 각 AI가 자기 내용을 짧은 대화체로 다시 쓴 실제 댓글을 표시한다. 이전 GPT 버티브(VRT) 원문·기존 발췌·출처도 보존한다. 실제 답글은 0개이며 다른 모델의 대필을 채우지 않는다.
-Claude의 종목 추천은 금융 용도 제한으로 차단된 상태이며 이번 댓글도 실적 사실의 표현 변경만 포함한다. Gemini CLI 개인용 Google 로그인은 지원 종료로 차단됐고 Gemini 발행물의 실제 실행 출처는 Antigravity CLI다. 공유 커뮤니티 DB·백그라운드 워커는 비활성 상태다. [실제 검증 기록](docs/community/live-verification-2026-10-28.md)을 참고한다.
+첫 화면은 **AI Value Chain Today**다. 현재 실제 추천은 GPT의 엔비디아(NVDA)와 Gemini의 버티브(VRT)로 서로 다르다. GPT는 새 적정가격 산정을 보류했고 Gemini의 조건부 비교값은 234 USD다.
+이미 고른 종목은 다음 AI 후보에서 제외하며 중복 응답은 거절한다. 이전 의견서·대화체 댓글·가격·출처는 원래 날짜와 함께 이전 발행에 보존한다. 실제 답글은 0개이며 다른 모델의 대필을 채우지 않는다.
+Claude의 종목 추천은 금융 용도 제한으로 차단된 상태여서 미발행으로 표시하고 기존 실적 검토는 이력에서 읽는다. Gemini CLI 개인용 Google 로그인은 지원 종료로 차단됐고 Gemini 발행물의 실제 실행 출처는 Antigravity CLI다. 공유 커뮤니티 DB·백그라운드 워커는 비활성 상태다. [서로 다른 추천 검증 기록](docs/community/distinct-recommendations-2026-10-29.md)과 [이전 실제 검증 기록](docs/community/live-verification-2026-10-28.md)을 참고한다.
 기존 지도·시세·통계는 상세 메뉴와 기존 주소에서 계속 제공한다. [Today 실행·검토·발행](docs/community/today-picks.md)을 따른다.
 
 ## 바로 실행

@@ -88,8 +88,50 @@ def reviewed_reports_browser_fixture():
                            'promptVersion': 'owner-conversation-v1',
                            'responseSha256': hashlib.sha256(fresh_response.encode('utf-8')).hexdigest()}}
         reports.append(report)
-    value.update(schemaVersion=3, reports=reports, picks=value['picks'][:1], responses=[],
+    previous_gemini = json.loads(json.dumps(reports[-1]))
+    gemini = reports[-1]
+    gemini.update(id='report-gemini-distinct-browser', symbol='AMD',
+                  comment='gemini 서로 다른 AMD 종목을 고른 화면 검증용 댓글입니다. 실제 모델의 응답이 아닙니다.')
+    gemini['report'] = gemini['comment'] + '\n새 종목의 독립된 원문 표시를 검증하는 문단입니다.'
+    gemini['provenance'].update(runId='report-run-gemini-distinct-browser',
+                                generatedAt=stamp.replace('Z', '.160Z'), reviewedAt=stamp.replace('Z', '.180Z'),
+                                responseSha256=hashlib.sha256(gemini['report'].encode('utf-8')).hexdigest())
+    gemini['createdAt'] = stamp.replace('Z', '.190Z')
+    gemini['evidence'] = [{**gemini['evidence'][0], 'id': 'amd-source', 'symbol': 'AMD', 'sourceUrl': 'https://finance.yahoo.com/quote/AMD/'}]
+    gemini['comparisonSources'] = [{'symbol': symbol, 'label': '브라우저 비교 자료',
+                                    'sourceUrl': 'https://finance.yahoo.com/quote/' + symbol + '/',
+                                    'observedAt': stamp, 'collectedAt': stamp} for symbol in ['VRT', 'AVGO']]
+    gemini.pop('conversationComment'); gemini.pop('fairValue')
+    legacy = value['picks'][0]
+    legacy['symbol'] = 'VRT'
+    legacy['evidence'] = [{**legacy['evidence'][0], 'id': 'vrt-source', 'symbol': 'VRT', 'sourceUrl': 'https://finance.yahoo.com/quote/VRT/'}]
+    legacy['fairValue'] = {**legacy['fairValue'], 'evidenceIds': ['vrt-source']}
+    value.update(schemaVersion=3, reports=reports, picks=[legacy], responses=[],
+                 selectionPolicy='distinct-symbols-v1', reportHistory=[previous_gemini],
                  publishedAt=value['publishedAt'].replace('Z', '.200Z'))
+    return value
+
+
+def displayed_report_comment(report):
+    return report.get('conversationComment') or {'id': report['id'], 'text': report['comment'],
+                                                'provenance': report['provenance'], 'createdAt': report['createdAt']}
+
+
+def recommendation_only_browser_fixture():
+    # Current selections have separate fresh runs; all former reports remain in history.
+    value = reviewed_reports_browser_fixture()
+    gpt, claude, gemini = value['reports']
+    history = json.loads(json.dumps([gpt, claude] + value['reportHistory']))
+    gpt.update(id='report-gpt-fresh-distinct-browser',
+               comment='gpt 새로운 엔비디아 선택을 검증하는 댓글입니다. 실제 모델의 답변이 아닙니다.')
+    gpt['report'] = gpt['comment'] + '\n새 날짜의 실제 생성 출처를 구분하는 화면 검증 문단입니다.'
+    gpt['provenance'].update(runId='report-run-gpt-fresh-distinct-browser',
+                             generatedAt=value['publishedAt'], reviewedAt=value['publishedAt'],
+                             responseSha256=hashlib.sha256(gpt['report'].encode('utf-8')).hexdigest())
+    gpt['createdAt'] = value['publishedAt']
+    gpt.pop('conversationComment'); gpt.pop('fairValue', None)
+    value.update(reports=[gpt, gemini], reportHistory=history)
+    value['providerStates']['claude'] = {'status': 'disabled', 'reason': 'terms_not_cleared'}
     return value
 
 @contextmanager
@@ -228,14 +270,24 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             # One-off reports share existing cards and retain earlier publications.
             today_fixture.update(status=200, value=reviewed_reports_browser_fixture())
             today.locator('[data-today-refresh]').click()
-            today.get_by_text('AI 댓글 3개 발행', exact=False).wait_for()
+            today.get_by_text('서로 다른 추천 2개', exact=False).wait_for()
             assert today.locator('[data-today-cards] [data-today-comment]').count() == 3
             assert today.locator('[data-today-cards] [data-today-response]').count() == 0
+            assert today.locator('[data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
+            assert today.locator('[data-today-agent=gemini] .today-company .today-ticker').inner_text() == 'AMD'
+            claude_card = today.locator('[data-today-agent=claude]')
+            claude_card.get_by_role('heading', name='추천 미발행', exact=True).wait_for()
+            assert claude_card.get_attribute('data-recommendation-state') == 'unpublished'
+            assert claude_card.locator('.today-company').is_hidden()
+            assert claude_card.locator('[data-today-price]').is_hidden()
+            assert claude_card.locator('[data-today-comment]').is_hidden()
+            claude_card.locator('[data-today-factual-review] > summary').click()
             for report in today_fixture['value']['reports']:
                 card = today.locator('[data-today-agent="' + report['agent'] + '"]')
-                fresh_comment = report['conversationComment']
+                fresh_comment = displayed_report_comment(report)
                 assert card.locator('[data-today-comment]').inner_text() == fresh_comment['text']
-                assert card.locator('[data-today-comment]').inner_text() != report['comment']
+                if report.get('conversationComment'):
+                    assert card.locator('[data-today-comment]').inner_text() != report['comment']
                 assert card.locator('.today-review-notes').is_visible()
                 card.get_by_text(report['reviewNotes'][0], exact=True).wait_for()
                 assert card.locator('.today-message-label').first.inner_text() == {'gpt': 'GPT', 'claude': 'Claude', 'gemini': 'Gemini'}[report['agent']] + ' · AI'
@@ -245,48 +297,86 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 assert card.locator('.today-initial-comment time').first.get_attribute('datetime') == fresh_comment['provenance']['generatedAt']
                 assert card.locator('.today-initial-comment time').nth(1).get_attribute('datetime') == fresh_comment['createdAt']
                 assert card.locator('[data-today-fair-value]').inner_text() == {
-                    'gpt': '216.48 USD', 'claude': '가격 평가 없음', 'gemini': '222 USD'}[report['agent']]
+                    'gpt': '216.48 USD', 'claude': '가격 평가 없음', 'gemini': '미산정'}[report['agent']]
                 if report['agent'] == 'claude':
-                    assert card.locator('.today-pick-kicker').inner_text() == '검토 대상 · 실적 검토'
-                    assert '고른 종목' not in card.inner_text()
+                    assert card.locator('.today-company .today-pick-kicker').inner_text() == '검토 대상 · 실적 검토'
                 card.locator('.today-initial-comment > .today-sources > summary').click()
                 cli_label = {'gpt': 'Codex', 'claude': 'Claude Code', 'gemini': 'Antigravity'}[report['agent']]
                 card.get_by_text('CLI ' + cli_label + ' cli-1.0.0', exact=True).wait_for()
-                card.get_by_text('댓글 작성 출처', exact=True).wait_for()
-                card.get_by_text('CLI ' + fresh_comment['provenance']['cliName'] + ' · cli-1.0.0', exact=True).wait_for()
-                card.get_by_text('댓글 SHA-256 ' + fresh_comment['provenance']['responseSha256'], exact=True).wait_for()
+                if report.get('comparisonSources'):
+                    card.get_by_text('비교에 사용한 타사 원문', exact=True).wait_for()
+                    comparison_links = card.get_by_role('link', name='비교 자료 원문 ↗', exact=True)
+                    assert comparison_links.count() == len(report['comparisonSources'])
+                    assert [comparison_links.nth(index).get_attribute('href') for index in range(comparison_links.count())] == [source['sourceUrl'] for source in report['comparisonSources']]
+                if report.get('conversationComment'):
+                    card.get_by_text('댓글 작성 출처', exact=True).wait_for()
+                    card.get_by_text('CLI ' + fresh_comment['provenance']['cliName'] + ' · cli-1.0.0', exact=True).wait_for()
+                    card.get_by_text('댓글 SHA-256 ' + fresh_comment['provenance']['responseSha256'], exact=True).wait_for()
             assert today.locator('[data-today-archive]').is_visible()
             if today.locator('[data-today-archive]').get_attribute('open') is None:
                 today.locator('[data-today-archive] > summary').click()
-            assert today.locator('[data-today-archive] [data-today-comment]').count() == 1
+            assert today.locator('[data-today-archive] [data-today-comment]').count() == 2
             assert today.locator('[data-today-archive-agent=gpt] [data-today-comment]').inner_text() == today_fixture['value']['picks'][0]['comment']
+            assert today.locator('[data-today-archive-agent=gpt] .today-ticker').inner_text() == 'VRT'
+            historical_gemini = today_fixture['value']['reportHistory'][0]
+            assert today.locator('[data-today-archive-agent=gemini] .today-ticker').inner_text() == 'NVDA'
+            assert today.locator('[data-today-archive-agent=gemini] [data-today-comment]').inner_text() == displayed_report_comment(historical_gemini)['text']
             page.screenshot(path=str(output / 'today-reviewed-reports-fixture-desktop.png'), full_page=True)
+            # Production-shaped replacement: two distinct current picks and all three prior reports.
+            today_fixture['value'] = recommendation_only_browser_fixture()
+            today.locator('[data-today-refresh]').click()
+            today.locator('[data-today-agent=gpt]').get_by_text(today_fixture['value']['reports'][0]['comment'], exact=True).wait_for()
+            assert today.locator('[data-today-cards] [data-today-comment]').count() == 2
+            assert today.locator('[data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
+            assert today.locator('[data-today-agent=gemini] .today-company .today-ticker').inner_text() == 'AMD'
+            inactive_claude = today.locator('[data-today-agent=claude]')
+            assert today.locator('[data-today-agent=gpt] [data-today-fair-value]').inner_text() == '미산정'
+            assert today.locator('[data-today-agent=gemini] [data-today-fair-value]').inner_text() == '미산정'
+            inactive_claude.get_by_role('heading', name='추천 미발행', exact=True).wait_for()
+            assert inactive_claude.locator('.today-company').count() == 0
+            assert inactive_claude.locator('[data-today-comment]').count() == 0
+            assert inactive_claude.locator('[data-today-factual-review]').count() == 0
+            if today.locator('[data-today-archive]').get_attribute('open') is None:
+                today.locator('[data-today-archive] > summary').click()
+            assert today.locator('[data-today-archive] [data-today-comment]').count() == 4
+            assert today.locator('[data-today-archive-agent=gpt]').count() == 2
+            assert today.locator('[data-today-archive-agent=claude]').count() == 1
+            assert today.locator('[data-today-archive-agent=gemini]').count() == 1
+            for previous_report in today_fixture['value']['reportHistory']:
+                today.locator('[data-today-archive] [data-today-message="' + previous_report['id'] + '"]').get_by_text(displayed_report_comment(previous_report)['text'], exact=True).wait_for()
+            page.screenshot(path=str(output / 'today-distinct-picks-fixture-desktop.png'), full_page=True)
             # The same reviewed comments appear by symbol without becoming shared DB messages.
             page.goto(origin + '/#talk/NVDA')
             page.reload()
             published_comments = page.locator('#v-talk [data-role=published-reports]')
             published_comments.locator('[data-published-report-id]').first.wait_for()
-            assert published_comments.locator('[data-published-report-id]').count() == 3
+            assert published_comments.locator('[data-published-report-id]').count() == 4
             assert published_comments.locator('[data-comment-id]').count() == 0
-            for report in today_fixture['value']['reports']:
-                comment = published_comments.locator('[data-report-agent="' + report['agent'] + '"]')
-                fresh_comment = report['conversationComment']
+            nvda_reports = [report for report in today_fixture['value']['reports'] + today_fixture['value']['reportHistory'] if report['symbol'] == 'NVDA']
+            for report in nvda_reports:
+                comment = published_comments.locator('[data-published-report-id="' + report['id'] + '"]')
+                fresh_comment = displayed_report_comment(report)
                 comment.get_by_text(fresh_comment['text'], exact=True).wait_for()
                 assert comment.get_attribute('data-ai-comment-id') == fresh_comment['id']
                 assert comment.locator('time').first.get_attribute('datetime') == fresh_comment['provenance']['generatedAt']
                 assert comment.locator('time').nth(1).get_attribute('datetime') == fresh_comment['createdAt']
                 assert not any(label in comment.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
                 assert comment.get_by_role('button').count() == 0
+            assert published_comments.locator('[data-published-report-history]').count() == 3
             page.locator('#v-talk [data-tab=human]').click()
             assert published_comments.is_hidden()
             page.locator('#v-talk [data-tab=ai]').click()
             assert published_comments.is_visible()
             page.goto(origin + '/#talk/AMD')
             page.locator('#v-talk h2').wait_for()
-            assert page.locator('#v-talk [data-published-report-id]').count() == 0
+            amd_comment = page.locator('#v-talk [data-published-report-id="report-gemini-distinct-browser"]')
+            amd_comment.wait_for()
+            assert page.locator('#v-talk [data-published-report-id]').count() == 1
+            assert amd_comment.get_by_text(displayed_report_comment(today_fixture['value']['reports'][-1])['text'], exact=True).is_visible()
+            assert page.locator('#v-talk [data-published-report-history]').count() == 0
             page.goto(origin + '/#talk/NVDA')
             page.locator('#v-talk [data-published-report-id]').first.wait_for()
-            assert page.locator('#v-talk [data-published-report-id]').count() == 3
+            assert page.locator('#v-talk [data-published-report-id]').count() == 4
             page.locator('#v-talk [data-tab=mixed]').click()
             page.unroute('**/data/today-picks.json', serve_today_fixture)
             page.goto(origin + '/#talk/NVDA')
@@ -408,16 +498,33 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'today-populated-fixture-mobile.png'), full_page=True)
             mobile_today_fixture = reviewed_reports_browser_fixture()
             mobile.locator('#v-today [data-today-refresh]').click()
-            mobile.locator('#v-today').get_by_text('AI 댓글 3개 발행', exact=False).wait_for()
+            mobile.locator('#v-today').get_by_text('서로 다른 추천 2개', exact=False).wait_for()
             assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
             for report in mobile_today_fixture['reports']:
                 mobile_card = mobile.locator('#v-today [data-today-agent="' + report['agent'] + '"]')
-                assert mobile_card.locator('[data-today-comment]').inner_text() == report['conversationComment']['text']
+                if report['agent'] == 'claude':
+                    mobile_card.get_by_role('heading', name='추천 미발행', exact=True).wait_for()
+                    assert mobile_card.locator('[data-today-comment]').is_hidden()
+                    mobile_card.locator('[data-today-factual-review] > summary').click()
+                assert mobile_card.locator('[data-today-comment]').inner_text() == displayed_report_comment(report)['text']
                 assert not any(label in mobile_card.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
+            assert mobile.locator('#v-today [data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
+            assert mobile.locator('#v-today [data-today-agent=gemini] .today-company .today-ticker').inner_text() == 'AMD'
             mobile.locator('#v-today [data-today-agent=gemini] .today-report-original > summary').click()
             assert mobile.locator('#v-today [data-today-agent=gemini] [data-today-report-original]').is_visible()
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-reviewed-reports-fixture-mobile.png'), full_page=True)
+            mobile_today_fixture = recommendation_only_browser_fixture()
+            mobile.locator('#v-today [data-today-refresh]').click()
+            mobile.locator('#v-today [data-today-agent=gpt]').get_by_text(mobile_today_fixture['reports'][0]['comment'], exact=True).wait_for()
+            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 2
+            mobile.locator('#v-today [data-today-agent=claude]').get_by_role('heading', name='추천 미발행', exact=True).wait_for()
+            assert mobile.locator('#v-today [data-today-agent=claude] .today-company').count() == 0
+            if mobile.locator('#v-today [data-today-archive]').get_attribute('open') is None:
+                mobile.locator('#v-today [data-today-archive] > summary').click()
+            assert mobile.locator('#v-today [data-today-archive] [data-today-comment]').count() == 4
+            assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+            mobile.screenshot(path=str(output / 'today-distinct-picks-fixture-mobile.png'), full_page=True)
             mobile.goto(origin + '/#talk/NVDA')
             mobile.get_by_text('다른 브라우저에서도 보이는 검증 댓글', exact=True).wait_for()
             mobile.locator('[data-opinion-agent=gpt]').get_by_text(latest_gpt['text'], exact=True).wait_for()

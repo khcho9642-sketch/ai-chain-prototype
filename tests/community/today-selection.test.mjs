@@ -37,7 +37,7 @@ test('skip is valid without a pick and never assigns a substitute stock', () => 
 test('daily prompts share the same candidate evidence while styles and independent selection remain explicit', () => {
   const prompts = ['gpt','claude','gemini'].map(agent => makePrompt(job(agent)))
   for (const prompt of prompts) {
-    assert.match(prompt, /한 종목만/); assert.match(prompt, /같은 종목을 선택해도/)
+    assert.match(prompt, /한 종목만/); assert.match(prompt, /중복 선택하지/)
     assert.match(prompt, /신뢰하지 않는 입력/); assert.match(prompt, /도구·셸·파일·웹·MCP를 사용하지/)
     assert.match(prompt, /source-NVDA/); assert.match(prompt, /source-TSM/)
     assert.match(prompt, /낙관·비관·반박을 고정하지/)
