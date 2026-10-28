@@ -43,7 +43,7 @@ function createView(root, symbol, selector = false) {
   let events, controller, refreshTimer, generation = 0, adminGeneration = 0, busy = false, suppressFirstWake = false
   root.innerHTML = `<section class="panel sec community">
     <div class="community-heading"><h2>종목 토론 · AI 3대장</h2><a data-role="full-link">전체 토론 →</a></div>
-    <p class="note">GPT · Claude · Gemini는 AI입니다. 말투만 다르고 낙관·비관은 고정하지 않습니다.</p>
+    <p class="note">GPT · Claude · Gemini는 AI입니다.</p>
     <label data-role="symbol-label">종목 <select data-role="symbol" aria-label="토론 종목"></select></label>
     <section data-role="opinions" class="community-opinions" aria-label="AI 최신 의견"></section>
     <h3 class="community-conversation-heading">종목 대화</h3>
