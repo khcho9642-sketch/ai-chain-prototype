@@ -8,6 +8,7 @@ import { validateTodaySnapshot, getTodayComment } from '../../assets/today-core.
 
 const snapshot = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
 const source = await readFile(new URL('../../assets/community.js', import.meta.url), 'utf8')
+const allReports = [...snapshot.reports, ...(snapshot.reportHistory || [])]
 const digests = {
   gpt: '877b8fc3c09a9f5dd522b0cd4a7d35ca5bff5ebf30fd4591f5dcfdc43eba040d',
   gemini: '90f768add01d36ab29c75979233be4ac17171b8dc902c1a918abe34f19cb7449',
@@ -25,16 +26,35 @@ function moduleHarness(fetch) {
   return context.reportsApi
 }
 
-test('three published native reports retain exact response hashes, excerpts and factual-only Claude scope', () => {
+test('active and historical native reports retain exact hashes while current recommendations are distinct', () => {
   validateTodaySnapshot(snapshot)
-  assert.equal(snapshot.reports.length, 3)
-  for (const report of snapshot.reports) {
-    assert.equal(createHash('sha256').update(report.report, 'utf8').digest('hex'), digests[report.agent])
-    assert.equal(report.provenance.responseSha256, digests[report.agent])
+  assert.equal(snapshot.reports.length, 2)
+  assert.equal(snapshot.selectionPolicy, 'distinct-symbols-v1')
+  for (const report of allReports) {
+    assert.equal(createHash('sha256').update(report.report, 'utf8').digest('hex'), report.provenance.responseSha256)
     assert.ok(report.report.includes(report.comment))
     assert.ok(report.reviewNotes.length)
   }
-  const claude = snapshot.reports.find(report => report.agent === 'claude')
+  for (const [agent, digest] of Object.entries(digests)) {
+    const original = allReports.find(report => report.agent === agent && report.provenance.responseSha256 === digest)
+    assert.ok(original, `${agent} original report remains published or archived`)
+    assert.equal(createHash('sha256').update(original.report, 'utf8').digest('hex'), digest)
+  }
+  const selections = snapshot.reports.filter(report => report.kind === 'stock-opinion')
+  assert.equal(selections.length, 2)
+  assert.equal(new Set(selections.map(report => report.symbol)).size, selections.length)
+  const gpt = selections.find(report => report.agent === 'gpt')
+  assert.equal(gpt.provenance.responseSha256, '39d4b075a10cbc73756c2d6f94309a13d846f2b2e3063cbfe27be04c2f514d53')
+  assert.equal(Object.hasOwn(gpt, 'fairValue'), false)
+  const gemini = selections.find(report => report.agent === 'gemini')
+  assert.notEqual(gemini.symbol, 'NVDA')
+  assert.equal(gemini.provenance.responseSha256, '67cbe8312be1a1dfe2d03f75f3c640d15218c0dce80f37d55e640d5e9de4370a')
+  assert.equal(gemini.symbol, 'VRT')
+  assert.equal(gemini.fairValue.price, 234)
+  assert.deepEqual(gemini.comparisonSources.map(item => item.symbol).sort(), ['AMD', 'AVGO'])
+  assert.equal(snapshot.reportHistory.some(report => report.agent === 'gemini' && report.symbol === 'NVDA' && report.provenance.responseSha256 === digests.gemini), true)
+  assert.equal(snapshot.reports.some(report => report.agent === 'claude'), false)
+  const claude = snapshot.reportHistory.find(report => report.agent === 'claude')
   assert.equal(claude.kind, 'earnings-review')
   assert.equal(Object.hasOwn(claude, 'fairValue'), false)
   assert.equal(claude.provenance.cliName, 'claude-code')
@@ -43,11 +63,13 @@ test('three published native reports retain exact response hashes, excerpts and 
 
 test('three conversational comments preserve separate native responses and bind to their original reports', () => {
   const ids = new Set(), runs = new Set()
-  for (const report of snapshot.reports) {
+  const separatelyGenerated = allReports.filter(report => report.conversationComment)
+  assert.equal(separatelyGenerated.length, 3)
+  for (const report of separatelyGenerated) {
     const comment = report.conversationComment
     assert.ok(comment, `${report.agent} has a separately generated comment`)
     assert.equal(getTodayComment(report), comment)
-    assert.equal(comment.sourceReportSha256, digests[report.agent])
+    assert.equal(comment.sourceReportSha256, report.provenance.responseSha256)
     assert.equal(createHash('sha256').update(comment.response, 'utf8').digest('hex'), comment.provenance.responseSha256)
     assert.ok(comment.response.includes(comment.text))
     assert.notEqual(comment.text, report.comment)
@@ -64,11 +86,15 @@ test('three conversational comments preserve separate native responses and bind 
 
 test('read-only published comments respect human-only tabs and never mix other stock contexts', () => {
   const { publishedReportsForSymbol } = moduleHarness(() => { throw new Error('unexpected_network') })
-  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'mixed').length, 3)
-  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'ai').length, 3)
+  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'mixed').length, 4)
+  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'ai').length, 4)
   assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'human').length, 0)
-  assert.equal(publishedReportsForSymbol(snapshot, 'AMD', 'mixed').length, 0)
-  assert.equal(publishedReportsForSymbol(snapshot, 'VRT', 'mixed').length, 0)
+  const gemini = snapshot.reports.find(report => report.agent === 'gemini')
+  assert.deepEqual(Array.from(publishedReportsForSymbol(snapshot, gemini.symbol, 'mixed'), report => report.id), [gemini.id])
+  assert.equal(publishedReportsForSymbol(snapshot, gemini.symbol, 'human').length, 0)
+  for (const symbol of instruments.filter(item => item.chains.some(chain => chain > 0)).map(item => item.symbol)) {
+    assert.ok(publishedReportsForSymbol(snapshot, symbol).every(report => report.symbol === symbol))
+  }
   const malformed = structuredClone(snapshot); malformed.reports[0].provenance.responseSha256 = 'invented'
   assert.throws(() => publishedReportsForSymbol(malformed, 'NVDA'), /invalid_today_provenance/u)
 })
@@ -85,7 +111,7 @@ test('views share one snapshot read independently of community backend connectiv
   const values = await Promise.all([readPublishedReports(first.signal), readPublishedReports(second.signal)])
   assert.equal(calls, 1)
   assert.equal(values[0], values[1])
-  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 3)
+  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 2)
   assert.equal(calls, 1)
 })
 
@@ -102,7 +128,7 @@ test('disposing the last pending view aborts its read and a new view can load wi
   first.abort()
   await assert.rejects(pending, error => error.name === 'AbortError')
   assert.equal(aborted, 1)
-  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 3)
+  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 2)
   assert.equal(calls, 2)
 })
 
@@ -123,7 +149,7 @@ test('a failed snapshot read can recover on route re-entry without a full page r
   })
   await assert.rejects(readPublishedReports(new AbortController().signal), /temporary_network_failure/u)
   const recovered = await readPublishedReports(new AbortController().signal)
-  assert.equal(recovered.reports.length, 3)
+  assert.equal(recovered.reports.length, 2)
   assert.equal(calls, 2)
   assert.equal(await readPublishedReports(new AbortController().signal), recovered)
   assert.equal(calls, 2)

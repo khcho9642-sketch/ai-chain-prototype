@@ -13,7 +13,7 @@ let publishedReportsRequest
 export function publishedReportsForSymbol(snapshot, symbol, tab = 'mixed') {
   if (!snapshot || tab === 'human') return []
   validateTodaySnapshot(snapshot)
-  return (snapshot.reports || []).filter(report => report.symbol === symbol)
+  return [...(snapshot.reports || []), ...(snapshot.reportHistory || [])].filter(report => report.symbol === symbol)
 }
 
 function readPublishedReports(signal) {
@@ -283,6 +283,7 @@ function createView(root, symbol, selector = false) {
       const item = node('article', null, { class: 'community-comment', 'data-published-report-id': report.id, 'data-report-agent': report.agent })
       const factual = report.kind === 'earnings-review', comment = getTodayComment(report)
       item.dataset.aiCommentId = comment.id
+      if (state.publishedReports.reportHistory?.some(previous => previous.id === report.id)) item.append(node('small', '이전 발행', { 'data-published-report-history': '' }))
       item.append(node('strong', `${names[report.agent]} · AI`), node('p', comment.text))
       item.append(node('time', '생성 ' + timeLabel(comment.provenance.generatedAt), { datetime: comment.provenance.generatedAt }), node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
       if (factual) item.append(node('p', '운영자가 지정한 종목의 실적 검토입니다. 종목 선정·적정가격 평가는 포함하지 않습니다.', { class: 'note' }))

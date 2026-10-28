@@ -53,6 +53,8 @@ const reasonLabel = value => ({
   awaiting_manual_review: '실제 원고 검토·발행 대기',
   cli_unavailable: '공식 CLI 실행 환경 확인 대기', cli_not_installed: '공식 CLI 실행 환경 확인 대기',
   disabled: '현재 참여 중지', not_published: '검증된 추천이 아직 없습니다.',
+  no_distinct_candidates: '아직 선택되지 않은 다른 종목의 근거가 없습니다.',
+  duplicate_daily_pick_symbol: '이미 선택된 종목과 겹쳐 발행하지 않았습니다.',
 })[value] || (typeof value === 'string' && /[가-힣]/u.test(value) ? value : '실제 응답 검증 대기')
 
 function sourceDetails(pick) {
@@ -78,7 +80,7 @@ function sourceDetails(pick) {
     node('p', 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
     node('p', '실제 생성 ' + timeLabel(provenance.generatedAt)),
     node('p', '검수 ' + timeLabel(provenance.reviewedAt)))
-  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', '실제 CLI 1회 실행 원문 · 운영자 검토 후 수동 발행'))
+  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', '실제 CLI 응답 원문 · 운영자 검토 후 수동 발행'))
   if (provenance.responseSha256) info.append(node('p', '원문 SHA-256 ' + provenance.responseSha256, { class: 'today-response-digest mono' }))
   for (const evidence of pick.evidence || []) {
     const item = node('article', null, { class: 'today-evidence' })
@@ -86,6 +88,15 @@ function sourceDetails(pick) {
     const url = communityEvidenceUrl(evidence.sourceUrl)
     if (url) item.append(node('a', '근거 원문 ↗', { href: url, target: '_blank', rel: 'noopener noreferrer' }))
     info.append(item)
+  }
+  if (pick.comparisonSources?.length) {
+    info.append(node('strong', '비교에 사용한 타사 원문'))
+    for (const source of pick.comparisonSources) {
+      const item = node('article', null, { class: 'today-evidence' }), url = communityEvidenceUrl(source.sourceUrl)
+      item.append(node('strong', source.symbol + ' · ' + source.label), node('small', '확인 ' + timeLabel(source.observedAt)))
+      if (url) item.append(node('a', '비교 자료 원문 ↗', { href: url, target: '_blank', rel: 'noopener noreferrer' }))
+      info.append(item)
+    }
   }
   if (pick.businessProfile) {
     const profile = pick.businessProfile, url = communityEvidenceUrl(profile.sourceUrl)
@@ -122,8 +133,15 @@ function messageMeta(message) {
 
 function reportDetails(report) {
   const details = node('details', null, { class: 'today-report-original' })
-  details.append(node('summary', report.kind === 'earnings-review' ? '실적 검토 원문 전체 보기' : '의견서 원문 전체 보기'),
-    node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
+  details.append(node('summary', report.kind === 'earnings-review' ? '실적 검토 원문 전체 보기' : '의견서 원문 전체 보기'))
+  let structured
+  try { structured = JSON.parse(report.report) } catch {}
+  if (typeof structured?.opinion === 'string' && structured.opinion.trim()) {
+    details.append(node('p', structured.opinion.replaceAll('\\n', '\n'), { class: 'today-report-text' }))
+    const original = node('details', null, { class: 'today-native-response' })
+    original.append(node('summary', '실제 응답 원문'), node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
+    details.append(original)
+  } else details.append(node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
   return details
 }
 
@@ -162,11 +180,20 @@ function renderCard(card, { archived = false } = {}) {
   }
   const company = instruments.find(item => item.symbol === pick.symbol)
   article.dataset.pickId = pick.id
-  const title = node('div', null, { class: 'today-company' })
   const factualReview = pick.kind === 'earnings-review'
+  let content = article
+  if (factualReview && !archived) {
+    article.dataset.recommendationState = 'unpublished'
+    article.append(node('p', '고른 종목', { class: 'today-pick-kicker' }), node('h3', '추천 미발행'),
+      node('p', '현재 이용 조건으로 종목 추천에 참여하지 않습니다.', { class: 'today-empty-note' }))
+    content = node('details', null, { class: 'today-review-only', 'data-today-factual-review': '' })
+    content.append(node('summary', '기존 실적 검토 · 댓글 보기'))
+    article.append(content)
+  }
+  const title = node('div', null, { class: 'today-company' })
   title.append(node('p', factualReview ? '검토 대상 · 실적 검토' : '고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
   if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
-  article.append(title, priceFields(pick))
+  content.append(title, priceFields(pick))
   const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
   initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }),
@@ -174,11 +201,11 @@ function renderCard(card, { archived = false } = {}) {
   if (pick.kind) initial.append(reportReviewNotes(pick), reportDetails(pick))
   initial.append(messageMeta(pick), sourceDetails(pick))
   thread.append(initial, ...(!card.report ? card.responses || [] : []).map(response => renderResponse(response, pick)))
-  article.append(thread)
+  content.append(thread)
   const actions = node('div', null, { class: 'today-card-actions' })
   actions.append(node('button', '종목 · 차트', { type: 'button', 'data-market-symbol': pick.symbol, 'aria-label': `${company?.name || pick.symbol} 종목 · 차트` }),
     node('a', '생각 나누기 →', { href: `#talk/${encodeURIComponent(pick.symbol)}` }))
-  article.append(actions)
+  content.append(actions)
   return article
 }
 
@@ -198,16 +225,17 @@ function render() {
   grid.replaceChildren(...cards.map(card => renderCard(card)))
   const published = cards.filter(card => card.state === 'published' && (card.report || card.pick)).length
   const publishedReports = cards.filter(card => card.state === 'published' && card.report)
-  const stockOpinions = publishedReports.filter(card => card.report.kind === 'stock-opinion').length
+  const stockOpinions = new Set(publishedReports.filter(card => card.report.kind === 'stock-opinion').map(card => card.report.symbol)).size
   const earningsReviews = publishedReports.filter(card => card.report.kind === 'earnings-review').length
   root.querySelector('[data-today-status]').textContent = state.error ? '발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.' :
-    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : publishedReports.length ? `${currentDate} · AI 댓글 ${publishedReports.length}개 발행 · 종목 의견 ${stockOpinions}개 · 실적 검토 ${earningsReviews}개` : published ? `${currentDate} · ${published}개 AI의 추천 발행 · 실제 작성 시각과 근거를 확인하세요.` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
+    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : publishedReports.length ? `${currentDate} · 서로 다른 추천 ${stockOpinions}개 · 실적 검토 ${earningsReviews}개` : published ? `${currentDate} · ${published}개 AI의 추천 발행 · 실제 작성 시각과 근거를 확인하세요.` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
   const refresh = root.querySelector('[data-today-refresh]')
   refresh.disabled = state.busy; refresh.textContent = state.busy ? '읽는 중…' : '다시 읽기'
   const older = cards.filter(card => card.state === 'previous-edition' && (card.report || card.pick))
   for (const card of cards) {
     if (card.report && card.pick) older.push({ ...card, report: null, state: 'published' })
   }
+  for (const report of state.snapshot?.reportHistory || []) older.push({ agent: report.agent, ...TODAY_AGENTS[report.agent], report, pick: null, responses: [], state: 'published' })
   const archive = root.querySelector('[data-today-archive]')
   archive.hidden = !older.length
   if (older.length) {

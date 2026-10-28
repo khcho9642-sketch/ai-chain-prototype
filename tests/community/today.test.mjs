@@ -448,3 +448,133 @@ test('factual Claude comments retain the existing review scope and cannot add a 
     assert.throws(() => validate(bad), /invalid_today_conversation_comment/)
   }
 })
+
+test('distinct selection policy rejects duplicate active stock opinions without rewriting legacy editions', () => {
+  const value = reportsEdition(['gpt', 'claude', 'gemini'].map(agent => reviewedReport(agent)))
+  assert.equal(validate(value), value)
+  value.selectionPolicy = 'distinct-symbols-v1'
+  assert.throws(() => validate(value), /duplicate_today_recommendation_symbol/)
+  const gemini = value.reports.find(report => report.agent === 'gemini')
+  gemini.symbol = '005930.KS'; gemini.evidence[0].symbol = gemini.symbol
+  assert.equal(validate(value), value)
+  assert.deepEqual(todayCards(value, { now, catalog }).map(card => card.report.symbol), ['NVDA', 'NVDA', '005930.KS'])
+  assert.equal(value.reports[1].kind, 'earnings-review')
+})
+
+test('distinct policy checks visible legacy fallback picks while ignoring picks shadowed by actual reports', () => {
+  const value = reportsEdition([reviewedReport('gpt')])
+  value.selectionPolicy = 'distinct-symbols-v1'
+  // The retained original GPT pick is an archive record while its newer report is shown.
+  assert.equal(validate(value), value)
+  value.picks.push(pick('gemini'))
+  assert.throws(() => validate(value), /duplicate_today_recommendation_symbol/)
+  value.picks[1].symbol = '005930.KS'; value.picks[1].evidence[0].symbol = '005930.KS'
+  assert.equal(validate(value), value)
+})
+
+test('selection policy and history are optional v3-only fields with explicit bounded shapes', () => {
+  const value = reportsEdition()
+  for (const policy of [null, true, 'different-stocks', '']) {
+    assert.throws(() => validate({ ...value, selectionPolicy: policy }), /invalid_today_selection_policy/)
+  }
+  for (const reportHistory of [null, {}, Array(31).fill(reviewedReport('gemini'))]) {
+    assert.throws(() => validate({ ...value, reportHistory }), /invalid_today_snapshot/)
+  }
+  assert.equal(validate({ ...value, reportHistory: [] }).reportHistory.length, 0)
+  assert.throws(() => validate({ ...edition([pick()]), selectionPolicy: 'distinct-symbols-v1' }), /invalid_today_snapshot/)
+  assert.throws(() => validate({ ...threaded(), reportHistory: [] }), /invalid_today_snapshot/)
+  assert.throws(() => validate({ ...initial(), schemaVersion: 3, reports: [], responses: [], reportHistory: [reviewedReport('gemini')] }), /invalid_today_edition/)
+})
+
+test('replacement report history retains original publication and native comment dates across editions', () => {
+  const prior = reviewedReport('gemini'); prior.conversationComment = conversationComment(prior)
+  const replacement = reviewedReport('gemini')
+  replacement.id = 'gemini-later-selection'; replacement.provenance.runId = 'gemini-later-selection-run'
+  replacement.symbol = '005930.KS'; replacement.evidence[0].symbol = '005930.KS'
+  replacement.createdAt = '2026-10-28T02:08:00Z'; replacement.provenance.reviewedAt = '2026-10-28T02:05:00Z'
+  const before = clone(prior), value = { ...reportsEdition([replacement]), editionDate: '2026-10-28', publishedAt: '2026-10-28T02:10:00Z', selectionPolicy: 'distinct-symbols-v1', reportHistory: [prior] }
+  const later = Date.parse('2026-10-28T03:00:00Z')
+  assert.equal(validateTodaySnapshot(value, { now: later, catalog }), value)
+  assert.deepEqual(value.reportHistory[0], before)
+  const cards = todayCards(value, { now: later, catalog })
+  assert.equal(cards[2].report, replacement)
+  assert.equal(cards[2].state, 'published')
+  assert.equal(cards.some(card => card.report?.id === prior.id), false)
+})
+
+test('historical comments may have their own later publication date without redating the original report', () => {
+  const prior = reviewedReport('gemini'); prior.conversationComment = conversationComment(prior)
+  prior.conversationComment.provenance.generatedAt = '2026-10-28T02:08:30Z'
+  prior.conversationComment.provenance.reviewedAt = '2026-10-28T02:09:00Z'
+  prior.conversationComment.createdAt = '2026-10-28T02:10:00Z'
+  const value = { ...reportsEdition([]), editionDate: '2026-10-28', publishedAt: '2026-10-28T02:10:00Z', reportHistory: [prior] }
+  assert.equal(validateTodaySnapshot(value, { now: Date.parse('2026-10-28T03:00:00Z'), catalog }), value)
+  assert.equal(prior.createdAt, '2026-10-27T02:08:00Z')
+  assert.equal(prior.conversationComment.createdAt, '2026-10-28T02:10:00Z')
+  prior.conversationComment.provenance.reviewedAt = '2026-10-27T02:09:00Z'
+  assert.throws(() => validateTodaySnapshot(value, { now: Date.parse('2026-10-28T03:00:00Z'), catalog }), /invalid_today_chronology/)
+})
+
+test('historical reports retain all source checks and cannot collide with active messages or actual runs', () => {
+  const prior = reviewedReport('gemini'); prior.conversationComment = conversationComment(prior)
+  const value = { ...reportsEdition(), reportHistory: [prior] }
+  assert.equal(validate(value), value)
+  const duplicate = clone(value); duplicate.reportHistory.push(clone(prior))
+  assert.throws(() => validate(duplicate), /invalid_today_report/)
+  const activeId = clone(value); activeId.reportHistory[0].id = value.reports[0].id
+  assert.throws(() => validate(activeId), /invalid_today_report/)
+  const activeRun = clone(value); activeRun.reportHistory[0].provenance.runId = value.reports[0].provenance.runId
+  assert.throws(() => validate(activeRun), /invalid_today_provenance/)
+  const commentId = clone(value); commentId.reportHistory[0].conversationComment.id = value.reports[0].id
+  assert.throws(() => validate(commentId), /invalid_today_conversation_comment/)
+  const foreignEvidence = clone(value); foreignEvidence.reportHistory[0].evidence[0].symbol = '005930.KS'
+  assert.throws(() => validate(foreignEvidence), /invalid_today_evidence/)
+  const falseCli = clone(value); falseCli.reportHistory[0].provenance.cliName = 'codex'
+  assert.throws(() => validate(falseCli), /invalid_today_provenance/)
+  const late = clone(value); late.reportHistory[0].createdAt = '2026-10-28T02:08:00Z'; late.reportHistory[0].provenance.reviewedAt = '2026-10-28T02:05:00Z'
+  assert.throws(() => validate(late), /invalid_today_chronology/)
+})
+
+test('a factual review stays available without becoming an AI stock recommendation', () => {
+  const value = reportsEdition(['gpt', 'claude'].map(agent => reviewedReport(agent)))
+  value.selectionPolicy = 'distinct-symbols-v1'
+  const cards = todayCards(value, { now, catalog })
+  assert.equal(cards[0].recommendationState, 'published')
+  assert.equal(cards[1].state, 'published')
+  assert.equal(cards[1].recommendationState, 'unpublished')
+  assert.equal(cards[1].recommendationReason, 'factual_review_only')
+  assert.equal(cards[1].report.kind, 'earnings-review')
+  assert.equal(cards[2].recommendationState, 'unavailable')
+})
+
+test('comparison sources reference other eligible companies without becoming selected-stock evidence', () => {
+  const value = reportsEdition(), report = value.reports[0]
+  report.comparisonSources = [{ symbol: '005930.KS', label: '비교에 사용한 다른 회사 공식 자료',
+    sourceUrl: 'https://www.samsung.com/global/ir/', observedAt: '2026-10-27T01:00:00Z', collectedAt: '2026-10-27T01:10:00Z' }]
+  report.fairValue = fairValue()
+  const selectedEvidence = clone(report.evidence), selectedDataAsOf = report.dataAsOf
+  assert.equal(validate(value), value)
+  assert.deepEqual(report.evidence, selectedEvidence)
+  assert.equal(report.dataAsOf, selectedDataAsOf)
+  report.fairValue.evidenceIds = ['005930.KS']
+  assert.throws(() => validate(value), /invalid_today_fair_value/)
+})
+
+test('comparison references reject own-stock, unknown, duplicate, unsafe or post-generation sources', () => {
+  const base = { symbol: '005930.KS', label: '비교 기업 공식 자료', sourceUrl: 'https://www.samsung.com/global/ir/',
+    observedAt: '2026-10-27T01:00:00Z', collectedAt: '2026-10-27T01:10:00Z' }
+  for (const patch of [{ symbol: 'NVDA' }, { symbol: 'UNKNOWN' }, { symbol: 'BTC-USD' }, { label: '' },
+    { sourceUrl: 'http://www.samsung.com/' }, { sourceUrl: 'https://u:secret@www.samsung.com/' },
+    { sourceUrl: 'https://127.0.0.1/' }, { sourceUrl: 'https://example.com/' },
+    { observedAt: '2026-10-27' }, { collectedAt: '2026-10-27T01:31:00Z' },
+    { observedAt: '2026-10-27T01:11:00Z' }, { id: 'foreign-company-evidence' }, { fairValue: fairValue() }]) {
+    const value = reportsEdition(); value.reports[0].comparisonSources = [{ ...base, ...patch }]
+    assert.throws(() => validate(value), /invalid_today_comparison_source/)
+  }
+  for (const comparisonSources of [null, {}, Array(11).fill(base), [base, { ...base }]]) {
+    const value = reportsEdition(); value.reports[0].comparisonSources = comparisonSources
+    assert.throws(() => validate(value), /invalid_today_comparison_source/)
+  }
+  const old = edition([pick()]); old.picks[0].comparisonSources = [base]
+  assert.throws(() => validate(old), /invalid_today_pick/)
+})

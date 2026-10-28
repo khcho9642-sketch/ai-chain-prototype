@@ -15,6 +15,7 @@ const PROVENANCE_KEYS = ['provider', 'requestedModel', 'reportedModel', 'cliVers
 const REPORT_PROVENANCE_KEYS = [...PROVENANCE_KEYS, 'cliName', 'responseSha256']
 const REPORT_CLI_NAMES = Object.freeze({ gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' })
 const EVIDENCE_KEYS = ['id', 'label', 'sourceUrl', 'observedAt', 'collectedAt']
+const COMPARISON_SOURCE_KEYS = ['symbol', 'label', 'sourceUrl', 'observedAt', 'collectedAt']
 const FAIR_VALUE_KEYS = ['price', 'currency', 'asOf', 'method', 'assumptions', 'evidenceIds']
 const FUTURE_ALLOWANCE = 5 * 60 * 1000
 const SIMULATION = /(?:fixture|(?:^|[\s_-])test(?:$|[\s_-])|test[\s_-]*only|not[\s_-]*real|mock|synthetic|demo[\s_-]*only)/iu
@@ -46,7 +47,7 @@ function publicSource(value) {
 }
 
 function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, error, fairValueAllowed = false, reviewedReport = false }) {
-    if (!keysAre(pick, keys, ['businessProfile', ...(fairValueAllowed ? ['fairValue'] : []), ...(reviewedReport ? ['conversationComment'] : [])]) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
+    if (!keysAre(pick, keys, ['businessProfile', ...(fairValueAllowed ? ['fairValue'] : []), ...(reviewedReport ? ['conversationComment', 'comparisonSources'] : [])]) || !Object.hasOwn(TODAY_AGENTS, pick.agent) ||
       !cleanText(pick.id, 1, 160) || ids.has(pick.id) || SIMULATION.test(pick.id) || !cleanText(pick.symbol, 1, 40) || !eligible.has(pick.symbol) ||
       !cleanText(pick.comment, min, max) || /<\/?[a-z]|https?:\/\/|www\./iu.test(pick.comment) ||
       /수익\s*보장|무조건\s*(?:매수|사라)|내부\s*정보/iu.test(pick.comment) ||
@@ -75,6 +76,17 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
   if (generated > created || created > published || generated > reviewed || reviewed > published ||
       (reviewedReport && reviewed > created) ||
       (reviewedReport ? [created, reviewed] : [generated, created, reviewed]).some(ms => kstDate(ms) !== value.editionDate)) fail('invalid_today_chronology')
+  if (Object.hasOwn(pick, 'comparisonSources')) {
+    if (!Array.isArray(pick.comparisonSources) || pick.comparisonSources.length > 10) fail('invalid_today_comparison_source')
+    const comparisonSymbols = new Set()
+    for (const source of pick.comparisonSources) {
+      if (!keysAre(source, COMPARISON_SOURCE_KEYS) || !cleanText(source.symbol, 1, 40) || !eligible.has(source.symbol) ||
+          source.symbol === pick.symbol || comparisonSymbols.has(source.symbol) || !cleanText(source.label, 1, 240) ||
+          !publicSource(source.sourceUrl) || !time(source.observedAt) || !time(source.collectedAt) ||
+          Date.parse(source.observedAt) > Date.parse(source.collectedAt) || Date.parse(source.collectedAt) > generated) fail('invalid_today_comparison_source')
+      comparisonSymbols.add(source.symbol)
+    }
+  }
   const evidenceLimit = (reviewedReport ? reviewed : generated) + FUTURE_ALLOWANCE
   const evidenceIds = new Set()
   for (const evidence of pick.evidence) {
@@ -124,12 +136,15 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
   if (!Array.isArray(catalog)) fail('invalid_today_catalog')
   const eligible = new Set(catalog.filter(item => Array.isArray(item.chains) && item.chains.some(chain => chain > 0)).map(item => item.symbol))
   const rootKeys = value?.schemaVersion === 3 ? [...ROOT_KEYS, 'responses', 'reports'] : value?.schemaVersion === 2 ? [...ROOT_KEYS, 'responses'] : ROOT_KEYS
-  if (!keysAre(value, rootKeys) || ![1, 2, 3].includes(value.schemaVersion) || value.timezone !== 'Asia/Seoul' ||
+  const optionalRootKeys = value?.schemaVersion === 3 ? ['selectionPolicy', 'reportHistory'] : []
+  if (!keysAre(value, rootKeys, optionalRootKeys) || ![1, 2, 3].includes(value.schemaVersion) || value.timezone !== 'Asia/Seoul' ||
       !(value.editionDate === null || date(value.editionDate)) || !(value.publishedAt === null || time(value.publishedAt)) ||
       !Array.isArray(value.picks) || value.picks.length > 3 || !keysAre(value.providerStates, Object.keys(TODAY_AGENTS)) ||
       (value.schemaVersion >= 2 && (!Array.isArray(value.responses) || value.responses.length > 3)) ||
-      (value.schemaVersion === 3 && (!Array.isArray(value.reports) || value.reports.length > 3))) fail('invalid_today_snapshot')
-  if ((value.editionDate === null) !== (value.publishedAt === null) || ((value.picks.length || value.reports?.length) && value.editionDate === null)) fail('invalid_today_edition')
+      (value.schemaVersion === 3 && (!Array.isArray(value.reports) || value.reports.length > 3)) ||
+      (Object.hasOwn(value, 'reportHistory') && (!Array.isArray(value.reportHistory) || value.reportHistory.length > 30))) fail('invalid_today_snapshot')
+  if (Object.hasOwn(value, 'selectionPolicy') && value.selectionPolicy !== 'distinct-symbols-v1') fail('invalid_today_selection_policy')
+  if ((value.editionDate === null) !== (value.publishedAt === null) || ((value.picks.length || value.reports?.length || value.reportHistory?.length) && value.editionDate === null)) fail('invalid_today_edition')
   if (value.publishedAt && (Date.parse(value.publishedAt) > nowMs + FUTURE_ALLOWANCE || value.editionDate > kstDate(nowMs) || kstDate(Date.parse(value.publishedAt)) !== value.editionDate)) fail('invalid_today_publication_time')
   for (const state of Object.values(value.providerStates)) {
     if (!keysAre(state, ['status', 'reason']) || !['disabled', 'ready', 'unavailable', 'blocked'].includes(state.status) ||
@@ -161,6 +176,21 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
     reportAgents.add(report.agent)
     if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, context)
   }
+  if (value.selectionPolicy === 'distinct-symbols-v1') {
+    const selected = new Set()
+    // Legacy picks count only when they are actually visible instead of an active report.
+    const recommendations = [...(value.reports || []).filter(report => report.kind === 'stock-opinion'),
+      ...value.picks.filter(pick => !reportAgents.has(pick.agent) && kstDate(Date.parse(pick.createdAt)) === value.editionDate)]
+    for (const recommendation of recommendations) {
+      if (selected.has(recommendation.symbol)) fail('duplicate_today_recommendation_symbol')
+      selected.add(recommendation.symbol)
+    }
+  }
+  for (const report of value.reportHistory || []) {
+    const reportContext = legacyContext(report)
+    validateMessage(report, { ...reportContext, keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: report?.agent !== 'claude', reviewedReport: true })
+    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, legacyContext(report.conversationComment))
+  }
   return value
 }
 
@@ -173,9 +203,12 @@ export function todayCards(snapshot, { now = Date.now(), catalog = instruments }
     const report = (snapshot.reports || []).find(report => report.agent === agent) || null
     const provider = snapshot.providerStates[agent]
     const messageCurrent = report ? current : pick ? kstDate(Date.parse(pick.createdAt)) === kstDate(now) : false
+    const state = report || pick ? messageCurrent ? 'published' : 'previous-edition' : provider.status === 'ready' ? 'unpublished' : 'unavailable'
+    const reason = report || pick ? messageCurrent ? report ? 'reviewed_one_off_publication' : 'reviewed_publication' : 'previous_edition' : provider.reason
     return { agent, ...info, pick, report, responses: pick ? (snapshot.responses || []).filter(response => response.parentId === pick.id) : [],
-      state: report || pick ? messageCurrent ? 'published' : 'previous-edition' : provider.status === 'ready' ? 'unpublished' : 'unavailable',
-      reason: report || pick ? messageCurrent ? report ? 'reviewed_one_off_publication' : 'reviewed_publication' : 'previous_edition' : provider.reason,
+      state, reason,
+      recommendationState: report?.kind === 'earnings-review' ? 'unpublished' : state,
+      recommendationReason: report?.kind === 'earnings-review' ? 'factual_review_only' : reason,
       editionDate: snapshot.editionDate, publishedAt: snapshot.publishedAt }
   })
 }
