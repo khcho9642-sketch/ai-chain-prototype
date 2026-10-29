@@ -25,6 +25,7 @@
 | --- | --- |
 | [커뮤니티 구현 현황](community/ai-community.md) | 현재 구현·테스트와 운영 미완료 범위 |
 | [Today 추천·댓글](community/today-picks.md) | 모델별 하루 한 종목·한 댓글, 목적 승인·검수·수동 발행 |
+| [추정 가격 비교와 실제 재선정](community/estimated-price-2026-10-29.md) | Gemini 웹의 실제 AVGO 의견, 시가보다 높은 추정 조건, 원문·출처 보존 |
 | [서로 다른 추천 검증](community/distinct-recommendations-2026-10-29.md) | 종목 중복 차단·새 실제 의견·이전 원문과 댓글 보존 |
 | [AI 의견·댓글 PRD v4](community/AI_Chat_Opinion_PRD_v4.md) | 사용자 제공 요구사항 원본 |
 | [v4 구현·검수·마이그레이션](community/v4-implementation.md) | 의견·이력·근거·큐 변경과 검증 범위 |
