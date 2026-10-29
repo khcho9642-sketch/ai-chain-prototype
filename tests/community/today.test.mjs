@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { kstDate, validateTodaySnapshot, todayCards, getTodayComment } from '../../assets/today-core.js'
+import { kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison } from '../../assets/today-core.js'
 
 const now = Date.parse('2026-10-27T03:00:00Z')
 const catalog = [{ symbol: 'NVDA', name: '엔비디아', chains: [4] }, { symbol: '005930.KS', name: '삼성전자', chains: [2, 3] }, { symbol: 'BTC-USD', name: '비트코인', chains: [0] }]
@@ -45,6 +45,66 @@ const conversationalEdition = (agent = 'gpt') => {
   report.conversationComment = conversationComment(report)
   return reportsEdition([report])
 }
+
+test('price-upside eligibility requires an estimate strictly above the same-stock observed quote', () => {
+  const opinion = pick('gpt', { fairValue: fairValue() })
+  const quote = { symbol: 'NVDA', price: 200, currency: 'USD', marketTime: Date.parse('2026-10-26T20:00:00Z') / 1000, status: 'ok' }
+  assert.deepEqual(getTodayPriceComparison(opinion, quote, { now }), { status: 'above', eligible: true, differencePercent: 10, reason: null })
+  assert.deepEqual(getTodayPriceComparison(opinion, { ...quote, price: 250 }, { now }), { status: 'below', eligible: false, differencePercent: -12, reason: null })
+  assert.deepEqual(getTodayPriceComparison(opinion, { ...quote, price: 220 }, { now }), { status: 'equal', eligible: false, differencePercent: 0, reason: null })
+})
+
+test('missing AI estimates and factual reviews cannot imply price upside', () => {
+  const quote = { symbol: 'NVDA', price: 200, currency: 'USD', marketTime: now / 1000, status: 'ok' }
+  for (const opinion of [null, pick(), pick('gpt', { fairValue: null })]) {
+    assert.deepEqual(getTodayPriceComparison(opinion, quote, { now }), { status: 'missing', eligible: false, differencePercent: null, reason: 'estimate_missing' })
+  }
+  assert.deepEqual(getTodayPriceComparison({ ...reviewedReport('claude'), fairValue: fairValue() }, quote, { now }),
+    { status: 'unavailable', eligible: false, differencePercent: null, reason: 'factual_review_only' })
+})
+
+test('failed, missing, cross-stock and cross-currency quotes never qualify a price-upside pick', () => {
+  const opinion = pick('gpt', { fairValue: fairValue() })
+  const quote = { symbol: 'NVDA', price: 200, currency: 'USD', marketTime: now / 1000, status: 'ok' }
+  for (const bad of [null, { ...quote, status: 'error' }, { ...quote, status: undefined }, { ...quote, symbol: '005930.KS' },
+    { ...quote, currency: 'KRW' }, { ...quote, currency: 'usd' }]) {
+    const result = getTodayPriceComparison(opinion, bad, { now })
+    assert.equal(result.status, 'unavailable')
+    assert.equal(result.eligible, false)
+    assert.equal(result.differencePercent, null)
+  }
+  assert.deepEqual(getTodayPriceComparison(opinion, quote, { now, marketError: true }),
+    { status: 'unavailable', eligible: false, differencePercent: null, reason: 'quote_unavailable' })
+})
+
+test('invalid prices, observation dates and future inputs cannot produce an upside comparison', () => {
+  const opinion = pick('gpt', { fairValue: fairValue() })
+  const quote = { symbol: 'NVDA', price: 200, currency: 'USD', marketTime: now / 1000, status: 'ok' }
+  for (const patch of [{ price: 0 }, { price: -1 }, { price: '200' }, { price: Infinity }, { price: NaN },
+    { marketTime: 0 }, { marketTime: '1793052000' }, { marketTime: Infinity }, { marketTime: (now + 300001) / 1000 }]) {
+    assert.equal(getTodayPriceComparison(opinion, { ...quote, ...patch }, { now }).status, 'unavailable')
+  }
+  for (const patch of [{ price: 0 }, { price: -1 }, { price: '220' }, { price: Infinity }, { currency: 'USD/share' },
+    { asOf: '2026-02-30T01:30:00Z' }, { asOf: '2026-10-27' }, { asOf: new Date(now + 300001).toISOString() }]) {
+    assert.equal(getTodayPriceComparison({ ...opinion, fairValue: { ...opinion.fairValue, ...patch } }, quote, { now }).status, 'unavailable')
+  }
+  assert.equal(getTodayPriceComparison(opinion, { ...quote, price: Number.MIN_VALUE }, { now }).reason, 'comparison_out_of_range')
+  assert.throws(() => getTodayPriceComparison(opinion, quote, { now: NaN }), /invalid_today_clock/)
+})
+
+test('a newer market price can remove upside eligibility without rewriting an AI estimate or either quote', () => {
+  const estimate = Object.freeze({ ...fairValue(), price: 234 })
+  const opinion = Object.freeze(pick('gemini', { symbol: 'VRT', fairValue: estimate }))
+  const earlierQuote = Object.freeze({ symbol: 'VRT', price: 230, currency: 'USD', marketTime: (now - 3600000) / 1000, status: 'ok' })
+  const latestQuote = Object.freeze({ ...earlierQuote, price: 242.94, marketTime: now / 1000 })
+  const before = clone({ opinion, earlierQuote, latestQuote })
+  assert.equal(getTodayPriceComparison(opinion, earlierQuote, { now }).eligible, true)
+  const result = getTodayPriceComparison(opinion, latestQuote, { now })
+  assert.equal(result.status, 'below')
+  assert.equal(result.eligible, false)
+  assert.ok(Math.abs(result.differencePercent - (234 / 242.94 - 1) * 100) < 1e-12)
+  assert.deepEqual({ opinion, earlierQuote, latestQuote }, before)
+})
 
 test('committed public snapshot validates against the real catalog and preserves three author slots', async () => {
   const value = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
@@ -342,6 +402,50 @@ test('one-off reports require the actual CLI family and complete source metadata
   assert.throws(() => validate(missing), /invalid_today_report/)
   const old = edition([pick()]); old.picks[0].provenance.execution = 'owner-reviewed-one-off'
   assert.throws(() => validate(old), /invalid_today_provenance/)
+})
+
+test('reviewed Gemini web reports preserve their actual source and an explicitly unknown application version', () => {
+  const web = reviewedReport('gemini')
+  Object.assign(web.provenance, { cliName: 'gemini-web', cliVersion: null, requestedModel: 'Gemini 웹 자동 모드', reportedModel: null })
+  web.fairValue = fairValue()
+  const value = reportsEdition([web]), before = clone(web)
+  assert.equal(validate(value), value)
+  assert.deepEqual(value.reports[0], before)
+  assert.equal(todayCards(value, { now, catalog })[2].report.provenance.cliName, 'gemini-web')
+  const archive = { ...reportsEdition([]), reportHistory: [web] }
+  assert.equal(validate(archive), archive)
+  assert.deepEqual(archive.reportHistory[0], before)
+})
+
+test('Gemini web provenance does not loosen other provider, version, source or required-field checks', () => {
+  const web = reviewedReport('gemini')
+  Object.assign(web.provenance, { cliName: 'gemini-web', cliVersion: null, requestedModel: 'Gemini 웹 자동 모드', reportedModel: null })
+  for (const patch of [{ cliVersion: '1.0.0' }, { cliVersion: 'web' }, { cliVersion: '' }, { cliVersion: undefined },
+    { cliName: 'gemini-browser' }, { cliName: 'antigravity' }, { provider: 'gpt' }, { execution: 'official-cli' },
+    { requestedModel: '' }, { reportedModel: 'unobserved-model' }, { responseSha256: 'not-a-digest' }]) {
+    const bad = clone(web); Object.assign(bad.provenance, patch)
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_provenance/)
+  }
+  for (const field of ['cliName', 'cliVersion', 'requestedModel']) {
+    const bad = clone(web); delete bad.provenance[field]
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_report/)
+  }
+  for (const agent of ['gpt', 'claude']) {
+    const bad = reviewedReport(agent); Object.assign(bad.provenance, { cliName: 'gemini-web', cliVersion: null })
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_provenance/)
+  }
+  for (const agent of ['gpt', 'claude', 'gemini']) {
+    const bad = reviewedReport(agent); bad.provenance.cliVersion = null
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_provenance/)
+  }
+  const legacy = edition([pick('gemini')]); legacy.picks[0].provenance.cliVersion = null
+  assert.throws(() => validate(legacy), /invalid_today_provenance/)
+})
+
+test('a Gemini web capture cannot silently become a separately generated CLI conversation comment', () => {
+  const value = conversationalEdition('gemini')
+  Object.assign(value.reports[0].conversationComment.provenance, { cliName: 'gemini-web', cliVersion: null, requestedModel: 'Gemini 웹 자동 모드' })
+  assert.throws(() => validate(value), /invalid_today_conversation_comment/)
 })
 
 test('reports publish at the actual new date while preserving earlier generation and original pick dates', () => {

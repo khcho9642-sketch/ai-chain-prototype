@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment } from './today-core.js'
+import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 
 const root = document.getElementById('v-today')
@@ -25,7 +25,7 @@ const quoteFor = symbol => {
   return quote
 }
 
-function priceFields(pick) {
+function priceFields(pick, { showComparison = false } = {}) {
   const fields = node('dl', null, { class: 'today-price-fields' })
   const quote = pick ? quoteFor(pick.symbol) : null
   const field = (label, value, key, note) => {
@@ -40,7 +40,15 @@ function priceFields(pick) {
   const quoteNote = quote ? [failed ? '이전 확인값 · 조회 실패' : null, quote.delayed ? '지연 시세' : null, quote.source].filter(Boolean).join(' · ') : null
   field('현재 시가', quote ? priceLabel(quote.price, quote.currency) : pick ? '시세 미확인' : '—', 'price', quoteNote)
   field('시가 기준일', quote ? timeLabel(new Date(quote.marketTime * 1000).toISOString()) : '—', 'price-as-of')
-  field('AI 추정 적정가격', pick?.kind === 'earnings-review' ? '가격 평가 없음' : pick?.fairValue ? priceLabel(pick.fairValue.price, pick.fairValue.currency) : '미산정', 'fair-value', pick?.fairValue ? 'AI 추정 · ' + timeLabel(pick.fairValue.asOf) : null)
+  field('AI 추정 가격', pick?.kind === 'earnings-review' ? '가격 평가 없음' : pick?.fairValue ? priceLabel(pick.fairValue.price, pick.fairValue.currency) : '미산정', 'fair-value', pick?.fairValue ? 'AI 추정 · ' + timeLabel(pick.fairValue.asOf) : null)
+  if (showComparison) {
+    const comparison = getTodayPriceComparison(pick, quote, { marketError: state.marketError })
+    const percent = comparison.differencePercent
+    const value = percent === null ? '—' : percent === 0 ? '0.00%' : (percent > 0 ? '+' : '−') + (Math.abs(percent) < 0.01 ? '0.01% 미만' : Math.abs(percent).toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%')
+    const label = { above: '추정 가격이 시가보다 높음', below: '상승 여력 조건 미충족', equal: '상승 여력 조건 미충족', missing: '가격 추정 보류', unavailable: '비교 불가' }[comparison.status]
+    field('시가 대비 추정 차이', value, 'estimate-gap', label)
+    fields.querySelector('[data-today-field="estimate-gap"]').dataset.estimateState = comparison.status
+  }
   return fields
 }
 const reasonLabel = value => ({
@@ -77,10 +85,10 @@ function sourceDetails(pick) {
   info.append(node('p', '제공사 ' + (TODAY_AGENTS[provenance.provider]?.name || provenance.provider || '미확인')),
     node('p', '요청 모델 ' + (provenance.requestedModel || '미확인')),
     node('p', provenance.reportedModel ? '실제 응답 모델 ' + provenance.reportedModel : '실제 모델명 미확인'),
-    node('p', 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
-    node('p', '실제 생성 ' + timeLabel(provenance.generatedAt)),
+    node('p', provenance.cliName === 'gemini-web' ? '실행 환경 Gemini 웹 · 앱 버전 미공개' : 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
+    node('p', (provenance.cliName === 'gemini-web' ? '웹 응답 확인 ' : '실제 생성 ') + timeLabel(provenance.generatedAt)),
     node('p', '검수 ' + timeLabel(provenance.reviewedAt)))
-  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', '실제 CLI 응답 원문 · 운영자 검토 후 수동 발행'))
+  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', provenance.cliName === 'gemini-web' ? '공식 Gemini 웹에서 받은 응답 · 화면에서 복사한 원문을 검토 후 수동 발행' : '실제 CLI 응답 원문 · 운영자 검토 후 수동 발행'))
   if (provenance.responseSha256) info.append(node('p', '원문 SHA-256 ' + provenance.responseSha256, { class: 'today-response-digest mono' }))
   for (const evidence of pick.evidence || []) {
     const item = node('article', null, { class: 'today-evidence' })
@@ -107,7 +115,7 @@ function sourceDetails(pick) {
   }
   if (pick.fairValue) {
     const valuation = pick.fairValue, item = node('article', null, { class: 'today-evidence' })
-    item.append(node('strong', 'AI 적정가격 산정 근거'), node('small', '산정 기준 ' + timeLabel(valuation.asOf)), node('p', valuation.method))
+    item.append(node('strong', 'AI 추정 가격 계산 근거'), node('small', '산정 기준 ' + timeLabel(valuation.asOf)), node('p', valuation.method))
     for (const assumption of valuation.assumptions) item.append(node('small', assumption))
     for (const evidenceId of valuation.evidenceIds) {
       const evidence = pick.evidence.find(item => item.id === evidenceId), url = communityEvidenceUrl(evidence?.sourceUrl)
@@ -124,7 +132,7 @@ function messageMeta(message) {
   const meta = node('div', null, { class: 'today-pick-meta' })
   const comment = getTodayComment(message)
   const generatedAt = message.kind ? comment.provenance.generatedAt : message.createdAt
-  meta.append(node('time', '작성 ' + timeLabel(generatedAt), { datetime: generatedAt }))
+  meta.append(node('time', (comment.provenance?.cliName === 'gemini-web' ? '응답 확인 ' : '작성 ') + timeLabel(generatedAt), { datetime: generatedAt }))
   if (message.kind) meta.append(node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
   meta.append(node('span', '자료 기준 ' + timeLabel(message.dataAsOf)))
   if (!comment.provenance?.reportedModel) meta.append(node('span', '실제 모델명 미확인'))
@@ -191,9 +199,14 @@ function renderCard(card, { archived = false } = {}) {
     article.append(content)
   }
   const title = node('div', null, { class: 'today-company' })
-  title.append(node('p', factualReview ? '검토 대상 · 실적 검토' : '고른 종목', { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
+  const comparison = !archived && !factualReview ? getTodayPriceComparison(pick, quoteFor(pick.symbol), { marketError: state.marketError }) : null
+  const kicker = factualReview ? '검토 대상 · 실적 검토' : comparison ? {
+    above: '고른 종목 · 상승 여력 조건 충족', below: '참고 의견 · 상승 여력 조건 미충족', equal: '참고 의견 · 상승 여력 조건 미충족',
+    missing: '관심 종목 · 가격 추정 보류', unavailable: '참고 의견 · 비교 불가',
+  }[comparison.status] : '고른 종목'
+  title.append(node('p', kicker, { class: 'today-pick-kicker' }), node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
   if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
-  content.append(title, priceFields(pick))
+  content.append(title, priceFields(pick, { showComparison: !archived && !factualReview }))
   const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
   initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }),
@@ -225,10 +238,15 @@ function render() {
   grid.replaceChildren(...cards.map(card => renderCard(card)))
   const published = cards.filter(card => card.state === 'published' && (card.report || card.pick)).length
   const publishedReports = cards.filter(card => card.state === 'published' && card.report)
-  const stockOpinions = new Set(publishedReports.filter(card => card.report.kind === 'stock-opinion').map(card => card.report.symbol)).size
+  const stockOpinionCards = cards.filter(card => card.state === 'published' && (card.report || card.pick) && (card.report || card.pick).kind !== 'earnings-review')
+  const stockOpinions = new Set(stockOpinionCards.map(card => (card.report || card.pick).symbol)).size
+  const eligibleOpinions = new Set(stockOpinionCards.filter(card => {
+    const pick = card.report || card.pick
+    return getTodayPriceComparison(pick, quoteFor(pick.symbol), { marketError: state.marketError, now }).eligible
+  }).map(card => (card.report || card.pick).symbol)).size
   const earningsReviews = publishedReports.filter(card => card.report.kind === 'earnings-review').length
   root.querySelector('[data-today-status]').textContent = state.error ? '발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.' :
-    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : publishedReports.length ? `${currentDate} · 서로 다른 추천 ${stockOpinions}개 · 실적 검토 ${earningsReviews}개` : published ? `${currentDate} · ${published}개 AI의 추천 발행 · 실제 작성 시각과 근거를 확인하세요.` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
+    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : published ? `${currentDate} · 서로 다른 종목 의견 ${stockOpinions}개 · 상승 여력 조건 충족 ${eligibleOpinions}개 · 실적 검토 ${earningsReviews}개` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
   const refresh = root.querySelector('[data-today-refresh]')
   refresh.disabled = state.busy; refresh.textContent = state.busy ? '읽는 중…' : '다시 읽기'
   const older = cards.filter(card => card.state === 'previous-edition' && (card.report || card.pick))

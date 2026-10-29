@@ -23,7 +23,7 @@ const fail = code => { throw new Error(code) }
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const keysAre = (value, keys, optional = []) => object(value) && keys.every(key => Object.hasOwn(value, key)) && Object.keys(value).every(key => keys.includes(key) || optional.includes(key))
 const cleanText = (value, min, max) => typeof value === 'string' && value === value.trim().normalize('NFC') && [...value].length >= min && [...value].length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value)
-// Preserve the original CLI response bytes, including its final line ending.
+// Preserve the original response bytes, including its final line ending.
 const nativeReport = value => typeof value === 'string' && value.normalize('NFC') === value && value.trim().length > 0 && [...value].length <= 16000 && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value)
 const time = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().replace('.000Z', 'Z') === value.replace('.000Z', 'Z')
 const date = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/u.test(value) && Number.isFinite(Date.parse(value + 'T00:00:00Z')) && new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value
@@ -35,6 +35,26 @@ const clock = now => {
 
 export function kstDate(now = Date.now()) {
   return new Date(clock(now) + 9 * 3600000).toISOString().slice(0, 10)
+}
+
+/** Compare an unchanged AI estimate with a successfully observed quote. */
+export function getTodayPriceComparison(pick, quote, { marketError = false, now = Date.now() } = {}) {
+  const nowMs = clock(now)
+  const unavailable = reason => ({ status: 'unavailable', eligible: false, differencePercent: null, reason })
+  if (pick?.kind === 'earnings-review') return unavailable('factual_review_only')
+  const estimate = pick?.fairValue
+  if (estimate == null) return { status: 'missing', eligible: false, differencePercent: null, reason: 'estimate_missing' }
+  if (!Number.isFinite(estimate.price) || estimate.price <= 0 || typeof estimate.currency !== 'string' || !/^[A-Z]{3}$/u.test(estimate.currency) ||
+      !time(estimate.asOf) || Date.parse(estimate.asOf) > nowMs + FUTURE_ALLOWANCE) return unavailable('estimate_invalid')
+  if (marketError || !quote || quote.status !== 'ok') return unavailable('quote_unavailable')
+  if (!cleanText(pick.symbol, 1, 40) || quote.symbol !== pick.symbol) return unavailable('quote_symbol_mismatch')
+  if (quote.currency !== estimate.currency) return unavailable('currency_mismatch')
+  if (!Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(quote.marketTime) || quote.marketTime <= 0 ||
+      quote.marketTime * 1000 > nowMs + FUTURE_ALLOWANCE) return unavailable('quote_invalid')
+  const differencePercent = (estimate.price - quote.price) / quote.price * 100
+  if (!Number.isFinite(differencePercent)) return unavailable('comparison_out_of_range')
+  const status = estimate.price > quote.price ? 'above' : estimate.price < quote.price ? 'below' : 'equal'
+  return { status, eligible: status === 'above', differencePercent, reason: null }
 }
 
 function publicSource(value) {
@@ -65,12 +85,13 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
           profile.reviewedAt > value.editionDate) fail('invalid_today_business_source')
     }
     const provenance = pick.provenance
+  const geminiWebReport = reviewedReport && pick.agent === 'gemini' && pick.kind === 'stock-opinion' && provenance.cliName === 'gemini-web'
   if (provenance.provider !== pick.agent || provenance.execution !== (reviewedReport ? 'owner-reviewed-one-off' : 'official-cli') ||
-      (reviewedReport && (provenance.cliName !== REPORT_CLI_NAMES[pick.agent] || typeof provenance.responseSha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(provenance.responseSha256))) ||
+      (reviewedReport && ((!geminiWebReport && provenance.cliName !== REPORT_CLI_NAMES[pick.agent]) || typeof provenance.responseSha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(provenance.responseSha256))) ||
       !cleanText(provenance.requestedModel, 1, 120) || !(provenance.reportedModel === null || cleanText(provenance.reportedModel, 1, 120)) ||
       (provenance.reportedModel !== null && provenance.reportedModel !== provenance.requestedModel) ||
-      !cleanText(provenance.cliVersion, 1, 120) || !cleanText(provenance.promptVersion, 1, 120) || !cleanText(provenance.runId, 1, 160) || runs.has(provenance.runId) ||
-      [provenance.requestedModel, provenance.reportedModel || '', provenance.cliVersion, provenance.promptVersion, provenance.runId].some(text => SIMULATION.test(text)) ||
+      (geminiWebReport ? provenance.cliVersion !== null : !cleanText(provenance.cliVersion, 1, 120)) || !cleanText(provenance.promptVersion, 1, 120) || !cleanText(provenance.runId, 1, 160) || runs.has(provenance.runId) ||
+      [provenance.requestedModel, provenance.reportedModel || '', provenance.cliVersion || '', provenance.promptVersion, provenance.runId].some(text => SIMULATION.test(text)) ||
       !time(provenance.generatedAt) || !time(provenance.reviewedAt)) fail('invalid_today_provenance')
   const generated = Date.parse(provenance.generatedAt), created = Date.parse(pick.createdAt), reviewed = Date.parse(provenance.reviewedAt), published = Date.parse(value.publishedAt)
   if (generated > created || created > published || generated > reviewed || reviewed > published ||
@@ -116,6 +137,7 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
 function validateConversationComment(report, context) {
   const comment = report.conversationComment
   if (!keysAre(comment, CONVERSATION_COMMENT_KEYS) || comment.sourceReportSha256 !== report.provenance.responseSha256 ||
+      comment.provenance?.cliName === 'gemini-web' ||
       !time(comment.provenance?.generatedAt) || Date.parse(comment.provenance.generatedAt) < Date.parse(report.provenance.generatedAt)) fail('invalid_today_conversation_comment')
   // Reuse the report boundary without changing the original report, excerpt or source metadata.
   const message = { id: comment.id, agent: report.agent, symbol: report.symbol, comment: comment.text,

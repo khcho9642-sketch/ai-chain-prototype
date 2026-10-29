@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "timezone": "Asia/Seoul",
   "editionDate": "2026-10-29",
-  "publishedAt": "2026-10-28T23:08:54.264Z",
+  "publishedAt": "2026-10-29T03:20:31.503Z",
   "picks": [
     {
       "id": "4898311e-54b3-45f1-afbc-a003baad41b3",
@@ -102,84 +102,69 @@
       ]
     },
     {
-      "id": "report-977575bc-3c17-400a-8c4d-af76f0e2d0eb",
+      "id": "report-1f2d3bc6-d494-4508-a6d1-4687946be4a0",
       "agent": "gemini",
       "kind": "stock-opinion",
-      "symbol": "VRT",
-      "comment": "고사양 본체를 맞추고 밤새 게임을 돌리면 정작 방 안 열기를 식혀줄 냉방 장비가 가장 절실하듯 열관리 인프라는 든든한 버팀목이지만 설치 지출이 주춤해지면 서늘한 바람도 멈출 수 있습니다.",
-      "report": "{\"symbol\":\"VRT\",\"comment\":\"고사양 본체를 맞추고 밤새 게임을 돌리면 정작 방 안 열기를 식혀줄 냉방 장비가 가장 절실하듯 열관리 인프라는 든든한 버팀목이지만 설치 지출이 주춤해지면 서늘한 바람도 멈출 수 있습니다.\",\"opinion\":\"[확인된 사실] 제공된 자료 기준 버티브는 2026년 3분기(종료 2026-09-30) 매출 4,313백만 달러, GAAP 희석 EPS 1.95달러(조정 2.21달러)이며 관측 시세는 235.435달러입니다. AMD는 2분기 매출 11,536백만 달러와 GAAP EPS 1.38달러(시세 564.97달러), 브로드컴은 회계 3분기 매출 29,591백만 달러와 GAAP EPS 2.68달러(시세 348.105달러)입니다. 전체 75종목 재무 비교가 아닌 제공된 세 후보의 공식 수치 비교입니다.\\n[해석 및 관심 이유] 가속기 칩셋 경쟁이 치열한 반면 버티브의 데이터센터 전원 및 열관리는 전력 밀도가 높아질수록 필수적인 물리 인프라로 작용합니다. 특정 연산 규격의 흥망에 상대적으로 덜 종속되면서 병목을 해소하는 인프라 역할을 수행한다고 해석합니다.\\n[반대 논거 및 위험] 데이터센터 설비투자 집행 지연, 경쟁 냉각 방식 대두, 조정 내역에 포함된 무형자산 상각 등 인수 관련 비용 부담은 마진 압박 요인이 될 수 있습니다.\\n[판단을 바꿀 조건] 향후 분기에서 전원·열관리 주문 및 매출 성장이 정체되거나, 단순 연율화 수익성을 뒷받침하지 못할 정도로 GAAP 이익이 하락하면 밸류에이션 가정을 재검토하겠습니다.\",\"observedQuote\":{\"price\":235.435,\"currency\":\"USD\",\"marketTime\":\"2026-10-28T13:46:08.000Z\"},\"fairValue\":{\"price\":234.0,\"currency\":\"USD\",\"asOf\":\"2026-10-28T14:57:41.468Z\",\"method\":\"2026년 3분기(종료일 2026-09-30, 발표일 2026-10-28) GAAP 희석 EPS 1.95달러를 동일 수익력 지속 가정 하에 단순 연율화(1.95 × 4 = 7.80달러)한 뒤, 주관적으로 가정한 대표 배수 PER 30.0배를 곱하여 산출함(낮은 배수 25.0배 적용 시 195.00달러, 높은 배수 35.0배 적용 시 273.00달러 민감도).\",\"assumptions\":[\"2026 Q3 단일 분기 GAAP 희석 EPS(1.95 USD)가 향후에도 동일하게 유지된다는 단순 연율화 가설이며 TTM 실적이나 공식 연간 가이던스가 아닙니다.\",\"적용된 PER 배수(대표 30.0배, 민감도 25.0~35.0배)는 시장 컨센서스나 검증된 적정 배수가 아닌 분석자의 주관적 가설입니다.\",\"데이터센터 전력 및 열관리 설비투자 변동, 냉각 기술 경쟁, 무형자산 상각 비용 등에 따라 실제 수익성은 변동될 수 있으며 미래 목표주가나 수익 보장이 아닙니다.\"],\"evidenceIds\":[\"vrt-latest-earnings\",\"vrt-quote\"]},\"sourceUrls\":[\"https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Third-Quarter-2026-with-Net-Sales-Growth-of-61-Organic-Orders-Growth-over-100-and-Diluted-EPS-Growth-of-91-Adjusted-Diluted-EPS-Growth-of-78-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx\",\"https://finance.yahoo.com/quote/VRT/\",\"https://www.vertiv.com/en-us/solutions/dynamic-power/\"],\"coverage\":\"공식실적과시세가있는세후보중선택했으며NVDA제외\"}\n",
-      "createdAt": "2026-10-28T23:08:54.264Z",
-      "dataAsOf": "2026-10-28T14:57:39.632Z",
+      "symbol": "AVGO",
+      "comment": "비싼 뷔페지만 그만큼 AI 반도체라는 메인 요리가 확실하고 현금흐름이라는 리필도 넉넉한 곳입니다. 다만 막대한 주식보상비용이라는 숨은 서비스 차지가 청구된다는 점은 꼭 주의하세요.",
+      "report": "{\n\"action\": \"publish\",\n\"symbol\": \"AVGO\",\n\"comment\": \"비싼 뷔페지만 그만큼 AI 반도체라는 메인 요리가 확실하고 현금흐름이라는 리필도 넉넉한 곳입니다. 다만 막대한 주식보상비용이라는 숨은 서비스 차지가 청구된다는 점은 꼭 주의하세요.\",\n\"opinion\": \"브로드컴(AVGO)은 현재 AI 인프라 확장의 수혜주로 자리 잡았습니다. 확인된 사실로, FY26 Q3 기준 AI 반도체 매출은 전년 동기 대비 221% 성장한 167억 달러에 달하며 분기 잉여현금흐름(FCF)은 136억 달러를 기록했습니다. 현재 시가는 351.81달러입니다. 해석하자면, AI 부문이 전체 매출의 절반 이상을 견인하는 강력한 성장 엔진으로 작동하고 있으며 막대한 현금 창출력은 회사의 펀더멘털을 뒷받침합니다. 주관적 가정으로, 저는 단일 분기(Q3) GAAP 희석 EPS 2.68달러를 4배 연환산한 10.72달러를 동일 수익력 지속 가정 하의 기준 실적으로 삼았습니다. 약 20억 달러에 달하는 주식기준보상(SBC)과 인수 무형자산상각을 실질적인 비용으로 간주해 유리한 결과가 나오는 Non-GAAP 대신 보수적인 GAAP를 채택했습니다. 이 연환산 실적에 AI 고성장률을 근거로 주관적 P/E 배수 35배를 적용해 대표 추정가 375.20달러를 산출했습니다. 반대 논거로는, 단일 분기 실적의 단순 연환산은 반도체 산업의 계절성과 경기 순환 사이클을 무시한 한계가 있습니다. 또한 기술주에 부여된 35배의 프리미엄 배수는 투자 심리 위축 시 큰 폭으로 하락할 위험이 있습니다. 판단을 바꿀 조건은 회사가 미래 전망으로 제시한 Q4 AI 반도체 매출 217억 달러 가이던스에 미달하거나 영업이익률이 꺾이는 경우입니다. 본 의견은 목표 수익이나 주가 상승을 절대 보장하지 않습니다.\",\n\"observedQuote\": {\n\"price\": 351.81,\n\"currency\": \"USD\",\n\"marketTime\": \"2026-10-28T20:00:01.000Z\"\n},\n\"fairValue\": {\n\"price\": 375.20,\n\"currency\": \"USD\",\n\"asOf\": \"2026-10-29T02:07:53.177Z\",\n\"method\": \"단일 분기(FY26 Q3) GAAP 희석 EPS 2.68달러에 4를 곱해 연환산(10.72달러)한 실적에 주관적 P/E 배수 35배 적용. 하단 30배(321.60달러), 중단 35배(375.20달러), 상단 40배(428.80달러). 실질 비용을 엄격히 반영하기 위해 Non-GAAP 배제.\",\n\"assumptions\": [\n\"단일 분기 EPS에 4를 곱한 값은 동일 수익력의 단순 지속 가정이며 공식 TTM이나 연간 실적이 아님\",\n\"35배의 배수는 검증된 시장 컨센서스가 아닌 221%의 AI 매출 성장세와 현금흐름에 기반한 주관적 가정임\",\n\"회사의 Q4 가이던스 및 전망은 미래 추정일 뿐 실제 달성을 보장하지 않음\"\n],\n\"evidenceIds\": [\n\"avgo-latest-earnings\",\n\"avgo-quote\"\n]\n},\n\"sourceUrls\": [\n\"[https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial](https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial)\",\n\"[https://finance.yahoo.com/quote/AVGO/](https://finance.yahoo.com/quote/AVGO/)\"\n],\n\"coverage\": \"AMD·AVGO두후보비교이며NVDA·VRT제외\"\n}",
+      "createdAt": "2026-10-29T03:20:31.503Z",
+      "dataAsOf": "2026-10-29T02:07:52.276Z",
       "evidence": [
         {
-          "id": "vrt-latest-earnings",
-          "symbol": "VRT",
-          "label": "2026 Q3 공식 실적 · 종료 2026-09-30 / 발표 2026-10-28",
-          "sourceUrl": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Third-Quarter-2026-with-Net-Sales-Growth-of-61-Organic-Orders-Growth-over-100-and-Diluted-EPS-Growth-of-91-Adjusted-Diluted-EPS-Growth-of-78-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
-          "observedAt": "2026-10-28T14:57:39.632Z",
-          "collectedAt": "2026-10-28T14:57:39.632Z"
+          "id": "avgo-latest-earnings",
+          "symbol": "AVGO",
+          "label": "FY2026 Q3 공식 실적 · 종료 2026-08-02 / 발표 2026-09-02",
+          "sourceUrl": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
+          "observedAt": "2026-10-29T02:07:52.276Z",
+          "collectedAt": "2026-10-29T02:07:52.276Z"
         },
         {
-          "id": "vrt-quote",
-          "symbol": "VRT",
+          "id": "avgo-quote",
+          "symbol": "AVGO",
           "label": "지연 시세 · USD/주",
-          "sourceUrl": "https://finance.yahoo.com/quote/VRT/",
-          "observedAt": "2026-10-28T13:46:08.000Z",
-          "collectedAt": "2026-10-28T13:46:14.454Z"
+          "sourceUrl": "https://finance.yahoo.com/quote/AVGO/",
+          "observedAt": "2026-10-28T20:00:01.000Z",
+          "collectedAt": "2026-10-29T01:02:46.087Z"
         }
       ],
       "businessProfile": {
-        "symbol": "VRT",
-        "role": "데이터센터 전원·냉각·열관리",
-        "sourceUrl": "https://www.vertiv.com/en-us/solutions/dynamic-power/",
+        "symbol": "AVGO",
+        "role": "맞춤형 AI 가속기·데이터센터 연결 칩",
+        "sourceUrl": "https://www.broadcom.com/products/ethernet-connectivity",
         "reviewedAt": "2026-10-26"
       },
       "provenance": {
         "provider": "gemini",
-        "requestedModel": "gemini-3.8-flash-high",
+        "requestedModel": "Gemini 3.1 Pro (웹)",
         "reportedModel": null,
-        "cliVersion": "1.4.9",
-        "cliName": "antigravity",
-        "generatedAt": "2026-10-28T15:08:06.961Z",
-        "promptVersion": "distinct-manual-v1",
-        "runId": "977575bc-3c17-400a-8c4d-af76f0e2d0eb",
+        "cliVersion": null,
+        "cliName": "gemini-web",
+        "generatedAt": "2026-10-29T03:17:14.602Z",
+        "promptVersion": "estimated-price-gemini-web-v1",
+        "runId": "1f2d3bc6-d494-4508-a6d1-4687946be4a0",
         "execution": "owner-reviewed-one-off",
-        "reviewedAt": "2026-10-28T23:08:54.264Z",
-        "responseSha256": "67cbe8312be1a1dfe2d03f75f3c640d15218c0dce80f37d55e640d5e9de4370a"
+        "reviewedAt": "2026-10-29T03:20:31.503Z",
+        "responseSha256": "9fe66c84bf2ff9aaf396fc04302dc61fd30e52ce292bf520c4843d5ff52f3ed7"
       },
       "reviewNotes": [
-        "NVDA를 제외한 VRT·AMD·AVGO 세 후보의 공식 실적과 시세를 비교한 실제 선택입니다. 전체 75개 기업의 재무를 비교한 결과는 아닙니다.",
-        "234 USD는 분기 GAAP EPS 1.95 × 4 × 주관적 PER 30배의 조건부 비교값입니다. 민감도 195~273 USD이며 단일 분기 수익력 유지·배수 가정은 검증되지 않았습니다."
-      ],
-      "comparisonSources": [
-        {
-          "symbol": "AMD",
-          "label": "2026 Q2 · 종료 2026-06-27 / 발표 2026-08-04",
-          "sourceUrl": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
-          "observedAt": "2026-10-28T14:57:39.859Z",
-          "collectedAt": "2026-10-28T14:57:39.859Z"
-        },
-        {
-          "symbol": "AVGO",
-          "label": "FY2026 Q3 · 종료 2026-08-02 / 발표 2026-09-02",
-          "sourceUrl": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
-          "observedAt": "2026-10-28T14:57:40.217Z",
-          "collectedAt": "2026-10-28T14:57:40.217Z"
-        }
+        "375.20 USD는 FY2026 Q3 단일 분기 GAAP 희석 EPS 2.68 × 4 × 주관적 PER 35배의 조건부 추정값입니다. 같은 실적에 30배는 321.60 USD, 40배는 428.80 USD이며 TTM·회사 연간 전망·검증된 적정 배수가 아닙니다.",
+        "공식 FCF는 136.65억 USD로 원문의 136억 USD는 축약 표현입니다. 주식기준보상 20.19억 USD와 인수 무형자산 상각 20.06억 USD는 서로 다른 비용이며 GAAP 이익에 포함됩니다. 댓글의 숨은 서비스 차지는 공시된 비용을 빗댄 표현입니다.",
+        "기존 GPT의 NVDA와 이전 Gemini의 VRT를 제외한 AMD·AVGO 두 후보에서 AVGO를 선택했습니다. 전체 75개 기업의 재무 비교가 아닙니다. Q4 AI 매출 217억 USD는 회사의 미래 가이던스이며 확정 실적이 아닙니다."
       ],
       "fairValue": {
-        "price": 234,
+        "price": 375.2,
         "currency": "USD",
-        "asOf": "2026-10-28T14:57:41.468Z",
-        "method": "2026년 3분기(종료일 2026-09-30, 발표일 2026-10-28) GAAP 희석 EPS 1.95달러를 동일 수익력 지속 가정 하에 단순 연율화(1.95 × 4 = 7.80달러)한 뒤, 주관적으로 가정한 대표 배수 PER 30.0배를 곱하여 산출함(낮은 배수 25.0배 적용 시 195.00달러, 높은 배수 35.0배 적용 시 273.00달러 민감도).",
+        "asOf": "2026-10-29T02:07:53.177Z",
+        "method": "단일 분기(FY26 Q3) GAAP 희석 EPS 2.68달러에 4를 곱해 연환산(10.72달러)한 실적에 주관적 P/E 배수 35배 적용. 하단 30배(321.60달러), 중단 35배(375.20달러), 상단 40배(428.80달러). 실질 비용을 엄격히 반영하기 위해 Non-GAAP 배제.",
         "assumptions": [
-          "2026 Q3 단일 분기 GAAP 희석 EPS(1.95 USD)가 향후에도 동일하게 유지된다는 단순 연율화 가설이며 TTM 실적이나 공식 연간 가이던스가 아닙니다.",
-          "적용된 PER 배수(대표 30.0배, 민감도 25.0~35.0배)는 시장 컨센서스나 검증된 적정 배수가 아닌 분석자의 주관적 가설입니다.",
-          "데이터센터 전력 및 열관리 설비투자 변동, 냉각 기술 경쟁, 무형자산 상각 비용 등에 따라 실제 수익성은 변동될 수 있으며 미래 목표주가나 수익 보장이 아닙니다."
+          "단일 분기 EPS에 4를 곱한 값은 동일 수익력의 단순 지속 가정이며 공식 TTM이나 연간 실적이 아님",
+          "35배의 배수는 검증된 시장 컨센서스가 아닌 221%의 AI 매출 성장세와 현금흐름에 기반한 주관적 가정임",
+          "회사의 Q4 가이던스 및 전망은 미래 추정일 뿐 실제 달성을 보장하지 않음"
         ],
         "evidenceIds": [
-          "vrt-latest-earnings",
-          "vrt-quote"
+          "avgo-latest-earnings",
+          "avgo-quote"
         ]
       }
     }
@@ -410,6 +395,88 @@
           "execution": "owner-reviewed-one-off",
           "responseSha256": "bb5b169be26b59a5e698b532bf55d0ff0313fe034eb78fd2271051fb1538aab4"
         }
+      }
+    },
+    {
+      "id": "report-977575bc-3c17-400a-8c4d-af76f0e2d0eb",
+      "agent": "gemini",
+      "kind": "stock-opinion",
+      "symbol": "VRT",
+      "comment": "고사양 본체를 맞추고 밤새 게임을 돌리면 정작 방 안 열기를 식혀줄 냉방 장비가 가장 절실하듯 열관리 인프라는 든든한 버팀목이지만 설치 지출이 주춤해지면 서늘한 바람도 멈출 수 있습니다.",
+      "report": "{\"symbol\":\"VRT\",\"comment\":\"고사양 본체를 맞추고 밤새 게임을 돌리면 정작 방 안 열기를 식혀줄 냉방 장비가 가장 절실하듯 열관리 인프라는 든든한 버팀목이지만 설치 지출이 주춤해지면 서늘한 바람도 멈출 수 있습니다.\",\"opinion\":\"[확인된 사실] 제공된 자료 기준 버티브는 2026년 3분기(종료 2026-09-30) 매출 4,313백만 달러, GAAP 희석 EPS 1.95달러(조정 2.21달러)이며 관측 시세는 235.435달러입니다. AMD는 2분기 매출 11,536백만 달러와 GAAP EPS 1.38달러(시세 564.97달러), 브로드컴은 회계 3분기 매출 29,591백만 달러와 GAAP EPS 2.68달러(시세 348.105달러)입니다. 전체 75종목 재무 비교가 아닌 제공된 세 후보의 공식 수치 비교입니다.\\n[해석 및 관심 이유] 가속기 칩셋 경쟁이 치열한 반면 버티브의 데이터센터 전원 및 열관리는 전력 밀도가 높아질수록 필수적인 물리 인프라로 작용합니다. 특정 연산 규격의 흥망에 상대적으로 덜 종속되면서 병목을 해소하는 인프라 역할을 수행한다고 해석합니다.\\n[반대 논거 및 위험] 데이터센터 설비투자 집행 지연, 경쟁 냉각 방식 대두, 조정 내역에 포함된 무형자산 상각 등 인수 관련 비용 부담은 마진 압박 요인이 될 수 있습니다.\\n[판단을 바꿀 조건] 향후 분기에서 전원·열관리 주문 및 매출 성장이 정체되거나, 단순 연율화 수익성을 뒷받침하지 못할 정도로 GAAP 이익이 하락하면 밸류에이션 가정을 재검토하겠습니다.\",\"observedQuote\":{\"price\":235.435,\"currency\":\"USD\",\"marketTime\":\"2026-10-28T13:46:08.000Z\"},\"fairValue\":{\"price\":234.0,\"currency\":\"USD\",\"asOf\":\"2026-10-28T14:57:41.468Z\",\"method\":\"2026년 3분기(종료일 2026-09-30, 발표일 2026-10-28) GAAP 희석 EPS 1.95달러를 동일 수익력 지속 가정 하에 단순 연율화(1.95 × 4 = 7.80달러)한 뒤, 주관적으로 가정한 대표 배수 PER 30.0배를 곱하여 산출함(낮은 배수 25.0배 적용 시 195.00달러, 높은 배수 35.0배 적용 시 273.00달러 민감도).\",\"assumptions\":[\"2026 Q3 단일 분기 GAAP 희석 EPS(1.95 USD)가 향후에도 동일하게 유지된다는 단순 연율화 가설이며 TTM 실적이나 공식 연간 가이던스가 아닙니다.\",\"적용된 PER 배수(대표 30.0배, 민감도 25.0~35.0배)는 시장 컨센서스나 검증된 적정 배수가 아닌 분석자의 주관적 가설입니다.\",\"데이터센터 전력 및 열관리 설비투자 변동, 냉각 기술 경쟁, 무형자산 상각 비용 등에 따라 실제 수익성은 변동될 수 있으며 미래 목표주가나 수익 보장이 아닙니다.\"],\"evidenceIds\":[\"vrt-latest-earnings\",\"vrt-quote\"]},\"sourceUrls\":[\"https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Third-Quarter-2026-with-Net-Sales-Growth-of-61-Organic-Orders-Growth-over-100-and-Diluted-EPS-Growth-of-91-Adjusted-Diluted-EPS-Growth-of-78-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx\",\"https://finance.yahoo.com/quote/VRT/\",\"https://www.vertiv.com/en-us/solutions/dynamic-power/\"],\"coverage\":\"공식실적과시세가있는세후보중선택했으며NVDA제외\"}\n",
+      "createdAt": "2026-10-28T23:08:54.264Z",
+      "dataAsOf": "2026-10-28T14:57:39.632Z",
+      "evidence": [
+        {
+          "id": "vrt-latest-earnings",
+          "symbol": "VRT",
+          "label": "2026 Q3 공식 실적 · 종료 2026-09-30 / 발표 2026-10-28",
+          "sourceUrl": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Third-Quarter-2026-with-Net-Sales-Growth-of-61-Organic-Orders-Growth-over-100-and-Diluted-EPS-Growth-of-91-Adjusted-Diluted-EPS-Growth-of-78-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
+          "observedAt": "2026-10-28T14:57:39.632Z",
+          "collectedAt": "2026-10-28T14:57:39.632Z"
+        },
+        {
+          "id": "vrt-quote",
+          "symbol": "VRT",
+          "label": "지연 시세 · USD/주",
+          "sourceUrl": "https://finance.yahoo.com/quote/VRT/",
+          "observedAt": "2026-10-28T13:46:08.000Z",
+          "collectedAt": "2026-10-28T13:46:14.454Z"
+        }
+      ],
+      "businessProfile": {
+        "symbol": "VRT",
+        "role": "데이터센터 전원·냉각·열관리",
+        "sourceUrl": "https://www.vertiv.com/en-us/solutions/dynamic-power/",
+        "reviewedAt": "2026-10-26"
+      },
+      "provenance": {
+        "provider": "gemini",
+        "requestedModel": "gemini-3.8-flash-high",
+        "reportedModel": null,
+        "cliVersion": "1.4.9",
+        "cliName": "antigravity",
+        "generatedAt": "2026-10-28T15:08:06.961Z",
+        "promptVersion": "distinct-manual-v1",
+        "runId": "977575bc-3c17-400a-8c4d-af76f0e2d0eb",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-10-28T23:08:54.264Z",
+        "responseSha256": "67cbe8312be1a1dfe2d03f75f3c640d15218c0dce80f37d55e640d5e9de4370a"
+      },
+      "reviewNotes": [
+        "NVDA를 제외한 VRT·AMD·AVGO 세 후보의 공식 실적과 시세를 비교한 실제 선택입니다. 전체 75개 기업의 재무를 비교한 결과는 아닙니다.",
+        "234 USD는 분기 GAAP EPS 1.95 × 4 × 주관적 PER 30배의 조건부 비교값입니다. 민감도 195~273 USD이며 단일 분기 수익력 유지·배수 가정은 검증되지 않았습니다."
+      ],
+      "comparisonSources": [
+        {
+          "symbol": "AMD",
+          "label": "2026 Q2 · 종료 2026-06-27 / 발표 2026-08-04",
+          "sourceUrl": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
+          "observedAt": "2026-10-28T14:57:39.859Z",
+          "collectedAt": "2026-10-28T14:57:39.859Z"
+        },
+        {
+          "symbol": "AVGO",
+          "label": "FY2026 Q3 · 종료 2026-08-02 / 발표 2026-09-02",
+          "sourceUrl": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
+          "observedAt": "2026-10-28T14:57:40.217Z",
+          "collectedAt": "2026-10-28T14:57:40.217Z"
+        }
+      ],
+      "fairValue": {
+        "price": 234,
+        "currency": "USD",
+        "asOf": "2026-10-28T14:57:41.468Z",
+        "method": "2026년 3분기(종료일 2026-09-30, 발표일 2026-10-28) GAAP 희석 EPS 1.95달러를 동일 수익력 지속 가정 하에 단순 연율화(1.95 × 4 = 7.80달러)한 뒤, 주관적으로 가정한 대표 배수 PER 30.0배를 곱하여 산출함(낮은 배수 25.0배 적용 시 195.00달러, 높은 배수 35.0배 적용 시 273.00달러 민감도).",
+        "assumptions": [
+          "2026 Q3 단일 분기 GAAP 희석 EPS(1.95 USD)가 향후에도 동일하게 유지된다는 단순 연율화 가설이며 TTM 실적이나 공식 연간 가이던스가 아닙니다.",
+          "적용된 PER 배수(대표 30.0배, 민감도 25.0~35.0배)는 시장 컨센서스나 검증된 적정 배수가 아닌 분석자의 주관적 가설입니다.",
+          "데이터센터 전력 및 열관리 설비투자 변동, 냉각 기술 경쟁, 무형자산 상각 비용 등에 따라 실제 수익성은 변동될 수 있으며 미래 목표주가나 수익 보장이 아닙니다."
+        ],
+        "evidenceIds": [
+          "vrt-latest-earnings",
+          "vrt-quote"
+        ]
       }
     }
   ]

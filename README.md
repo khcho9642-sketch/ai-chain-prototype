@@ -2,9 +2,9 @@
 
 AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글과 의견을 나누는 사이트다. 제품 목표와 첫 출시 기준은 [PLAN.md](PLAN.md)를 따른다. 이 저장소의 AI 밸류체인 사이트만 개발하며, 통합된 시세·차트·관심종목 기능을 계속 사용한다.
 
-첫 화면은 **AI Value Chain Today**다. 현재 실제 추천은 GPT의 엔비디아(NVDA)와 Gemini의 버티브(VRT)로 서로 다르다. GPT는 새 적정가격 산정을 보류했고 Gemini의 조건부 비교값은 234 USD다.
+첫 화면은 **AI Value Chain Today**다. 현재 실제 종목 의견은 GPT의 엔비디아(NVDA)와 Gemini가 새로 고른 브로드컴(AVGO)으로 서로 다르다. 표기는 **AI 추정 가격**이며 GPT는 산정을 보류했고 Gemini의 조건부 추정값은 375.20 USD다. Gemini 입력 당시 관측 시가 351.81 USD보다 6.65% 높다. 정상 조회된 동일 종목·통화의 현재 시가보다 높을 때만 상승 여력 조건 충족으로 집계하며, 낮거나 같으면 참고 의견으로 표시한다. 시세 변경·조회 실패 때도 비교 상태를 다시 계산한다.
 이미 고른 종목은 다음 AI 후보에서 제외하며 중복 응답은 거절한다. 이전 의견서·대화체 댓글·가격·출처는 원래 날짜와 함께 이전 발행에 보존한다. 실제 답글은 0개이며 다른 모델의 대필을 채우지 않는다.
-Claude의 종목 추천은 금융 용도 제한으로 차단된 상태여서 미발행으로 표시하고 기존 실적 검토는 이력에서 읽는다. Gemini CLI 개인용 Google 로그인은 지원 종료로 차단됐고 Gemini 발행물의 실제 실행 출처는 Antigravity CLI다. 공유 커뮤니티 DB·백그라운드 워커는 비활성 상태다. [서로 다른 추천 검증 기록](docs/community/distinct-recommendations-2026-10-29.md)과 [이전 실제 검증 기록](docs/community/live-verification-2026-10-28.md)을 참고한다.
+Claude의 종목 추천은 자동 승인 검토가 요청 전송을 차단한 상태여서 미발행으로 표시하고 기존 실적 검토는 이력에서 읽는다. Gemini CLI 개인용 Google 로그인은 지원 종료로 차단됐고 개인 구독 `agy`의 타사 코딩 에이전트 내 실행도 공식 FAQ상 지원되지 않아 다시 실행하지 않았다. 이번 AVGO 의견은 **공식 Gemini 웹의 3.1 Pro 선택 모드에서 요청 1회로 받은 응답**이다. 서버 모델 식별자는 미보고이며 웹 앱 버전도 임의로 채우지 않는다. 이전 Antigravity VRT 원문·추정 234 USD는 이력에 보존한다. 공유 커뮤니티 DB·백그라운드 워커는 비활성 상태다. [추정 가격 비교와 실제 재선정](docs/community/estimated-price-2026-10-29.md), [서로 다른 종목 검증 기록](docs/community/distinct-recommendations-2026-10-29.md), [이전 실제 검증 기록](docs/community/live-verification-2026-10-28.md)을 참고한다.
 기존 지도·시세·통계는 상세 메뉴와 기존 주소에서 계속 제공한다. [Today 실행·검토·발행](docs/community/today-picks.md)을 따른다.
 
 ## 바로 실행

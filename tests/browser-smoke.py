@@ -130,6 +130,7 @@ def recommendation_only_browser_fixture():
                              responseSha256=hashlib.sha256(gpt['report'].encode('utf-8')).hexdigest())
     gpt['createdAt'] = value['publishedAt']
     gpt.pop('conversationComment'); gpt.pop('fairValue', None)
+    gemini['provenance'].update(cliName='gemini-web', cliVersion=None, requestedModel='Gemini 웹 Pro')
     value.update(reports=[gpt, gemini], reportHistory=history)
     value['providerStates']['claude'] = {'status': 'disabled', 'reason': 'terms_not_cleared'}
     return value
@@ -199,8 +200,12 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 card.get_by_text('123.45 USD', exact=True).wait_for()
                 assert '지연 시세' in card.locator('[data-today-field=price]').inner_text()
                 assert 'KST' in card.locator('[data-today-price-as-of]').inner_text()
-                assert card.locator('.today-price-fields dt').all_inner_texts() == ['현재 시가', '시가 기준일', 'AI 추정 적정가격']
+                assert card.locator('.today-price-fields dt').all_inner_texts() == ['현재 시가', '시가 기준일', 'AI 추정 가격', '시가 대비 추정 차이']
                 assert card.locator('[data-today-fair-value]').inner_text() == ('150 USD' if pick['agent'] == 'gpt' else '미산정')
+                assert card.locator('[data-today-estimate-gap]').inner_text() == ('+21.51%' if pick['agent'] == 'gpt' else '—')
+                assert card.locator('[data-today-field=estimate-gap]').get_attribute('data-estimate-state') == ('above' if pick['agent'] == 'gpt' else 'missing')
+                assert ('추정 가격이 시가보다 높음' if pick['agent'] == 'gpt' else '가격 추정 보류') in card.locator('[data-today-field=estimate-gap]').inner_text()
+                assert card.locator('.today-company .today-pick-kicker').inner_text() == ('고른 종목 · 상승 여력 조건 충족' if pick['agent'] == 'gpt' else '관심 종목 · 가격 추정 보류')
                 assert card.locator('.today-initial-comment > .today-message-label').inner_text() == '의견'
             assert today.locator('[data-today-comment]').count() == 3
             assert today.locator('[data-today-response]').count() == 3
@@ -208,13 +213,36 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             market_quote['price'] = 124.56
             page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
             today.locator('[data-today-agent=gpt]').get_by_text('124.56 USD', exact=True).wait_for()
+            assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '+20.42%'
             market_fixture['status'] = 503
             page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
             today.locator('[data-today-agent=gpt]').get_by_text('이전 확인값 · 조회 실패 · 지연 시세 · Yahoo Finance', exact=True).wait_for()
             assert today.locator('[data-today-agent=gpt] [data-today-price]').inner_text() == '124.56 USD'
+            assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '—'
+            assert '비교 불가' in today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]').inner_text()
             market_fixture['status'] = 200
             page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
             page.wait_for_function("!document.querySelector('[data-today-agent=gpt] [data-today-field=price]').textContent.includes('조회 실패')")
+            # Compare the unchanged estimate honestly, including nonzero differences that round to zero.
+            for current_price, expected_gap, expected_state in [(151, '−0.66%', 'below'), (150, '0.00%', 'equal'),
+                                                               (149.999, '+0.01% 미만', 'above'), (150.001, '−0.01% 미만', 'below')]:
+                market_quote['price'] = current_price
+                page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+                today.locator('[data-today-agent=gpt]').get_by_text(expected_gap, exact=True).wait_for()
+                gap = today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]')
+                assert gap.get_attribute('data-estimate-state') == expected_state
+                assert ('추정 가격이 시가보다 높음' if expected_state == 'above' else '상승 여력 조건 미충족') in gap.inner_text()
+                assert today.locator('[data-today-agent=gpt] .today-company .today-pick-kicker').inner_text() == ('고른 종목 · 상승 여력 조건 충족' if expected_state == 'above' else '참고 의견 · 상승 여력 조건 미충족')
+                assert ('상승 여력 조건 충족 1개' if expected_state == 'above' else '상승 여력 조건 충족 0개') in today.locator('[data-today-status]').inner_text()
+                assert today.locator('[data-today-agent=gpt] [data-today-fair-value]').inner_text() == '150 USD'
+            market_quote.update(price=124.56, currency='KRW')
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('124.56 KRW', exact=True).wait_for()
+            assert '비교 불가' in today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]').inner_text()
+            assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '—'
+            market_quote['currency'] = 'USD'
+            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            today.locator('[data-today-agent=gpt]').get_by_text('+20.42%', exact=True).wait_for()
             for response in today_fixture['value']['responses']:
                 parent_card = today.locator('[data-pick-id="' + response['parentId'] + '"]')
                 reply = parent_card.locator('[data-today-response="' + response['id'] + '"]')
@@ -261,6 +289,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert today.locator('[data-today-archive-agent]').count() == 3
             assert today.locator('[data-today-archive] [data-today-comment]').count() == 3
             assert today.locator('[data-today-archive] [data-today-response]').count() == 3
+            assert today.locator('[data-today-archive] [data-today-estimate-gap]').count() == 0
             today_fixture['status'] = 503
             today.locator('[data-today-refresh]').click()
             today.get_by_text('발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.', exact=True).wait_for()
@@ -270,7 +299,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             # One-off reports share existing cards and retain earlier publications.
             today_fixture.update(status=200, value=reviewed_reports_browser_fixture())
             today.locator('[data-today-refresh]').click()
-            today.get_by_text('서로 다른 추천 2개', exact=False).wait_for()
+            today.get_by_text('서로 다른 종목 의견 2개', exact=False).wait_for()
             assert today.locator('[data-today-cards] [data-today-comment]').count() == 3
             assert today.locator('[data-today-cards] [data-today-response]').count() == 0
             assert today.locator('[data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
@@ -344,6 +373,12 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert today.locator('[data-today-archive-agent=gemini]').count() == 1
             for previous_report in today_fixture['value']['reportHistory']:
                 today.locator('[data-today-archive] [data-today-message="' + previous_report['id'] + '"]').get_by_text(displayed_report_comment(previous_report)['text'], exact=True).wait_for()
+            gemini_sources = today.locator('[data-today-cards] [data-today-agent=gemini] .today-sources')
+            gemini_sources.locator('summary').click()
+            assert gemini_sources.get_by_text('실행 환경 Gemini 웹 · 앱 버전 미공개', exact=True).is_visible()
+            assert '공식 Gemini 웹에서 받은 응답' in gemini_sources.inner_text()
+            assert 'CLI null' not in gemini_sources.inner_text()
+            gemini_sources.locator('summary').click()
             page.screenshot(path=str(output / 'today-distinct-picks-fixture-desktop.png'), full_page=True)
             # The same reviewed comments appear by symbol without becoming shared DB messages.
             page.goto(origin + '/#talk/NVDA')
@@ -498,7 +533,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'today-populated-fixture-mobile.png'), full_page=True)
             mobile_today_fixture = reviewed_reports_browser_fixture()
             mobile.locator('#v-today [data-today-refresh]').click()
-            mobile.locator('#v-today').get_by_text('서로 다른 추천 2개', exact=False).wait_for()
+            mobile.locator('#v-today').get_by_text('서로 다른 종목 의견 2개', exact=False).wait_for()
             assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
             for report in mobile_today_fixture['reports']:
                 mobile_card = mobile.locator('#v-today [data-today-agent="' + report['agent'] + '"]')
