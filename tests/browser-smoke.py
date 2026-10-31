@@ -235,6 +235,25 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert comparison.locator('[data-peer-remove-symbol]').count() == 2
             assert comparison.locator('[data-peer-series="005930.KS"]').count() == 1
             assert comparison.locator('[data-peer-series="NVDA"]').count() == 1
+            # Picking stays above the chart and keeps its own scroll/focus after each check.
+            picker = comparison.locator('[data-peer-company-picker]')
+            picker_list = comparison.locator('[data-peer-picker-list]')
+            assert picker.locator('.peer-card').count() == 8
+            assert comparison.locator('.peer-card').count() == 8
+            assert comparison.evaluate("el => el.querySelector('[data-peer-company-picker]').getBoundingClientRect().bottom <= el.querySelector('#peer-chart').getBoundingClientRect().top")
+            assert 0 < picker_list.evaluate('el => el.clientHeight') <= 320
+            comparison.locator('[data-peer-jump="8"]').click()
+            assert picker_list.evaluate('el => el.scrollTop') > 0
+            picker_list.evaluate('el => { el.scrollTop = el.scrollHeight }')
+            picker_scroll = picker_list.evaluate('el => el.scrollTop')
+            comparison.locator('[data-peer-symbol="035720.KS"]').check()
+            assert abs(picker_list.evaluate('el => el.scrollTop') - picker_scroll) <= 2
+            assert page.evaluate("document.activeElement?.dataset.peerSymbol") == '035720.KS'
+            comparison.locator('[data-peer-remove-symbol="035720.KS"]').click()
+            picker.locator(':scope > summary').click()
+            comparison.locator('[data-peer-period="90"]').click()
+            assert picker.get_attribute('open') is None
+            picker.locator(':scope > summary').click()
             comparison.locator('[data-peer-period="1095"]').click()
             comparison.locator('#peer-chart [data-peer-series="NVDA"]').wait_for()
             page.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
@@ -725,6 +744,10 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile_comparison.locator('[data-peer-remove-symbol]').count() == 2
             assert mobile_comparison.locator('[data-peer-series]').count() == 2
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+            assert mobile_comparison.locator('[data-peer-company-picker] .peer-card').count() == 8
+            assert mobile_comparison.locator('.peer-card').count() == 8
+            assert 0 < mobile_comparison.locator('[data-peer-picker-list]').evaluate('el => el.clientHeight') <= 260
+            assert mobile_comparison.evaluate("el => el.querySelector('[data-peer-company-picker]').getBoundingClientRect().bottom <= el.querySelector('#peer-chart').getBoundingClientRect().top")
             mobile.screenshot(path=str(output / 'comparison-companies-mobile.png'), full_page=True)
             mobile.evaluate("location.hash = 'today'")
             mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
@@ -835,7 +858,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'company picker above chart, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

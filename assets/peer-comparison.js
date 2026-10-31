@@ -72,7 +72,7 @@ function mini(){
 }
 function chart(){
   const active=items().filter(item=>item.available&&isVisible(item))
-  if(isCompany()&&!selected.size)return '<p class="peer-empty" data-peer-empty>아래 고리별 회사 목록에서 비교할 회사를 선택하세요. 서로 다른 고리의 회사도 함께 비교할 수 있습니다.</p>'
+  if(isCompany()&&!selected.size)return '<p class="peer-empty" data-peer-empty>회사 선택 목록에서 비교할 회사를 선택하세요. 서로 다른 고리의 회사도 함께 비교할 수 있습니다.</p>'
   if(model.dates.length<2||!active.length)return '<p class="peer-empty" data-peer-empty>'+(days>365&&!longSnapshot?'장기 일봉 수집값이 필요합니다. 1년 이력을 2·3년으로 대신 표시하지 않습니다.':'비교할 '+(isCompany()?'회사를':'고리를')+' 표시하거나, 같은 날짜의 유효 종가 데이터가 있는지 확인하세요.')+'</p>'
   const endLabelsEnabled=active.length<=12
   const w=1100,h=410,left=60,right=endLabelsEnabled?220:24,top=24,bottom=42
@@ -103,7 +103,7 @@ function cursorValues(){
 function selections(){
   if(!isCompany())return ''
   return '<div class="peer-selection"><div class="peer-heading"><p class="peer-selection-count" role="status">선택한 회사 <b>'+selected.size+'개</b> · 같은 종목은 한 번만 비교</p><button class="f" data-peer-clear-companies'+(!selected.size?' disabled':'')+'>선택 비우기</button></div>'+
-    (selected.size?'<div class="peer-selection-chips">'+[...selected].map(symbol=>'<button class="peer-selection-chip" data-peer-remove-symbol="'+esc(symbol)+'" aria-label="'+esc(catalogMap.get(symbol)?.name||symbol)+' 비교에서 제거">'+esc(catalogMap.get(symbol)?.name||symbol)+' <small>'+esc(symbol)+'</small> <span aria-hidden="true">×</span></button>').join('')+'</div>':'<p class="note">소부장부터 애플리케이션까지, 아래 목록의 체크박스로 회사를 골라 보세요.</p>')+'</div>'
+    (selected.size?'<div class="peer-selection-chips">'+[...selected].map(symbol=>'<button class="peer-selection-chip" data-peer-remove-symbol="'+esc(symbol)+'" aria-label="'+esc(catalogMap.get(symbol)?.name||symbol)+' 비교에서 제거">'+esc(catalogMap.get(symbol)?.name||symbol)+' <small>'+esc(symbol)+'</small> <span aria-hidden="true">×</span></button>').join('')+'</div>':'<p class="note">소부장부터 애플리케이션까지, 회사 선택 목록의 체크박스로 회사를 골라 보세요.</p>')+'</div>'
 }
 function cards(){
   const companyMap=new Map(companyModel.companies.map(item=>[item.symbol,item]))
@@ -122,6 +122,10 @@ function cards(){
     return '<article class="peer-card" data-peer-chain="'+g.id+'" style="--peer-color:'+color(g.id)+'">'+heading+summary+'<ul class="peer-list">'+list+'</ul><details><summary>계산에 사용한 종가·출처</summary>'+(isCompany()?'<p class="note">선택한 회사만 표시 · 실제 비교 '+date(companyModel.startDate)+' ~ '+date(companyModel.endDate)+'</p>':'')+'<div class="peer-evidence"><table><thead><tr><th>피어</th><th>기준 종가</th><th>마지막 종가</th></tr></thead><tbody>'+evidence.map(p=>'<tr><td><a href="https://finance.yahoo.com/quote/'+encodeURIComponent(p.symbol)+'/" target="_blank" rel="noopener noreferrer">'+esc(p.symbol)+'</a><small>'+esc(p.currency||'')+' · '+esc(p.fetchedAt||'수집 시각 미제공')+'</small></td><td>'+number(p.startClose)+'</td><td>'+number(p.endClose)+'</td></tr>').join('')+'</tbody></table></div></details></article>'
   }).join('')+'</div>'
 }
+function companyPicker(open){
+  if(!isCompany())return ''
+  return '<details class="peer-company-picker" data-peer-company-picker'+(open?' open':'')+'><summary>회사 선택 목록 <span>고리를 골라 회사를 체크하세요</span></summary><div class="peer-picker-nav" role="group" aria-label="회사 목록 고리 바로가기">'+chains.map(chain=>'<button class="f" data-peer-jump="'+chain.id+'" aria-label="'+esc(chain.name)+' 회사 목록으로 이동">'+esc(chain.name)+'</button>').join('')+'</div><div class="peer-picker-list" data-peer-picker-list tabindex="0" role="region" aria-label="고리별 회사 선택 목록">'+cards()+'</div></details>'
+}
 function methodology(){
   return '<section class="panel sec peer-method"><h2>'+(isCompany()?'회사별 흐름은 이렇게 비교합니다':'피어 평균은 이렇게 계산합니다')+'</h2><p><b>'+(isCompany()?'회사 지수 = 해당일 종가 ÷ 공통 기준일 종가 × 100':'고리 지수 = 평균(각 피어의 해당일 종가 ÷ 공통 기준일 종가 × 100)')+'</b></p><p>'+(isCompany()?'회사의 가격 수준을 100으로 맞춰 각 회사를 별도의 선으로 그립니다. 선택 회사를 평균으로 묶지 않으며, 여러 고리에 있는 종목도 한 번만 비교합니다.':'고리 평균 등락률은 이 지수에서 100을 뺀 값입니다. 선택한 기간의 시작에 각 피어를 동일 비중으로 놓는 계산이며, 매일 비중을 재조정하는 지수가 아닙니다.')+'</p><ul><li>현지 통화 기준의 주가 등락률입니다. 환율 변동·배당·거래비용·세금은 반영하지 않습니다. 리츠의 배당 포함 성과와는 다릅니다.</li><li>한국·미국 거래소의 현지 거래 날짜를 맞추고, 포함 대상 모두에게 종가가 있는 날짜만 사용합니다. 휴장일은 보간하지 않습니다. 거래소별 장 마감 시각은 다릅니다. 최신 일봉에는 장중 값이 포함될 수 있습니다.</li><li>'+(isCompany()?'상장 이력이 짧은 회사를 고르면 실제 공통 비교 기간이 짧아질 수 있습니다. 위의 실제 날짜와 기간 경고를 확인하세요.':'삼성전자는 파운드리와 메모리에 함께 포함됩니다. 각 고리는 독립 비교이며, 8개 고리를 합쳐 하나의 분산 포트폴리오로 계산하지 않습니다. 2·3년 평균은 요청 시작일까지 이력이 있는 피어만 포함합니다.')+'</li><li>현재 등록된 대표 종목으로 비교한 값입니다. 업종 전체 수익률이나 공인 지수가 아닙니다. 기간 안에서 피어와 분모는 고정하며, 계산에서 빠진 대상은 위에 이유와 함께 표시합니다.</li><li>출처: <a href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer">Yahoo Finance</a> 제공 종가. 시세는 지연될 수 있고 현재 수집 파일의 최근 거래일까지 표시합니다. 수집 파일 시각과 각 회사의 실제 수집 시각은 다를 수 있습니다.</li></ul></section>'
 }
@@ -133,17 +137,21 @@ function render(){
   const shortened=model.startDate&&model.metadata?.requestedStartDate&&Date.parse(model.startDate)-Date.parse(model.metadata.requestedStartDate)>7*86400000
   const title=isCompany()?'회사별 주가 흐름 비교':'8개 고리 주가 흐름 비교'
   const error=days>365?longError:loadError
+  const previousPicker=el.querySelector('[data-peer-company-picker]')
+  const pickerOpen=previousPicker?.open??true
+  const pickerScroll=el.querySelector('[data-peer-picker-list]')?.scrollTop||0
   el.innerHTML='<section class="panel sec peer-comparison" data-peer-active-mode="'+mode+'"><div class="peer-heading"><div><p class="peer-kicker">VALUE CHAIN · SAME START</p><h1>'+title+'</h1></div><button class="f" data-peer-refresh'+(longLoading?' disabled':'')+'>최신 수집값 읽기</button></div><p class="peer-subtitle">'+(isCompany()?'고리별 회사 목록 → 비교할 회사 선택 → 같은 시작점에서 개별 주가 흐름':'고리별 피어 목록 → 각 종목의 같은 기간 주가 등락률 → 동일 비중 평균')+'</p><p class="note"><a href="#data">기업 전체 목록·사업 설명 →</a> · <a href="#industry">수출·물량 산업통계 →</a></p>'+
     '<div class="peer-modes" role="group" aria-label="비교 방식">'+[['groups','고리 평균'],['companies','회사별 비교']].map(([id,label])=>'<button class="f'+(mode===id?' on':'')+'" data-peer-mode="'+id+'" aria-pressed="'+(mode===id)+'">'+label+'</button>').join('')+'</div>'+
     '<div class="peer-toolbar"><div class="peer-periods" role="group" aria-label="비교 기간">'+PERIODS.map(([n,label])=>'<button class="f'+(days===n?' on':'')+'" data-peer-period="'+n+'" aria-pressed="'+(days===n)+'">'+label+'</button>').join('')+'</div><div><button class="f" data-peer-all>'+ (isCompany()?'선택 회사 모두 표시':'8개 모두 표시')+'</button></div></div>'+
-    selections()+'<p class="peer-period-note'+(shortened?' peer-period-short':'')+'" data-peer-actual-period>요청 기간: '+PERIODS.find(([n])=>n===days)[1]+' · 실제 비교: <b>'+date(model.startDate)+' ~ '+date(model.endDate)+'</b> · 공통 거래일 '+model.dates.length+'개 · 수집 '+esc(sourceStamp())+'</p>'+
+    companyPicker(pickerOpen)+selections()+'<p class="peer-period-note'+(shortened?' peer-period-short':'')+'" data-peer-actual-period>요청 기간: '+PERIODS.find(([n])=>n===days)[1]+' · 실제 비교: <b>'+date(model.startDate)+' ~ '+date(model.endDate)+'</b> · 공통 거래일 '+model.dates.length+'개 · 수집 '+esc(sourceStamp())+'</p>'+
     (shortened?'<p class="peer-alert peer-period-warning" role="status">'+(isCompany()?'선택한 회사의 상장·수집 이력이 짧아':'일부 피어의 이력이 짧아')+' 요청한 전체 기간을 비교하지 못합니다. 위 실제 시작일 이후의 흐름입니다.</p>':'')+
     (days>365?'<p class="peer-period-note">장기 비교 전용 일봉 수집값'+(longSnapshot?' · '+esc(longSnapshot.source):'')+'을 사용합니다.</p>':'')+
     (longLoading&&days>365?'<p class="peer-period-note" role="status">장기 일봉 수집값 읽는 중…</p>':'')+
     (error?'<p class="peer-alert" role="alert">'+esc(error)+'</p>':'')+
     (warnings.length?'<ul class="peer-alert">'+warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'')+
     '<div class="peer-legend">'+items().map(item=>'<button class="peer-legend-item'+(isVisible(item)?' selected':'')+'" data-peer-toggle="'+esc(item.id)+'" aria-pressed="'+isVisible(item)+'" style="--peer-color:'+color(item.id)+'">'+swatch(item.id)+'<span>'+esc(itemLabel(item))+'</span><b>'+percent(item.returnPercent)+'</b></button>').join('')+'</div>'+chart()+
-    '<p class="peer-reading">100에서 110이 되면 '+(isCompany()?'그 회사의 주가 등락률':'해당 피어 묶음의 평균 주가 등락률')+'은 +10%입니다. 범례를 눌러 선을 숨길 수 있습니다. 선 위에서 마우스를 움직이거나 날짜 슬라이더로 같은 날짜의 값을 확인하세요.</p></section>'+cards()+methodology()
+    '<p class="peer-reading">100에서 110이 되면 '+(isCompany()?'그 회사의 주가 등락률':'해당 피어 묶음의 평균 주가 등락률')+'은 +10%입니다. 범례를 눌러 선을 숨길 수 있습니다. 선 위에서 마우스를 움직이거나 날짜 슬라이더로 같은 날짜의 값을 확인하세요.</p></section>'+(isCompany()?'':cards())+methodology()
+  const pickerList=el.querySelector('[data-peer-picker-list]');if(pickerList)pickerList.scrollTop=pickerScroll
 }
 function inspect(index){
   if(!model.dates.length)return
@@ -156,16 +164,25 @@ function inspect(index){
 }
 function changeSelection(symbol,checked){
   if(!catalogMap.has(symbol))return
+  const enteringCompanyMode=!isCompany()
   const focused=document.activeElement,focusSymbol=focused?.dataset?.peerSymbol
   const focusIndex=focusSymbol?[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol).indexOf(focused):-1
   if(checked){selected.add(symbol);hiddenCompanies.delete(symbol)}else{selected.delete(symbol);hiddenCompanies.delete(symbol)}
   mode='companies';calculate();render()
   if(focusIndex>=0)[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol)[focusIndex]?.focus({preventScroll:true})
+  if(enteringCompanyMode)document.querySelector('[data-peer-company-picker]')?.scrollIntoView({block:'start'})
 }
 window.renderComparison=render
 window.addEventListener('market-snapshot',event=>{snapshot=event.detail;loadError='';calculate();render()})
 window.addEventListener('market-snapshot-error',event=>{loadError=event.detail;render()})
 document.addEventListener('click',event=>{
+  const jump=event.target.closest('[data-peer-jump]')
+  if(jump){
+    const list=document.querySelector('[data-peer-picker-list]')
+    const target=list?.querySelector('[data-peer-chain="'+Number(jump.dataset.peerJump)+'"]')
+    if(target)list.scrollTop+=target.getBoundingClientRect().top-list.getBoundingClientRect().top
+    return
+  }
   const period=event.target.closest('[data-peer-period]')
   if(period){days=Number(period.dataset.peerPeriod);cursor=-1;calculate();render();if(days>365)loadLongHistory();return}
   const modeButton=event.target.closest('[data-peer-mode]')
