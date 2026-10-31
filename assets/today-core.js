@@ -14,6 +14,7 @@ const CONVERSATION_COMMENT_KEYS = ['id', 'text', 'response', 'sourceReportSha256
 const PROVENANCE_KEYS = ['provider', 'requestedModel', 'reportedModel', 'cliVersion', 'generatedAt', 'promptVersion', 'runId', 'execution', 'reviewedAt']
 const REPORT_PROVENANCE_KEYS = [...PROVENANCE_KEYS, 'cliName', 'responseSha256']
 const REPORT_CLI_NAMES = Object.freeze({ gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' })
+const REPORT_WEB_NAMES = Object.freeze({ claude: 'claude-web', gemini: 'gemini-web' })
 const EVIDENCE_KEYS = ['id', 'label', 'sourceUrl', 'observedAt', 'collectedAt']
 const COMPARISON_SOURCE_KEYS = ['symbol', 'label', 'sourceUrl', 'observedAt', 'collectedAt']
 const FAIR_VALUE_KEYS = ['price', 'currency', 'asOf', 'method', 'assumptions', 'evidenceIds']
@@ -36,6 +37,15 @@ const clock = now => {
 export function kstDate(now = Date.now()) {
   return new Date(clock(now) + 9 * 3600000).toISOString().slice(0, 10)
 }
+
+/** Identify the recorded web source without treating a UI mode as a server model identity. */
+export function getTodayWebProvider(provenance) {
+  return provenance?.execution === 'owner-reviewed-one-off' && Object.hasOwn(REPORT_WEB_NAMES, provenance.provider) &&
+    provenance.cliName === REPORT_WEB_NAMES[provenance.provider] ? provenance.provider : null
+}
+
+const reportEstimateAllowed = report => report?.agent !== 'claude' ||
+  (report?.kind === 'stock-opinion' && getTodayWebProvider(report?.provenance) === 'claude')
 
 /** Compare an unchanged AI estimate with a successfully observed quote. */
 export function getTodayPriceComparison(pick, quote, { marketError = false, now = Date.now() } = {}) {
@@ -73,8 +83,11 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
       /수익\s*보장|무조건\s*(?:매수|사라)|내부\s*정보/iu.test(pick.comment) ||
       !time(pick.createdAt) || !time(pick.dataAsOf) || !Array.isArray(pick.evidence) || !pick.evidence.length || pick.evidence.length > 12 ||
       !keysAre(pick.provenance, reviewedReport ? REPORT_PROVENANCE_KEYS : PROVENANCE_KEYS)) fail(error)
+    const provenance = pick.provenance
+    const webReport = reviewedReport && pick.kind === 'stock-opinion' && getTodayWebProvider(provenance) === pick.agent
+    const claudeWebReport = webReport && pick.agent === 'claude'
     if (reviewedReport && (!nativeReport(pick.report) || /<\/?[a-z]/iu.test(pick.report) || !pick.report.includes(pick.comment) ||
-        pick.kind !== (pick.agent === 'claude' ? 'earnings-review' : 'stock-opinion') ||
+        pick.kind !== (pick.agent === 'claude' && !claudeWebReport ? 'earnings-review' : 'stock-opinion') ||
         (pick.kind === 'earnings-review' && Object.hasOwn(pick, 'fairValue')) ||
         !Array.isArray(pick.reviewNotes) || !pick.reviewNotes.length || pick.reviewNotes.length > 16 ||
         pick.reviewNotes.some(note => !cleanText(note, 1, 1500) || /<\/?[a-z]/iu.test(note)) || new Set(pick.reviewNotes).size !== pick.reviewNotes.length)) fail('invalid_today_report')
@@ -84,13 +97,12 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
           !cleanText(profile.role, 1, 240) || !publicSource(profile.sourceUrl) || !date(profile.reviewedAt) ||
           profile.reviewedAt > value.editionDate) fail('invalid_today_business_source')
     }
-    const provenance = pick.provenance
-  const geminiWebReport = reviewedReport && pick.agent === 'gemini' && pick.kind === 'stock-opinion' && provenance.cliName === 'gemini-web'
   if (provenance.provider !== pick.agent || provenance.execution !== (reviewedReport ? 'owner-reviewed-one-off' : 'official-cli') ||
-      (reviewedReport && ((!geminiWebReport && provenance.cliName !== REPORT_CLI_NAMES[pick.agent]) || typeof provenance.responseSha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(provenance.responseSha256))) ||
+      (reviewedReport && ((!webReport && provenance.cliName !== REPORT_CLI_NAMES[pick.agent]) || typeof provenance.responseSha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(provenance.responseSha256))) ||
       !cleanText(provenance.requestedModel, 1, 120) || !(provenance.reportedModel === null || cleanText(provenance.reportedModel, 1, 120)) ||
+      (claudeWebReport && provenance.reportedModel !== null) ||
       (provenance.reportedModel !== null && provenance.reportedModel !== provenance.requestedModel) ||
-      (geminiWebReport ? provenance.cliVersion !== null : !cleanText(provenance.cliVersion, 1, 120)) || !cleanText(provenance.promptVersion, 1, 120) || !cleanText(provenance.runId, 1, 160) || runs.has(provenance.runId) ||
+      (webReport ? provenance.cliVersion !== null : !cleanText(provenance.cliVersion, 1, 120)) || !cleanText(provenance.promptVersion, 1, 120) || !cleanText(provenance.runId, 1, 160) || runs.has(provenance.runId) ||
       [provenance.requestedModel, provenance.reportedModel || '', provenance.cliVersion || '', provenance.promptVersion, provenance.runId].some(text => SIMULATION.test(text)) ||
       !time(provenance.generatedAt) || !time(provenance.reviewedAt)) fail('invalid_today_provenance')
   const generated = Date.parse(provenance.generatedAt), created = Date.parse(pick.createdAt), reviewed = Date.parse(provenance.reviewedAt), published = Date.parse(value.publishedAt)
@@ -137,7 +149,7 @@ function validateMessage(pick, { value, eligible, ids, runs, keys, min, max, err
 function validateConversationComment(report, context) {
   const comment = report.conversationComment
   if (!keysAre(comment, CONVERSATION_COMMENT_KEYS) || comment.sourceReportSha256 !== report.provenance.responseSha256 ||
-      comment.provenance?.cliName === 'gemini-web' ||
+      ['gemini-web', 'claude-web'].includes(comment.provenance?.cliName) ||
       !time(comment.provenance?.generatedAt) || Date.parse(comment.provenance.generatedAt) < Date.parse(report.provenance.generatedAt)) fail('invalid_today_conversation_comment')
   // Reuse the report boundary without changing the original report, excerpt or source metadata.
   const message = { id: comment.id, agent: report.agent, symbol: report.symbol, comment: comment.text,
@@ -176,6 +188,11 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
   const context = { value, eligible, ids, runs }
   // v3 preserves earlier publications without relabeling their original generation or review dates.
   const legacyContext = message => value.schemaVersion === 3 ? { ...context, value: { ...value, editionDate: time(message?.createdAt) ? kstDate(Date.parse(message.createdAt)) : value.editionDate } } : context
+  const reportContext = report => {
+    const originalDateContext = legacyContext(report)
+    if (originalDateContext.value.editionDate > value.editionDate) fail('invalid_today_chronology')
+    return originalDateContext
+  }
   for (const pick of value.picks) {
     validateMessage(pick, { ...legacyContext(pick), keys: PICK_KEYS, min: 30, max: 160, error: 'invalid_today_pick', fairValueAllowed: true })
     if (agents.has(pick.agent)) fail('invalid_today_pick')
@@ -193,10 +210,10 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
   }
   const reportAgents = new Set()
   for (const report of value.reports || []) {
-    validateMessage(report, { ...context, keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: report?.agent !== 'claude', reviewedReport: true })
+    validateMessage(report, { ...reportContext(report), keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: reportEstimateAllowed(report), reviewedReport: true })
     if (reportAgents.has(report.agent)) fail('invalid_today_report_limit')
     reportAgents.add(report.agent)
-    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, context)
+    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, reportContext(report.conversationComment))
   }
   if (value.selectionPolicy === 'distinct-symbols-v1') {
     const selected = new Set()
@@ -209,9 +226,8 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
     }
   }
   for (const report of value.reportHistory || []) {
-    const reportContext = legacyContext(report)
-    validateMessage(report, { ...reportContext, keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: report?.agent !== 'claude', reviewedReport: true })
-    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, legacyContext(report.conversationComment))
+    validateMessage(report, { ...reportContext(report), keys: REPORT_KEYS, min: 2, max: 2000, error: 'invalid_today_report', fairValueAllowed: reportEstimateAllowed(report), reviewedReport: true })
+    if (Object.hasOwn(report, 'conversationComment')) validateConversationComment(report, reportContext(report.conversationComment))
   }
   return value
 }
@@ -219,12 +235,13 @@ export function validateTodaySnapshot(value, { catalog = instruments, now = Date
 /** Exactly three honest slots; an empty or old edition never becomes today's AI pick. */
 export function todayCards(snapshot, { now = Date.now(), catalog = instruments } = {}) {
   validateTodaySnapshot(snapshot, { now, catalog })
-  const current = snapshot.editionDate === kstDate(now)
+  const currentDate = kstDate(now)
   return Object.entries(TODAY_AGENTS).map(([agent, info]) => {
     const pick = snapshot.picks.find(pick => pick.agent === agent) || null
     const report = (snapshot.reports || []).find(report => report.agent === agent) || null
     const provider = snapshot.providerStates[agent]
-    const messageCurrent = report ? current : pick ? kstDate(Date.parse(pick.createdAt)) === kstDate(now) : false
+    const message = report || pick
+    const messageCurrent = message ? kstDate(Date.parse(message.createdAt)) === currentDate : false
     const state = report || pick ? messageCurrent ? 'published' : 'previous-edition' : provider.status === 'ready' ? 'unpublished' : 'unavailable'
     const reason = report || pick ? messageCurrent ? report ? 'reviewed_one_off_publication' : 'reviewed_publication' : 'previous_edition' : provider.reason
     return { agent, ...info, pick, report, responses: pick ? (snapshot.responses || []).filter(response => response.parentId === pick.id) : [],

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison } from '../../assets/today-core.js'
+import { kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from '../../assets/today-core.js'
 
 const now = Date.parse('2026-10-27T03:00:00Z')
 const catalog = [{ symbol: 'NVDA', name: '엔비디아', chains: [4] }, { symbol: '005930.KS', name: '삼성전자', chains: [2, 3] }, { symbol: 'BTC-USD', name: '비트코인', chains: [0] }]
@@ -32,6 +32,12 @@ const reviewedReport = (agent = 'gpt') => {
     createdAt: '2026-10-27T02:08:00Z', reviewNotes: ['수동 검토한 실제 원문의 일부를 댓글로 표시한다.'],
     provenance: { ...base.provenance, runId: `reviewed-report-run-${agent}`, execution: 'owner-reviewed-one-off',
       cliName: { gpt: 'codex', claude: 'claude-code', gemini: 'antigravity' }[agent], responseSha256: 'a'.repeat(64) } }
+}
+const claudeWebReport = () => {
+  const report = reviewedReport('claude')
+  report.kind = 'stock-opinion'; report.fairValue = fairValue()
+  Object.assign(report.provenance, { cliName: 'claude-web', cliVersion: null, requestedModel: 'Claude 웹 Opus', reportedModel: null })
+  return report
 }
 const reportsEdition = (reports = [reviewedReport()]) => ({ ...threaded([pick()], []), schemaVersion: 3, reports })
 const conversationComment = report => ({ id: `conversation-comment-${report.agent}`,
@@ -446,6 +452,84 @@ test('a Gemini web capture cannot silently become a separately generated CLI con
   const value = conversationalEdition('gemini')
   Object.assign(value.reports[0].conversationComment.provenance, { cliName: 'gemini-web', cliVersion: null, requestedModel: 'Gemini 웹 자동 모드' })
   assert.throws(() => validate(value), /invalid_today_conversation_comment/)
+})
+
+test('a reviewed Claude web stock opinion retains its unknown server identity and original estimate', () => {
+  const report = claudeWebReport(), value = reportsEdition([report]), before = clone(report)
+  const providerStates = clone(value.providerStates)
+  assert.equal(validate(value), value)
+  assert.deepEqual(report, before)
+  assert.deepEqual(value.providerStates, providerStates)
+  assert.equal(getTodayWebProvider(report.provenance), 'claude')
+  assert.equal(todayCards(value, { now, catalog })[1].recommendationState, 'published')
+  assert.equal(getTodayPriceComparison(report, { symbol: 'NVDA', price: 200, currency: 'USD', marketTime: now / 1000, status: 'ok' }, { now }).eligible, true)
+  const archived = { ...reportsEdition([]), reportHistory: [report] }
+  assert.equal(validate(archived), archived)
+  assert.deepEqual(archived.reportHistory[0], before)
+})
+
+test('Claude web acceptance does not loosen provider aliases, CLI versions, server identity or the factual-review boundary', () => {
+  const report = claudeWebReport()
+  for (const patch of [{ cliName: 'claude-browser' }, { cliName: 'claude-code' }, { cliName: 'gemini-web' },
+    { provider: 'gemini' }, { provider: 'gpt' }, { execution: 'official-cli' }, { cliVersion: 'web' },
+    { cliVersion: '1.0.0' }, { cliVersion: '' }, { cliVersion: undefined }, { requestedModel: '' },
+    { reportedModel: report.provenance.requestedModel }, { responseSha256: 'not-a-digest' }]) {
+    const bad = clone(report); Object.assign(bad.provenance, patch)
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_(?:report|provenance)/)
+  }
+  for (const field of ['cliName', 'cliVersion', 'requestedModel', 'reportedModel']) {
+    const bad = clone(report); delete bad.provenance[field]
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_report/)
+  }
+  const factual = clone(report); factual.kind = 'earnings-review'; delete factual.fairValue
+  assert.throws(() => validate(reportsEdition([factual])), /invalid_today_provenance/)
+  for (const agent of ['gpt', 'gemini']) {
+    const bad = reviewedReport(agent); Object.assign(bad.provenance, { cliName: 'claude-web', cliVersion: null })
+    assert.throws(() => validate(reportsEdition([bad])), /invalid_today_provenance/)
+  }
+  assert.equal(getTodayWebProvider(null), null)
+  assert.equal(getTodayWebProvider({ ...report.provenance, provider: 'gpt' }), null)
+  assert.equal(getTodayWebProvider({ ...report.provenance, cliName: 'claude-code' }), null)
+  assert.equal(getTodayWebProvider({ ...report.provenance, execution: 'official-cli' }), null)
+  const gemini = reviewedReport('gemini')
+  Object.assign(gemini.provenance, { cliName: 'gemini-web', cliVersion: null })
+  assert.equal(getTodayWebProvider(gemini.provenance), 'gemini')
+})
+
+test('a Claude web capture cannot become a separately generated conversation comment', () => {
+  const report = claudeWebReport()
+  report.conversationComment = conversationComment(report)
+  assert.throws(() => validate(reportsEdition([report])), /invalid_today_conversation_comment/)
+})
+
+test('latest active reports preserve their own prior publication dates and never become fresh with a new edition', () => {
+  const original = reviewedReport(), originalBefore = clone(original), latest = claudeWebReport()
+  latest.symbol = '005930.KS'; latest.evidence[0].symbol = '005930.KS'
+  latest.createdAt = '2026-10-28T02:08:00Z'
+  Object.assign(latest.provenance, { generatedAt: '2026-10-28T01:30:00Z', reviewedAt: '2026-10-28T02:05:00Z' })
+  const value = { ...reportsEdition([original, latest]), editionDate: '2026-10-28', publishedAt: '2026-10-28T02:10:00Z', selectionPolicy: 'distinct-symbols-v1' }
+  const nextDay = Date.parse('2026-10-28T03:00:00Z'), providers = clone(value.providerStates)
+  assert.equal(validateTodaySnapshot(value, { now: nextDay, catalog }), value)
+  assert.deepEqual(original, originalBefore)
+  assert.deepEqual(value.providerStates, providers)
+  const cards = todayCards(value, { now: nextDay, catalog })
+  assert.equal(cards[0].state, 'previous-edition')
+  assert.equal(cards[0].reason, 'previous_edition')
+  assert.equal(cards[0].recommendationState, 'previous-edition')
+  assert.equal(cards[0].report.createdAt, originalBefore.createdAt)
+  assert.equal(cards[1].state, 'published')
+  assert.equal(cards[1].report.createdAt, latest.createdAt)
+  assert.equal(todayCards(value, { now: nextDay + 86400000, catalog })[1].state, 'previous-edition')
+  const inconsistentReview = clone(value)
+  inconsistentReview.reports[0].provenance.reviewedAt = '2026-10-28T02:05:00Z'
+  assert.throws(() => validateTodaySnapshot(inconsistentReview, { now: nextDay, catalog }), /invalid_today_chronology/)
+  const futureReport = clone(value)
+  futureReport.reports[0].createdAt = '2026-10-29T02:08:00Z'
+  futureReport.reports[0].provenance.reviewedAt = '2026-10-29T02:05:00Z'
+  assert.throws(() => validateTodaySnapshot(futureReport, { now: nextDay, catalog }), /invalid_today_chronology/)
+  const afterPublication = clone(value)
+  afterPublication.reports[1].createdAt = '2026-10-28T02:11:00Z'
+  assert.throws(() => validateTodaySnapshot(afterPublication, { now: nextDay, catalog }), /invalid_today_chronology/)
 })
 
 test('reports publish at the actual new date while preserving earlier generation and original pick dates', () => {

@@ -1,7 +1,7 @@
 import { instruments } from './instruments.js'
 import { communityApiOrigin } from './community-runtime.js'
 import { resolveCommunityOrigin, resolveDiscussionSymbol, mergeComments, opinionEntry, communityStateLabel, communityReasonLabel, messageProvenance, communityEvidenceUrl } from './community-ui-core.js'
-import { validateTodaySnapshot, getTodayComment } from './today-core.js'
+import { validateTodaySnapshot, getTodayComment, getTodayWebProvider } from './today-core.js'
 
 const catalog = instruments.filter(x => x.chains.some(n => n > 0))
 const names = { gpt: 'GPT', claude: 'Claude', gemini: 'Gemini' }
@@ -285,7 +285,7 @@ function createView(root, symbol, selector = false) {
       item.dataset.aiCommentId = comment.id
       if (state.publishedReports.reportHistory?.some(previous => previous.id === report.id)) item.append(node('small', '이전 발행', { 'data-published-report-history': '' }))
       item.append(node('strong', `${names[report.agent]} · AI`), node('p', comment.text))
-      item.append(node('time', (comment.provenance.cliName === 'gemini-web' ? '웹 응답 확인 ' : '생성 ') + timeLabel(comment.provenance.generatedAt), { datetime: comment.provenance.generatedAt }), node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
+      item.append(node('time', (getTodayWebProvider(comment.provenance) ? '웹 응답 확인 ' : '생성 ') + timeLabel(comment.provenance.generatedAt), { datetime: comment.provenance.generatedAt }), node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
       if (factual) item.append(node('p', '운영자가 지정한 종목의 실적 검토입니다. 종목 선정·가격 추정은 포함하지 않습니다.', { class: 'note' }))
       for (const note of report.reviewNotes) item.append(node('p', note, { class: 'note' }))
       item.append(node('a', '의견서 원문·모델·근거 보기 →', { href: '#today', class: 'community-reference' }))
