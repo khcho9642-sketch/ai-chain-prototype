@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison } from './today-core.js'
+import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 
 const root = document.getElementById('v-today')
@@ -69,6 +69,7 @@ function sourceDetails(pick) {
   const details = node('details', null, { class: 'today-sources' })
   details.append(node('summary', '근거 · 작성 출처'))
   const provenance = pick.provenance || {}, info = node('div', null, { class: 'today-source-content' })
+  const webProvider = getTodayWebProvider(provenance), webName = TODAY_AGENTS[webProvider]?.name
   if (pick.conversationComment) {
     const comment = pick.conversationComment, author = comment.provenance
     const detail = node('article', null, { class: 'today-evidence' })
@@ -83,12 +84,12 @@ function sourceDetails(pick) {
     info.append(detail, node('strong', '원래 의견서 작성 출처'))
   }
   info.append(node('p', '제공사 ' + (TODAY_AGENTS[provenance.provider]?.name || provenance.provider || '미확인')),
-    node('p', '요청 모델 ' + (provenance.requestedModel || '미확인')),
+    node('p', (webProvider ? '화면 선택 모델 ' : '요청 모델 ') + (provenance.requestedModel || '미확인')),
     node('p', provenance.reportedModel ? '실제 응답 모델 ' + provenance.reportedModel : '실제 모델명 미확인'),
-    node('p', provenance.cliName === 'gemini-web' ? '실행 환경 Gemini 웹 · 앱 버전 미공개' : 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
-    node('p', (provenance.cliName === 'gemini-web' ? '웹 응답 확인 ' : '실제 생성 ') + timeLabel(provenance.generatedAt)),
+    node('p', webProvider ? '실행 환경 ' + webName + ' 웹 · 앱 버전 미공개' : 'CLI ' + ([{ codex: 'Codex', 'claude-code': 'Claude Code', antigravity: 'Antigravity' }[provenance.cliName], provenance.cliVersion].filter(Boolean).join(' ') || '미확인')),
+    node('p', (webProvider ? '웹 응답 확인 ' : '실제 생성 ') + timeLabel(provenance.generatedAt)),
     node('p', '검수 ' + timeLabel(provenance.reviewedAt)))
-  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', provenance.cliName === 'gemini-web' ? '공식 Gemini 웹에서 받은 응답 · 화면에서 복사한 원문을 검토 후 수동 발행' : '실제 CLI 응답 원문 · 운영자 검토 후 수동 발행'))
+  if (provenance.execution === 'owner-reviewed-one-off') info.append(node('p', webProvider ? '공식 ' + webName + ' 웹에서 받은 응답 · 화면에서 복사한 원문을 검토 후 수동 발행' : '실제 CLI 응답 원문 · 운영자 검토 후 수동 발행'))
   if (provenance.responseSha256) info.append(node('p', '원문 SHA-256 ' + provenance.responseSha256, { class: 'today-response-digest mono' }))
   for (const evidence of pick.evidence || []) {
     const item = node('article', null, { class: 'today-evidence' })
@@ -132,7 +133,7 @@ function messageMeta(message) {
   const meta = node('div', null, { class: 'today-pick-meta' })
   const comment = getTodayComment(message)
   const generatedAt = message.kind ? comment.provenance.generatedAt : message.createdAt
-  meta.append(node('time', (comment.provenance?.cliName === 'gemini-web' ? '응답 확인 ' : '작성 ') + timeLabel(generatedAt), { datetime: generatedAt }))
+  meta.append(node('time', (getTodayWebProvider(comment.provenance) ? '응답 확인 ' : '작성 ') + timeLabel(generatedAt), { datetime: generatedAt }))
   if (message.kind) meta.append(node('time', '발행 ' + timeLabel(comment.createdAt), { datetime: comment.createdAt }))
   meta.append(node('span', '자료 기준 ' + timeLabel(message.dataAsOf)))
   if (!comment.provenance?.reportedModel) meta.append(node('span', '실제 모델명 미확인'))
@@ -143,7 +144,8 @@ function reportDetails(report) {
   const details = node('details', null, { class: 'today-report-original' })
   details.append(node('summary', report.kind === 'earnings-review' ? '실적 검토 원문 전체 보기' : '의견서 원문 전체 보기'))
   let structured
-  try { structured = JSON.parse(report.report) } catch {}
+  const source = report.report.trim(), fenced = source.match(/^```(?:json)?[ \t]*\r?\n([\s\S]*)\r?\n```$/iu)
+  try { structured = JSON.parse(fenced ? fenced[1] : source) } catch {}
   if (typeof structured?.opinion === 'string' && structured.opinion.trim()) {
     details.append(node('p', structured.opinion.replaceAll('\\n', '\n'), { class: 'today-report-text' }))
     const original = node('details', null, { class: 'today-native-response' })
@@ -177,7 +179,8 @@ function renderCard(card, { archived = false } = {}) {
   const header = node('div', null, { class: 'today-agent-heading' })
   header.append(node('div', card.name || TODAY_AGENTS[card.agent]?.name, { class: 'today-agent-name' }), node('span', 'AI', { class: 'today-ai-label' }))
   article.append(header)
-  const pick = card.report || card.pick, published = !!pick && (archived || card.state === 'published')
+  const pick = card.report || card.pick, previousReport = !!card.report && card.state === 'previous-edition'
+  const published = !!pick && (archived || card.state === 'published' || previousReport)
   article.dataset.state = card.state
   if (!published) {
     const empty = node('div', null, { class: 'today-empty' })
@@ -188,6 +191,7 @@ function renderCard(card, { archived = false } = {}) {
   }
   const company = instruments.find(item => item.symbol === pick.symbol)
   article.dataset.pickId = pick.id
+  if (previousReport && !archived) article.append(node('p', '이전 발행 · ' + kstDate(Date.parse(pick.createdAt)), { class: 'today-empty-note', 'data-today-previous-report': '' }))
   const factualReview = pick.kind === 'earnings-review'
   let content = article
   if (factualReview && !archived) {
@@ -237,8 +241,8 @@ function render() {
   const cards = cardsForSnapshot(), grid = root.querySelector('[data-today-cards]')
   grid.replaceChildren(...cards.map(card => renderCard(card)))
   const published = cards.filter(card => card.state === 'published' && (card.report || card.pick)).length
-  const publishedReports = cards.filter(card => card.state === 'published' && card.report)
-  const stockOpinionCards = cards.filter(card => card.state === 'published' && (card.report || card.pick) && (card.report || card.pick).kind !== 'earnings-review')
+  const publishedReports = cards.filter(card => card.report)
+  const stockOpinionCards = cards.filter(card => (card.report || card.state === 'published' && card.pick) && (card.report || card.pick).kind !== 'earnings-review')
   const stockOpinions = new Set(stockOpinionCards.map(card => (card.report || card.pick).symbol)).size
   const eligibleOpinions = new Set(stockOpinionCards.filter(card => {
     const pick = card.report || card.pick
@@ -246,10 +250,10 @@ function render() {
   }).map(card => (card.report || card.pick).symbol)).size
   const earningsReviews = publishedReports.filter(card => card.report.kind === 'earnings-review').length
   root.querySelector('[data-today-status]').textContent = state.error ? '발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.' :
-    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : published ? `${currentDate} · 서로 다른 종목 의견 ${stockOpinions}개 · 상승 여력 조건 충족 ${eligibleOpinions}개 · 실적 검토 ${earningsReviews}개` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
+    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : stockOpinions || earningsReviews ? `${currentDate} · 서로 다른 종목 의견 ${stockOpinions}개 · 오늘 발행 ${published}개 · 상승 여력 조건 충족 ${eligibleOpinions}개 · 실적 검토 ${earningsReviews}개` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
   const refresh = root.querySelector('[data-today-refresh]')
   refresh.disabled = state.busy; refresh.textContent = state.busy ? '읽는 중…' : '다시 읽기'
-  const older = cards.filter(card => card.state === 'previous-edition' && (card.report || card.pick))
+  const older = cards.filter(card => !card.report && card.state === 'previous-edition' && card.pick)
   for (const card of cards) {
     if (card.report && card.pick) older.push({ ...card, report: null, state: 'published' })
   }

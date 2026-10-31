@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import vm from 'node:vm'
 import { instruments } from '../../assets/instruments.js'
-import { validateTodaySnapshot, getTodayComment, getTodayPriceComparison } from '../../assets/today-core.js'
+import { validateTodaySnapshot, getTodayComment, getTodayPriceComparison, getTodayWebProvider, todayCards } from '../../assets/today-core.js'
 
 const snapshot = JSON.parse(await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8'))
 const source = await readFile(new URL('../../assets/community.js', import.meta.url), 'utf8')
@@ -17,7 +17,7 @@ const digests = {
 
 function moduleHarness(fetch) {
   const context = vm.createContext({
-    instruments, validateTodaySnapshot, getTodayComment, fetch, AbortController, DOMException, URL, console,
+    instruments, validateTodaySnapshot, getTodayComment, getTodayWebProvider, fetch, AbortController, DOMException, URL, console,
     location: { origin: 'https://ai-chain-prototype.vercel.app', hash: '' },
     document: { getElementById: () => null }, window: { addEventListener() {} },
     communityApiOrigin: '', resolveCommunityOrigin: (_, origin) => origin,
@@ -28,7 +28,7 @@ function moduleHarness(fetch) {
 
 test('active and historical native reports retain exact hashes while current recommendations are distinct', () => {
   validateTodaySnapshot(snapshot)
-  assert.equal(snapshot.reports.length, 2)
+  assert.equal(snapshot.reports.length, 3)
   assert.equal(snapshot.selectionPolicy, 'distinct-symbols-v1')
   for (const report of allReports) {
     assert.equal(createHash('sha256').update(report.report, 'utf8').digest('hex'), report.provenance.responseSha256)
@@ -41,7 +41,7 @@ test('active and historical native reports retain exact hashes while current rec
     assert.equal(createHash('sha256').update(original.report, 'utf8').digest('hex'), digest)
   }
   const selections = snapshot.reports.filter(report => report.kind === 'stock-opinion')
-  assert.equal(selections.length, 2)
+  assert.equal(selections.length, 3)
   assert.equal(new Set(selections.map(report => report.symbol)).size, selections.length)
   const gpt = selections.find(report => report.agent === 'gpt')
   assert.equal(gpt.provenance.responseSha256, '39d4b075a10cbc73756c2d6f94309a13d846f2b2e3063cbfe27be04c2f514d53')
@@ -57,17 +57,26 @@ test('active and historical native reports retain exact hashes while current rec
   assert.equal(gemini.provenance.reportedModel, null)
   assert.equal(gemini.reviewNotes.length, 3)
   assert.equal(snapshot.reportHistory.some(report => report.agent === 'gemini' && report.symbol === 'NVDA' && report.provenance.responseSha256 === digests.gemini), true)
-  assert.equal(snapshot.reports.some(report => report.agent === 'claude'), false)
-  const claude = snapshot.reportHistory.find(report => report.agent === 'claude')
-  assert.equal(claude.kind, 'earnings-review')
-  assert.equal(Object.hasOwn(claude, 'fairValue'), false)
-  assert.equal(claude.provenance.cliName, 'claude-code')
+  const claude = snapshot.reports.find(report => report.agent === 'claude')
+  assert.equal(claude.kind, 'stock-opinion')
+  assert.equal(claude.symbol, 'VRT')
+  assert.equal(claude.provenance.cliName, 'claude-web')
+  assert.equal(claude.provenance.cliVersion, null)
+  assert.equal(claude.provenance.requestedModel, 'Opus 5.5 중간 (웹)')
+  assert.equal(claude.provenance.reportedModel, null)
+  assert.equal(claude.provenance.responseSha256, '9abf7f895240a9d0cfa2eb5b075e93f818dcd35fc936e913e450208d23402e94')
+  const previousClaude = snapshot.reportHistory.find(report => report.agent === 'claude')
+  assert.equal(previousClaude.kind, 'earnings-review')
+  assert.equal(Object.hasOwn(previousClaude, 'fairValue'), false)
+  assert.equal(previousClaude.provenance.cliName, 'claude-code')
 })
 
 test('the replacement preserves all earlier report fields, comments, dates and original legacy picks', () => {
   const recordHash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
   const gpt = snapshot.reports.find(report => report.agent === 'gpt')
   assert.equal(recordHash(gpt), 'fa532a4b1d3178be64d96753e5cb90d9f8df4afba40dbc5cad5f4e593a7991ed')
+  const gemini = snapshot.reports.find(report => report.agent === 'gemini')
+  assert.equal(recordHash(gemini), 'e0c9f88437e5f33da0c139ece34f2f1622fd87d5ec3387a7f89d1d95ed6b6541')
   const preserved = new Map([
     ['report-3083de50-d655-417b-8af9-ec9158bb0b5a', '6b1fcf5c93de4b3ac0b69eac35a837f52bffeca13d06c644e8b89f8064123866'],
     ['report-051ba683-4799-4120-a484-9f6e0b5f2467', '16863266bdbd6d6705fc1bdb04db03806eedfe8871a671a0e1f213fe0217faae'],
@@ -85,6 +94,43 @@ test('the replacement preserves all earlier report fields, comments, dates and o
   assert.equal(priorGemini.provenance.cliName, 'antigravity')
   assert.deepEqual(priorGemini.comparisonSources.map(item => item.symbol).sort(), ['AMD', 'AVGO'])
   assert.equal(recordHash(snapshot.picks), 'b06f9ecef634510154a099b13d256d7324705c362080e74d457f531474a8ee36')
+  assert.deepEqual(snapshot.providerStates.claude, { status: 'disabled', reason: 'terms_not_cleared' })
+  assert.deepEqual(snapshot.providerStates.gemini, { status: 'blocked', reason: 'consumer_client_retired' })
+})
+
+test('the actual Claude web response keeps its forecast assumptions, raw JSON fence and unchanged input quote', () => {
+  const claude = snapshot.reports.find(report => report.agent === 'claude')
+  assert.ok(claude.report.startsWith('```json\n'))
+  const original = JSON.parse(claude.report.trim().replace(/^```json\s*\n/u, '').replace(/\n```$/u, ''))
+  assert.equal(original.action, 'publish')
+  assert.equal(original.symbol, 'VRT')
+  assert.equal(original.comment, claude.comment)
+  assert.ok(original.comment.includes('뜨거운 벽돌'))
+  assert.deepEqual(original.observedQuote, { price: 249.525, currency: 'USD', marketTime: '2026-10-29T14:28:25.000Z' })
+  assert.equal(original.fairValue.price, 270)
+  assert.equal(claude.fairValue.price, original.fairValue.price)
+  assert.equal(claude.fairValue.method, original.fairValue.formula)
+  assert.deepEqual(claude.fairValue.assumptions, original.fairValue.assumptions)
+  assert.equal(2.25 * 4 * 30, claude.fairValue.price)
+  assert.deepEqual(original.fairValue.range, { low: 222, high: 319.2 })
+  assert.ok(original.fairValue.limitations.some(text => text.includes('214.5')))
+  assert.ok(claude.reviewNotes.some(text => text.includes('214.50') && text.includes('249.60')))
+  assert.ok(claude.evidence.every(item => item.symbol === 'VRT'))
+  assert.deepEqual(claude.comparisonSources.map(item => item.symbol), ['AMD'])
+  assert.ok(claude.comparisonSources[0].sourceUrl.startsWith('https://ir.amd.com/'))
+  const quote = { symbol: 'VRT', ...original.observedQuote, marketTime: Date.parse(original.observedQuote.marketTime) / 1000, status: 'ok' }
+  assert.equal(getTodayPriceComparison(claude, quote).differencePercent.toFixed(2), '8.21')
+  assert.equal(getTodayPriceComparison(claude, { ...quote, price: 280 }).eligible, false)
+})
+
+test('adding Claude never retimes earlier GPT and Gemini publications as new answers today', () => {
+  const cards = todayCards(snapshot, { now: Date.parse(snapshot.publishedAt) })
+  assert.equal(cards.find(card => card.agent === 'claude').state, 'published')
+  for (const agent of ['gpt', 'gemini']) {
+    const card = cards.find(item => item.agent === agent)
+    assert.equal(card.state, 'previous-edition')
+    assert.equal(card.report, snapshot.reports.find(item => item.agent === agent))
+  }
 })
 
 test('the genuine Gemini web estimate exceeds its unchanged input quote with selected-stock-only canonical evidence', () => {
@@ -144,7 +190,8 @@ test('read-only published comments respect human-only tabs and never mix other s
   assert.deepEqual(Array.from(publishedReportsForSymbol(snapshot, gemini.symbol, 'mixed'), report => report.id), [gemini.id])
   assert.equal(publishedReportsForSymbol(snapshot, gemini.symbol, 'human').length, 0)
   const archivedVrt = snapshot.reportHistory.find(report => report.symbol === 'VRT')
-  assert.deepEqual(Array.from(publishedReportsForSymbol(snapshot, 'VRT', 'ai'), report => report.id), [archivedVrt.id])
+  const claude = snapshot.reports.find(report => report.agent === 'claude')
+  assert.deepEqual(Array.from(publishedReportsForSymbol(snapshot, 'VRT', 'ai'), report => report.id), [claude.id, archivedVrt.id])
   assert.equal(publishedReportsForSymbol(snapshot, 'VRT', 'human').length, 0)
   assert.equal(publishedReportsForSymbol(snapshot, 'AVGO', 'ai').some(report => report.symbol === 'VRT'), false)
   assert.equal(publishedReportsForSymbol(snapshot, 'VRT', 'ai').some(report => report.symbol === 'AVGO'), false)
@@ -167,7 +214,7 @@ test('views share one snapshot read independently of community backend connectiv
   const values = await Promise.all([readPublishedReports(first.signal), readPublishedReports(second.signal)])
   assert.equal(calls, 1)
   assert.equal(values[0], values[1])
-  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 2)
+  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 3)
   assert.equal(calls, 1)
 })
 
@@ -184,7 +231,7 @@ test('disposing the last pending view aborts its read and a new view can load wi
   first.abort()
   await assert.rejects(pending, error => error.name === 'AbortError')
   assert.equal(aborted, 1)
-  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 2)
+  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 3)
   assert.equal(calls, 2)
 })
 
@@ -205,7 +252,7 @@ test('a failed snapshot read can recover on route re-entry without a full page r
   })
   await assert.rejects(readPublishedReports(new AbortController().signal), /temporary_network_failure/u)
   const recovered = await readPublishedReports(new AbortController().signal)
-  assert.equal(recovered.reports.length, 2)
+  assert.equal(recovered.reports.length, 3)
   assert.equal(calls, 2)
   assert.equal(await readPublishedReports(new AbortController().signal), recovered)
   assert.equal(calls, 2)

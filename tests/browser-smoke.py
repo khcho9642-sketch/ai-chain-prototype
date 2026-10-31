@@ -117,6 +117,13 @@ def displayed_report_comment(report):
                                                 'provenance': report['provenance'], 'createdAt': report['createdAt']}
 
 
+def structured_report(report):
+    text = report['report'].strip()
+    if text.startswith('```json\n') and text.endswith('\n```'):
+        text = text[len('```json\n'):-len('\n```')]
+    return json.loads(text)
+
+
 def recommendation_only_browser_fixture():
     # Current selections have separate fresh runs; all former reports remain in history.
     value = reviewed_reports_browser_fixture()
@@ -413,6 +420,77 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.locator('#v-talk [data-published-report-id]').first.wait_for()
             assert page.locator('#v-talk [data-published-report-id]').count() == 4
             page.locator('#v-talk [data-tab=mixed]').click()
+            # Read the genuine reviewed publication without changing original report dates or content.
+            # Market price below is an isolated browser fixture equal to Claude's recorded input quote.
+            actual_today = json.loads((root / 'data/today-picks.json').read_text(encoding='utf-8'))
+            actual_reports = {report['agent']: report for report in actual_today['reports']}
+            assert {agent: report['symbol'] for agent, report in actual_reports.items()} == {'gpt': 'NVDA', 'claude': 'VRT', 'gemini': 'AVGO'}
+            actual_claude = actual_reports['claude']
+            actual_claude_json = structured_report(actual_claude)
+            assert actual_claude_json['observedQuote']['price'] == 249.525
+            assert actual_claude['fairValue']['price'] == 270
+            today_fixture['value'] = actual_today
+            vrt_quote = next(quote for quote in market_fixture['value']['quotes'] if quote['symbol'] == 'VRT')
+            original_vrt_quote = json.loads(json.dumps(vrt_quote))
+            vrt_quote.update(price=actual_claude_json['observedQuote']['price'], currency='USD', status='ok',
+                             marketTime=int(datetime.now(timezone.utc).timestamp()) - 60, delayed=True, source='Yahoo Finance', error=None)
+            page.goto(origin + '/#today')
+            page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot', {detail:value}))", market_fixture['value'])
+            today.locator('[data-today-refresh]').click()
+            today.locator('[data-today-agent=claude] [data-today-comment]').get_by_text(actual_claude['comment'], exact=True).wait_for()
+            assert today.locator('[data-today-cards] [data-today-comment]').count() == 3
+            assert today.locator('[data-today-cards] [data-today-response]').count() == 0
+            current_kst_date = (datetime.now(timezone.utc) + timedelta(hours=9)).date().isoformat()
+            actual_current_count = 0
+            for agent, report in actual_reports.items():
+                card = today.locator('[data-today-agent="' + agent + '"]')
+                assert card.locator('.today-company .today-ticker').inner_text() == report['symbol']
+                assert card.locator('[data-today-comment]').inner_text() == displayed_report_comment(report)['text']
+                assert card.locator('[data-today-comment]').is_visible()
+                report_date = (datetime.fromisoformat(report['createdAt'].replace('Z', '+00:00')) + timedelta(hours=9)).date().isoformat()
+                if report_date == current_kst_date:
+                    actual_current_count += 1
+                    assert card.get_attribute('data-state') == 'published'
+                    assert card.locator('[data-today-previous-report]').count() == 0
+                else:
+                    assert card.get_attribute('data-state') == 'previous-edition'
+                    assert card.locator('[data-today-previous-report]').inner_text() == '이전 발행 · ' + report_date
+            assert f'오늘 발행 {actual_current_count}개' in today.locator('[data-today-status]').inner_text()
+            actual_claude_card = today.locator('[data-today-agent=claude]')
+            assert actual_claude_card.locator('[data-today-price]').inner_text() == '249.53 USD'
+            assert actual_claude_card.locator('[data-today-fair-value]').inner_text() == '270 USD'
+            assert actual_claude_card.locator('[data-today-estimate-gap]').inner_text() == '+8.21%'
+            actual_claude_card.locator('.today-report-original > summary').click()
+            assert actual_claude_card.locator('.today-report-original > .today-report-text').inner_text() == actual_claude_json['opinion']
+            actual_claude_card.locator('.today-native-response > summary').click()
+            assert actual_claude_card.locator('[data-today-report-original]').inner_text() == actual_claude['report']
+            actual_claude_sources = actual_claude_card.locator('.today-sources')
+            actual_claude_sources.locator('summary').click()
+            assert actual_claude_sources.get_by_text('실행 환경 Claude 웹 · 앱 버전 미공개', exact=True).is_visible()
+            assert actual_claude_sources.get_by_text('화면 선택 모델 ' + actual_claude['provenance']['requestedModel'], exact=True).is_visible()
+            assert actual_claude_sources.get_by_text('실제 모델명 미확인', exact=True).is_visible()
+            assert '공식 Claude 웹에서 받은 응답' in actual_claude_sources.inner_text()
+            assert '웹 응답 확인 ' in actual_claude_sources.inner_text()
+            assert 'CLI null' not in actual_claude_sources.inner_text()
+            actual_claude_sources.locator('summary').click()
+            page.screenshot(path=str(output / 'today-actual-three-reports-desktop.png'), full_page=True)
+            page.goto(origin + '/#talk/VRT')
+            page.reload()
+            actual_claude_comment = page.locator('#v-talk [data-published-report-id="' + actual_claude['id'] + '"]')
+            actual_claude_comment.get_by_text(actual_claude['comment'], exact=True).wait_for()
+            assert actual_claude_comment.locator('strong').inner_text() == 'Claude · AI'
+            assert actual_claude_comment.locator('time').first.inner_text().startswith('웹 응답 확인 ')
+            assert actual_claude_comment.locator('time').first.get_attribute('datetime') == actual_claude['provenance']['generatedAt']
+            assert actual_claude_comment.locator('time').nth(1).get_attribute('datetime') == actual_claude['createdAt']
+            expected_vrt_reports = [report for report in actual_today['reports'] + actual_today['reportHistory'] if report['symbol'] == 'VRT']
+            assert page.locator('#v-talk [data-published-report-id]').count() == len(expected_vrt_reports)
+            page.locator('#v-talk [data-tab=human]').click()
+            assert actual_claude_comment.is_hidden()
+            page.locator('#v-talk [data-tab=ai]').click()
+            assert actual_claude_comment.is_visible()
+            assert page.locator('#v-talk [data-published-report-id][data-report-agent=claude]').count() == 1
+            page.screenshot(path=str(output / 'claude-actual-stock-comment-desktop.png'), full_page=True)
+            vrt_quote.clear(); vrt_quote.update(original_vrt_quote)
             page.unroute('**/data/today-picks.json', serve_today_fixture)
             page.goto(origin + '/#talk/NVDA')
             board = page.locator('#v-talk .community')
@@ -560,6 +638,21 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile.locator('#v-today [data-today-archive] [data-today-comment]').count() == 4
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-distinct-picks-fixture-mobile.png'), full_page=True)
+            mobile_today_fixture = actual_today
+            mobile.locator('#v-today [data-today-refresh]').click()
+            mobile.locator('#v-today [data-today-agent=claude] [data-today-comment]').get_by_text(actual_claude['comment'], exact=True).wait_for()
+            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
+            for agent, report in actual_reports.items():
+                mobile_card = mobile.locator('#v-today [data-today-agent="' + agent + '"]')
+                assert mobile_card.locator('.today-company .today-ticker').inner_text() == report['symbol']
+                assert mobile_card.locator('[data-today-comment]').is_visible()
+            mobile_claude = mobile.locator('#v-today [data-today-agent=claude]')
+            mobile_claude.locator('.today-sources > summary').click()
+            assert mobile_claude.get_by_text('실행 환경 Claude 웹 · 앱 버전 미공개', exact=True).is_visible()
+            assert mobile_claude.locator('[data-today-fair-value]').inner_text() == '270 USD'
+            mobile_claude.locator('.today-sources > summary').click()
+            assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+            mobile.screenshot(path=str(output / 'today-actual-three-reports-mobile.png'), full_page=True)
             mobile.goto(origin + '/#talk/NVDA')
             mobile.get_by_text('다른 브라우저에서도 보이는 검증 댓글', exact=True).wait_for()
             mobile.locator('[data-opinion-agent=gpt]').get_by_text(latest_gpt['text'], exact=True).wait_for()
