@@ -1,4 +1,4 @@
-export const ranges = Object.freeze({ '1d': '5m', '5d': '30m', '1mo': '1d', '3mo': '1d', '1y': '1d', '5y': '1wk' })
+export const ranges = Object.freeze({ '1d': '5m', '5d': '30m', '1mo': '1d', '3mo': '1d', '1y': '1d', '3y': '1d', '5y': '1wk' })
 const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']
 const number = value => Number.isFinite(value) ? value : null
 const failure = (message, status) => Object.assign(new Error(message), { status })
@@ -52,7 +52,17 @@ export function createChartService({ fetchImpl = globalThis.fetch, now = Date.no
       for (const host of hosts) {
         try {
           const url = new URL(`https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}`)
-          url.search = new URLSearchParams({ range, interval: ranges[range], events: 'div,splits' }).toString()
+          const params = new URLSearchParams({ interval: ranges[range], events: 'div,splits' })
+          if (range === '3y') {
+            // Request exact daily periods; standard Yahoo ranges omit 3y.
+            const end = new Date(now())
+            const start = new Date(end)
+            start.setUTCFullYear(start.getUTCFullYear() - 3)
+            start.setUTCDate(start.getUTCDate() - 14)
+            params.set('period1', String(Math.floor(start.getTime() / 1000)))
+            params.set('period2', String(Math.floor(end.getTime() / 1000)))
+          } else params.set('range', range)
+          url.search = params.toString()
           const response = await fetchImpl(url, { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }, signal: AbortSignal.timeout(timeoutMs) })
           if (!response.ok) throw new Error(`제공처 HTTP ${response.status}`)
           const body = await response.json()

@@ -26,7 +26,7 @@ ai-chain-prototype/
 │  ├─ community/                회원·댓글·AI·패키징·운영 연결
 │  ├─ browser-smoke.py          브라우저 통합 검사
 │  └─ helpers/                  테스트 전용 서버 등 보조 코드
-├─ data/                         검증된 공개 스냅샷 7종 (Today 포함)
+├─ data/                         검증된 공개 스냅샷 8종 (Today·3년 비교 이력 포함)
 ├─ research/                     검토 통계 원본·공식 출처 확인 근거
 │  └─ dart/                     DART 회사 연결 근거·RSS 형식 샘플
 ├─ docs/                         기능별 정의·수집 방식·운영 안내

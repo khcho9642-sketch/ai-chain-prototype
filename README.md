@@ -30,7 +30,7 @@ npm run build
 | --- | --- |
 | Today | AI별 종목 1개·댓글 1개, KST 발행일·근거·실제 작성 출처, 검증 전 미발행 |
 | 밸류체인·시세 | 8개 고리 지도, 93개 종목·시장지표, AI 기업 75개, 관심종목·직접 티커·차트·OHLCV·CSV |
-| 기업·비교 | 기업 역할·국가·공식 출처, 8개 고리 피어 비교 |
+| 기업·비교 | 기업 역할·국가·공식 출처, 8개 고리 평균·회사별 비교, 1개월~3년, 목록에서 회사 선택 |
 | 데이터 | 공식 산업통계, 검토한 AI 사업·산업 지표, OpenRouter 토큰 집계, 공식 발표문 변경 감시, 국내 18개 기업 DART RSS |
 | 커뮤니티 | 종목별 공유 댓글·회원 인증·영속 SQLite API·AI 워커 초안/승인. v4 의견·이력·근거 확장은 [변경별 검수 기록](docs/community/v4-implementation.md) 참조 |
 
@@ -45,6 +45,7 @@ npm run build
 | 명령 | 역할 |
 | --- | --- |
 | `npm run collect` | 시세·차트 스냅샷 수집 |
+| `npm run collect:comparison` | AI 기업 75개 비교용 3년 일별 종가 수집 |
 | `npm run collect:industry` | ECOS·TWSE 공식 산업통계 수집 |
 | `npm run build:statistics` | 검토 원본을 공개 AI 통계로 변환·검증 |
 | `npm run collect:tokens` | OpenRouter 공식 공개 토큰 통계 수집 |
@@ -66,7 +67,7 @@ npm run build
 - [프로젝트 구조](docs/project-structure.md): 소스·스크립트·테스트·검토 근거·비공개 작업물 배치
 - [데이터·운영 문서 목록](docs/README.md): 시세·통계·공시·배포·커뮤니티 상세 정의
 - [작업 규칙](AGENTS.md): 개발 위치·원본 보존·공개 데이터 허용목록
-- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 7종
+- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 8종
 
 ## 기존 사이트
 

@@ -38,7 +38,10 @@ jobs:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
         run: node scripts/data/collect-industry.mjs
       - name: Restore validated public collector state
-        run: node scripts/deployment/restore-ai-snapshots.mjs
+        run: node scripts/deployment/restore-ai-snapshots.mjs --with-comparison
+      - name: Collect three-year daily closes for company comparison
+        continue-on-error: true
+        run: npm run collect:comparison
       - name: Collect public OpenRouter token statistics
         continue-on-error: true
         env:

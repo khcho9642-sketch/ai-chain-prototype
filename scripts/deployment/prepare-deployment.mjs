@@ -16,5 +16,5 @@ const industryResponse=await fetch('https://khcho9642-sketch.github.io/ai-chain-
 if(!industryResponse.ok)throw new Error('배포용 산업통계 HTTP '+industryResponse.status)
 const industry=await industryResponse.json()
 await writeFile(join(projectRoot,'data','industry.json'),JSON.stringify(industry)+'\n')
-await restoreAiSnapshots()
+await restoreAiSnapshots({includeComparison:true})
 await build()
