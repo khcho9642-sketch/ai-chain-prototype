@@ -62,8 +62,26 @@ test('all supported ranges request the correct interval and separate one-day bas
     assert.equal(quote.range, range)
     assert.equal(quote.previousClose, 100)
   }
-  assert.equal(urls.length, 6)
-  assert.ok(urls.every(url => url.searchParams.get('interval') === ranges[url.searchParams.get('range')]))
+  assert.equal(urls.length, 7)
+  assert.ok(urls.every(url => url.searchParams.get('interval') === (url.searchParams.has('period1') ? '1d' : ranges[url.searchParams.get('range')])))
+})
+
+test('three-year charts request exact daily periods with holiday padding, never range=3y', async () => {
+  const time = Date.parse('2026-11-01T12:00:00Z'), urls = []
+  const service = createChartService({ now:()=>time, fetchImpl:async url=>{
+    urls.push(url); return responseFor(fixture({range:url.searchParams.get('range')}))
+  } })
+  const quote = await service('NVDA','3y')
+  const history = urls.find(url=>url.searchParams.has('period1'))
+  assert.ok(history)
+  assert.equal(history.searchParams.has('range'),false)
+  assert.equal(history.searchParams.get('interval'),'1d')
+  assert.equal(Number(history.searchParams.get('period1')),Date.parse('2023-10-18T12:00:00Z')/1000)
+  assert.equal(Number(history.searchParams.get('period2')),time/1000)
+  assert.equal(quote.range,'3y'); assert.equal(quote.interval,'1d')
+  assert.equal(quote.previousClose,100)
+  assert.equal(urls.filter(url=>url.searchParams.get('range')==='1d').length,1)
+  await service('NVDA','3y'); assert.equal(urls.length,2)
 })
 
 test('same-symbol concurrent requests share history and one-day calls; cache expires', async () => {
@@ -182,6 +200,7 @@ test('build publishes only the public site; server handles API errors without ex
       collection:{method:'api',status:'not-connected',lastAttemptAt:null,lastSuccessAt:null},rows:[]},
     'ai-disclosures':{schemaVersion:1,collection:{method:'web-monitor',status:'not-run',lastAttemptAt:null,lastSuccessAt:null},
       sources:[],candidates:[],notes:[]},
+    'comparison-history':{schemaVersion:1,range:'3y',interval:'1d',generatedAt:'2024-01-01T00:00:00Z',source:'Yahoo Finance',quotes:[]},
     'company-disclosures':createEmptyCompanyDisclosures({now:new Date('2026-10-26T00:00:00Z')}),
   }
   for (const [name,data] of Object.entries(aiSnapshots)) await writeFile(join(source,'data',name+'.json'),JSON.stringify(data))
@@ -194,7 +213,7 @@ test('build publishes only the public site; server handles API errors without ex
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
-  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','industry.json','market.json','today-picks.json'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','industry.json','market.json','today-picks.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })

@@ -1,5 +1,5 @@
 // Compare the fixed catalog's peers using collected daily closes. No network calls.
-export const comparisonPeriods = Object.freeze({ '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365 })
+export const comparisonPeriods = Object.freeze({ '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
 
 const DAY = 86400000
 const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0
@@ -19,7 +19,7 @@ function localDateFormatter(timezone) {
   } catch { return null }
 }
 
-function readPeer(instrument, quote, nowMs, maxSnapshotAgeHours) {
+function readPeer(instrument, quote, nowMs, maxSnapshotAgeHours, periodDays) {
   const peer = {
     symbol: instrument.symbol, name: instrument.name || instrument.symbol,
     currency: quote?.currency || null, source: quote?.source || null,
@@ -31,8 +31,12 @@ function readPeer(instrument, quote, nowMs, maxSnapshotAgeHours) {
   }
   const points = new Map()
   if (!quote) { peer.reason = '시세 수집값 없음'; return { peer, points } }
-  const explicitDaily = Array.isArray(quote.bars1year) ? quote.bars1year : quote.histories?.['1y']
-  const bars = Array.isArray(explicitDaily) ? explicitDaily : quote.bars
+  const longPeriod = periodDays > 365
+  if (longPeriod && (quote.range !== '3y' || quote.interval !== '1d' || !Array.isArray(quote.bars))) {
+    peer.reason = '3년 일봉 자료 없음'; return { peer, points }
+  }
+  const explicitDaily = !longPeriod && (Array.isArray(quote.bars1year) ? quote.bars1year : quote.histories?.['1y'])
+  const bars = longPeriod ? quote.bars : Array.isArray(explicitDaily) ? explicitDaily : quote.bars
   if (!Array.isArray(bars) || !bars.length) { peer.reason = '일봉 이력 없음'; return { peer, points } }
   if (!Array.isArray(explicitDaily) && quote.interval && quote.interval !== '1d') {
     peer.reason = '일봉이 아닌 이력'; return { peer, points }
@@ -77,10 +81,11 @@ function readPeer(instrument, quote, nowMs, maxSnapshotAgeHours) {
  */
 export function buildComparison({
   quotes = [], instruments = [], chains = [], days = 90,
-  generatedAt = null, source = null, now = Date.now(), maxSnapshotAgeHours = 6,
+  generatedAt = null, source = null, now = Date.now(), maxSnapshotAgeHours = 6, requireFullPeriod = false,
 } = {}) {
   const periodDays = comparisonPeriods[days] || Number(days)
   if (!Number.isFinite(periodDays) || periodDays < 1) throw new RangeError('days must be a positive number or a supported period')
+  if (typeof requireFullPeriod !== 'boolean') throw new TypeError('requireFullPeriod must be a boolean')
   const nowMs = now instanceof Date ? now.getTime() : typeof now === 'string' ? Date.parse(now) : Number(now)
   if (!Number.isFinite(nowMs)) throw new RangeError('now must be a valid date')
   const quoteValues = quotes instanceof Map ? [...quotes.values()] : Array.isArray(quotes) ? quotes : Object.values(quotes || {})
@@ -96,11 +101,26 @@ export function buildComparison({
   const chainIds = new Set(normalizedChains.map(chain => Number(chain.id)))
   const catalog = [...new Map(instruments.filter(item => item?.symbol && item.chains?.some(id => chainIds.has(Number(id))))
     .map(item => [item.symbol, item])).values()]
-  const observations = new Map(catalog.map(item => [item.symbol, readPeer(item, quoteMap.get(item.symbol), nowMs, maxSnapshotAgeHours)]))
+  const observations = new Map(catalog.map(item => [item.symbol, readPeer(item, quoteMap.get(item.symbol), nowMs, maxSnapshotAgeHours, periodDays)]))
+  const initiallyEligible = [...observations.values()].filter(item => item.peer.included)
+  const periodAnchorDate = initiallyEligible.length ? initiallyEligible.map(item => item.peer.lastDate).sort().at(-1) : null
+  const fullPeriodStartDate = periodAnchorDate ? shiftDate(periodAnchorDate, periodDays) : null
+  const periodCoverageExcludedSymbols = []
+  if (requireFullPeriod && periodAnchorDate && fullPeriodStartDate) {
+    for (const { peer } of initiallyEligible) {
+      const missingStart = calendarGap(peer.firstDate, fullPeriodStartDate) > 7
+      const missingEnd = calendarGap(periodAnchorDate, peer.lastDate) > 7
+      if (!missingStart && !missingEnd) continue
+      peer.included = false
+      peer.reason = '선택 기간 이력 부족'
+      peer.warnings.push(missingStart ? '요청 시작일보다 상장·수집 이력이 늦음' : '최신 공통 구간까지 이력이 없음')
+      periodCoverageExcludedSymbols.push(peer.symbol)
+    }
+  }
   const eligible = [...observations.values()].filter(item => item.peer.included)
-  let allSharedDates = eligible.length ? [...eligible[0].points.keys()].filter(date => eligible.every(item => item.points.has(date))).sort() : []
+  const allSharedDates = eligible.length ? [...eligible[0].points.keys()].filter(date => eligible.every(item => item.points.has(date))).sort() : []
   const endDate = allSharedDates.at(-1) || null
-  const requestedStartDate = endDate ? shiftDate(endDate, periodDays) : null
+  const requestedStartDate = requireFullPeriod ? fullPeriodStartDate : endDate ? shiftDate(endDate, periodDays) : null
   const dates = requestedStartDate ? allSharedDates.filter(date => date >= requestedStartDate) : []
   const startDate = dates[0] || null
   const usableDates = dates.length >= 2
@@ -161,6 +181,7 @@ export function buildComparison({
       source: source || unique(quoteValues.map(quote => quote?.source).filter(Boolean)).join(', ') || null,
       generatedAt, requestedStartDate, observedStartDate: allSharedDates[0] || null,
       latestObservedDate, commonPointCount: dates.length, commonDatesAvailable: usableDates,
+      fullPeriodRequired: requireFullPeriod, periodAnchorDate, periodCoverageExcludedSymbols,
       totalUniquePeers: catalog.length, includedUniquePeers: eligible.length,
       excludedUniquePeers: catalog.length - eligible.length,
       availableGroupCount: groups.filter(group => group.available).length,
@@ -169,6 +190,61 @@ export function buildComparison({
       latestFetchedAt: eligible.map(item => item.peer.fetchedAt).filter(value => Number.isFinite(dateMs(value))).sort((a, b) => dateMs(b) - dateMs(a))[0] || null,
       rejectedBarCount: [...observations.values()].reduce((sum, item) => sum + item.peer.rejectedBarCount, 0),
       partialSessionPossible: true, asynchronousMarkets: true, warnings,
+    },
+  }
+}
+
+// Compare only explicitly selected companies. Memberships never duplicate a curve.
+export function buildCompanyComparison({
+  symbols = [], instruments = [], chains: _chains, ...options
+} = {}) {
+  if (!Array.isArray(symbols) || symbols.some(symbol => typeof symbol !== 'string' || !symbol.trim())) throw new TypeError('symbols must be an array of nonempty strings')
+  if (!Array.isArray(instruments)) throw new TypeError('instruments must be an array')
+  const requestedSymbols = unique(symbols)
+  const requested = new Set(requestedSymbols)
+  const catalogMap = new Map()
+  for (const item of instruments) {
+    if (!item?.symbol || !Array.isArray(item.chains)) continue
+    const memberships = unique(item.chains.map(Number).filter(id => Number.isFinite(id) && id > 0))
+    if (!memberships.length) continue
+    const prior = catalogMap.get(item.symbol)
+    catalogMap.set(item.symbol, { ...item, chains: unique([...(prior?.chains || []), ...memberships]) })
+  }
+  const selected = [...catalogMap.values()].filter(item => requested.has(item.symbol))
+  const unknownSymbols = requestedSymbols.filter(symbol => !catalogMap.has(symbol))
+  const syntheticChains = selected.map((item, index) => ({ id: index + 1, name: item.name || item.symbol }))
+  const comparison = buildComparison({
+    ...options, requireFullPeriod: false,
+    instruments: selected.map((item, index) => ({ ...item, chains: [index + 1] })),
+    chains: syntheticChains,
+  })
+  const companies = selected.map((item, index) => {
+    const group = comparison.groups[index]
+    const peer = group.peers[0]
+    return {
+      ...peer, id: item.symbol, symbol: item.symbol, name: item.name || item.symbol,
+      chains: [...item.chains], available: group.available,
+      reason: peer.reason || group.unavailableReason,
+      warnings: unique([...peer.warnings, ...group.warnings]),
+      series: group.series, returnPercent: group.returnPercent, rank: group.rank,
+    }
+  })
+  const ranking = [...companies].filter(company => company.available).sort((a, b) => a.rank - b.rank)
+  const warnings = comparison.metadata.warnings.map(warning => warning.replace('결측 피어를 0%로 간주하지 않으며, 표시된 유효 피어만 평균에 포함합니다.', '결측 회사는 0%로 처리하지 않고 개별 비교에서 제외합니다.'))
+  if (unknownSymbols.length) warnings.push('현재 기업 목록에 없는 선택 종목 제외: ' + unknownSymbols.join(', '))
+  return {
+    days: comparison.days, dates: comparison.dates, startDate: comparison.startDate, endDate: comparison.endDate,
+    companies, ranking, selectedSymbols: selected.map(item => item.symbol),
+    methodology: {
+      ...comparison.methodology, name: '개별 기업 누적 가격수익률',
+      formula: '각 종목의 해당일 종가 / 공통 기준일 종가 × 100',
+      description: '선택한 각 기업의 현지통화 종가를 시작점 100으로 맞춘 개별 가격수익률입니다. 기업 간 평균을 내지 않으며 배당 재투자와 원화 환산은 반영하지 않습니다.',
+      missingDays: '선택한 유효 기업의 현지 거래일 교집합 · 보간 없음',
+      universeCaveat: '현재 등록된 기업 중 선택한 종목만 비교합니다. 여러 고리에 속해도 동일 기업은 한 번만 표시합니다. 상장·수집 이력이 짧은 종목을 선택하면 실제 공통 비교 기간이 짧아질 수 있습니다.',
+    },
+    metadata: {
+      ...comparison.metadata, warnings, requestedSymbols, unknownSymbols,
+      selectedCompanyCount: companies.length, availableCompanyCount: companies.filter(company => company.available).length,
     },
   }
 }

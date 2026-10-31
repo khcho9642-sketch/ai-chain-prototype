@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { buildComparison, comparisonPeriods } from '../../assets/peer-comparison-core.js'
+import { buildComparison, buildCompanyComparison, comparisonPeriods } from '../../assets/peer-comparison-core.js'
 
 const now = '2026-01-10T22:00:00Z'
 const unix = date => Date.parse(date) / 1000
@@ -69,7 +69,7 @@ test('calendar range filters shared points without silently changing the peer de
   assert.equal(result.groups[0].includedCount, 2)
   assert.equal(result.metadata.requestedStartDate, '2025-12-07')
   approx(result.groups[0].returnPercent, 10)
-  assert.deepEqual(comparisonPeriods, { '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365 })
+  assert.deepEqual(comparisonPeriods, { '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
 })
 
 test('a completely missing group is unavailable while other valid groups still compare', () => {
@@ -176,4 +176,120 @@ test('rejects invalid range or clock rather than quietly returning a misleading 
   assert.throws(() => buildComparison({ days: 0 }), RangeError)
   assert.throws(() => buildComparison({ days: 'unknown' }), RangeError)
   assert.throws(() => buildComparison({ now: 'no date' }), RangeError)
+})
+
+const longValues = [['2023-01-06', 100], ['2023-01-09', 100], ['2024-01-08', 120], ['2025-03-03', 130], ['2026-01-06', 150]]
+const longQuote = (symbol, values = longValues, extra = {}) => q(symbol, values, { range: '3y', ...extra })
+const companyBuild = (quotes, symbols, instruments = quotes.map(item => instrument(item.symbol)), extra = {}) => buildCompanyComparison({ quotes, symbols, instruments, now, ...extra })
+
+test('long comparison periods require dedicated three-year daily history', () => {
+  const result = build([longQuote('A'), q('LEGACY', longValues), longQuote('WEEK', longValues, { range: '5y', interval: '1wk' })], undefined, { days: '3y' })
+  assert.equal(result.days, 1095)
+  assert.equal(result.groups[0].includedCount, 1)
+  for (const symbol of ['LEGACY', 'WEEK']) assert.equal(result.groups[0].peers.find(peer => peer.symbol === symbol).reason, '3년 일봉 자료 없음')
+  assert.equal(build([longQuote('A')], undefined, { days: '2y' }).days, 730)
+})
+
+test('three-year comparison uses dedicated bars even when a short bars1year field exists', () => {
+  const result = build([longQuote('A', longValues, { bars1year: bars([['2026-01-02', 1], ['2026-01-06', 10]]) })], undefined, { days: '3y' })
+  assert.equal(result.startDate, '2023-01-09')
+  approx(result.groups[0].returnPercent, 50)
+})
+
+test('full-period sector comparison excludes short IPO history and fixes the peer denominator', () => {
+  const result = build([longQuote('LONG'), longQuote('IPO', [['2025-03-03', 10], ['2026-01-06', 20]])], undefined, { days: '3y', requireFullPeriod: true })
+  assert.equal(result.startDate, '2023-01-09')
+  assert.equal(result.metadata.requestedStartDate, '2023-01-07')
+  assert.equal(result.groups[0].includedCount, 1)
+  approx(result.groups[0].returnPercent, 50)
+  const ipo = result.groups[0].peers.find(peer => peer.symbol === 'IPO')
+  assert.equal(ipo.reason, '선택 기간 이력 부족')
+  assert.equal(ipo.firstDate, '2025-03-03')
+  assert.deepEqual(result.metadata.periodCoverageExcludedSymbols, ['IPO'])
+  assert.equal(result.metadata.fullPeriodRequired, true)
+})
+
+test('full-period sector comparison excludes history ending far before the anchor', () => {
+  const result = build([longQuote('LONG'), longQuote('ENDED', [['2023-01-06', 10], ['2025-01-06', 20]])], undefined, { days: '3y', requireFullPeriod: true })
+  assert.equal(result.endDate, '2026-01-06')
+  assert.equal(result.groups[0].peers.find(peer => peer.symbol === 'ENDED').reason, '선택 기간 이력 부족')
+  assert.throws(() => buildComparison({ requireFullPeriod: 'yes' }), TypeError)
+})
+
+test('company comparison shows individual normalized prices without averaging companies', () => {
+  const result = companyBuild([q('A', [['2026-01-02', 100], ['2026-01-06', 200]]), q('B', [['2026-01-02', 1000], ['2026-01-06', 900]])], ['A', 'B'])
+  assert.deepEqual(result.companies.map(company => company.id), ['A', 'B'])
+  assert.deepEqual(result.companies[0].series.map(point => point.index), [100, 200])
+  assert.deepEqual(result.companies[1].series.map(point => point.index), [100, 90])
+  approx(result.companies[0].returnPercent, 100)
+  approx(result.companies[1].returnPercent, -10)
+  assert.equal(result.methodology.fxAdjusted, false)
+  assert.equal(result.methodology.dividendsReinvested, false)
+  assert.match(result.methodology.description, /평균을 내지 않/)
+})
+
+test('unselected IPOs cannot shorten selected companies common dates', () => {
+  const quotes = [longQuote('A'), longQuote('B'), longQuote('IPO', [['2025-03-03', 10], ['2026-01-06', 20]])]
+  const result = companyBuild(quotes, ['A', 'B'], undefined, { days: '3y' })
+  assert.equal(result.startDate, '2023-01-09')
+  assert.equal(result.metadata.totalUniquePeers, 2)
+  assert.deepEqual(result.selectedSymbols, ['A', 'B'])
+})
+
+test('company selection deduplicates cross-sector members and does not mutate catalog inputs', () => {
+  const quotes = [q('A', [['2026-01-02', 100], ['2026-01-06', 110]])]
+  const inputs = [instrument('A', [1]), instrument('A', [2, 2])]
+  const before = JSON.stringify({ quotes, inputs })
+  const result = companyBuild(quotes, ['A', 'A'], inputs)
+  assert.equal(result.companies.length, 1)
+  assert.deepEqual(result.companies[0].chains, [1, 2])
+  assert.deepEqual(result.metadata.requestedSymbols, ['A'])
+  assert.equal(JSON.stringify({ quotes, inputs }), before)
+})
+
+test('company mode keeps empty selection empty and supports one company with explicit unknown symbols', () => {
+  const quotes = [q('A', [['2026-01-02', 100], ['2026-01-06', 110]])]
+  assert.deepEqual(companyBuild(quotes, []).companies, [])
+  assert.deepEqual(companyBuild(quotes, []).dates, [])
+  const result = companyBuild(quotes, ['A', 'MISSING'])
+  assert.equal(result.companies.length, 1)
+  assert.equal(result.companies[0].available, true)
+  assert.deepEqual(result.metadata.unknownSymbols, ['MISSING'])
+  assert.ok(result.metadata.warnings.some(warning => warning.includes('MISSING')))
+  assert.throws(() => companyBuild(quotes, 'A'), TypeError)
+})
+
+test('selected IPO history uses a shorter actual common period with an explicit warning', () => {
+  const result = companyBuild([longQuote('LONG'), longQuote('IPO', [['2025-03-03', 10], ['2026-01-06', 20]])], ['LONG', 'IPO'], undefined, { days: '3y' })
+  assert.equal(result.startDate, '2025-03-03')
+  assert.ok(result.metadata.warnings.some(warning => warning.includes('실제 공통 비교 기간이 짧아')))
+  approx(result.companies[0].returnPercent, (150 / 130 - 1) * 100)
+  approx(result.companies[1].returnPercent, 100)
+  assert.equal(result.metadata.fullPeriodRequired, false)
+})
+
+test('company mode retains exchange dates, local currencies, missing values and stale warnings', () => {
+  const quotes = [
+    q('KR', [], { timezone: 'Asia/Seoul', currency: 'KRW', fetchedAt: '2026-01-08T00:00:00Z', status: 'stale', bars: [{ time: unix('2026-01-01T20:00:00Z'), close: 100 }, { time: unix('2026-01-02T20:00:00Z'), close: 110 }] }),
+    q('US', [['2026-01-02', 100], ['2026-01-03', 90]]),
+    q('BAD', [['2026-01-02', 0], ['2026-01-03', null]]),
+  ]
+  const result = companyBuild(quotes, ['KR', 'US', 'BAD', 'MISSING'], [...quotes.map(quote => instrument(quote.symbol)), instrument('MISSING')])
+  assert.deepEqual(result.dates, ['2026-01-02', '2026-01-03'])
+  assert.deepEqual(result.companies.slice(0, 2).map(company => company.currency), ['KRW', 'USD'])
+  assert.equal(result.companies[0].stale, true)
+  assert.equal(result.companies[2].available, false)
+  assert.equal(result.companies[2].reason, '유효 종가가 2거래일 미만')
+  assert.equal(result.companies[3].reason, '시세 수집값 없음')
+  assert.equal(result.metadata.rejectedBarCount, 2)
+})
+
+test('company mode never invents curves when fewer than two dates are shared', () => {
+  const result = companyBuild([q('A', [['2026-01-02', 100], ['2026-01-05', 110]]), q('B', [['2026-01-05', 100], ['2026-01-06', 120]])], ['A', 'B'])
+  for (const company of result.companies) {
+    assert.equal(company.available, false)
+    assert.equal(company.returnPercent, null)
+    assert.deepEqual(company.series, [])
+  }
+  assert.deepEqual(result.ranking, [])
 })

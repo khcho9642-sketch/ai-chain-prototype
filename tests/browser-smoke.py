@@ -192,6 +192,109 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.wait_for_function("!document.querySelector('[data-today-refresh]').disabled")
             assert not any(method != 'GET' or '/api/community/worker/' in url for method, url in home_requests)
             page.screenshot(path=str(output / 'today-desktop.png'), full_page=True)
+            page.wait_for_function("window.aiChainSnapshot?.quotes?.length > 0")
+            # Comparison is a read-only consumer of collected histories, with no per-company lookup.
+            comparison = page.locator('#v-compare')
+            comparison_history_requests = []
+            page.on('request', lambda request: comparison_history_requests.append(request.url)
+                    if '/api/comparison-history' in request.url or '/data/comparison-history.json' in request.url else None)
+            comparison_fixture = {'status': 200, 'value': page.evaluate("""async () => {
+              const {instruments} = await import('./assets/instruments.js');
+              const end = Math.floor(Date.now() / 86400000) * 86400 - 43200;
+              const stamp = new Date().toISOString();
+              const quotes = instruments.filter(item => item.chains.some(id => id > 0)).map((item, i) => ({
+                symbol:item.symbol, name:item.name, currency:'USD', timezone:'UTC',
+                range:'3y', interval:'1d', source:'Yahoo Finance',
+                sourceUrl:'https://finance.yahoo.com/quote/' + encodeURIComponent(item.symbol) + '/',
+                fetchedAt:stamp, status:'ok', error:null,
+                bars:Array.from({length:item.symbol === 'SNDK' ? 420 : 1100}, (_, j) => {
+                  const count = item.symbol === 'SNDK' ? 420 : 1100;
+                  return {time:end - (count - 1 - j) * 86400, close:100 + i + j * (i % 3 + 1) / 10};
+                })
+              }));
+              return {schemaVersion:1, range:'3y', interval:'1d', generatedAt:stamp, source:'Yahoo Finance', quotes};
+            }""")}
+            def serve_comparison_fixture(route):
+                route.fulfill(status=comparison_fixture['status'], content_type='application/json',
+                              body=json.dumps(comparison_fixture['value'], ensure_ascii=False))
+            page.route('**/api/comparison-history?*', serve_comparison_fixture)
+            page.route('**/data/comparison-history.json?*', serve_comparison_fixture)
+            page.evaluate("location.hash = 'compare'")
+            comparison.get_by_role('heading', name='8개 고리 주가 흐름 비교', exact=True).wait_for()
+            assert comparison.locator('.peer-card').count() == 8
+            assert comparison.locator('[data-peer-mode=groups]').get_attribute('aria-pressed') == 'true'
+            assert not comparison_history_requests
+            comparison.locator('[data-peer-mode=companies]').click()
+            assert comparison.locator('[data-peer-empty]').is_visible()
+            assert comparison.locator('#peer-chart').count() == 0
+            samsung = comparison.locator('[data-peer-symbol="005930.KS"]')
+            assert samsung.count() == 2
+            samsung.first.check()
+            assert all(samsung.nth(i).is_checked() for i in range(samsung.count()))
+            comparison.locator('[data-peer-symbol="NVDA"]').first.check()
+            assert comparison.locator('[data-peer-remove-symbol]').count() == 2
+            assert comparison.locator('[data-peer-series="005930.KS"]').count() == 1
+            assert comparison.locator('[data-peer-series="NVDA"]').count() == 1
+            comparison.locator('[data-peer-period="1095"]').click()
+            comparison.locator('#peer-chart [data-peer-series="NVDA"]').wait_for()
+            page.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
+            assert len(comparison_history_requests) == 1
+            assert comparison.locator('[data-peer-period="1095"]').get_attribute('aria-pressed') == 'true'
+            assert comparison.locator('[data-peer-actual-period]').inner_text().count('공통 거래일') == 1
+            assert comparison.locator('[data-peer-remove-symbol]').count() == 2
+            comparison.locator('[data-peer-period="730"]').click()
+            comparison.locator('[data-peer-period="1095"]').click()
+            assert len(comparison_history_requests) == 1
+            # Sector calculations retain full 3-year coverage; a young listing can shorten only company mode.
+            comparison.locator('[data-peer-mode=groups]').click()
+            assert comparison.locator('.peer-card').count() == 8
+            assert '선택 기간 이력 부족' in comparison.locator('[data-peer-row="SNDK"]').inner_text()
+            assert '관측 이력:' in comparison.locator('[data-peer-observed-period="SNDK"]').inner_text()
+            comparison.locator('[data-peer-symbol="SNDK"]').first.check()
+            assert comparison.locator('[data-peer-mode=companies]').get_attribute('aria-pressed') == 'true'
+            comparison.locator('.peer-period-warning').wait_for()
+            # Selected rows use the company model's shortened dates, exactly as its legend does.
+            nvda_legend_return = comparison.locator('[data-peer-toggle="NVDA"] b').inner_text()
+            assert comparison.locator('[data-peer-company-return="NVDA"]').first.inner_text() == nvda_legend_return
+            slider = comparison.locator('#peer-date-slider')
+            slider.evaluate("el => { el.value = '0'; el.dispatchEvent(new Event('input', {bubbles:true})); }")
+            assert '+0.00%' not in comparison.locator('#peer-date-values').inner_text()
+            assert comparison.locator('#peer-date-values').inner_text().count('0.00%') == 3
+            # A refresh failure keeps the original history and explicitly identifies it as an earlier success.
+            comparison_fixture['status'] = 503
+            comparison.locator('[data-peer-refresh]').click()
+            comparison.get_by_role('alert').filter(has_text='마지막 성공 수집값을 유지합니다.').wait_for()
+            assert comparison.locator('[data-peer-series="NVDA"]').count() == 1
+            assert comparison.locator('[data-peer-remove-symbol]').count() == 3
+            comparison_fixture['status'] = 200
+            comparison.locator('[data-peer-refresh]').click()
+            page.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
+            assert comparison.locator('[data-peer-remove-symbol]').count() == 3
+            comparison.locator('[data-peer-remove-symbol="005930.KS"]').click()
+            assert all(not samsung.nth(i).is_checked() for i in range(samsung.count()))
+            comparison.locator('[data-peer-clear-companies]').click()
+            assert comparison.locator('[data-peer-empty]').is_visible()
+            assert comparison.locator('#peer-chart').count() == 0
+            # More than twelve selected companies all remain drawn; only crowded end labels are omitted.
+            comparison.evaluate("""el => {
+              const seen = new Set();
+              for (const input of [...el.querySelectorAll('[data-peer-symbol]')]) {
+                const symbol = input.dataset.peerSymbol;
+                if (seen.has(symbol)) continue;
+                seen.add(symbol);
+                const current = document.querySelector('[data-peer-symbol="' + CSS.escape(symbol) + '"]');
+                current.checked = true; current.dispatchEvent(new Event('change', {bubbles:true}));
+                if (seen.size === 14) break;
+              }
+            }""")
+            assert comparison.locator('[data-peer-remove-symbol]').count() == 14
+            assert comparison.locator('[data-peer-series]').count() == 14
+            assert comparison.locator('.peer-end-label').count() == 0
+            page.screenshot(path=str(output / 'comparison-companies-desktop.png'), full_page=True)
+            comparison.locator('[data-peer-clear-companies]').click()
+            comparison.locator('[data-peer-mode=groups]').click()
+            page.evaluate("location.hash = 'today'")
+            today.get_by_role('heading', name='AI Value Chain Today', exact=True).wait_for()
             # Exercise populated cards through a browser-only response, never real AI or public file writes.
             today_fixture = {'value': today_browser_fixture(), 'status': 200}
             def serve_today_fixture(route):
@@ -601,6 +704,30 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile.locator('#v-today [data-today-agent]').count() == 3
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-mobile.png'), full_page=True)
+            # Company picking and a long-period chart fit a narrow screen without clipping the page.
+            mobile_comparison_fixture = {'status': 503, 'value': comparison_fixture['value']}
+            def serve_mobile_comparison(route):
+                route.fulfill(status=mobile_comparison_fixture['status'], content_type='application/json',
+                              body=json.dumps(mobile_comparison_fixture['value'], ensure_ascii=False))
+            mobile.route('**/api/comparison-history?*', serve_mobile_comparison)
+            mobile.route('**/data/comparison-history.json?*', serve_mobile_comparison)
+            mobile.evaluate("location.hash = 'compare'")
+            mobile_comparison = mobile.locator('#v-compare')
+            mobile_comparison.locator('[data-peer-period="1095"]').click()
+            mobile_comparison.get_by_role('alert').filter(has_text='2·3년 비교를 표시할 수 없습니다.').wait_for()
+            assert mobile_comparison.locator('#peer-chart').count() == 0
+            assert mobile_comparison.locator('[data-peer-period="1095"]').get_attribute('aria-pressed') == 'true'
+            mobile_comparison_fixture['status'] = 200
+            mobile_comparison.locator('[data-peer-refresh]').click()
+            mobile.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
+            mobile_comparison.locator('[data-peer-symbol="ASML"]').first.check()
+            mobile_comparison.locator('[data-peer-symbol="NVDA"]').first.check()
+            assert mobile_comparison.locator('[data-peer-remove-symbol]').count() == 2
+            assert mobile_comparison.locator('[data-peer-series]').count() == 2
+            assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+            mobile.screenshot(path=str(output / 'comparison-companies-mobile.png'), full_page=True)
+            mobile.evaluate("location.hash = 'today'")
+            mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
             mobile_today_fixture = today_browser_fixture()
             mobile.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(mobile_today_fixture, ensure_ascii=False)))
             mobile.locator('#v-today [data-today-refresh]').click()
@@ -708,7 +835,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

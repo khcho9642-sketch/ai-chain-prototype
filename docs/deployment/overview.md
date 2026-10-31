@@ -18,11 +18,12 @@
 
 ## 공개 파일과 예약 갱신
 
-`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 기존 6개와 Today 1개를 합한 7개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
+`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 기존 7개와 비교용 3년 일봉 1개를 합한 8개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
 
 | 공개 JSON | 내용 |
 | --- | --- |
 | `market.json` | 93개 종목·시장지표 시세 |
+| `comparison-history.json` | AI 기업 75개 비교용 3년 일별 종가·실제 수집시각·실패 상태 |
 | `industry.json` | 기존 공식 산업통계 12개 |
 | `ai-statistics.json` | 검토한 AI 통계 81개 정의·88개 표시 행 |
 | `ai-tokens.json` | OpenRouter 검토 스냅샷 또는 공식 API 수집 결과와 상태 |
@@ -34,7 +35,7 @@
 
 읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`, `/api/company-disclosures`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter·DART를 직접 호출하거나 매출·사용자 수를 새로 수집하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
 
-배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 7종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 8종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
 
 Today는 `data/today-picks.json`을 읽는 정적 발행 화면이다. 조회·다시 읽기는 모델을 호출하지 않는다.
 이 파일은 기존 시세 수집·복원 작업에서 덮어쓰지 않으며, 승인된 공식 CLI 원고를 사람이 검토한 뒤 수동 발행한다.
@@ -43,3 +44,6 @@ Today는 `data/today-picks.json`을 읽는 정적 발행 화면이다. 조회·�
 ## 커뮤니티 서버 배포 준비
 
 기존 댓글·회원·AI 워커 구현은 별도 Node24+영속 SQLite 서버를 사용한다. `npm run community:package`는 API 실행에 필요한 공개 소스만 `.local/releases/`에 패키징하고 파일별 SHA-256을 기록한다. 서버·계정·방화벽을 설치하거나 변경하지 않는다. 실제 서버의 읽기 전용 연결 검사는 `npm run community:check -- https://API도메인 https://웹도메인`이다. [Oracle 계정부터 시작하는 안내](../community/oracle-community-quickstart.md)를 참고한다. 실제 운영 연결과 모델 활성화는 아직 준비 단계다.
+
+
+비교용 이력은 기존 예약 작업에서 `restore-ai-snapshots.mjs --with-comparison`으로 검증된 이전 파일을 복원한 뒤 `npm run collect:comparison`으로 갱신한다. 로컬 파일보다 오래된 전체·종목 수집시각은 복원하지 않는다. 수집 전체 실패·응답 크기 제한 때는 이전 파일을 보존한다. Vercel 준비 단계도 같은 선택 복원을 사용한다. `/api/comparison-history`는 Pages의 검증된 파일을 프록시하며 원천 주가를 수집하지 않는다. 이 파일의 원문과 API 응답은 4,000,000바이트 이내로 제한한다. Vercel의 함수 응답 한도는 [공식 문서](https://vercel.com/docs/functions/limitations)를 따른다.

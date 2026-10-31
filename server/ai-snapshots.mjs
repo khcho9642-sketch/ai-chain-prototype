@@ -1,9 +1,10 @@
+import { validateComparisonHistorySnapshot } from '../assets/comparison-history-core.js'
 import { validateAiStatistics } from '../assets/ai-statistics-core.js'
 import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
 import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
-const validators = {'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot, 'company-disclosures':validateCompanyDisclosures}
+const validators = {'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot, 'company-disclosures':validateCompanyDisclosures, 'comparison-history':validateComparisonHistorySnapshot}
 export function aiSnapshotHandler(name, {fetcher = fetch} = {}) {
   if (!Object.hasOwn(validators, name)) throw new Error('지원하지 않는 공개 자료입니다.')
   return async (req, res) => {

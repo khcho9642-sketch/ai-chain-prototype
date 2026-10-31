@@ -9,7 +9,7 @@ import { createCommunityHandler } from '../server/community/http.mjs'
 import { createEvidenceSource } from '../server/community/evidence.mjs'
 
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json',
-  '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json'}
+  '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json', '/api/comparison-history':'comparison-history.json'}
 
 export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null } = {}) {
   return createServer(async (req, res) => {
