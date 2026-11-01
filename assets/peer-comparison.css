@@ -47,3 +47,6 @@
 .peer-company-picker .peer-card h3{font-size:13px}
 .peer-company-picker .peer-card-note{margin-bottom:8px}
 @media(max-width:760px){.peer-company-picker .peer-card-grid{grid-template-columns:1fr}.peer-picker-list{max-height:260px}.peer-company-picker{padding:10px}.peer-company-picker>summary span{display:block;margin:5px 0 0 16px}.peer-picker-nav{gap:5px}.peer-picker-nav .f{padding:6px 8px}.peer-company-picker .peer-card{padding:9px}}
+
+.peer-company-picker > .peer-selection{margin-top:12px}
+.peer-company-picker > summary{min-height:24px;line-height:24px}
