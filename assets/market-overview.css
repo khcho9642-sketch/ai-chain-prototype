@@ -444,3 +444,55 @@
   #market-overview .mo-index:last-child > small:nth-of-type(3) { grid-column: 1 / -1; }
   #market-overview .mo-heading .mo-eyebrow { font-size: 13px; letter-spacing: .035em; }
 }
+
+/* Keep narrow-screen companies readable without changing the desktop map. */
+@media (max-width: 640px) {
+  #market-overview .mo-tile-groups { grid-template-columns: minmax(0, 1fr); }
+  #market-overview .mo-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #market-overview .mo-tile {
+    box-sizing: border-box;
+    height: 124px;
+    min-height: 124px;
+    padding: 8px;
+    gap: 4px;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: hidden;
+  }
+  #market-overview .mo-tile > strong {
+    display: block;
+    flex: 0 0 18px;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #market-overview .mo-tile > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    flex: 0 0 36px;
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    line-height: 18px;
+    overflow: hidden;
+  }
+  #market-overview .mo-tile > b {
+    flex: 0 0 18px;
+    line-height: 18px;
+    white-space: nowrap;
+  }
+  #market-overview .mo-tile > small {
+    flex: 0 0 18px;
+    min-width: 0;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

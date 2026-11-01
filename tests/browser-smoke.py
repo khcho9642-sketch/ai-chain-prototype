@@ -641,6 +641,33 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert 'CLI null' not in actual_claude_sources.inner_text()
             actual_claude_sources.locator('summary').click()
             page.screenshot(path=str(output / 'today-actual-three-reports-desktop.png'), full_page=True)
+            # Home reuses the same genuine reviewed comments and stored official disclosures.
+            page.goto(origin + '/#today')
+            home.locator('[data-mo-refresh]').click()
+            page.wait_for_function("document.querySelectorAll('#market-overview [data-mo-agent]').length === 3")
+            for agent, report in actual_reports.items():
+                preview = home.locator('[data-mo-agent="' + agent + '"]')
+                expected_comment = displayed_report_comment(report)['text']
+                assert preview.locator('strong').inner_text().startswith({'gpt': 'GPT', 'claude': 'Claude', 'gemini': 'Gemini'}[agent] + ' · ')
+                assert preview.locator('small').inner_text().startswith('AI 작성 · 발행 ')
+                assert preview.locator('p').text_content() == page.evaluate('(text) => text.slice(0, 180)', expected_comment)
+                assert preview.get_by_role('link', name='원문·근거 보기 →', exact=True).get_attribute('href') == '#opinions'
+            actual_home_disclosures = json.loads((root / 'data/company-disclosures.json').read_text(encoding='utf-8'))
+            catalog_symbols = {row['symbol'] for row in catalog}
+            expected_home_disclosures = sorted(
+                [(company, item) for company in actual_home_disclosures['companies'] if company['symbol'] in catalog_symbols for item in company['items']],
+                key=lambda record: record[1].get('publishedAt') or '', reverse=True)[:5]
+            assert expected_home_disclosures, 'Stored official disclosures must exercise the populated home feed.'
+            home.locator('.mo-feed').first.wait_for()
+            assert home.locator('.mo-feed').count() == len(expected_home_disclosures)
+            for index, (company, item) in enumerate(expected_home_disclosures):
+                feed = home.locator('.mo-feed').nth(index)
+                assert feed.locator('small').inner_text().startswith(company['companyName'] + ' · ')
+                source = feed.get_by_role('link', name=item['title'], exact=True)
+                assert source.get_attribute('href') == (item.get('url') or item['sourceUrl'])
+                assert source.get_attribute('target') == '_blank'
+                assert {'noopener', 'noreferrer'} <= set(source.get_attribute('rel').split())
+            page.goto(origin + '/#opinions')
             page.goto(origin + '/#talk/VRT')
             page.reload()
             actual_claude_comment = page.locator('#v-talk [data-published-report-id="' + actual_claude['id'] + '"]')
