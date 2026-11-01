@@ -23,7 +23,8 @@ ai-chain-prototype/
 ├─ tests/                        단위·HTTP·배포·브라우저 테스트
 │  ├─ market/                   시세·차트·고리별 비교
 │  ├─ data/                     산업·AI 통계·토큰·공시
-│  ├─ community/                회원·댓글·AI·패키징·운영 연결
+│  ├─ community/                회원·댓글·AI 의견과 발행
+│  ├─ deployment/               스냅샷 복원·API 패키징·운영 연결
 │  ├─ browser-smoke.py          브라우저 통합 검사
 │  └─ helpers/                  테스트 전용 서버 등 보조 코드
 ├─ data/                         검증된 공개 스냅샷 8종 (Today·3년 비교 이력 포함)
@@ -41,7 +42,9 @@ ai-chain-prototype/
 ├─ .github/workflows/            수집·테스트·Pages 배포 작업
 ├─ .local/                       Git에서 제외하는 로컬 작업물
 │  ├─ README.md                 로컬 작업물 찾아보기
-│  ├─ tmp/                      재생성 가능한 임시 작업 파일
+│  ├─ tmp/                      실행별 작업물·AI 원문·인증 프로필 (선별 정리)
+│  ├─ tools/                    재사용 도구·브라우저 검증 Python 패키지
+│  ├─ browser-smoke/            최근 브라우저 통합 검사 결과
 │  ├─ screenshots/              개발·브라우저 검증 캡처
 │  ├─ onboarding/oracle/        Oracle 가입 진행용 비공개 자료
 │  ├─ archive/                  이전 작업 파일의 비공개 보관본
@@ -53,7 +56,7 @@ ai-chain-prototype/
 
 브라우저의 `assets/` 경로와 `api/` 주소, `server/`의 공용 모듈 위치는 유지한다. 실행 스크립트와 테스트·문서만 기능별로 묶었다. `npm run` 명령 이름은 그대로 사용하며, 스크립트를 직접 실행할 때는 위 하위 폴더 경로를 따른다. `scripts/data/collect-tsmc.mjs`·`official-trade.mjs` 같은 수집 보조 모듈도 실제 수집기에서 사용하는 파일이다. `server/community/http.mjs`는 로컬 개발 모드에서 사용하므로 공개용 처리 모듈과 이름이 비슷하다는 이유로 삭제하지 않는다.
 
-새 수집기와 통계 생성기는 `scripts/data/`, 커뮤니티 실행 도구는 `scripts/community/`, 배포·패키징 도구는 `scripts/deployment/`에 추가한다. 테스트도 같은 기능의 하위 폴더에 넣고 `package.json`의 테스트 명령에 등록한다. 기능 설명은 `docs/data/` 또는 `docs/community/`에 두고 [문서 목록](README.md)에 연결한다.
+새 수집기와 통계 생성기는 `scripts/data/`, 커뮤니티 실행 도구는 `scripts/community/`, 배포·패키징 도구는 `scripts/deployment/`에 추가한다. 테스트도 같은 기능의 하위 폴더에 `*.test.mjs` 이름으로 추가한다. `npm test`가 `tests/**/*.test.mjs`를 자동 탐색하므로 파일별 명령 등록은 필요 없다. 배포·패키징·스냅샷 복원 검사는 `tests/deployment/`에 모은다. 기능 설명은 `docs/data/` 또는 `docs/community/`에 두고 [문서 목록](README.md)에 연결한다.
 
 새 테스트 fixture가 실제로 필요하면 `tests/fixtures/`에 추가한다. 현재 DART RSS 형식 샘플은 테스트가 읽는 입력이 아니므로 `research/dart/`에서 회사 연결 근거와 함께 보존한다. 과거 구현 설명은 `docs/community/history/`에 두고 현재 운영 문서와 구분한다.
 
@@ -75,7 +78,7 @@ ai-chain-prototype/
 
 ## 공개 데이터와 비공개 작업물
 
-`data/`의 공개 파일은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`, `today-picks.json`이다. Today 파일은 실제 제공사 실행·수동 검토를 마친 종목별 추천·댓글만 담으며 초기값은 빈 미발행 상태다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
+`data/`의 공개 파일은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`, `today-picks.json`, `comparison-history.json`이다. Today 파일은 실제 제공사 실행·수동 검토를 마친 종목별 추천·댓글만 담으며 초기값은 빈 미발행 상태다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
 
 `research/ai-statistics-2026-10-26.json`은 검토 통계의 재생성·테스트 입력이다. `research/dart/`는 공식 회사 연결 검증 근거와 당시 RSS 형식 샘플이다. 샘플의 날짜·공시 수를 현재 수집 상태로 읽지 않는다. 공개 스냅샷과 연구 원본을 구분하고 확인되지 않은 자료를 자동 승인하지 않는다. 예전 산업통계 작업의 원본 seed·다운로드는 `.local/archive/education-2026-10-27/industry-stats-work/export/`에 보관하며, 현재 실행은 통합된 `data/industry.json`과 공식 수집 모듈을 사용한다.
 
@@ -95,7 +98,7 @@ npm test
 npm run build
 ```
 
-기본 개발 주소는 `http://127.0.0.1:5175`다. `npm run preview`와 `npm start`도 같은 서버를 실행한다. 모든 JavaScript 테스트는 `tests/`에 모았고 브라우저 smoke는 `tests/browser-smoke.py`가 담당한다. 외부 서비스를 호출하는 수집은 필요한 자료를 갱신할 때 실행하며, UI 재조회와 원천 수집을 혼동하지 않는다.
+기본 개발 주소는 `http://127.0.0.1:5175`다. `npm run preview`와 `npm start`도 같은 서버를 실행한다. `npm run test:community`는 커뮤니티 테스트를, `npm run test:deployment`는 배포 테스트를 실행한다. 기존 `npm run test:community:deploy`도 배포 테스트 명령의 호환 별칭으로 유지한다. 모든 JavaScript 테스트는 `tests/`에 모았고 브라우저 smoke는 `tests/browser-smoke.py`가 담당한다. 외부 서비스를 호출하는 수집은 필요한 자료를 갱신할 때 실행하며, UI 재조회와 원천 수집을 혼동하지 않는다.
 
 | 명령 | 역할 |
 | --- | --- |

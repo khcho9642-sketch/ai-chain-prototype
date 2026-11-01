@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: 24
       - run: npm run test:community
-      - run: npm run test:community:deploy
+      - run: npm run test:deployment
       - name: Parse development task script without installing any tasks
         shell: pwsh
         run: |

@@ -9,3 +9,7 @@ _site/
 .local/
 *.sqlite
 *.sqlite-*
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
