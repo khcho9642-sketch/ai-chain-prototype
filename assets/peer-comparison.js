@@ -9,13 +9,14 @@ const PERIODS=[[30,'1개월'],[90,'3개월'],[180,'6개월'],[365,'1년'],[730,'
 const chains=CHAIN_NAMES.map((name,index)=>({id:index+1,name}))
 const catalog=[...new Map(instruments.filter(item=>item.chains?.some(id=>Number(id)>0)).map(item=>[item.symbol,item])).values()]
 const catalogMap=new Map(catalog.map(item=>[item.symbol,item]))
-const symbolOrder=new Map(catalog.map((item,index)=>[item.symbol,index]))
+const DEFAULT_COMPANIES=['005930.KS','000660.KS']
+const symbolOrder=new Map([...new Set([...DEFAULT_COMPANIES,...catalog.map(item=>item.symbol)])].map((symbol,index)=>[symbol,index]))
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const number=value=>Number.isFinite(value)?value.toLocaleString('ko-KR',{maximumFractionDigits:2}):'—'
 const percent=value=>Number.isFinite(value)?(value>0?'+':'')+value.toFixed(2)+'%':'—'
 const date=value=>value?String(value).replaceAll('-','. '):'—'
 let snapshot=window.aiChainSnapshot||null,loadError='',days=90,mode='companies'
-let visible=new Set(chains.map(c=>c.id)),selected=new Set(['005930.KS','000660.KS'].filter(symbol=>catalogMap.has(symbol))),hiddenCompanies=new Set()
+let visible=new Set(chains.map(c=>c.id)),selected=new Set(DEFAULT_COMPANIES.filter(symbol=>catalogMap.has(symbol))),hiddenCompanies=new Set()
 let sectorModel=null,companyModel=null,model=null,cursor=-1
 let sectorFeed=null,sectorDays=null
 let longSnapshot=null,longError='',longLoading=false,longRequest=null,longAttempted=false
@@ -124,7 +125,7 @@ function cards(){
 }
 function companyPicker(open){
   if(!isCompany())return ''
-  return '<details class="peer-company-picker" data-peer-company-picker'+(open?' open':'')+'><summary>회사 선택 목록 <span>'+selected.size+'개 선택 · 펼쳐서 회사 추가·제외</span></summary>'+selections()+'<div class="peer-picker-nav" role="group" aria-label="회사 목록 고리 바로가기">'+chains.map(chain=>'<button class="f" data-peer-jump="'+chain.id+'" aria-label="'+esc(chain.name)+' 회사 목록으로 이동">'+esc(chain.name)+'</button>').join('')+'</div><div class="peer-picker-list" data-peer-picker-list tabindex="0" role="region" aria-label="고리별 회사 선택 목록">'+cards()+'</div></details>'
+  return '<details class="peer-company-picker" data-peer-company-picker'+(open?' open':'')+'><summary>회사 선택 목록 <span>'+selected.size+'개 선택 · 추가·제외</span></summary>'+selections()+'<div class="peer-picker-nav" role="group" aria-label="회사 목록 고리 바로가기">'+chains.map(chain=>'<button class="f" data-peer-jump="'+chain.id+'" aria-label="'+esc(chain.name)+' 회사 목록으로 이동">'+esc(chain.name)+'</button>').join('')+'</div><div class="peer-picker-list" data-peer-picker-list tabindex="0" role="region" aria-label="고리별 회사 선택 목록">'+cards()+'</div></details>'
 }
 function methodology(){
   return '<section class="panel sec peer-method"><h2>'+(isCompany()?'회사별 흐름은 이렇게 비교합니다':'피어 평균은 이렇게 계산합니다')+'</h2><p><b>'+(isCompany()?'회사 지수 = 해당일 종가 ÷ 공통 기준일 종가 × 100':'고리 지수 = 평균(각 피어의 해당일 종가 ÷ 공통 기준일 종가 × 100)')+'</b></p><p>'+(isCompany()?'회사의 가격 수준을 100으로 맞춰 각 회사를 별도의 선으로 그립니다. 선택 회사를 평균으로 묶지 않으며, 여러 고리에 있는 종목도 한 번만 비교합니다.':'고리 평균 등락률은 이 지수에서 100을 뺀 값입니다. 선택한 기간의 시작에 각 피어를 동일 비중으로 놓는 계산이며, 매일 비중을 재조정하는 지수가 아닙니다.')+'</p><ul><li>현지 통화 기준의 주가 등락률입니다. 환율 변동·배당·거래비용·세금은 반영하지 않습니다. 리츠의 배당 포함 성과와는 다릅니다.</li><li>한국·미국 거래소의 현지 거래 날짜를 맞추고, 포함 대상 모두에게 종가가 있는 날짜만 사용합니다. 휴장일은 보간하지 않습니다. 거래소별 장 마감 시각은 다릅니다. 최신 일봉에는 장중 값이 포함될 수 있습니다.</li><li>'+(isCompany()?'상장 이력이 짧은 회사를 고르면 실제 공통 비교 기간이 짧아질 수 있습니다. 위의 실제 날짜와 기간 경고를 확인하세요.':'삼성전자는 파운드리와 메모리에 함께 포함됩니다. 각 고리는 독립 비교이며, 8개 고리를 합쳐 하나의 분산 포트폴리오로 계산하지 않습니다. 2·3년 평균은 요청 시작일까지 이력이 있는 피어만 포함합니다.')+'</li><li>현재 등록된 대표 종목으로 비교한 값입니다. 업종 전체 수익률이나 공인 지수가 아닙니다. 기간 안에서 피어와 분모는 고정하며, 계산에서 빠진 대상은 위에 이유와 함께 표시합니다.</li><li>출처: <a href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer">Yahoo Finance</a> 제공 종가. 시세는 지연될 수 있고 현재 수집 파일의 최근 거래일까지 표시합니다. 수집 파일 시각과 각 회사의 실제 수집 시각은 다를 수 있습니다.</li></ul></section>'
@@ -140,7 +141,7 @@ function render(){
   const previousPicker=el.querySelector('[data-peer-company-picker]')
   const pickerOpen=previousPicker?.open??false
   const pickerScroll=el.querySelector('[data-peer-picker-list]')?.scrollTop||0
-  el.innerHTML='<section class="panel sec peer-comparison" data-peer-active-mode="'+mode+'"><div class="peer-heading"><div><p class="peer-kicker">VALUE CHAIN · SAME START</p><h1>'+title+'</h1></div><button class="f" data-peer-refresh'+(longLoading?' disabled':'')+'>최신 수집값 읽기</button></div><p class="peer-subtitle">'+(isCompany()?'같은 시작점 100으로 비교하는 회사별 주가 흐름 · 회사 선택 목록에서 추가·제외':'고리별 피어 목록 → 각 종목의 같은 기간 주가 등락률 → 동일 비중 평균')+'</p><p class="note"><a href="#data">기업 전체 목록·사업 설명 →</a> · <a href="#industry">수출·물량 산업통계 →</a></p>'+
+  el.innerHTML='<section class="panel sec peer-comparison" data-peer-active-mode="'+mode+'"><div class="peer-heading"><div><p class="peer-kicker">VALUE CHAIN · SAME START</p><h1>'+title+'</h1></div><button class="f" data-peer-refresh'+(longLoading?' disabled':'')+'>최신 수집값 읽기</button></div>'+
     '<div class="peer-modes" role="group" aria-label="비교 방식">'+[['groups','고리 평균'],['companies','회사별 비교']].map(([id,label])=>'<button class="f'+(mode===id?' on':'')+'" data-peer-mode="'+id+'" aria-pressed="'+(mode===id)+'">'+label+'</button>').join('')+'</div>'+
     '<div class="peer-toolbar"><div class="peer-periods" role="group" aria-label="비교 기간">'+PERIODS.map(([n,label])=>'<button class="f'+(days===n?' on':'')+'" data-peer-period="'+n+'" aria-pressed="'+(days===n)+'">'+label+'</button>').join('')+'</div><div><button class="f" data-peer-all>'+ (isCompany()?'선택 회사 모두 표시':'8개 모두 표시')+'</button></div></div>'+
     companyPicker(pickerOpen)+'<p class="peer-period-note'+(shortened?' peer-period-short':'')+'" data-peer-actual-period>요청 기간: '+PERIODS.find(([n])=>n===days)[1]+' · 실제 비교: <b>'+date(model.startDate)+' ~ '+date(model.endDate)+'</b> · 공통 거래일 '+model.dates.length+'개 · 수집 '+esc(sourceStamp())+'</p>'+
@@ -148,9 +149,9 @@ function render(){
     (days>365?'<p class="peer-period-note">장기 비교 전용 일봉 수집값'+(longSnapshot?' · '+esc(longSnapshot.source):'')+'을 사용합니다.</p>':'')+
     (longLoading&&days>365?'<p class="peer-period-note" role="status">장기 일봉 수집값 읽는 중…</p>':'')+
     (error?'<p class="peer-alert" role="alert">'+esc(error)+'</p>':'')+
-    (warnings.length?'<ul class="peer-alert">'+warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'')+
+    (warnings.length?'<details class="peer-alert peer-data-notes"><summary>'+(model.metadata?.stale?'이전 수집값 포함 · ':'')+'자료 확인 사항 '+warnings.length+'개</summary><ul>'+warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul></details>':'')+
     '<div class="peer-legend">'+items().map(item=>'<button class="peer-legend-item'+(isVisible(item)?' selected':'')+'" data-peer-toggle="'+esc(item.id)+'" aria-pressed="'+isVisible(item)+'" style="--peer-color:'+color(item.id)+'">'+swatch(item.id)+'<span>'+esc(itemLabel(item))+'</span><b>'+percent(item.returnPercent)+'</b></button>').join('')+'</div>'+chart()+
-    '<p class="peer-reading">100에서 110이 되면 '+(isCompany()?'그 회사의 주가 등락률':'해당 피어 묶음의 평균 주가 등락률')+'은 +10%입니다. 범례를 눌러 선을 숨길 수 있습니다. 선 위에서 마우스를 움직이거나 날짜 슬라이더로 같은 날짜의 값을 확인하세요.</p></section>'+(isCompany()?'':cards())+methodology()
+    '<p class="peer-reading">100에서 110이 되면 '+(isCompany()?'그 회사의 주가 등락률':'해당 피어 묶음의 평균 주가 등락률')+'은 +10%입니다. 범례를 눌러 선을 숨길 수 있습니다. 선 위에서 마우스를 움직이거나 날짜 슬라이더로 같은 날짜의 값을 확인하세요.</p><p class="note"><a href="#data">기업 전체 목록·사업 설명 →</a> · <a href="#industry">수출·물량 산업통계 →</a></p></section>'+(isCompany()?'':cards())+methodology()
   const pickerList=el.querySelector('[data-peer-picker-list]');if(pickerList)pickerList.scrollTop=pickerScroll
 }
 function inspect(index){

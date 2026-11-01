@@ -50,3 +50,6 @@
 
 .peer-company-picker > .peer-selection{margin-top:12px}
 .peer-company-picker > summary{min-height:24px;line-height:24px}
+
+.peer-data-notes{margin:0}.peer-data-notes>summary{cursor:pointer;min-height:24px;line-height:24px}.peer-data-notes>ul{margin:8px 0 0;padding-left:20px}
+@media(max-width:760px){.peer-company-picker>summary span{display:inline;margin:0 0 0 6px}.peer-comparison .peer-heading h1{font-size:21px}.peer-comparison .peer-kicker{margin-bottom:4px}}

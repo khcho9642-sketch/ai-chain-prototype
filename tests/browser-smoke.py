@@ -229,7 +229,8 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             picker = comparison.locator('[data-peer-company-picker]')
             assert picker.get_attribute('open') is None
             assert comparison.locator('.peer-selection').is_hidden()
-            assert comparison.locator('#peer-chart').bounding_box()['y'] < page.viewport_size['height']
+            assert comparison.locator('[data-peer-series="005930.KS"]').get_attribute('stroke') != comparison.locator('[data-peer-series="000660.KS"]').get_attribute('stroke')
+            assert comparison.locator('#peer-chart').bounding_box()['y'] < page.viewport_size['height'] - 140
             samsung = comparison.locator('[data-peer-symbol="005930.KS"]')
             assert samsung.count() == 2
             assert all(samsung.nth(i).is_checked() for i in range(samsung.count()))
@@ -767,7 +768,8 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile_picker = mobile_comparison.locator('[data-peer-company-picker]')
             assert mobile_picker.get_attribute('open') is None
             assert mobile_comparison.locator('.peer-selection').is_hidden()
-            assert mobile_comparison.locator('#peer-chart').bounding_box()['y'] < mobile.viewport_size['height']
+            assert mobile_comparison.locator('[data-peer-series="005930.KS"]').get_attribute('stroke') != mobile_comparison.locator('[data-peer-series="000660.KS"]').get_attribute('stroke')
+            assert mobile_comparison.locator('#peer-chart').bounding_box()['y'] < mobile.viewport_size['height'] - 140
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'comparison-default-companies-mobile.png'))
             mobile_comparison.locator('[data-peer-period="1095"]').click()
