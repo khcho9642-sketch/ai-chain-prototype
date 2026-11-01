@@ -180,7 +180,52 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             home_requests = []
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
             page.goto(origin + '/')
-            today = page.locator('#v-today')
+            home = page.locator('#market-overview')
+            home.get_by_role('heading', name='시장 현황', exact=True).wait_for()
+            page.wait_for_function("window.aiChainSnapshot?.quotes?.length > 0")
+            catalog = page.evaluate("async () => (await import('./assets/instruments.js')).instruments.filter(x => x.chains.some(id => id > 0))")
+            home.locator('[data-mo-symbol]').first.wait_for()
+            symbols = home.locator('[data-mo-symbol]').evaluate_all("(els) => els.map(el => el.dataset.moSymbol)")
+            assert len(symbols) == len(set(symbols)) == len(catalog)
+            assert home.locator('[data-mo-index]').count() == 5
+            assert 'pt' in home.locator('[data-mo-index="^KS11"]').inner_text()
+            assert '1 USD' in home.locator('[data-mo-index="KRW=X"]').inner_text()
+            assert home.locator('.mo-tile.is-up,.mo-tile.is-down,.mo-tile.is-flat').count() > 0
+            assert not any('/api/chart?' in url or method != 'GET' for method, url in home_requests)
+            home.locator('.mo-toolbar [data-mo-chain="3"]').click()
+            assert 'stage=3' in page.url
+            expected_memory = sorted(row['symbol'] for row in catalog if 3 in row['chains'])
+            assert sorted(home.locator('[data-mo-symbol]').evaluate_all("(els) => els.map(el => el.dataset.moSymbol)")) == expected_memory
+            page.reload()
+            home.locator('[data-mo-symbol]').first.wait_for()
+            assert sorted(home.locator('[data-mo-symbol]').evaluate_all("(els) => els.map(el => el.dataset.moSymbol)")) == expected_memory
+            home.locator('.mo-toolbar [data-mo-chain="0"]').click()
+            home.locator('[data-mo-symbol="NVDA"]').click()
+            home.locator('[data-mo-selected="NVDA"]').wait_for()
+            assert '123.45 USD' in home.locator('[data-mo-selected]').inner_text()
+            home.locator('[data-mo-selected] [data-market-symbol="NVDA"]').click()
+            page.locator('#market-selected').get_by_role('heading', name='엔비디아 · NVDA', exact=True).wait_for()
+            page.goto(origin + '/#today')
+            home.locator('[data-mo-symbol]').first.wait_for()
+            market_fixture['status'] = 503
+            home.locator('[data-mo-refresh]').click()
+            home.locator('[data-mo-status]').get_by_text('시세 갱신 실패', exact=False).wait_for()
+            assert home.locator('[data-mo-symbol]').count() == len(catalog)
+            market_fixture['status'] = 200
+            home.locator('[data-mo-refresh]').click()
+            page.wait_for_function("!document.querySelector('[data-mo-refresh]').disabled && !document.querySelector('[data-mo-status]').textContent.includes('실패')")
+            page.screenshot(path=str(output / 'market-overview-desktop.png'), full_page=True)
+            for width in [360, 390, 430]:
+                page.set_viewport_size({'width': width, 'height': 844})
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+                home.locator('[data-mo-symbol="NVDA"]').click()
+                assert home.locator('[data-mo-selected="NVDA"]').is_visible()
+                assert page.evaluate("Array.from(document.querySelectorAll('#market-overview .mo-tile')).every(el => el.getBoundingClientRect().height >= 44)")
+                page.screenshot(path=str(output / ('market-overview-mobile-' + str(width) + '.png')), full_page=True)
+            page.set_viewport_size({'width': 1440, 'height': 1000})
+            page.goto(origin + '/#opinions')
+
+            today = page.locator('#v-opinions')
             today.get_by_role('heading', name='AI Value Chain Today', exact=True).wait_for()
             today.get_by_text('추천 미발행', exact=True).first.wait_for()
             assert today.locator('[data-today-agent]').count() == 3
@@ -312,7 +357,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.screenshot(path=str(output / 'comparison-companies-desktop.png'), full_page=True)
             comparison.locator('[data-peer-clear-companies]').click()
             comparison.locator('[data-peer-mode=groups]').click()
-            page.evaluate("location.hash = 'today'")
+            page.evaluate("location.hash = 'opinions'")
             today.get_by_role('heading', name='AI Value Chain Today', exact=True).wait_for()
             # Exercise populated cards through a browser-only response, never real AI or public file writes.
             today_fixture = {'value': today_browser_fixture(), 'status': 200}
@@ -398,11 +443,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.wait_for_url(origin + '/#data')
             page.locator('#market-selected h3').wait_for()
             assert 'NVDA' in page.locator('#market-selected h3').inner_text()
-            page.goto(origin + '/#today')
+            page.goto(origin + '/#opinions')
             today_gpt.get_by_role('link', name='생각 나누기 →', exact=True).click()
             page.wait_for_url(origin + '/#talk/NVDA')
             page.locator('#v-talk .community').get_by_text('브라우저 검증용 원문입니다.', exact=True).wait_for()
-            page.goto(origin + '/#today')
+            page.goto(origin + '/#opinions')
             today_fixture['value'] = today_browser_fixture()
             today_fixture['value']['responses'][0]['parentId'] = 'not-a-published-parent'
             today.locator('[data-today-refresh]').click()
@@ -556,7 +601,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             original_vrt_quote = json.loads(json.dumps(vrt_quote))
             vrt_quote.update(price=actual_claude_json['observedQuote']['price'], currency='USD', status='ok',
                              marketTime=int(datetime.now(timezone.utc).timestamp()) - 60, delayed=True, source='Yahoo Finance', error=None)
-            page.goto(origin + '/#today')
+            page.goto(origin + '/#opinions')
             page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot', {detail:value}))", market_fixture['value'])
             today.locator('[data-today-refresh]').click()
             today.locator('[data-today-agent=claude] [data-today-comment]').get_by_text(actual_claude['comment'], exact=True).wait_for()
@@ -718,9 +763,9 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             captured_pages.append(mobile)
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))
             mobile.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
-            mobile.goto(origin + '/')
-            mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
-            assert mobile.locator('#v-today [data-today-agent]').count() == 3
+            mobile.goto(origin + '/#opinions')
+            mobile.locator('#v-opinions').get_by_text('추천 미발행', exact=True).first.wait_for()
+            assert mobile.locator('#v-opinions [data-today-agent]').count() == 3
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-mobile.png'), full_page=True)
             # Company picking and a long-period chart fit a narrow screen without clipping the page.
@@ -749,54 +794,54 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert 0 < mobile_comparison.locator('[data-peer-picker-list]').evaluate('el => el.clientHeight') <= 260
             assert mobile_comparison.evaluate("el => el.querySelector('[data-peer-company-picker]').getBoundingClientRect().bottom <= el.querySelector('#peer-chart').getBoundingClientRect().top")
             mobile.screenshot(path=str(output / 'comparison-companies-mobile.png'), full_page=True)
-            mobile.evaluate("location.hash = 'today'")
-            mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
+            mobile.evaluate("location.hash = 'opinions'")
+            mobile.locator('#v-opinions').get_by_text('추천 미발행', exact=True).first.wait_for()
             mobile_today_fixture = today_browser_fixture()
             mobile.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(mobile_today_fixture, ensure_ascii=False)))
-            mobile.locator('#v-today [data-today-refresh]').click()
+            mobile.locator('#v-opinions [data-today-refresh]').click()
             mobile.get_by_text(mobile_today_fixture['picks'][2]['comment'], exact=True).wait_for()
-            assert mobile.locator('#v-today [data-today-comment]').count() == 3
-            assert mobile.locator('#v-today [data-today-response-comment]').count() == 3
+            assert mobile.locator('#v-opinions [data-today-comment]').count() == 3
+            assert mobile.locator('#v-opinions [data-today-response-comment]').count() == 3
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-populated-fixture-mobile.png'), full_page=True)
             mobile_today_fixture = reviewed_reports_browser_fixture()
-            mobile.locator('#v-today [data-today-refresh]').click()
-            mobile.locator('#v-today').get_by_text('서로 다른 종목 의견 2개', exact=False).wait_for()
-            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
+            mobile.locator('#v-opinions [data-today-refresh]').click()
+            mobile.locator('#v-opinions').get_by_text('서로 다른 종목 의견 2개', exact=False).wait_for()
+            assert mobile.locator('#v-opinions [data-today-cards] [data-today-comment]').count() == 3
             for report in mobile_today_fixture['reports']:
-                mobile_card = mobile.locator('#v-today [data-today-agent="' + report['agent'] + '"]')
+                mobile_card = mobile.locator('#v-opinions [data-today-agent="' + report['agent'] + '"]')
                 if report['agent'] == 'claude':
                     mobile_card.get_by_role('heading', name='추천 미발행', exact=True).wait_for()
                     assert mobile_card.locator('[data-today-comment]').is_hidden()
                     mobile_card.locator('[data-today-factual-review] > summary').click()
                 assert mobile_card.locator('[data-today-comment]').inner_text() == displayed_report_comment(report)['text']
                 assert not any(label in mobile_card.inner_text() for label in ['원문 발췌', '펨코 느낌', '디시 느낌', '블라인드 느낌'])
-            assert mobile.locator('#v-today [data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
-            assert mobile.locator('#v-today [data-today-agent=gemini] .today-company .today-ticker').inner_text() == 'AMD'
-            mobile.locator('#v-today [data-today-agent=gemini] .today-report-original > summary').click()
-            assert mobile.locator('#v-today [data-today-agent=gemini] [data-today-report-original]').is_visible()
+            assert mobile.locator('#v-opinions [data-today-agent=gpt] .today-company .today-ticker').inner_text() == 'NVDA'
+            assert mobile.locator('#v-opinions [data-today-agent=gemini] .today-company .today-ticker').inner_text() == 'AMD'
+            mobile.locator('#v-opinions [data-today-agent=gemini] .today-report-original > summary').click()
+            assert mobile.locator('#v-opinions [data-today-agent=gemini] [data-today-report-original]').is_visible()
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-reviewed-reports-fixture-mobile.png'), full_page=True)
             mobile_today_fixture = recommendation_only_browser_fixture()
-            mobile.locator('#v-today [data-today-refresh]').click()
-            mobile.locator('#v-today [data-today-agent=gpt]').get_by_text(mobile_today_fixture['reports'][0]['comment'], exact=True).wait_for()
-            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 2
-            mobile.locator('#v-today [data-today-agent=claude]').get_by_role('heading', name='추천 미발행', exact=True).wait_for()
-            assert mobile.locator('#v-today [data-today-agent=claude] .today-company').count() == 0
-            if mobile.locator('#v-today [data-today-archive]').get_attribute('open') is None:
-                mobile.locator('#v-today [data-today-archive] > summary').click()
-            assert mobile.locator('#v-today [data-today-archive] [data-today-comment]').count() == 4
+            mobile.locator('#v-opinions [data-today-refresh]').click()
+            mobile.locator('#v-opinions [data-today-agent=gpt]').get_by_text(mobile_today_fixture['reports'][0]['comment'], exact=True).wait_for()
+            assert mobile.locator('#v-opinions [data-today-cards] [data-today-comment]').count() == 2
+            mobile.locator('#v-opinions [data-today-agent=claude]').get_by_role('heading', name='추천 미발행', exact=True).wait_for()
+            assert mobile.locator('#v-opinions [data-today-agent=claude] .today-company').count() == 0
+            if mobile.locator('#v-opinions [data-today-archive]').get_attribute('open') is None:
+                mobile.locator('#v-opinions [data-today-archive] > summary').click()
+            assert mobile.locator('#v-opinions [data-today-archive] [data-today-comment]').count() == 4
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-distinct-picks-fixture-mobile.png'), full_page=True)
             mobile_today_fixture = actual_today
-            mobile.locator('#v-today [data-today-refresh]').click()
-            mobile.locator('#v-today [data-today-agent=claude] [data-today-comment]').get_by_text(actual_claude['comment'], exact=True).wait_for()
-            assert mobile.locator('#v-today [data-today-cards] [data-today-comment]').count() == 3
+            mobile.locator('#v-opinions [data-today-refresh]').click()
+            mobile.locator('#v-opinions [data-today-agent=claude] [data-today-comment]').get_by_text(actual_claude['comment'], exact=True).wait_for()
+            assert mobile.locator('#v-opinions [data-today-cards] [data-today-comment]').count() == 3
             for agent, report in actual_reports.items():
-                mobile_card = mobile.locator('#v-today [data-today-agent="' + agent + '"]')
+                mobile_card = mobile.locator('#v-opinions [data-today-agent="' + agent + '"]')
                 assert mobile_card.locator('.today-company .today-ticker').inner_text() == report['symbol']
                 assert mobile_card.locator('[data-today-comment]').is_visible()
-            mobile_claude = mobile.locator('#v-today [data-today-agent=claude]')
+            mobile_claude = mobile.locator('#v-opinions [data-today-agent=claude]')
             mobile_claude.locator('.today-sources > summary').click()
             assert mobile_claude.get_by_text('실행 환경 Claude 웹 · 앱 버전 미공개', exact=True).is_visible()
             assert mobile_claude.locator('[data-today-fair-value]').inner_text() == '270 USD'
@@ -858,7 +903,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'company picker above chart, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Market overview desktop and 360/390/430px, snapshot sharing, stage URL, deduplication, error recovery and existing chart links', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Today stock chart and discussion navigation', 'Today previous edition and failed refresh hide current picks', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'company picker above chart, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

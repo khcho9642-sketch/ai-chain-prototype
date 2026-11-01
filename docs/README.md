@@ -6,6 +6,7 @@
 
 | 문서 | 내용 |
 | --- | --- |
+| [시장 현황 홈](data/market-overview.md) | 홈 구성·전일 대비 산식·실제 데이터 범위·기존 의견 화면 연결 |
 | [시세·기업·피어 비교](data/market.md) | Yahoo Finance 출처·조회 환경·관심종목 저장·고리 평균·회사별 비교 계산 |
 | [산업통계 출처](data/industry-sources.md) | ECOS·TWSE·관세청 자료, 단위와 수집 한계 |
 | [AI 사업·산업 검토 통계](data/ai-statistics.md) | 지표 정의·관측 범위·검토 원본·수치 승인 |

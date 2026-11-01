@@ -97,6 +97,7 @@ async function request(symbol,r,signal){
 }
 function rememberQuote(symbol,q){const {bars,histories,events,...meta}=q;const item=instruments.find(i=>i.symbol===symbol);customQuotes.set(symbol,{...item,...meta,name:item?.name||q.name||symbol,symbol,chains:item?.chains||[],group:item?.group||'직접추가'})}
 async function loadDetail(force=false){
+  if(document.getElementById('v-data')?.hidden){controller?.abort();detailBusy=false;return}
   if(!apiAvailable){detailError='';renderSelected();return}
   detailError=''
   controller?.abort();controller=new AbortController()
@@ -126,7 +127,7 @@ function csv(){
   const a=document.createElement('a');a.href=url;a.download=`${selected}-${range}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
 const oldDetail=window.renderDetail;window.renderDetail=function(){oldDetail();chainQuotes()}
-const oldData=window.renderData;window.renderData=function(){oldData();mount()}
+const oldData=window.renderData;window.renderData=function(){oldData();mount();loadDetail()}
 document.addEventListener('click',event=>{
   const target=event.target,w=target.closest('[data-market-watch]')
   if(w){const symbol=w.dataset.marketWatch;watch=watch.includes(symbol)?watch.filter(s=>s!==symbol):[...watch,symbol];write('ai-chain.watch.v1',watch);syncWatch();update();return}
