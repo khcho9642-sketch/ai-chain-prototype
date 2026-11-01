@@ -4,7 +4,9 @@ import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
 import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 
-const validators = {'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot, 'company-disclosures':validateCompanyDisclosures, 'comparison-history':validateComparisonHistorySnapshot}
+import { validateEpochSnapshot, MAX_EPOCH_BYTES } from '../assets/epoch-ai-core.js'
+
+const validators = {'epoch-ai':validateEpochSnapshot,'ai-statistics':validateAiStatistics, 'ai-tokens':validateTokenSnapshot, 'ai-disclosures':validateDisclosureSnapshot, 'company-disclosures':validateCompanyDisclosures, 'comparison-history':validateComparisonHistorySnapshot}
 export function aiSnapshotHandler(name, {fetcher = fetch} = {}) {
   if (!Object.hasOwn(validators, name)) throw new Error('지원하지 않는 공개 자료입니다.')
   return async (req, res) => {
@@ -18,7 +20,13 @@ export function aiSnapshotHandler(name, {fetcher = fetch} = {}) {
       const response = await fetcher('https://khcho9642-sketch.github.io/ai-chain-prototype/data/' + name + '.json?t=' + Math.floor(Date.now() / 60000),
         {signal:AbortSignal.timeout(15000), redirect:'error'})
       if (!response.ok) throw new Error('스냅샷 조회 실패')
-      const data = validators[name](await response.json())
+      let payload
+      if(name==='epoch-ai'){
+        const text=await response.text()
+        if(Buffer.byteLength(text)>MAX_EPOCH_BYTES)throw new Error('Epoch 응답 크기 제한')
+        payload=JSON.parse(text)
+      }else payload=await response.json()
+      const data = validators[name](payload)
       res.setHeader('Cache-Control','public, max-age=0, s-maxage=300'); res.statusCode = 200
       return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(data))
     } catch {

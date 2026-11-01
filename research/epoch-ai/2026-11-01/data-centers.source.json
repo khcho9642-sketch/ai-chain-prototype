@@ -1,0 +1,26 @@
+{
+  "url": "https://epoch.ai/data/data_centers/data_centers.csv",
+  "page": "https://epoch.ai/data/ai-data-centers",
+  "license": "CC BY 4.0",
+  "collectedAt": "2026-11-01T10:09:38.092Z",
+  "rowCount": 96,
+  "sha256": "cc66e9295c6ec2bada6a1928fda19da59a600b0ce14b8df40caaab7a9efbafed",
+  "headers": [
+    "Name",
+    "Current H100 equivalents",
+    "Current power (MW)",
+    "Current total capital cost (2025 USD billions)",
+    "Owner",
+    "Users",
+    "Selected Sources",
+    "Calculations sheet",
+    "Project",
+    "Current chip types",
+    "All chip types",
+    "Investors",
+    "Construction companies",
+    "Energy companies",
+    "Country",
+    "Address"
+  ]
+}

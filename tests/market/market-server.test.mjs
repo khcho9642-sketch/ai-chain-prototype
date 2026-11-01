@@ -9,6 +9,8 @@ import { createSiteServer } from '../../scripts/serve.mjs'
 import { build } from '../../scripts/build.mjs'
 import { createEmptyCompanyDisclosures } from '../../assets/company-disclosures-core.js'
 
+import { emptyEpochSnapshot } from '../../assets/epoch-ai-core.js'
+
 function fixture({ range = '1d', symbol = 'NVDA' } = {}) {
   return {
     meta: { symbol, shortName: 'NVIDIA', currency: 'USD', regularMarketPrice: 110, regularMarketTime: 1704326400,
@@ -194,6 +196,7 @@ test('build publishes only the public site; server handles API errors without ex
   const industry={schemaVersion:1,sources:[],series:[]}
   await writeFile(join(source,'data','industry.json'),JSON.stringify(industry))
   const aiSnapshots = {
+    'epoch-ai':emptyEpochSnapshot(),
     'ai-statistics':{schemaVersion:1,asOf:'2026-10-26',definitionCount:0,metrics:[],gaps:[]},
     'ai-tokens':{schemaVersion:1,source:{name:'OpenRouter',url:'https://openrouter.ai/rankings',license:'CC BY 4.0'},
       timezone:'UTC',coverage:{kind:'reviewed-top-model-snapshot',completePublicTotal:false,publicOnly:true},
@@ -213,7 +216,7 @@ test('build publishes only the public site; server handles API errors without ex
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
-  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','industry.json','market.json','today-picks.json'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','epoch-ai.json','industry.json','market.json','today-picks.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })

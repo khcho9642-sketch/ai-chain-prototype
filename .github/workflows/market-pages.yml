@@ -39,6 +39,9 @@ jobs:
         run: node scripts/data/collect-industry.mjs
       - name: Restore validated public collector state
         run: node scripts/deployment/restore-ai-snapshots.mjs --with-comparison
+      - name: Collect free Epoch AI datasets
+        continue-on-error: true
+        run: npm run collect:epoch -- --no-evidence
       - name: Collect three-year daily closes for company comparison
         continue-on-error: true
         run: npm run collect:comparison

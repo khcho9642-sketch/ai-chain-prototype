@@ -27,6 +27,9 @@
     },
     "api/comparison-history.js": {
       "maxDuration": 30
+    },
+    "api/epoch-ai.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -95,6 +98,15 @@
     },
     {
       "source": "/data/comparison-history.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/epoch-ai.json",
       "headers": [
         {
           "key": "Cache-Control",

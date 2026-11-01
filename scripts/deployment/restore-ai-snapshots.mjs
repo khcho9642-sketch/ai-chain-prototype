@@ -6,9 +6,11 @@ import { validateDisclosureSnapshot } from '../../assets/ai-disclosure-core.js'
 import { validateCompanyDisclosures } from '../../assets/company-disclosures-core.js'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../../assets/comparison-history-core.js'
 
+import { validateEpochSnapshot } from '../../assets/epoch-ai-core.js'
+
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url))
 const baseUrl = 'https://khcho9642-sketch.github.io/ai-chain-prototype/data/'
-const definitions = [['ai-tokens.json', validateTokenSnapshot], ['ai-disclosures.json', validateDisclosureSnapshot], ['company-disclosures.json', validateCompanyDisclosures]]
+const definitions = [['epoch-ai.json', validateEpochSnapshot], ['ai-tokens.json', validateTokenSnapshot], ['ai-disclosures.json', validateDisclosureSnapshot], ['company-disclosures.json', validateCompanyDisclosures]]
 
 // Restore only validated collector state; approved statistics remain versioned in Git.
 export async function restoreAiSnapshots({root = projectRoot, fetcher = fetch, now = new Date(), includeComparison = false} = {}) {
@@ -31,6 +33,13 @@ export async function restoreAiSnapshots({root = projectRoot, fetcher = fetch, n
         const remoteTimes = new Map(data.quotes.map(quote => [quote.symbol, stamp(quote.fetchedAt)]))
         if (stamp(local.generatedAt) > stamp(data.generatedAt) || local.quotes.some(quote => stamp(quote.fetchedAt) > (remoteTimes.get(quote.symbol) || 0))) {
           return {name, status:'kept', reason:'newer local comparison history'}
+        }
+      }
+      if (name === 'epoch-ai.json') {
+        const stamp = value => Date.parse(value || '') || 0
+        if (stamp(local.collection.lastAttemptAt) > stamp(data.collection.lastAttemptAt) ||
+            local.datasets.some(d => stamp(d.lastSuccessAt) > stamp(data.datasets.find(r => r.id === d.id)?.lastSuccessAt))) {
+          return {name, status:'kept', reason:'newer local Epoch data'}
         }
       }
       if (name === 'ai-tokens.json' && data.coverage.kind !== 'api-top50-plus-other' &&

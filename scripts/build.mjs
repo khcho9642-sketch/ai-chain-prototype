@@ -10,8 +10,10 @@ import { validateCompanyDisclosures } from '../assets/company-disclosures-core.j
 import { validateTodaySnapshot } from '../assets/today-core.js'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
 
+import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
+
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','comparison-history.json']
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','comparison-history.json','epoch-ai.json']
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -23,6 +25,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   catch (error) { if (error.code !== 'ENOENT') throw error }
   const data = JSON.parse(await readFile(join(source, 'data', 'market.json'), 'utf8'))
   if (!Array.isArray(data.quotes)) throw new Error('시세 스냅샷 형식이 올바르지 않습니다.')
+  validateEpochSnapshot(JSON.parse(await readFile(join(source, 'data', 'epoch-ai.json'), 'utf8')))
   validateIndustry(JSON.parse(await readFile(join(source, 'data', 'industry.json'), 'utf8')))
   validateAiStatistics(JSON.parse(await readFile(join(source, 'data', 'ai-statistics.json'), 'utf8')))
   validateTokenSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-tokens.json'), 'utf8')))

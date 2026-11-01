@@ -10,6 +10,7 @@
 | [산업통계 출처](data/industry-sources.md) | ECOS·TWSE·관세청 자료, 단위와 수집 한계 |
 | [AI 사업·산업 검토 통계](data/ai-statistics.md) | 지표 정의·관측 범위·검토 원본·수치 승인 |
 | [OpenRouter 토큰 통계](data/ai-tokens.md) | 공식 API·인증·일별 집계·결측·실패 보존 |
+| [Epoch AI 산업데이터](data/epoch-ai.md) | 모델·반도체·데이터센터·칩 판매 CSV 4종, 일일 수집·출처·검색·CSV·실패 보존 |
 | [국내 기업 공시](data/company-disclosures.md) | DART 회사 RSS, 회사 연결, 보존 기간과 오류 처리 |
 | [AI 발표자료 감시](data/ai-disclosure-collection.md) | OpenAI·Anthropic 공식 문서 변경과 검토 후보 |
 
@@ -17,7 +18,7 @@
 
 ## 사이트 배포
 
-[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 8종 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
+[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 9종 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
 
 ## 커뮤니티와 운영
 

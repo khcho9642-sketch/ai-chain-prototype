@@ -32,7 +32,7 @@ async function restore(root, value, options = {}) {
 test('comparison restore is opt-in and does not fetch it in the legacy restore flow', async t => {
   const {root,file} = await fixture(t), before = await readFile(file,'utf8'), urls = []
   const results = await restoreAiSnapshots({root,now,fetcher:async url=>{urls.push(url);return new Response('',{status:404})}})
-  assert.equal(results.length,3)
+  assert.equal(results.length,4)
   assert.equal(urls.some(url=>url.includes('comparison-history')),false)
   assert.equal(await readFile(file,'utf8'),before)
 })

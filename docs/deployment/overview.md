@@ -18,7 +18,7 @@
 
 ## 공개 파일과 예약 갱신
 
-`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 기존 7개와 비교용 3년 일봉 1개를 합한 8개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
+`scripts/build.mjs`의 `publicSnapshotFiles` 허용목록은 기존 8개에 Epoch AI 스냅샷을 더한 9개다. 빌드 시 검증한 뒤 `dist/data/`로 복사하며 `research/`, 원본 자료, 환경 파일과 임의의 추가 JSON은 공개하지 않는다.
 
 | 공개 JSON | 내용 |
 | --- | --- |
@@ -27,19 +27,22 @@
 | `industry.json` | 기존 공식 산업통계 12개 |
 | `ai-statistics.json` | 검토한 AI 통계 81개 정의·88개 표시 행 |
 | `ai-tokens.json` | OpenRouter 검토 스냅샷 또는 공식 API 수집 결과와 상태 |
+| `epoch-ai.json` | Epoch AI 모델·반도체 사양·데이터센터·칩 판매 추정 4종의 선택 열·출처·데이터셋별 수집 상태 |
 | `ai-disclosures.json` | 공식 문서 확인 상태와 검토 후보 |
 | `company-disclosures.json` | 국내 18개 기업의 DART 공시 메타데이터·수집 상태 |
 | `today-picks.json` | 검토한 실제 AI별 추천·실적 검토·발행 댓글·보존한 이전 원문 또는 미발행 상태 |
 
-`.github/workflows/market-pages.yml`은 기존 약 30분 간격 Pages 작업에서 이전 토큰·문서 감시·국내 기업 공시 상태를 검증해 복원하고 세 수집기를 실행한다. 토큰·AI 발표문 감시는 각각의 일일 호출 기준을, 국내 기업 공시는 15분 재시도 간격을 관리한다. 수집 오류 시 이전 자료를 배포할 수 있도록 수집 단계는 실패 후에도 진행하며, 최종 빌드의 자료 검증은 유지한다. 승인된 `ai-statistics.json`은 Git에서 관리하고, 배포된 과거 파일로 덮어쓰거나 문서 감시 결과로 자동 승인하지 않는다. 예약 실행은 지연될 수 있다.
+`.github/workflows/market-pages.yml`은 기존 약 30분 간격 Pages 작업에서 이전 Epoch AI·토큰·문서 감시·국내 기업 공시 상태를 검증해 복원하고 각 수집기를 실행한다. Epoch AI는 `npm run collect:epoch -- --no-evidence`로 UTC 날짜별 1회 시도하며, 토큰·AI 발표문 감시는 각각의 일일 호출 기준을, 국내 기업 공시는 15분 재시도 간격을 관리한다. 수집 오류 시 이전 자료를 배포할 수 있도록 수집 단계는 실패 후에도 진행하며, 최종 빌드의 자료 검증은 유지한다. 승인된 `ai-statistics.json`은 Git에서 관리하고, 배포된 과거 파일로 덮어쓰거나 문서 감시 결과로 자동 승인하지 않는다. 예약 실행은 지연될 수 있다.
 
-읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`, `/api/company-disclosures`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter·DART를 직접 호출하거나 매출·사용자 수를 새로 수집하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
+읽기 전용 경로는 `/api/ai-statistics`, `/api/ai-tokens`, `/api/ai-disclosures`, `/api/company-disclosures`, `/api/epoch-ai`다. 로컬 서버는 해당 로컬 JSON을 제공하고, Vercel 함수는 Pages의 같은 이름 JSON을 조회·검증해 제공한다. 이 경로들은 OpenRouter·DART·Epoch 원천 자료를 직접 수집하거나 매출·사용자 수를 새로 산출하지 않는다. Pages 자체는 정적 `data/` 파일을 제공한다. API 조회 실패와 자료의 마지막 성공 시점을 구분한다.
 
-배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 8종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
+배포 순서는 테스트·빌드 → GitHub main 푸시 → Pages 성공 및 93개 시세·기존 산업통계 12개·AI 통계와 공개 JSON 9종 확인 → 동일 커밋 소스의 Vercel production 배포다. 기존 프로젝트·도메인·인증 보호를 유지한다.
 
 Today는 `data/today-picks.json`을 읽는 정적 발행 화면이다. 조회·다시 읽기는 모델을 호출하지 않는다.
 이 파일은 기존 시세 수집·복원 작업에서 덮어쓰지 않으며, 승인된 공식 CLI 원고를 사람이 검토한 뒤 수동 발행한다.
 원고 생성·로컬 공개 파일 저장·운영 배포는 각각 다른 단계다. v3 일회성 발행본은 GPT·Gemini의 종목 의견과 Claude의 실적 검토를 실제 출처·정정 내용과 함께 읽기 전용 댓글로 표시한다. 이 발행은 워커 활성화가 아니며 기존 제공사 자동 실행 차단 상태를 유지한다.
+
+Epoch AI의 공개 JSON과 API 응답은 3,800,000바이트 한도를 적용한다. 수집 실패는 데이터셋별 이전 행·성공 시각을 보존한다. 복원 시 로컬 시도 시각이나 한 데이터셋의 성공 시각이라도 더 최신이면 오래된 원격 파일로 덮어쓰지 않는다. 로컬 기본 수집의 원본 CSV·SHA-256 기록은 `research/epoch-ai/YYYY-MM-DD/`에 보존하고 공개 빌드에는 포함하지 않는다. 초기 수집본의 존재와 운영 배포 성공은 구분하며, [Epoch AI 수집·해석 안내](../data/epoch-ai.md)를 따른다.
 
 ## 커뮤니티 서버 배포 준비
 

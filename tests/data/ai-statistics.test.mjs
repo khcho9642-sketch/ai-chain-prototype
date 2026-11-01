@@ -73,7 +73,7 @@ test('restoration validates remote JSON and retains local data on HTML or networ
   t.after(()=>rm(dir,{recursive:true,force:true}))
   await mkdir(join(dir,'data'))
   const originals={}
-  for (const name of ['ai-tokens.json','ai-disclosures.json']) {
+  for (const name of ['ai-tokens.json','ai-disclosures.json','epoch-ai.json']) {
     originals[name]=await readFile(new URL('data/'+name,root),'utf8')
     await writeFile(join(dir,'data',name),originals[name])
   }

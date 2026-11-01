@@ -26,9 +26,10 @@ ai-chain-prototype/
 │  ├─ community/                회원·댓글·AI·패키징·운영 연결
 │  ├─ browser-smoke.py          브라우저 통합 검사
 │  └─ helpers/                  테스트 전용 서버 등 보조 코드
-├─ data/                         검증된 공개 스냅샷 8종 (Today·3년 비교 이력 포함)
+├─ data/                         검증된 공개 스냅샷 9종 (Today·3년 비교 이력·Epoch AI 포함)
 ├─ research/                     검토 통계 원본·공식 출처 확인 근거
-│  └─ dart/                     DART 회사 연결 근거·RSS 형식 샘플
+│  ├─ dart/                     DART 회사 연결 근거·RSS 형식 샘플
+│  └─ epoch-ai/YYYY-MM-DD/       Epoch AI 원본 CSV·출처·SHA-256 기록
 ├─ docs/                         기능별 정의·수집 방식·운영 안내
 │  ├─ README.md                 문서 찾아보기
 │  ├─ project-structure.md      폴더 배치·개발 기준
@@ -66,18 +67,20 @@ ai-chain-prototype/
 | `assets/peer-comparison-core.js`, `peer-comparison.js`, `peer-comparison.css` | 고리별 피어 비교 계산·화면 |
 | `assets/company-profiles.js`, `company-directory.js` | 기업 역할·국가·공식 출처·목록 |
 | `assets/ai-statistics.js`, `ai-statistics.css`, `ai-statistics-core.js` | AI 통계 화면·검증 |
+| `assets/epoch-ai.js`, `epoch-ai.css`, `epoch-ai-core.js` | Epoch AI 데이터셋 정의·검증·검색·CSV 화면 |
+| `scripts/data/collect-epoch-ai.mjs`, `api/epoch-ai.js` | Epoch AI 공개 CSV 수집·근거 보존·읽기 전용 API 진입점 |
 | `assets/token-core.js`, `ai-disclosure-core.js` | 토큰 집계·발표자료 감시 상태 검증 |
 | `assets/company-disclosure-sources.js`, `company-disclosures-core.js` | 국내 기업 DART 연결·메타데이터 검증 |
 | `server/market.mjs`, `api/chart.js` | 단일 시세 조회·정규화·캐시·Vercel 진입점 |
-| `server/ai-snapshots.mjs` | 공개 AI 통계·토큰·발표문·DART 스냅샷 API 공통 처리 |
+| `server/ai-snapshots.mjs` | 공개 AI 통계·Epoch AI·토큰·발표문·DART 스냅샷 API 공통 처리 |
 
 기능별 출처·단위·계산·갱신 방식은 [전문 문서](README.md)를 따른다.
 
 ## 공개 데이터와 비공개 작업물
 
-`data/`의 공개 파일은 `market.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`, `today-picks.json`이다. Today 파일은 실제 제공사 실행·수동 검토를 마친 종목별 추천·댓글만 담으며 초기값은 빈 미발행 상태다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
+`data/`의 공개 파일은 `market.json`, `comparison-history.json`, `industry.json`, `ai-statistics.json`, `ai-tokens.json`, `ai-disclosures.json`, `company-disclosures.json`, `today-picks.json`, `epoch-ai.json`의 9종이다. Today 파일은 실제 제공사 실행·수동 검토를 마친 종목별 추천·댓글만 담으며 초기값은 빈 미발행 상태다. 빌드의 명시적 허용목록과 검증을 통과한 파일만 `dist/data/`에 복사한다. `research/`, `docs/`, `deploy/`, `design/`, `.local/`을 공개 사이트에 통째로 복사하지 않는다.
 
-`research/ai-statistics-2026-10-26.json`은 검토 통계의 재생성·테스트 입력이다. `research/dart/`는 공식 회사 연결 검증 근거와 당시 RSS 형식 샘플이다. 샘플의 날짜·공시 수를 현재 수집 상태로 읽지 않는다. 공개 스냅샷과 연구 원본을 구분하고 확인되지 않은 자료를 자동 승인하지 않는다. 예전 산업통계 작업의 원본 seed·다운로드는 `.local/archive/education-2026-10-27/industry-stats-work/export/`에 보관하며, 현재 실행은 통합된 `data/industry.json`과 공식 수집 모듈을 사용한다.
+`research/ai-statistics-2026-10-26.json`은 검토 통계의 재생성·테스트 입력이다. `research/dart/`는 공식 회사 연결 검증 근거와 당시 RSS 형식 샘플이다. `research/epoch-ai/YYYY-MM-DD/`는 UTC 수집일별 원본 CSV와 URL·라이선스·행 수·SHA-256 출처 기록이며 공개 빌드에 포함하지 않는다. 샘플의 날짜·공시 수를 현재 수집 상태로 읽지 않는다. 공개 스냅샷과 연구 원본을 구분하고 확인되지 않은 자료를 자동 승인하지 않는다. 예전 산업통계 작업의 원본 seed·다운로드는 `.local/archive/education-2026-10-27/industry-stats-work/export/`에 보관하며, 현재 실행은 통합된 `data/industry.json`과 공식 수집 모듈을 사용한다.
 
 개인 캡처·가입 자료·로컬 로그·DB·환경 파일은 Git과 공개 빌드에서 제외한다. `.local/`의 릴리스·검증 기록·보관 원본은 용도를 확인하고 관리한다. `dist/`는 빌드 산출물이지만 `design/`은 보존할 원본이다.
 
@@ -101,6 +104,7 @@ npm run build
 | --- | --- |
 | `npm run collect` | 실제 시세·차트 스냅샷 수집 |
 | `npm run collect:industry` | ECOS·TWSE 공식 산업통계 갱신 |
+| `npm run collect:epoch` | Epoch AI 공개 CSV 4종 수집·검증; UTC 일 1회 시도 |
 | `npm run build:statistics` | 검토 원본에서 승인된 AI 통계 재생성 |
 | `npm run collect:tokens` | 키가 연결된 경우 OpenRouter 공식 공개 토큰 API 수집 |
 | `npm run collect:disclosures` | OpenAI·Anthropic 공식 발표문 변경 감시 |
