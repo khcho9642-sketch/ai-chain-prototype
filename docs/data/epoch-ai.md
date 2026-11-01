@@ -9,7 +9,7 @@
 | `models` 주요 AI 모델 | [설명](https://epoch.ai/data/ai-models-documentation/downloads) · [CSV](https://epoch.ai/data/notable_ai_models.csv) | 모델·개발기관·발표일·국가, 파라미터 수, 학습 연산량(FLOP), 학습 비용 추정(2023 USD), 원자료 Confidence | Epoch가 선정한 주요 모델이며 전체 출시 목록이 아니다. 연산량·비용에는 추정치가 포함된다. |
 | `hardware` AI 반도체 사양 | [설명](https://epoch.ai/data/machine-learning-hardware) · [CSV](https://epoch.ai/data/ml_hardware.csv) | 칩·제조사·출시일·유형, FP8 성능(FLOP/s), 메모리(bytes), TDP(W), 출시 가격(USD) | 사양상 연산 성능은 실제 서비스 처리량과 다르다. TDP는 칩 설계 전력이며 데이터센터 전체 전력 소비가 아니다. |
 | `data-centers` AI 데이터센터 | [설명](https://epoch.ai/data/ai-data-centers) · [CSV](https://epoch.ai/data/data_centers/data_centers.csv) | 시설·소유자·국가·사용자·칩, 현재 H100 환산량(H100e), IT 전력용량(MW), 자본비용(십억 2025 USD) | Epoch가 추적하는 대형 시설의 현재 상태 추정으로, 전 세계 모든 시설을 포괄하지 않는다. |
-| `chip-sales` AI 칩 판매 추정 | [설명](https://epoch.ai/data/ai-chip-sales) · [CSV](https://epoch.ai/data/ai_chip_sales_timelines_by_chip.csv) | 제조사·칩·기간·미완료 여부, 판매량 추정(개), 판매량 5·95백분위, H100e 중앙값, 판매금액 추정(USD) | 칩·기간별 추정이며 회사가 공시한 확정 출하·매출이 아니다. 미완료 기간을 완결 분기와 구분한다. |
+| `chip-sales` AI 칩 판매 추정 | [설명](https://epoch.ai/data/ai-chip-sales) · [CSV](https://epoch.ai/data/ai_chip_sales_timelines_by_chip.csv) | 제조사·칩·기간·부분 집계 여부, 판매량 추정(개), 판매량 5·95백분위, H100e 중앙값, 판매금액 추정(USD) | 칩·기간별 추정이며 회사가 공시한 확정 출하·매출이 아니다. 기간 일부 집계을 완결 분기와 구분한다. |
 
 2026-11-01 19:09:38 KST(`2026-11-01T10:09:38.092Z`) 로컬 수집본은 모델 1,091행, 반도체 사양 183행, 데이터센터 96행, 칩 판매 추정 171행으로 총 1,541행이다. 이는 해당 수집본의 확인 기록이며 이후 원자료 변경에 따라 달라진다. 수집·구현 기록은 운영 배포 완료를 뜻하지 않는다.
 

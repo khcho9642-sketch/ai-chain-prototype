@@ -27,7 +27,7 @@ function filteredRows(){
 }
 function valueMarkup(value,column){
   if(value===null||value===undefined||value==='')return '<span class="epoch-missing" aria-label="자료 없음">—</span>'
-  if(typeof value==='boolean')return column.key==='incomplete'?(value?'미완료':'완료'):(value?'예':'아니요')
+  if(typeof value==='boolean')return column.key==='incomplete'?(value?'부분 집계':'표시 없음'):(value?'예':'아니요')
   if(typeof value==='number'){
     const magnitude=Math.abs(value)
     const formatted=magnitude>=1e12||(magnitude>0&&magnitude<0.001)?value.toExponential(3):value.toLocaleString('ko-KR',{maximumSignificantDigits:7})
