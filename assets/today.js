@@ -2,7 +2,7 @@ import { instruments } from './instruments.js'
 import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 
-const root = document.getElementById('v-today')
+const root = document.getElementById('v-opinions')
 const chains = ['소부장', '파운드리·패키징', '메모리', 'AI 칩', '전력', '인프라', '모델', '애플리케이션']
 const state = { snapshot: null, marketSnapshot: window.aiChainSnapshot || null, marketError: false, busy: false, loaded: false, error: false }
 let controller, generation = 0, dayTimer

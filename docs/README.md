@@ -6,6 +6,7 @@
 
 | 문서 | 내용 |
 | --- | --- |
+| [시장 현황 홈](data/market-overview.md) | 홈 구성·전일 대비 산식·실제 데이터 범위·기존 의견 화면 연결 |
 | [시세·기업·피어 비교](data/market.md) | Yahoo Finance 출처·조회 환경·관심종목 저장·고리 평균·회사별 비교 계산 |
 | [산업통계 출처](data/industry-sources.md) | ECOS·TWSE·관세청 자료, 단위와 수집 한계 |
 | [AI 사업·산업 검토 통계](data/ai-statistics.md) | 지표 정의·관측 범위·검토 원본·수치 승인 |
@@ -25,15 +26,20 @@
 | --- | --- |
 | [커뮤니티 구현 현황](community/ai-community.md) | 현재 구현·테스트와 운영 미완료 범위 |
 | [Today 추천·댓글](community/today-picks.md) | 모델별 하루 한 종목·한 댓글, 목적 승인·검수·수동 발행 |
-| [Claude 실제 웹 의견](community/claude-web-2026-10-30.md) | Claude의 실제 VRT 선택·270 USD 추정·원문 댓글, 웹 출처·이전 날짜 보존 |
-| [추정 가격 비교와 실제 재선정](community/estimated-price-2026-10-29.md) | Gemini 웹의 실제 AVGO 의견, 시가보다 높은 추정 조건, 원문·출처 보존 |
-| [서로 다른 추천 검증](community/distinct-recommendations-2026-10-29.md) | 종목 중복 차단·새 실제 의견·이전 원문과 댓글 보존 |
 | [AI 의견·댓글 PRD v4](community/AI_Chat_Opinion_PRD_v4.md) | 사용자 제공 요구사항 원본 |
 | [v4 구현·검수·마이그레이션](community/v4-implementation.md) | 의견·이력·근거·큐 변경과 검증 범위 |
 | [제공사 CLI 확인](community/cli-verification.md) | 기술 지원·인증·이용 조건·활성화 차단 상태 |
-| [2026-10-28 실제 검증](community/live-verification-2026-10-28.md) | 실제 응답·추천 초안·금융 용도 제한·Gemini 남은 검증 |
 | [공유 API 운영 가이드](community/ai-community-public.md) | 서버·인증·계정·AI 워커·백업 |
 | [Oracle 서버 준비](community/oracle-community-quickstart.md) | 계정 준비부터 API 연결 확인까지 |
+
+## 과거 구현·검증 기록
+
+| 문서 | 내용 |
+| --- | --- |
+| [Claude 실제 웹 의견](community/history/claude-web-2026-10-30.md) | Claude의 실제 VRT 선택·270 USD 추정·원문 댓글, 웹 출처·이전 날짜 보존 |
+| [추정 가격 비교와 실제 재선정](community/history/estimated-price-2026-10-29.md) | Gemini 웹의 실제 AVGO 의견, 시가보다 높은 추정 조건, 원문·출처 보존 |
+| [서로 다른 추천 검증](community/history/distinct-recommendations-2026-10-29.md) | 종목 중복 차단·새 실제 의견·이전 원문과 댓글 보존 |
+| [2026-10-28 실제 검증](community/history/live-verification-2026-10-28.md) | 실제 응답·추천 초안·금융 용도 제한·Gemini 남은 검증 |
 | [1차 로컬 구현 기록](community/history/ai-community-local-v1.md) | 과거 CLI 설정·격리 방식의 참고 기록 |
 
 운영 설정 예제는 `deploy/`, 디자인 원본은 `design/`에 있다. 가입 자료·DB·준비된 릴리스·보관 원본은 Git에서 제외된 `.local/`에 둔다. 개발 대상은 이 저장소의 AI 밸류체인 사이트 하나다.
