@@ -62,3 +62,4 @@
 .recommendation-comment-counter{color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
 .recommendation-comment-form-footer button{background:var(--agent-color);border-color:var(--agent-color);color:#101518;font-weight:600;padding:8px 12px}
 @media(max-width:760px){.recommendation-comment-form input,.recommendation-comment-form textarea{font-size:16px}.recommendation-comments-list{max-height:340px}}
+.today-card-grid:has(.recommendation-comments[open]){align-items:start}
