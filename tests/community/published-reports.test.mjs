@@ -44,8 +44,12 @@ test('active and historical native reports retain exact hashes while current rec
   assert.equal(selections.length, 3)
   assert.equal(new Set(selections.map(report => report.symbol)).size, selections.length)
   const gpt = selections.find(report => report.agent === 'gpt')
-  assert.equal(gpt.provenance.responseSha256, '39d4b075a10cbc73756c2d6f94309a13d846f2b2e3063cbfe27be04c2f514d53')
-  assert.equal(Object.hasOwn(gpt, 'fairValue'), false)
+  assert.equal(gpt.symbol, 'NVDA')
+  assert.ok(Number.isFinite(gpt.fairValue?.price) && gpt.fairValue.price > 0)
+  assert.notEqual(gpt.provenance.responseSha256, '39d4b075a10cbc73756c2d6f94309a13d846f2b2e3063cbfe27be04c2f514d53')
+  const priorGpt = snapshot.reportHistory.find(report => report.provenance.responseSha256 === '39d4b075a10cbc73756c2d6f94309a13d846f2b2e3063cbfe27be04c2f514d53')
+  assert.ok(priorGpt, 'the genuine previous GPT response remains in history')
+  assert.equal(Object.hasOwn(priorGpt, 'fairValue'), false)
   const gemini = selections.find(report => report.agent === 'gemini')
   assert.notEqual(gemini.symbol, 'NVDA')
   assert.equal(gemini.provenance.responseSha256, '9fe66c84bf2ff9aaf396fc04302dc61fd30e52ce292bf520c4843d5ff52f3ed7')
@@ -73,11 +77,13 @@ test('active and historical native reports retain exact hashes while current rec
 
 test('the replacement preserves all earlier report fields, comments, dates and original legacy picks', () => {
   const recordHash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
-  const gpt = snapshot.reports.find(report => report.agent === 'gpt')
-  assert.equal(recordHash(gpt), 'fa532a4b1d3178be64d96753e5cb90d9f8df4afba40dbc5cad5f4e593a7991ed')
+  const priorGpt = snapshot.reportHistory.find(report => report.id === 'report-b1d7e256-acd5-4bb6-936c-9e5a3955f79b')
+  assert.ok(priorGpt, 'the replaced GPT report remains intact in publication history')
+  assert.equal(recordHash(priorGpt), 'fa532a4b1d3178be64d96753e5cb90d9f8df4afba40dbc5cad5f4e593a7991ed')
   const gemini = snapshot.reports.find(report => report.agent === 'gemini')
   assert.equal(recordHash(gemini), 'e0c9f88437e5f33da0c139ece34f2f1622fd87d5ec3387a7f89d1d95ed6b6541')
   const preserved = new Map([
+    ['report-b1d7e256-acd5-4bb6-936c-9e5a3955f79b', 'fa532a4b1d3178be64d96753e5cb90d9f8df4afba40dbc5cad5f4e593a7991ed'],
     ['report-3083de50-d655-417b-8af9-ec9158bb0b5a', '6b1fcf5c93de4b3ac0b69eac35a837f52bffeca13d06c644e8b89f8064123866'],
     ['report-051ba683-4799-4120-a484-9f6e0b5f2467', '16863266bdbd6d6705fc1bdb04db03806eedfe8871a671a0e1f213fe0217faae'],
     ['report-04f0a3e0-a5e1-40e2-a08a-3e7810b75f85', '59e84c44615785fafa58d4ccab4646edb7d46df6a4b9c230b5fb2d8cdb1feb5a'],
@@ -123,14 +129,61 @@ test('the actual Claude web response keeps its forecast assumptions, raw JSON fe
   assert.equal(getTodayPriceComparison(claude, { ...quote, price: 280 }).eligible, false)
 })
 
-test('adding Claude never retimes earlier GPT and Gemini publications as new answers today', () => {
+test('refreshing GPT never retimes the preserved Claude and Gemini publications as new answers today', () => {
   const cards = todayCards(snapshot, { now: Date.parse(snapshot.publishedAt) })
-  assert.equal(cards.find(card => card.agent === 'claude').state, 'published')
-  for (const agent of ['gpt', 'gemini']) {
+  const gpt = cards.find(card => card.agent === 'gpt')
+  assert.equal(gpt.state, 'published')
+  assert.equal(gpt.report.symbol, 'NVDA')
+  for (const agent of ['claude', 'gemini']) {
     const card = cards.find(item => item.agent === agent)
     assert.equal(card.state, 'previous-edition')
     assert.equal(card.report, snapshot.reports.find(item => item.agent === agent))
+    assert.ok(Date.parse(card.report.createdAt) < Date.parse(gpt.report.createdAt))
   }
+})
+
+test('the refreshed GPT estimate projects the actual response and keeps NVDA-only evidence', () => {
+  const gpt = snapshot.reports.find(report => report.agent === 'gpt')
+  const original = JSON.parse(gpt.report.trim().replace(/^```(?:json)?[ \t]*\n/u, '').replace(/\n```$/u, ''))
+  assert.equal(original.action, 'publish')
+  assert.equal(original.symbol, 'NVDA')
+  assert.equal(original.comment, gpt.comment)
+  assert.equal(gpt.provenance.responseSha256, 'f34aa6f9dcb51727d4a18394f412da4a7c2c8c976f6e3cd063dba82bb2e40d15')
+  assert.deepEqual(original.observedQuote, { price: 206.69, currency: 'USD', marketTime: '2026-11-03T21:00:00.000Z' })
+  assert.equal(original.financialPeriod.period, 'FY2027 Q2')
+  assert.equal(original.financialPeriod.endedOn, '2026-07-26')
+  assert.equal(original.financialPeriod.publishedOn, '2026-08-26')
+  assert.deepEqual(original.range, {
+    low: 195.36, base: 222, high: 248.64,
+    meaning: 'Q2 non-GAAP EPS의 단순 연환산 8.88달러를 고정하고 PER 22·25·28배를 적용한 배수 민감도. 이익 변화 시나리오나 통계적 신뢰구간이 아니다.',
+  })
+  assert.equal(Number((2.22 * 4 * 25).toFixed(2)), gpt.fairValue.price)
+  assert.equal(gpt.fairValue.price, original.range.base)
+  assert.match(original.fairValue.method, /non-GAAP 희석 EPS 2\.22/u)
+  assert.ok(original.fairValue.assumptions.some(item => item.includes('주식보상비용이 포함')))
+  assert.deepEqual(gpt.fairValue.evidenceIds, [
+    'nvda-price-2026-11-03', 'nvda-fy2027-q2-2026-11-04',
+    'nvda-q3-guidance-2026-11-04', 'nvda-next-earnings-2026-11-04',
+  ])
+  assert.equal(original.fairValue.price, gpt.fairValue.price)
+  assert.equal(original.fairValue.currency, gpt.fairValue.currency)
+  assert.equal(original.fairValue.asOf, gpt.fairValue.asOf)
+  assert.equal(original.fairValue.method ?? original.fairValue.formula, gpt.fairValue.method)
+  assert.deepEqual(original.fairValue.assumptions, gpt.fairValue.assumptions)
+  assert.deepEqual(original.fairValue.evidenceIds, gpt.fairValue.evidenceIds)
+  assert.ok(gpt.evidence.every(item => item.symbol === 'NVDA'))
+  assert.ok(gpt.evidence.every(item => item.sourceUrl.startsWith('https://')))
+  assert.ok(gpt.fairValue.evidenceIds.every(id => gpt.evidence.some(item => item.id === id)))
+  assert.equal(gpt.provenance.cliName, 'codex')
+  assert.equal(gpt.provenance.execution, 'owner-reviewed-one-off')
+  assert.ok(Date.parse(gpt.fairValue.asOf) <= Date.parse(gpt.provenance.generatedAt))
+  const quote = { symbol: 'NVDA', ...original.observedQuote, marketTime: Date.parse(original.observedQuote.marketTime) / 1000, status: 'ok' }
+  const before = structuredClone(gpt)
+  const comparison = getTodayPriceComparison(gpt, quote)
+  assert.equal(comparison.status, 'above')
+  assert.equal(comparison.differencePercent.toFixed(2), '7.41')
+  assert.equal(getTodayPriceComparison(gpt, { ...quote, price: 250 }).eligible, false)
+  assert.deepEqual(gpt, before)
 })
 
 test('the genuine Gemini web estimate exceeds its unchanged input quote with selected-stock-only canonical evidence', () => {
@@ -183,8 +236,8 @@ test('three conversational comments preserve separate native responses and bind 
 
 test('read-only published comments respect human-only tabs and never mix other stock contexts', () => {
   const { publishedReportsForSymbol } = moduleHarness(() => { throw new Error('unexpected_network') })
-  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'mixed').length, 4)
-  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'ai').length, 4)
+  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'mixed').length, 5)
+  assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'ai').length, 5)
   assert.equal(publishedReportsForSymbol(snapshot, 'NVDA', 'human').length, 0)
   const gemini = snapshot.reports.find(report => report.agent === 'gemini')
   assert.deepEqual(Array.from(publishedReportsForSymbol(snapshot, gemini.symbol, 'mixed'), report => report.id), [gemini.id])

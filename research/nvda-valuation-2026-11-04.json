@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed-nvda-valuation-evidence",
+  "recordedAt": "2026-11-04T06:21:45.306Z",
+  "asOfDateKst": "2026-11-04",
+  "symbol": "NVDA",
+  "currency": "USD",
+  "scope": {
+    "singleSymbol": true,
+    "newUniverseSelection": false,
+    "consensusAvailable": false,
+    "peerMedianUsed": false,
+    "description": "NVDA단일 종목의 기존 GPT 가격 보류 의견을 새 실제 응답으로 갱신. 다른 AI의 평가를 대필하거나 전체 종목을 재선별한 결과가 아니다."
+  },
+  "quote": {
+    "price": 206.69,
+    "currency": "USD",
+    "marketTime": 1793739600,
+    "observedAt": "2026-11-03T21:00:00.000Z",
+    "observedAtKst": "2026-11-04T06:00:00+09:00",
+    "marketSessionLabel": "미국 2026-11-03 종가",
+    "delayed": true,
+    "collectedAt": "2026-11-04T06:18:36.429Z",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/quote/NVDA/"
+  },
+  "financials": {
+    "period": "FY2027 Q2",
+    "endedOn": "2026-07-26",
+    "publishedOn": "2026-08-26",
+    "verifiedAt": "2026-11-04T06:21:45.306Z",
+    "unit": "USD millions except EPS and percentages",
+    "revenue": 96221,
+    "dataCenterRevenue": 89023,
+    "gaapOperatingIncome": 63734,
+    "gaapNetIncome": 59688,
+    "gaapDilutedEpsUsd": 2.46,
+    "dilutedWeightedAverageSharesMillion": 24285,
+    "equitySecuritiesGainsNet": 7771,
+    "nonGaapNetIncome": 53954,
+    "nonGaapDilutedEpsUsd": 2.22,
+    "nonGaapPretaxAdjustments": -7251,
+    "nonGaapAdjustmentTaxEffect": 1517,
+    "nonGaapIncludesStockBasedCompensation": true,
+    "reconciliation": "59688 - 7251 + 1517 = 53954",
+    "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx",
+    "secSourceUrl": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+    "normalizationNotes": [
+      "FY2027부터 회사 non-GAAP도 주식보상비용을 포함한다. 일부 인수 관련 비용 등은 제외하므로 GAAP와 동일하지 않다.",
+      "지분증권 순이익 7771백만 USD는 대부분 미실현 이익이며, GAAP EPS를 반복 가능한 영업 수익력으로 단순 간주하지 않았다.",
+      "회사 non-GAAP 조정표를 사용했으며 투자이익에 자체 세율을 적용해 새 정규화 EPS를 만들지 않았다."
+    ]
+  },
+  "companyGuidance": {
+    "period": "FY2027 Q3",
+    "isActual": false,
+    "usedInPriceFormula": false,
+    "publishedOn": "2026-08-26",
+    "verifiedAt": "2026-11-04T06:21:45.306Z",
+    "revenueBillionUsd": 108,
+    "revenueRangePercent": 2,
+    "gaapGrossMarginPercent": 74,
+    "grossMarginRangePercentagePoints": 0.5,
+    "gaapOpexBillionUsd": 9.2,
+    "nonGaapOpexBillionUsd": 9,
+    "fy2027TaxRangePercent": [
+      16,
+      18
+    ],
+    "chinaDataCenterComputeRevenueAssumed": false,
+    "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/default.aspx"
+  },
+  "nextEarnings": {
+    "quarterEndedOn": "2026-10-25",
+    "announcementPublishedOn": "2026-10-28",
+    "verifiedAt": "2026-11-04T06:21:45.306Z",
+    "resultsReleaseApproximateUtc": "2026-11-17T21:20:00.000Z",
+    "conferenceCallUtc": "2026-11-17T22:00:00.000Z",
+    "resultsReleaseApproximateKst": "2026-11-18T06:20:00+09:00",
+    "conferenceCallKst": "2026-11-18T07:00:00+09:00",
+    "sourceUrl": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Sets-Conference-Call-for-Third-Quarter-Financial-Results/default.aspx"
+  },
+  "valuation": {
+    "method": "Company Q2 non-GAAP quarterly diluted EPS, annualized at unchanged earnings power, multiplied by assumed P/E",
+    "quarterEpsUsd": 2.22,
+    "annualizationFactor": 4,
+    "annualizedEpsUsd": 8.88,
+    "baseAssumedPe": 25,
+    "basePriceUsd": 222,
+    "sensitivity": [
+      {
+        "label": "low",
+        "assumedPe": 22,
+        "priceUsd": 195.36,
+        "differenceFromObservedQuotePercent": -5.481639169771146
+      },
+      {
+        "label": "base",
+        "assumedPe": 25,
+        "priceUsd": 222,
+        "differenceFromObservedQuotePercent": 7.407228216169148
+      },
+      {
+        "label": "high",
+        "assumedPe": 28,
+        "priceUsd": 248.64,
+        "differenceFromObservedQuotePercent": 20.296095602109432
+      }
+    ],
+    "observedQuoteImpliedPe": 23.275900900900897,
+    "impliedAnnualEpsAtBasePeUsd": 8.2676,
+    "impliedQuarterEpsAtBasePeUsd": 2.0669,
+    "assumptions": [
+      "Q2 회사 non-GAAP 희석 EPS 2.22달러와 동일한 수익력이 네 분기 유지된다고 가정한다. 향후 성장률을 별도로 가산하지 않는다.",
+      "PER 하단 22배·기준 25배·상단 28배는 자체 판단이며 비교기업 배수, 시장 컨센서스 또는 회사 전망이 아니다.",
+      "25배는 사업의 이익 규모와 데이터센터 수요에 대한 관심, 수요 집중과 수익력 지속 및 배수 축소 위험을 함께 고려한 주관적 평가다.",
+      "회사 non-GAAP 이익에는 주식보상비용이 포함되지만 일부 조정항목이 있어 GAAP 이익과 동일하지 않다.",
+      "GAAP EPS 2.46달러와 non-GAAP EPS 2.22달러를 혼합하지 않으며 투자자산 가치도 추가하지 않는다.",
+      "Q3 가이던스는 미확정 전망으로만 설명하고 수익력 산식에 사용하지 않는다. 금융손익·세율·주식수에 대한 추가 전망도 두지 않는다.",
+      "실적에서 반복 수익력이 하락하거나 개선되면 EPS 가정을 바꾸고, 이익 지속성에 대한 근거가 달라지면 적용 배수도 재검토한다.",
+      "관측 시세 대비 차이는 동일 수익력에 적용하는 배수 차이에서 발생한다. 범위에는 별도 이익 하락 시나리오가 포함되지 않는다."
+    ],
+    "limitations": [
+      "단일 분기 EPS ×4는 동일 수익력 지속 가정이며 TTM, 회사 공식 연간 전망 또는 애널리스트 컨센서스가 아니다.",
+      "PER 22·25·28배는 모델의 주관적 가정이며 동종기업 중앙값이나 시장 컨센서스가 아니다.",
+      "범위는 PER만 바꾼 민감도이며 이익 변화, 통계적 신뢰구간 또는 손실 하한을 뜻하지 않는다.",
+      "미발표 Q3 가이던스를 확정 실적으로 계산하지 않았고 투자자산 가치를 별도로 가산하지 않았다.",
+      "입력 시가와의 차이는 산술 비교이며 기대수익률 또는 상승 확률이 아니다."
+    ]
+  },
+  "verification": {
+    "financialFactsCheckedAgainst": [
+      "NVIDIA IR earnings release",
+      "SEC Form 10-Q"
+    ],
+    "arithmeticCheckedIndependently": true,
+    "checks": [
+      {
+        "expression": "2.22 * 4",
+        "expected": 8.88
+      },
+      {
+        "expression": "8.88 * 22",
+        "expected": 195.36
+      },
+      {
+        "expression": "8.88 * 25",
+        "expected": 222
+      },
+      {
+        "expression": "8.88 * 28",
+        "expected": 248.64
+      },
+      {
+        "expression": "59688 - 7251 + 1517",
+        "expected": 53954
+      }
+    ],
+    "generatingModelBrowsedSources": false,
+    "description": "공시·관측 시세는 Codex가 수집·대조한 입력 자료이며, 별도의 공식 CLI 한 번 실행으로 생성한 의견의 산식과 수치를 Codex 에이전트가 독립 검산했다."
+  },
+  "generation": {
+    "provider": "gpt",
+    "cliName": "codex",
+    "requestedModel": "gpt-6.1-sol",
+    "reportedModel": null,
+    "cliVersion": "codex-cli 0.166.0-alpha.5.1",
+    "runId": "277a7118-2c80-455a-adfb-4bf682048fa8",
+    "inferenceInvocations": 1,
+    "startedAt": "2026-11-04T06:21:45.323Z",
+    "responseObservedAt": "2026-11-04T06:22:29.647Z",
+    "responseSha256": "f34aa6f9dcb51727d4a18394f412da4a7c2c8c976f6e3cd063dba82bb2e40d15"
+  },
+  "review": {
+    "reviewer": "Codex agents",
+    "userAuthorizedPublication": true,
+    "userPersonallyReviewed": false,
+    "reviewedAt": "2026-11-04T06:24:41.233Z",
+    "scope": "공시 수치·시세 관측시각·단위·기간·가정·산식·원문 투영 검토"
+  },
+  "publication": {
+    "reportId": "report-277a7118-2c80-455a-adfb-4bf682048fa8",
+    "snapshotSchemaVersion": 3,
+    "editionDate": "2026-11-04",
+    "createdAt": "2026-11-04T06:24:41.233Z",
+    "publishedAt": "2026-11-04T06:24:41.233Z",
+    "status": "written-to-repository-snapshot",
+    "productionDeploymentVerified": false,
+    "historyPreserved": true,
+    "note": "이 기록의 발행은 저장소 공개 스냅샷 반영을 뜻한다. 이 문서 작성 시 운영 배포·실제 화면 검증은 별도 진행 중이다."
+  },
+  "timeSemantics": {
+    "quoteObservedAt": "실제 거래 관측시각이며 수집시각과 다르다.",
+    "financialPeriodAndPublication": "2026-07-26은 분기 종료일, 2026-08-26은 공시 발표일이다.",
+    "financialEvidenceObservedAt": "공개 스냅샷에서 공시·전망·일정의 observedAt은 2026-11-04의 확인 기록시각이며 과거 공시 발표시각이 아니다.",
+    "recordedAt": "평가 입력 패킷을 고정한 시각이다.",
+    "generatedAt": "공개 provenance의 generatedAt은 실제 CLI 응답 관측시각이며 서버가 모델 신원을 보고했다는 뜻은 아니다.",
+    "publishedAt": "이번 편집 스냅샷에 반영한 시각이며 운영 배포 성공시각과 다르다."
+  }
+}
