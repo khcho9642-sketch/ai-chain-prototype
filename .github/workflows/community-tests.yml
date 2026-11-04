@@ -23,6 +23,9 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
+      - name: Install locked server dependencies
+        run: npm ci
+
       - run: npm test
       - run: npm run build
       - name: Package persistent community API source
@@ -44,6 +47,9 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
+      - name: Install locked server dependencies
+        run: npm ci
+
       - run: npm run test:community
       - run: npm run test:community:deploy
       - name: Parse development task script without installing any tasks
@@ -63,6 +69,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
+      - name: Install locked server dependencies
+        run: npm ci
       - name: Install browser test driver only
         run: python3 -m pip install playwright==1.57.0
       - name: Run isolated HTTPS browser smoke

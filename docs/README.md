@@ -40,3 +40,5 @@
 | [1차 로컬 구현 기록](community/history/ai-community-local-v1.md) | 과거 CLI 설정·격리 방식의 참고 기록 |
 
 운영 설정 예제는 `deploy/`, 디자인 원본은 `design/`에 있다. 가입 자료·DB·준비된 릴리스·보관 원본은 Git에서 제외된 `.local/`에 둔다. 개발 대상은 이 저장소의 AI 밸류체인 사이트 하나다.
+
+- [추천 글 댓글: 저장·API·운영 범위](community/recommendation-comments.md)

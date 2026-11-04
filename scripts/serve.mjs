@@ -11,9 +11,13 @@ import { createEvidenceSource } from '../server/community/evidence.mjs'
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json', '/api/epoch-ai':'epoch-ai.json',
   '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json', '/api/comparison-history':'comparison-history.json'}
 
-export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null } = {}) {
+export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null } = {}) {
   return createServer(async (req, res) => {
     const pathname = URL.canParse(req.url, 'http://localhost') ? new URL(req.url, 'http://localhost').pathname : ''
+    if (pathname === '/api/recommendation-comments') {
+      const handler = recommendationComments || (await import('../api/recommendation-comments.js')).default
+      return handler(req, res)
+    }
     if (pathname === '/api/community' || pathname.startsWith('/api/community/')) {
       if (community) return community(req, res)
       res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })

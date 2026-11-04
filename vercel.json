@@ -30,6 +30,10 @@
     },
     "api/epoch-ai.js": {
       "maxDuration": 30
+    },
+    "api/recommendation-comments.js": {
+      "maxDuration": 30,
+      "includeFiles": "data/today-picks.json"
     }
   },
   "headers": [
