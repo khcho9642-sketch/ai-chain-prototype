@@ -1,5 +1,5 @@
 import { instruments } from './instruments.js'
-import { TODAY_AGENTS, kstDate, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
+import { TODAY_AGENTS, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 
 const root = document.getElementById('v-today')
@@ -140,30 +140,6 @@ function messageMeta(message) {
   return meta
 }
 
-function reportDetails(report) {
-  const details = node('details', null, { class: 'today-report-original' })
-  details.append(node('summary', report.kind === 'earnings-review' ? '실적 검토 원문 전체 보기' : '의견서 원문 전체 보기'))
-  let structured
-  const source = report.report.trim(), fenced = source.match(/^```(?:json)?[ \t]*\r?\n([\s\S]*)\r?\n```$/iu)
-  try { structured = JSON.parse(fenced ? fenced[1] : source) } catch {}
-  if (typeof structured?.opinion === 'string' && structured.opinion.trim()) {
-    details.append(node('p', structured.opinion.replaceAll('\\n', '\n'), { class: 'today-report-text' }))
-    const original = node('details', null, { class: 'today-native-response' })
-    original.append(node('summary', '실제 응답 원문'), node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
-    details.append(original)
-  } else details.append(node('p', report.report, { class: 'today-report-text', 'data-today-report-original': report.id }))
-  return details
-}
-
-function reportReviewNotes(report) {
-  const section = node('section', null, { class: 'today-review-notes', 'aria-label': '운영자 검토와 정정' })
-  section.append(node('h4', '운영자 검토 · 정정'))
-  const notes = node('ul', null)
-  for (const note of report.reviewNotes) notes.append(node('li', note))
-  section.append(notes)
-  return section
-}
-
 function renderResponse(response, parent) {
   const article = node('article', null, { class: `today-response today-agent-${response.agent}`, 'data-today-response': response.id,
     'data-parent-id': parent.id, 'data-today-message': response.id })
@@ -191,7 +167,6 @@ function renderCard(card, { archived = false } = {}) {
   }
   const company = instruments.find(item => item.symbol === pick.symbol)
   article.dataset.pickId = pick.id
-  if (previousReport && !archived) article.append(node('p', '이전 발행 · ' + kstDate(Date.parse(pick.createdAt)), { class: 'today-empty-note', 'data-today-previous-report': '' }))
   const factualReview = pick.kind === 'earnings-review'
   let content = article
   if (factualReview && !archived) {
@@ -215,13 +190,11 @@ function renderCard(card, { archived = false } = {}) {
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
   initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }),
     node('p', getTodayComment(pick).text, { class: 'today-comment', 'data-today-comment': '' }))
-  if (pick.kind) initial.append(reportReviewNotes(pick), reportDetails(pick))
   initial.append(messageMeta(pick), sourceDetails(pick))
   thread.append(initial, ...(!card.report ? card.responses || [] : []).map(response => renderResponse(response, pick)))
   content.append(thread)
   const actions = node('div', null, { class: 'today-card-actions' })
-  actions.append(node('button', '종목 · 차트', { type: 'button', 'data-market-symbol': pick.symbol, 'aria-label': `${company?.name || pick.symbol} 종목 · 차트` }),
-    node('a', '생각 나누기 →', { href: `#talk/${encodeURIComponent(pick.symbol)}` }))
+  actions.append(node('a', '생각 나누기 →', { href: `#talk/${encodeURIComponent(pick.symbol)}` }))
   content.append(actions)
   return article
 }
@@ -236,23 +209,8 @@ function render() {
   const nextMidnight = (Math.floor((Date.now() + 9 * 3600000) / 86400000) + 1) * 86400000 - 9 * 3600000
   dayTimer = setTimeout(render, Math.max(50, nextMidnight - Date.now() + 50))
   if (!active()) return
-  const now = Date.now(), currentDate = kstDate(now)
-  root.querySelector('[data-today-date]').textContent = new Date(now).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · KST'
   const cards = cardsForSnapshot(), grid = root.querySelector('[data-today-cards]')
   grid.replaceChildren(...cards.map(card => renderCard(card)))
-  const published = cards.filter(card => card.state === 'published' && (card.report || card.pick)).length
-  const publishedReports = cards.filter(card => card.report)
-  const stockOpinionCards = cards.filter(card => (card.report || card.state === 'published' && card.pick) && (card.report || card.pick).kind !== 'earnings-review')
-  const stockOpinions = new Set(stockOpinionCards.map(card => (card.report || card.pick).symbol)).size
-  const eligibleOpinions = new Set(stockOpinionCards.filter(card => {
-    const pick = card.report || card.pick
-    return getTodayPriceComparison(pick, quoteFor(pick.symbol), { marketError: state.marketError, now }).eligible
-  }).map(card => (card.report || card.pick).symbol)).size
-  const earningsReviews = publishedReports.filter(card => card.report.kind === 'earnings-review').length
-  root.querySelector('[data-today-status]').textContent = state.error ? '발행 자료를 불러오지 못했습니다. 다시 읽기로 확인해주세요.' :
-    state.busy ? '저장된 발행 자료를 읽고 있습니다.' : stockOpinions || earningsReviews ? `${currentDate} · 서로 다른 종목 의견 ${stockOpinions}개 · 오늘 발행 ${published}개 · 상승 여력 조건 충족 ${eligibleOpinions}개 · 실적 검토 ${earningsReviews}개` : '검증된 실제 응답이 발행되면 각 AI의 의견이 표시됩니다.'
-  const refresh = root.querySelector('[data-today-refresh]')
-  refresh.disabled = state.busy; refresh.textContent = state.busy ? '읽는 중…' : '다시 읽기'
   const older = cards.filter(card => !card.report && card.state === 'previous-edition' && card.pick)
   for (const card of cards) {
     if (card.report && card.pick) older.push({ ...card, report: null, state: 'published' })
@@ -290,7 +248,6 @@ function mount() {
   if (!state.loaded && !state.busy && !state.error) readEdition()
 }
 if (root) {
-  root.querySelector('[data-today-refresh]').addEventListener('click', readEdition)
   window.renderToday = mount
   window.addEventListener('hashchange', mount)
   window.addEventListener('market-snapshot', event => { state.marketSnapshot = event.detail; state.marketError = false; render() })
