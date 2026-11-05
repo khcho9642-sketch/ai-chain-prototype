@@ -6,12 +6,13 @@ import { getStockRows } from '../../assets/sector-compare-view.js';
 function measuredSectors() {
   return SECTORS.map(({ id, name, color }) => ({
     id, name, color,
-    members: [null, 0, 14].map((rate, i) => ({
+    members: [null, 0, 14, null].map((rate, i) => ({
       symbol: id + '-' + i,
       name: name + ' 기업 ' + i,
       sectorName: name,
       rate,
       series: rate === null ? null : [100, 100 + rate],
+      ...(rate === null && { reason: i === 0 ? '시세 수집값 없음' : '선택 기간 이력 부족' }),
     })),
   }));
 }
@@ -26,12 +27,30 @@ test('all stocks starts with one eligible company per sector, even after a memor
   }
 });
 
-test('sector drilldown includes every eligible member of that sector; all scope skips empty sectors', () => {
+test('each of nine sector scopes includes every registered company and preserves its data status', () => {
+  const sectors = measuredSectors();
+  assert.equal(sectors.length, 9);
+  for (const sector of sectors) {
+    const rows = getStockRows(sectors, sector.id);
+    assert.equal(rows.length, sector.members.length);
+    const found = new Map(rows.map(row => [row.id, row]));
+    for (const member of sector.members) {
+      const row = found.get(member.symbol);
+      assert.equal(row.sectorName, sector.name);
+      assert.equal(row.rate, member.rate);
+      assert.deepEqual(row.series, member.series);
+      assert.equal(row.reason, member.reason);
+    }
+  }
+});
+
+test('a sector with only unavailable quotes keeps its companies but contributes no representative', () => {
   const sectors = measuredSectors();
   const memory = sectors.find(sector => sector.id === 'memory');
-  assert.deepEqual(getStockRows(sectors, 'memory', []).map(row => row.id).sort(), ['memory-1', 'memory-2']);
   memory.members = memory.members.filter(member => member.rate === null);
-  assert.equal(getStockRows(sectors, 'memory', []).length, 0);
+  const members = getStockRows(sectors, 'memory');
+  assert.deepEqual(members.map(row => row.id).sort(), ['memory-0', 'memory-3']);
+  assert.ok(members.every(row => row.rate === null && row.series === null));
   const rows = getStockRows(sectors, 'all', []);
   assert.equal(rows.length, 8);
   assert.ok(rows.every(row => row.sectorName !== memory.name));

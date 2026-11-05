@@ -1,4 +1,3 @@
-import { SECTORS } from './home-map-core.js';
 import { validateComparisonHistorySnapshot } from './comparison-history-core.js';
 import { getSectorPeriod } from './sector-compare-data.js';
 import { mountSectorCompare } from './sector-compare-view.js';
@@ -8,7 +7,7 @@ const staticSite = location.hostname.endsWith('.github.io') || location.protocol
 const periodModels = new WeakMap();
 let view;
 let days = 90;
-let requestedSector;
+let entryTarget;
 let generation = 0;
 let historyFeed;
 let savedMarket;
@@ -72,8 +71,8 @@ function draw(feed, period) {
     if (feed.saved) model.source = (model.source || '종가') + ' · 배포 저장본';
     cache.set(period, model);
   }
-  view.showPeriod(cache.get(period), period, { sectorId: requestedSector });
-  requestedSector = undefined;
+  view.showPeriod(cache.get(period), period, { sectorId: entryTarget, openStocks: entryTarget === 'stocks' });
+  entryTarget = undefined;
   displayedSnapshot = feed.snapshot;
 }
 
@@ -106,8 +105,8 @@ window.addEventListener('market-snapshot', event => {
       displayedSnapshot.generatedAt !== event.detail.generatedAt) showPeriod(days, { loading: false });
 });
 
-window.renderSectorCompare = function (sectorId) {
-  requestedSector = SECTORS.some(sector => sector.id === sectorId) ? sectorId : undefined;
+window.renderSectorCompare = function (target) {
+  entryTarget = target;
   view ??= mountSectorCompare(host, { onPeriodChange: showPeriod, onRetry: retry });
   showPeriod(days);
 };

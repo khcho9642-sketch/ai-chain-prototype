@@ -58,7 +58,7 @@ export function getStockRows(sectors, scope, customSymbols = []) {
     const bySymbol = new Map(sectors.flatMap(sector => sector.members.map(stock => [stock.symbol, stock])));
     members = customSymbols.map(symbol => bySymbol.get(symbol)).filter(Boolean);
   } else {
-    members = sectors.find(sector => sector.id === scope)?.members.filter(stock => stock.rate != null) ?? [];
+    members = sectors.find(sector => sector.id === scope)?.members ?? [];
   }
   return members.map((stock, index) => ({ ...stock, id: stock.symbol, color: stockColors[index % stockColors.length] }));
 }
@@ -94,10 +94,16 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </div>
     <div data-field="status" class="scv-status" role="status" hidden></div>
     <div data-field="result" hidden>
-      <div class="scv-stock-scopes" data-field="stockScopes" role="group" aria-label="종목 비교 범위" hidden>
-        <div data-field="scopeList" class="scv-scope-list"></div>
-        <button type="button" class="scv-outline" data-action="choose">종목 직접 선택</button>
-      </div>
+      <section class="scv-stock-scopes" data-field="stockScopes" aria-label="종목 비교 범위" hidden>
+        <div class="scv-scope-head">
+          <h2>섹터 선택 <small data-field="catalogCount"></small></h2>
+          <div class="scv-scope-actions">
+            <button type="button" class="scv-outline" data-stock-scope="all">전체 섹터 대표 종목</button>
+            <button type="button" class="scv-outline" data-action="choose">종목 직접 선택</button>
+          </div>
+        </div>
+        <div data-field="scopeList" class="scv-scope-list" role="group" aria-label="9개 섹터"></div>
+      </section>
       <div class="scv-insight" aria-live="polite"><strong>한 줄 요약</strong><span data-field="insight"></span></div>
       <div class="scv-work">
         <section class="scv-panel scv-chart">
@@ -198,7 +204,9 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     if (!model) return;
     updateControls();
     const sectorMode = mode === 'sector';
-    const rows = (sectorMode ? [...model.sectors] : getStockRows(model.sectors, stockScope, customSymbols)).sort(byPerformance);
+    const stockCatalog = sectorMode ? [] : getStockRows(model.sectors, stockScope, customSymbols).sort(byPerformance);
+    const rows = sectorMode ? [...model.sectors].sort(byPerformance) : stockCatalog.filter(row => row.rate != null);
+    const singleSector = !sectorMode && stockScope !== 'all' && stockScope !== 'custom';
     let focused = rows.find(row => row.id === (sectorMode ? sectorId : stockId));
     if (!focused && sectorMode) {
       focused = rows.filter(row => row.belowPeak != null)
@@ -216,7 +224,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     ui.rankPeriod.textContent = label + ' 기준';
     ui.stockScopes.hidden = sectorMode;
     if (!sectorMode) {
-      for (const button of ui.scopeList.querySelectorAll('button')) {
+      for (const button of ui.stockScopes.querySelectorAll('[data-stock-scope]')) {
         button.setAttribute('aria-pressed', String(button.dataset.stockScope === stockScope));
       }
       choose.setAttribute('aria-pressed', String(stockScope === 'custom'));
@@ -258,18 +266,18 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       lines: rows.map(row => ({ id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused })),
     });
 
-    const detail = sectorMode ? [...(focused?.members ?? [])].sort(byPerformance) : rows;
+    const detail = sectorMode ? [...(focused?.members ?? [])].sort(byPerformance) : stockCatalog;
     const eligible = detail.filter(row => row.rate != null);
     const up = eligible.filter(row => row.rate > 0).length;
     const down = eligible.filter(row => row.rate < 0).length;
     const flat = eligible.length - up - down;
-    ui.detailTitle.textContent = sectorMode ? name + ' 구성 종목' : scopeName;
+    ui.detailTitle.textContent = sectorMode ? name + ' 구성 종목' : singleSector ? scopeName + ' 전체 목록' : scopeName;
     ui.coverage.textContent = sectorMode ? '계산에 포함된 종목 ' + eligible.length + '개 / 등록 ' + detail.length + '개'
       : stockScope === 'all' ? '종가 이력이 있는 ' + detail.length + '개 섹터 · 섹터별 구성 종목 순서에서 첫 번째 비교 가능 종목'
-      : label + ' · 비교 가능한 종목 ' + eligible.length + '개';
+      : (singleSector ? '등록 ' : '선택 ') + detail.length + '종목 · ' + label + ' 비교 가능 ' + eligible.length + '종목';
     ui.breadth.textContent = eligible.length ? '상승 ' + up + ' · 하락 ' + down + (flat ? ' · 보합 ' + flat : '') : '집계 종목 없음';
-    ui.detailBody.innerHTML = detail.length ? renderDetailTable(detail, sectorMode) : '';
-    ui.actionRow.hidden = !sectorMode || !eligible.length;
+    ui.detailBody.innerHTML = detail.length ? renderDetailTable(detail, sectorMode || singleSector) : '';
+    ui.actionRow.hidden = !sectorMode || !detail.length;
   }
 
   function fillOptions() {
@@ -351,15 +359,22 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     showError(nextDays, message) {
       showState(nextDays, message || '종가 데이터를 불러올 수 없습니다.', true);
     },
-    showPeriod(nextModel, nextDays, { sectorId: requestedId } = {}) {
+    showPeriod(nextModel, nextDays, { sectorId: requestedId, openStocks = false } = {}) {
       days = nextDays;
       model = withReturns(nextModel);
       stocks = model.sectors.flatMap(row => row.members);
-      ui.scopeList.innerHTML = [{ id: 'all', name: '전체 섹터' }, ...model.sectors].map(sector =>
-        '<button type="button" data-stock-scope="' + escape(sector.id) + '">' + escape(sector.name) + '</button>'
+      ui.catalogCount.textContent = model.sectors.length + '개 섹터 · 등록 ' + stocks.length + '종목';
+      ui.scopeList.innerHTML = model.sectors.map((sector, index) =>
+        '<button type="button" data-stock-scope="' + escape(sector.id) + '"><span class="scv-scope-count">' +
+        swatch(sector.color) + String(index + 1).padStart(2, '0') + '</span><strong>' + escape(sector.name) +
+        '</strong><small>' + sector.members.length + '종목</small></button>'
       ).join('');
       if (drawer.open) fillOptions();
-      if (requestedId && model.sectors.some(row => row.id === requestedId)) {
+      if (openStocks) {
+        mode = 'stock';
+        stockScope = 'all';
+        stockId = null;
+      } else if (requestedId && model.sectors.some(row => row.id === requestedId)) {
         sectorId = requestedId;
         mode = 'sector';
       }
