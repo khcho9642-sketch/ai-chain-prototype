@@ -1,4 +1,4 @@
-import { SECTORS } from './home-map-core.js';
+import { COMPANIES, SECTORS } from './home-map-core.js';
 import { buildHomeSectorReturns } from './home-sector-returns.js';
 
 const percent = value => {
@@ -7,6 +7,14 @@ const percent = value => {
   return `${rounded > 0 ? '+' : ''}${rounded.toFixed(2)}%`;
 };
 const date = value => value ? String(value).replaceAll('-', '.') : '—';
+
+const compactNames = new Map([
+  ['AMAT', 'AMAT'],
+  ['DELL', '델'],
+  ['SMCI', '슈퍼마이크로'],
+  ['GOOGL', '알파벳'],
+  ['META', '메타'],
+]);
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -40,22 +48,30 @@ export function mountHomeSectorSummary(container, { onSelect }) {
   let snapshot = null;
   let model = null;
   let loadError = '';
-  const cards = SECTORS.map(sector => {
+  const cards = SECTORS.map((sector, index) => {
     const button = element('button', 'sector-return-card');
     button.type = 'button';
     button.style.setProperty('--sector-color', sector.color);
     button.setAttribute('aria-controls', 'chart-stage');
     button.setAttribute('aria-pressed', 'false');
     button.dataset.sector = sector.id;
-    const name = element('span', 'sector-return-name', sector.name);
+    const step = String(index + 1).padStart(2, '0');
+    const representatives = COMPANIES.filter(company => company.sector === sector.name)
+      .slice(0, 2)
+      .map(company => compactNames.get(company.ticker) || company.name)
+      .join(' · ');
+    const identity = element('span', 'sector-return-identity');
+    const name = element('span', 'sector-return-name');
+    name.append(element('small', 'sector-return-step', step), document.createTextNode(sector.name));
+    identity.append(name, element('span', 'sector-return-representatives', representatives));
     const value = element('strong', 'sector-return-value', '—');
     const coverage = element('small', 'sector-return-coverage', '수집값 확인 중');
-    button.append(name, value, coverage);
+    button.append(identity, value, coverage);
     button.addEventListener('click', () => {
       onSelect(selectedSector === sector.name ? 'all' : sector.name);
     });
     grid.append(button);
-    return { sector, button, value, coverage };
+    return { sector, step, representatives, button, value, coverage };
   });
 
   function setSector(name) {
@@ -77,7 +93,7 @@ export function mountHomeSectorSummary(container, { onSelect }) {
       } else {
         card.coverage.textContent = loadError ? '수집값 조회 실패' : '수집값 확인 중';
       }
-      card.button.setAttribute('aria-label', `${card.sector.name} ${percent(result)}, ${card.coverage.textContent}, 아래 지도에서 보기`);
+      card.button.setAttribute('aria-label', `${card.step} ${card.sector.name}, 대표 기업 ${card.representatives}, ${percent(result)}, ${card.coverage.textContent}, 아래 지도에서 보기`);
       card.button.title = group?.available ? '누르면 아래 지도의 섹터를 선택합니다.' : group?.unavailableReason || '수집값을 확인하고 있습니다.';
     });
     if (model) {
