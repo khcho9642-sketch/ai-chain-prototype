@@ -69,13 +69,32 @@
   border-color:#86b8ec;
   box-shadow:inset 0 0 0 1px #86b8ec;
 }
+.sector-return-identity {
+  display:grid;
+  gap:4px;
+  width:100%;
+  flex:1;
+  align-content:start;
+}
+.sector-return-step {
+  margin-inline-end:5px;
+  color:var(--sector-color);
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+}
+.sector-return-representatives {
+  color:#a9bacb;
+  font-size:11px;
+  line-height:1.4;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
 .sector-return-name {
   font-size:11px;
   font-weight:600;
   line-height:1.5;
   word-break:keep-all;
   overflow-wrap:anywhere;
-  min-height:33px;
 }
 .sector-return-value {
   font-size:23px;
@@ -217,7 +236,6 @@
   }
   .sector-return-name {
     font-size:10px;
-    min-height:30px;
   }
   .sector-return-value {
     font-size:20px;
