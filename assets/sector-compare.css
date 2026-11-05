@@ -41,6 +41,13 @@
 .scv-periods button { min-height: 37px; padding: 6px 13px; color: #b4c3d4; font-size: 13px; }
 .scv-periods button:hover, .scv .scv-outline:hover { background: #203043; }
 .scv-periods button[aria-pressed="true"] { background: #253951; color: #f3f8fe; font-weight: 700; }
+.scv-stock-scopes, .scv-scope-list { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.scv-stock-scopes { gap: 7px 14px; margin: 0 0 16px; }
+.scv-scope-list { flex: 1 1 650px; }
+.scv-scope-list button { padding: 6px 10px; font-size: 12px; border: 1px solid var(--scv-rule); color: #bac9d7; }
+.scv-scope-list button:hover { background: var(--scv-panel); }
+.scv-stock-scopes button[aria-pressed="true"] { border-color: #77bfe4; background: #1b3345; color: #b7e8ff; }
+.scv-rank-name .scv-stock-sector { display: block; margin-top: 1px; color: var(--scv-muted); font-size: 10px; }
 .scv-status, .scv-insight { display: flex; align-items: baseline; gap: 14px; padding: 13px 17px; font-size: 14px; }
 .scv-status { align-items: center; flex-wrap: wrap; border: 1px solid var(--scv-rule); border-radius: 9px; color: var(--scv-muted); }
 .scv-insight { margin-bottom: 14px; border-left: 3px solid #83c6e5; background: #142432; border-radius: 0 7px 7px 0; }

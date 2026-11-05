@@ -3,7 +3,7 @@ import { renderFlowChart } from './sector-compare-chart.js';
 const periods = new Map([
   [30, '1개월'], [90, '3개월'], [180, '6개월'], [365, '1년'], [730, '2년'], [1095, '3년'],
 ]);
-const stockColors = ['#78d6fe', '#edbe76', '#c0a4ff', '#6edeb1', '#fb9dbe', '#9dafff'];
+const stockColors = ['#78d6fe', '#edbe76', '#c0a4ff', '#6edeb1', '#fb9dbe', '#9dafff', '#c2d46b', '#f3986f', '#6ccaaf'];
 const collectedDate = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
 });
@@ -46,6 +46,23 @@ function byPerformance(a, b) {
   return b.rate - a.rate;
 }
 
+export function getStockRows(sectors, scope, customSymbols = []) {
+  if (scope === 'all') {
+    return sectors.flatMap(sector => {
+      const member = sector.members.find(stock => stock.rate != null);
+      return member ? [{ ...member, id: member.symbol, color: sector.color }] : [];
+    });
+  }
+  let members;
+  if (scope === 'custom') {
+    const bySymbol = new Map(sectors.flatMap(sector => sector.members.map(stock => [stock.symbol, stock])));
+    members = customSymbols.map(symbol => bySymbol.get(symbol)).filter(Boolean);
+  } else {
+    members = sectors.find(sector => sector.id === scope)?.members.filter(stock => stock.rate != null) ?? [];
+  }
+  return members.map((stock, index) => ({ ...stock, id: stock.symbol, color: stockColors[index % stockColors.length] }));
+}
+
 function renderDetailTable(rows, sectorMode) {
   const maxChange = Math.max(0.01, ...rows.map(row => Math.abs(row.rate ?? 0)));
   const body = rows.map(row => {
@@ -77,12 +94,15 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </div>
     <div data-field="status" class="scv-status" role="status" hidden></div>
     <div data-field="result" hidden>
+      <div class="scv-stock-scopes" data-field="stockScopes" role="group" aria-label="종목 비교 범위" hidden>
+        <div data-field="scopeList" class="scv-scope-list"></div>
+        <button type="button" class="scv-outline" data-action="choose">종목 직접 선택</button>
+      </div>
       <div class="scv-insight" aria-live="polite"><strong>한 줄 요약</strong><span data-field="insight"></span></div>
       <div class="scv-work">
         <section class="scv-panel scv-chart">
           <div class="scv-panel-head"><div><h2 data-field="chartTitle"></h2>
             <p data-field="range" class="scv-caption"></p></div>
-            <button type="button" class="scv-outline" data-action="choose" hidden>종목 선택</button>
           </div>
           <div data-field="metric" class="scv-readout"></div>
           <div class="scv-plot" data-field="plot"></div>
@@ -110,6 +130,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </div>
     <dialog class="scv-dialog" aria-label="비교할 종목 선택">
       <div class="scv-panel-head"><h2>비교할 종목 선택</h2><button type="button" data-action="close" class="scv-outline">닫기</button></div>
+      <p class="scv-caption">9개 섹터에서 함께 볼 종목을 최대 9개 선택하세요.</p>
       <input type="search" data-field="query" aria-label="종목 검색" placeholder="종목명, 티커 또는 섹터 검색">
       <div data-field="options" class="scv-options"></div>
       <div class="scv-picker-foot"><span data-field="pickCount" aria-live="polite"></span>
@@ -125,7 +146,8 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
   let mode = 'sector';
   let sectorId = null;
   let stockId = null;
-  let selected = [];
+  let stockScope = 'all';
+  let customSymbols = [];
   let draft = new Set();
   let stocks = [];
 
@@ -159,19 +181,11 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     }
   }
 
-  function chooseDefaultStocks() {
-    if (selected.length) return;
-    const sector = model.sectors.find(row => row.id === sectorId);
-    const available = sector?.members.filter(member => member.rate != null) ?? [];
-    selected = (available.length ? available : stocks.filter(stock => stock.rate != null))
-      .slice(0, 2).map(stock => stock.symbol);
-  }
-
-  function stockRows() {
-    return selected.flatMap((symbol, index) => {
-      const stock = stocks.find(item => item.symbol === symbol);
-      return stock ? [{ ...stock, id: stock.symbol, color: stockColors[index] }] : [];
-    });
+  function enterStockScope(scope) {
+    mode = 'stock';
+    stockScope = scope;
+    stockId = null;
+    paint();
   }
 
   function focusRow(id) {
@@ -184,8 +198,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     if (!model) return;
     updateControls();
     const sectorMode = mode === 'sector';
-    if (!sectorMode) chooseDefaultStocks();
-    const rows = (sectorMode ? [...model.sectors] : stockRows()).sort(byPerformance);
+    const rows = (sectorMode ? [...model.sectors] : getStockRows(model.sectors, stockScope, customSymbols)).sort(byPerformance);
     let focused = rows.find(row => row.id === (sectorMode ? sectorId : stockId));
     if (!focused && sectorMode) {
       focused = rows.filter(row => row.belowPeak != null)
@@ -195,11 +208,19 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     if (focused && sectorMode) sectorId = focused.id;
     else if (focused) stockId = focused.id;
     const label = periods.get(days);
-    ui.chartTitle.textContent = sectorMode ? '섹터별 누적 등락률' : '종목별 누적 등락률';
-    ui.rankTitle.textContent = sectorMode ? '섹터 등락률 순위' : '선택 종목 순위';
+    const scopeName = stockScope === 'all' ? '섹터별 대표 종목'
+      : stockScope === 'custom' ? '직접 선택한 종목' : model.sectors.find(sector => sector.id === stockScope)?.name + ' 종목';
+    ui.chartTitle.textContent = sectorMode ? '섹터별 누적 등락률' : scopeName + ' 누적 등락률';
+    ui.rankTitle.textContent = sectorMode ? '섹터 등락률 순위' : scopeName + ' 순위';
     ui.rankLabel.textContent = sectorMode ? '순위 · 섹터' : '순위 · 종목';
     ui.rankPeriod.textContent = label + ' 기준';
-    choose.hidden = sectorMode;
+    ui.stockScopes.hidden = sectorMode;
+    if (!sectorMode) {
+      for (const button of ui.scopeList.querySelectorAll('button')) {
+        button.setAttribute('aria-pressed', String(button.dataset.stockScope === stockScope));
+      }
+      choose.setAttribute('aria-pressed', String(stockScope === 'custom'));
+    }
     const { dates } = model;
     ui.range.textContent = dates.length > 1
       ? date(dates[0]) + ' — ' + date(dates.at(-1)) + ' · 공통 거래일 ' + dates.length + '일'
@@ -222,13 +243,15 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
         tone(focused.rate) + '">' + pct(focused.rate) + '</strong><small>' + label + ' · ' +
         rows.filter(r => r.rate != null).length + (sectorMode ? '개 섹터 중 ' : '개 종목 중 ') + (rows.indexOf(focused) + 1) + '위</small>';
     } else {
-      ui.insight.textContent = name ? name + ' · 선택 기간의 등락률을 계산할 종가가 부족합니다.' : '이 기간에 비교할 종목을 선택하세요.';
+      ui.insight.textContent = name ? name + ' · 선택 기간의 등락률을 계산할 종가가 부족합니다.' : '이 범위에서 선택 기간의 종가 이력이 충분한 종목이 없습니다.';
       ui.metric.textContent = name;
     }
     ui.rankList.innerHTML = rows.map((row, index) =>
       '<button type="button" class="scv-rank" data-focus="' + escape(row.id) + '" aria-pressed="' + (row === focused) + '">' +
       '<span class="scv-rank-name"><small>' + (row.rate == null ? '—' : String(index + 1).padStart(2, '0')) + '</small>' +
-      swatch(row.color) + escape(row.name) + '</span><b class="' + tone(row.rate) + '">' + pct(row.rate) +
+      swatch(row.color) + '<span>' + escape(row.name) +
+      (!sectorMode && (stockScope === 'all' || stockScope === 'custom') ? '<small class="scv-stock-sector">' + escape(row.sectorName) + '</small>' : '') +
+      '</span></span><b class="' + tone(row.rate) + '">' + pct(row.rate) +
       '</b><span class="scv-drawdown">' + pct(row.belowPeak) + '</span></button>').join('');
     renderFlowChart(ui.plot, {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
@@ -240,8 +263,10 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     const up = eligible.filter(row => row.rate > 0).length;
     const down = eligible.filter(row => row.rate < 0).length;
     const flat = eligible.length - up - down;
-    ui.detailTitle.textContent = sectorMode ? name + ' 구성 종목' : '선택한 종목';
-    ui.coverage.textContent = sectorMode ? '계산에 포함된 종목 ' + eligible.length + '개 / 등록 ' + detail.length + '개' : label + ' 종목별 비교 결과';
+    ui.detailTitle.textContent = sectorMode ? name + ' 구성 종목' : scopeName;
+    ui.coverage.textContent = sectorMode ? '계산에 포함된 종목 ' + eligible.length + '개 / 등록 ' + detail.length + '개'
+      : stockScope === 'all' ? '종가 이력이 있는 ' + detail.length + '개 섹터 · 섹터별 구성 종목 순서에서 첫 번째 비교 가능 종목'
+      : label + ' · 비교 가능한 종목 ' + eligible.length + '개';
     ui.breadth.textContent = eligible.length ? '상승 ' + up + ' · 하락 ' + down + (flat ? ' · 보합 ' + flat : '') : '집계 종목 없음';
     ui.detailBody.innerHTML = detail.length ? renderDetailTable(detail, sectorMode) : '';
     ui.actionRow.hidden = !sectorMode || !eligible.length;
@@ -262,13 +287,8 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
   }
 
   function drill() {
-    const sector = model.sectors.find(row => row.id === sectorId);
-    selected = (sector?.members ?? []).filter(row => row.rate != null)
-      .sort(byPerformance).slice(0, stockColors.length).map(row => row.symbol);
-    stockId = selected[0];
-    mode = 'stock';
-    paint();
-    choose.focus({ preventScroll: true });
+    enterStockScope(sectorId);
+    ui.scopeList.querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
     host.querySelector('.scv-controls').scrollIntoView({ block: 'start' });
   }
 
@@ -281,9 +301,13 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     } else if (button.dataset.action === 'retry') {
       onRetry(days);
     } else if (model) {
-      if (button.dataset.mode) {
-        mode = button.dataset.mode;
+      if (button.dataset.mode === 'stock') {
+        enterStockScope('all');
+      } else if (button.dataset.mode === 'sector') {
+        mode = 'sector';
         paint();
+      } else if (button.dataset.stockScope) {
+        enterStockScope(button.dataset.stockScope);
       } else if (button.dataset.focus) {
         const id = button.dataset.focus;
         focusRow(id);
@@ -291,7 +315,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       } else if (button.dataset.action === 'drill') {
         drill();
       } else if (button.dataset.action === 'choose') {
-        draft = new Set(selected);
+        draft = new Set(customSymbols);
         ui.query.value = '';
         fillOptions();
         drawer.showModal();
@@ -299,9 +323,9 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       } else if (button.dataset.action === 'close') {
         drawer.close();
       } else if (button.dataset.action === 'apply') {
-        selected = [...draft];
+        customSymbols = [...draft];
         drawer.close();
-        paint();
+        enterStockScope('custom');
       }
     }
   });
@@ -331,6 +355,10 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       days = nextDays;
       model = withReturns(nextModel);
       stocks = model.sectors.flatMap(row => row.members);
+      ui.scopeList.innerHTML = [{ id: 'all', name: '전체 섹터' }, ...model.sectors].map(sector =>
+        '<button type="button" data-stock-scope="' + escape(sector.id) + '">' + escape(sector.name) + '</button>'
+      ).join('');
+      if (drawer.open) fillOptions();
       if (requestedId && model.sectors.some(row => row.id === requestedId)) {
         sectorId = requestedId;
         mode = 'sector';
