@@ -1,4 +1,5 @@
 import {SECTORS,COMPANIES,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map-core.js';
+import { instruments } from './instruments.js';
 const host = document.getElementById('v-home');
 const root = host.attachShadow({mode:'open'});
 const stylesheet = document.createElement('link');
@@ -51,7 +52,34 @@ function returnColor(v){if(v==null)return '#4e5967';const start=[51,68,83],end=v
 function setSector(name){state.sector=name;render();}
 function renderChips(){const container=$('#sector-chips');container.replaceChildren();for(const s of [{name:'전체',id:'all'},...SECTORS]){const b=document.createElement('button'),value=s.id==='all'?'all':s.name;b.className=state.sector===value?'active':'';b.setAttribute('aria-pressed',String(state.sector===value));if(s.color){const dot=document.createElement('span');dot.className='sector-dot';dot.style.setProperty('--sector',s.color);b.append(dot);}b.append(document.createTextNode(s.name));b.addEventListener('click',()=>setSector(value));container.append(b);}}
 function selectCompany(company){state.selected=state.selected===company.id?null:company.id;renderSelection();$$('.tile,.bubble-node').forEach(e=>{const selected=e.dataset.id===state.selected;e.classList.toggle('selected',selected);e.setAttribute('aria-pressed',String(selected));});hideTooltip();}
-function renderSelection(){const el=$('#selection'),c=currentItems.find(c=>c.id===state.selected);el.hidden=!c;if(!c)return;const r=getReturn(c,state.period);el.replaceChildren();const title=document.createElement('div');title.className='selected-title';const name=document.createElement('div');const b=document.createElement('b');b.textContent=c.ticker;name.append(b,document.createTextNode('  '+c.name));const sub=document.createElement('small');sub.textContent=`${c.sector} · ${COUNTRY_NAMES[c.country]??c.country}`;name.append(sub);title.append(name);const data=document.createElement('div');data.className='selection-data';const cap=document.createElement('span');cap.textContent=`시가총액 ${capText(c.cap)}`;const change=document.createElement('span');change.className=pctClass(r);change.textContent=`${periodName()} ${sign(r)}`;data.append(cap,change);const close=document.createElement('button');close.textContent='×';close.setAttribute('aria-label','기업 선택 닫기');close.addEventListener('click',()=>{state.selected=null;renderSelection();$$('.selected').forEach(e=>e.classList.remove('selected'));});el.append(title,data,close);}
+function renderSelection(){
+  const el=$('#selection'),c=currentItems.find(c=>c.id===state.selected);
+  el.hidden=!c;
+  if(!c)return;
+  const r=getReturn(c,state.period);
+  el.replaceChildren();
+  const title=document.createElement('div');title.className='selected-title';
+  const name=document.createElement('div'),b=document.createElement('b');
+  b.textContent=c.ticker;name.append(b,document.createTextNode('  '+c.name));
+  const sub=document.createElement('small');sub.textContent=`${c.sector} · ${COUNTRY_NAMES[c.country]??c.country}`;
+  name.append(sub);title.append(name);
+  const data=document.createElement('div');data.className='selection-data';
+  const cap=document.createElement('span');cap.textContent=`시가총액 ${capText(c.cap)}`;
+  const change=document.createElement('span');change.className=pctClass(r);change.textContent=`${periodName()} ${sign(r)}`;
+  data.append(cap,change);
+  const actions=document.createElement('div');actions.className='selection-actions';
+  const chart=document.createElement('button');chart.type='button';chart.textContent='시세·차트 보기';
+  chart.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('market-symbol-open',{detail:{symbol:c.ticker}})));
+  actions.append(chart);
+  if(instruments.some(item=>item.symbol===c.ticker&&item.chains.some(chain=>chain>0))){
+    const talk=document.createElement('a');talk.href='#talk/'+encodeURIComponent(c.ticker);talk.textContent='종목 토론';actions.append(talk);
+  }
+  const today=document.createElement('a');today.href='#today';today.textContent='오늘의 변화';actions.append(today);
+  const scenario=document.createElement('a');scenario.href='#scenario';scenario.textContent='시나리오 분석';actions.append(scenario);
+  const close=document.createElement('button');close.type='button';close.className='selection-close';close.textContent='×';close.setAttribute('aria-label','기업 선택 닫기');
+  close.addEventListener('click',()=>{state.selected=null;renderSelection();$$('.selected').forEach(e=>e.classList.remove('selected'));});
+  el.append(title,data,actions,close);
+}
 function showTooltip(c,e){if(matchMedia('(max-width:720px)').matches)return;const tooltip=$('#tooltip'),r=getReturn(c,state.period);tooltip.replaceChildren();const title=document.createElement('strong');title.textContent=`${c.ticker} · ${c.name}`;const sub=document.createElement('small');sub.textContent=`${c.sector} / ${COUNTRY_NAMES[c.country]??c.country}`;const vals=document.createElement('div');vals.className='tooltip-values';const cap=document.createElement('span');cap.textContent=capText(c.cap);const val=document.createElement('b');val.className=pctClass(r);val.textContent=sign(r);vals.append(cap,val);tooltip.append(title,sub,vals);tooltip.hidden=false;const bounds=$('#chart-stage').getBoundingClientRect();const x=Math.min(Math.max(8,e.clientX-bounds.left+15),bounds.width-tooltip.offsetWidth-8),y=Math.min(Math.max(8,e.clientY-bounds.top+15),bounds.height-tooltip.offsetHeight-8);tooltip.style.left=`${x}px`;tooltip.style.top=`${y}px`;}
 function hideTooltip(){$('#tooltip').hidden=true;}
 function wireCompany(el,c){el.dataset.id=c.id;el.setAttribute('aria-label',`${c.name} ${c.ticker}, ${c.sector}, ${periodName()} ${sign(getReturn(c,state.period))}, 시가총액 ${capText(c.cap)}`);el.setAttribute('aria-pressed',String(state.selected===c.id));el.classList.toggle('selected',state.selected===c.id);el.addEventListener('click',()=>selectCompany(c));el.addEventListener('pointermove',e=>showTooltip(c,e));el.addEventListener('pointerleave',hideTooltip);el.addEventListener('blur',hideTooltip);}

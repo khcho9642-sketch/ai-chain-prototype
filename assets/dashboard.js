@@ -110,7 +110,10 @@ async function loadDetail(force=false){
 function choose(symbol){selected=symbol;write('ai-chain.selected.v1',symbol);if(location.hash!=='#data')location.hash='data';else update();loadDetail()}
 async function add(event){
   event.preventDefault()
-  const input=document.getElementById('market-add'),symbol=normalizeSymbol(input.value)
+  return openSymbol(document.getElementById('market-add').value)
+}
+async function openSymbol(rawSymbol){
+  const symbol=normalizeSymbol(rawSymbol)
   const message=value=>{formError=value;const el=document.getElementById('market-form-status');if(el)el.textContent=value}
   if(!validSymbol(symbol)){message('올바른 티커를 입력하세요. 코스닥 종목은 .KQ를 붙이세요.');return}
   if(quotes().some(q=>q.symbol===symbol)){search='';filter=0;group='전체';choose(symbol);mount();return}
@@ -140,6 +143,18 @@ document.addEventListener('submit',event=>{if(event.target.id==='market-add-form
 document.addEventListener('input',event=>{if(event.target.id==='market-search'){search=event.target.value;const el=document.getElementById('market-results');if(el)el.innerHTML=result()}})
 document.addEventListener('change',event=>{if(event.target.id==='market-group'){group=event.target.value;update()}if(event.target.id==='market-filter'){filter=Number(event.target.value);update()}})
 document.getElementById('q')?.addEventListener('keydown',event=>{if(event.key==='Enter'){search=event.target.value;group='전체';filter=0;if(location.hash!=='#data')location.hash='data';else mount()}})
+// The home map shares this existing lookup, chart, watchlist and CSV flow.
+window.addEventListener('market-symbol-open',event=>{
+  const raw=event.detail?.symbol
+  if(typeof raw!=='string'||!validSymbol(normalizeSymbol(raw)))return
+  search='';filter=0;group='전체'
+  if(location.hash!=='#data')location.hash='data'
+  requestAnimationFrame(async()=>{
+    mount()
+    await openSymbol(raw)
+    requestAnimationFrame(()=>document.getElementById('market-selected')?.scrollIntoView({behavior:'smooth',block:'start'}))
+  })
+})
 window.addEventListener('market-refresh-request',()=>loadSnapshot());
 mount();syncWatch();loadSnapshot().then(()=>loadDetail())
 setInterval(()=>{if(!document.hidden){loadSnapshot();loadDetail(true)}},60000)

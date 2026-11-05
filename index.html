@@ -141,9 +141,22 @@ aside h2{margin:0;font-size:16px}
 <style>
 body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
 #v-home{min-width:0}
-.topnav{flex-wrap:wrap;row-gap:0}
+.top{gap:14px 24px}
+.topnav{flex:1 0 100%;order:3;flex-wrap:wrap;column-gap:22px;row-gap:0}
+.topnav a{white-space:nowrap}
+.mobile-menu{display:none}
+.mobile-menu summary:focus-visible,.mobile-menu a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:760px){
   body[data-page="home"]>main.wrap{padding-bottom:100px}
+  .mobile-menu{display:block;position:relative;margin-left:auto}
+  .mobile-menu summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:12px;cursor:pointer;list-style:none}
+  .mobile-menu summary::-webkit-details-marker{display:none}
+  .mobile-menu summary span{font-size:15px;line-height:1}
+  .mobile-menu[open] summary{border-color:var(--accent)}
+  .mobile-menu>nav{position:absolute;right:0;top:calc(100% + 8px);z-index:50;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;width:min(336px,calc(100vw - 32px));max-height:calc(100svh - 110px);overflow-y:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 14px 36px #0008}
+  .mobile-menu a{display:flex;align-items:center;min-height:44px;padding:10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:12px;white-space:nowrap}
+  .mobile-menu a.on{color:var(--accent);background:var(--card-on);font-weight:700}
+  .mobile-menu a:hover{background:var(--card-on);color:var(--ink)}
   .tabbar{display:flex!important;grid-template-columns:none!important;gap:2px;overflow-x:auto;overflow-y:hidden;z-index:30;height:calc(78px + env(safe-area-inset-bottom));padding:6px max(8px,env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom));scrollbar-width:none;overscroll-behavior-x:contain;scroll-snap-type:x proximity}
   .tabbar::-webkit-scrollbar{display:none}
   .tabbar a,.tabbar a:first-child{flex:0 0 72px;min-width:72px;min-height:60px;padding:4px 2px;scroll-snap-align:start;white-space:nowrap}
@@ -154,9 +167,32 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
 <header>
   <div class="wrap top">
     <a class="brand today-brand" href="#home">AI Value Chain <small>시장 지도</small></a>
+    <details class="mobile-menu">
+      <summary>전체 메뉴 <span aria-hidden="true">☰</span></summary>
+      <nav aria-label="전체 메뉴">
+      <a href="#home" data-r="home" class="on">시장 지도</a>
+      <a href="#today" data-r="today">오늘의 변화</a>
+      <a href="#data" data-r="data">시세·기업</a>
+      <a href="#scenario" data-r="scenario">시나리오 분석</a>
+      <a href="#talk" data-r="talk">토론</a>
+      <a href="#map" data-r="map">밸류체인 지도</a>
+      <a href="#compare" data-r="compare">고리 비교</a>
+      <a href="#industry" data-r="industry">산업통계</a>
+      <a href="#ai-stats" data-r="ai-stats">AI 통계</a>
+      <a href="#ai" data-r="ai">AI에게 묻기</a>
+      </nav>
+    </details>
     <nav class="topnav" aria-label="주요 메뉴">
-      <a href="#home" data-r="home" class="on">시장 지도</a><a href="#today" data-r="today">오늘의 변화</a><a href="#map" data-r="map">밸류체인 지도</a><a href="#data" data-r="data">시세·기업</a><a href="#scenario" data-r="scenario">시나리오 분석</a><a href="#talk" data-r="talk">토론</a>
-      <details class="nav-more"><summary>데이터 더보기</summary><div><a href="#compare" data-r="compare">고리 비교</a><a href="#industry" data-r="industry">산업통계</a><a href="#ai-stats" data-r="ai-stats">AI 통계</a><a href="#ai" data-r="ai">AI에게 묻기</a></div></details>
+      <a href="#home" data-r="home" class="on">시장 지도</a>
+      <a href="#today" data-r="today">오늘의 변화</a>
+      <a href="#data" data-r="data">시세·기업</a>
+      <a href="#scenario" data-r="scenario">시나리오 분석</a>
+      <a href="#talk" data-r="talk">토론</a>
+      <a href="#map" data-r="map">밸류체인 지도</a>
+      <a href="#compare" data-r="compare">고리 비교</a>
+      <a href="#industry" data-r="industry">산업통계</a>
+      <a href="#ai-stats" data-r="ai-stats">AI 통계</a>
+      <a href="#ai" data-r="ai">AI에게 묻기</a>
     </nav>
     <div class="spacer"></div>
     <div class="search">
@@ -333,6 +369,10 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});
 route();
+var mobileMenu=document.querySelector('.mobile-menu');
+mobileMenu.addEventListener('click',function(event){if(event.target.closest('a[data-r]'))mobileMenu.open=false;});
+mobileMenu.addEventListener('keydown',function(event){if(event.key==='Escape'){mobileMenu.open=false;mobileMenu.querySelector('summary').focus();}});
+window.addEventListener('hashchange',function(){mobileMenu.open=false;});
 </script>
 <script type="module" src="./assets/home-map.js"></script>
 <script type="module" src="./assets/dashboard.js"></script>
