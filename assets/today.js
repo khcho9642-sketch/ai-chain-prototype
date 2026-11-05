@@ -3,13 +3,15 @@ import { TODAY_AGENTS, validateTodaySnapshot, todayCards, getTodayComment, getTo
 import { communityEvidenceUrl } from './community-ui-core.js'
 import { recommendationComments, retainRecommendationComments } from './recommendation-comments.js'
 import { validateTodayDiscussion, todayDiscussionForReport } from './today-discussion-core.js'
+import { validateTodayPersonas, getPersonaForReport } from './today-persona-core.js'
 
 const root = document.getElementById('v-today')
 const chains = ['소부장', '파운드리·패키징', '메모리', 'AI 칩', '전력', '인프라', '모델', '애플리케이션']
-const state = { snapshot: null, marketSnapshot: window.aiChainSnapshot || null, marketError: false, busy: false, loaded: false, error: false, discussion: null, discussionDocument: null, discussionBusy: false, discussionLoaded: false, discussionError: false }
-let controller, generation = 0, dayTimer, discussionController, discussionGeneration = 0
+const state = { snapshot: null, marketSnapshot: window.aiChainSnapshot || null, marketError: false, busy: false, loaded: false, error: false, discussion: null, discussionDocument: null, discussionBusy: false, discussionLoaded: false, discussionError: false, personas: null, personasDocument: null, personasBusy: false, personasLoaded: false, personasError: false }
+let controller, generation = 0, dayTimer, discussionController, discussionGeneration = 0, personasController, personasGeneration = 0
 const cardNodes = new Map()
 const discussionNodes = new Map()
+const personaNodes = new Map()
 const node = (tag, content, attrs = {}) => {
   const element = document.createElement(tag)
   if (content != null) element.textContent = String(content)
@@ -164,14 +166,14 @@ function discussionSourceDetails(response) {
 function discussionPanel(report) {
   let entry = discussionNodes.get(report.id)
   if (!entry) {
-    entry = { element: node('section', null, { class: 'today-cross-opinions', 'data-today-discussion': report.id, 'aria-label': '다른 AI 의견' }), signature: null }
+    entry = { element: node('section', null, { class: 'today-cross-opinions', 'data-today-discussion': report.id, 'aria-label': 'AI 티키타카' }), signature: null }
     discussionNodes.set(report.id, entry)
   }
-  const result = state.discussion ? todayDiscussionForReport(state.discussion, report) : { responses: [], states: [] }
+  const result = state.discussion ? todayDiscussionForReport(state.discussion, report) : { responses: [], states: [], followUps: [] }
   const signature = JSON.stringify([result, state.discussionError, state.discussionBusy])
   if (entry.signature === signature) return entry.element
   entry.signature = signature
-  const children = [node('h4', '다른 AI 의견', { class: 'today-cross-heading' })]
+  const children = [node('h4', 'AI 티키타카', { class: 'today-cross-heading' })]
   for (const [agent, info] of Object.entries(TODAY_AGENTS)) {
     if (agent === report.agent) continue
     const response = result.responses.find(item => item.agent === agent)
@@ -183,6 +185,12 @@ function discussionPanel(report) {
     } else article.append(node('p', '의견 대기', { class: 'today-cross-pending' }))
     children.push(article)
   }
+  for (const response of result.followUps) {
+    const article = node('article', null, { class: `today-cross-opinion today-cross-follow-up today-agent-${response.agent}`, 'data-today-follow-up': response.id })
+    article.append(node('strong', TODAY_AGENTS[response.agent].name, { class: 'today-cross-name' }),
+      node('p', response.text, { class: 'today-cross-text', 'data-today-cross-text': '' }), discussionSourceDetails(response))
+    children.push(article)
+  }
   if (state.discussionError) {
     const error = node('div', null, { class: 'today-cross-error', role: 'status' })
     const retry = node('button', '다시 불러오기', { type: 'button' })
@@ -190,6 +198,43 @@ function discussionPanel(report) {
     retry.addEventListener('click', readDiscussion)
     error.append(node('p', '다른 AI 의견을 불러오지 못했어요.'), retry)
     children.push(error)
+  }
+  entry.element.replaceChildren(...children)
+  return entry.element
+}
+
+function personaContent(report) {
+  let entry = personaNodes.get(report.id)
+  if (!entry) {
+    entry = { element: node('div', null, { class: 'today-persona-content', 'data-today-persona': report.id }), signature: null }
+    personaNodes.set(report.id, entry)
+  }
+  const rewrite = state.personas ? getPersonaForReport(state.personas, report) : null
+  const error = report.kind === 'stock-opinion' && state.personasError
+  const signature = JSON.stringify([rewrite, error, state.personasBusy])
+  if (entry.signature === signature) return entry.element
+  entry.signature = signature
+  const analysisOpen = entry.element.querySelector('[data-today-persona-analysis]')?.open || false
+  const children = [node('p', rewrite?.comment || getTodayComment(report).text, { class: 'today-comment', 'data-today-comment': '' })]
+  if (rewrite) {
+    entry.element.setAttribute('data-persona-rewrite', rewrite.id)
+    const analysis = node('details', null, { class: 'today-persona-analysis', 'data-today-persona-analysis': '' })
+    const body = node('div', null, { class: 'today-persona-analysis-body' })
+    analysis.append(node('summary', '분석글 읽기'))
+    body.append(node('h4', rewrite.headline, { 'data-today-persona-headline': '' }))
+    for (const paragraph of rewrite.analysis.split(/\n\s*\n/u).filter(Boolean)) body.append(node('p', paragraph))
+    body.append(discussionSourceDetails(rewrite))
+    analysis.append(body)
+    analysis.open = analysisOpen
+    children.push(analysis)
+  } else entry.element.removeAttribute('data-persona-rewrite')
+  if (error) {
+    const notice = node('div', null, { class: 'today-persona-error', role: 'status' })
+    const retry = node('button', '다시 불러오기', { type: 'button' })
+    retry.disabled = state.personasBusy
+    retry.addEventListener('click', readPersonas)
+    notice.append(node('p', '새 분석글을 불러오지 못했어.'), retry)
+    children.push(notice)
   }
   entry.element.replaceChildren(...children)
   return entry.element
@@ -228,8 +273,7 @@ function renderCard(card, { archived = false } = {}) {
   content.append(title, priceFields(pick, { showComparison: !archived && !factualReview }))
   const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })
-  initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }),
-    node('p', getTodayComment(pick).text, { class: 'today-comment', 'data-today-comment': '' }))
+  initial.append(node('p', pick.kind ? `${card.name} · AI` : '의견', { class: 'today-message-label' }), personaContent(pick))
   initial.append(sourceDetails(pick))
   thread.append(initial, ...(!card.report ? card.responses || [] : []).map(response => renderResponse(response, pick)))
   content.append(thread)
@@ -252,6 +296,7 @@ function cachedCard(card, { archived = false } = {}, retainedCards) {
     const previous = entry.article.querySelector('.today-price-fields')
     const publishedPick = entry.article.dataset.pickId ? pick : null
     if (previous) previous.replaceWith(priceFields(publishedPick, { showComparison: !!publishedPick && !archived && publishedPick.kind !== 'earnings-review' }))
+    if (publishedPick) personaContent(publishedPick)
     if (publishedPick?.kind === 'stock-opinion') discussionPanel(publishedPick)
   }
   return entry.article
@@ -291,6 +336,7 @@ function render() {
   const retainedReports = new Set([...cards, ...older].map(card => (card.report || card.pick)?.id).filter(Boolean))
   retainRecommendationComments(retainedReports)
   for (const id of discussionNodes.keys()) if (!retainedReports.has(id)) discussionNodes.delete(id)
+  for (const id of personaNodes.keys()) if (!retainedReports.has(id)) personaNodes.delete(id)
 }
 
 function applyDiscussion() {
@@ -324,6 +370,37 @@ async function readDiscussion() {
   }
 }
 
+function applyPersonas() {
+  if (!state.snapshot || !state.personasDocument) return
+  try {
+    validateTodayPersonas(state.personasDocument, { today: state.snapshot, catalog: instruments, now: Date.now() })
+    state.personas = state.personasDocument
+    state.personasError = false
+  } catch {
+    state.personas = null
+    state.personasError = true
+  }
+}
+
+async function readPersonas() {
+  if (state.personasBusy) return
+  state.personasBusy = true; state.personasError = false; render()
+  personasController?.abort(); personasController = new AbortController(); const current = ++personasGeneration
+  try {
+    const response = await fetch('./data/today-personas.json', { cache: 'no-store', signal: AbortSignal.any([personasController.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
+    if (!response.ok) throw new Error('personas_unavailable')
+    const value = await response.json()
+    if (current !== personasGeneration) return
+    state.personasDocument = value; state.personasLoaded = true
+    applyPersonas()
+  } catch (error) {
+    if (current !== personasGeneration || error.name === 'AbortError') return
+    state.personasError = true; state.personas = null; state.personasDocument = null
+  } finally {
+    if (current === personasGeneration) { state.personasBusy = false; render() }
+  }
+}
+
 async function readEdition() {
   if (state.busy) return
   state.busy = true; state.error = false; render()
@@ -336,6 +413,7 @@ async function readEdition() {
     if (current !== generation) return
     state.snapshot = value; state.loaded = true
     applyDiscussion()
+    applyPersonas()
   } catch (error) {
     if (current !== generation || error.name === 'AbortError') return
     state.error = true; state.snapshot = null
@@ -348,6 +426,7 @@ function mount() {
   render()
   if (!state.loaded && !state.busy && !state.error) readEdition()
   if (!state.discussionBusy && (!state.discussionLoaded || state.discussionError)) readDiscussion()
+  if (!state.personasBusy && (!state.personasLoaded || state.personasError)) readPersonas()
 }
 if (root) {
   window.renderToday = mount
@@ -355,7 +434,7 @@ if (root) {
   window.addEventListener('market-snapshot', event => { state.marketSnapshot = event.detail; state.marketError = false; render() })
   window.addEventListener('market-snapshot-error', () => { state.marketError = true; render() })
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render() })
-  window.addEventListener('pagehide', () => { clearTimeout(dayTimer); controller?.abort(); discussionController?.abort() })
+  window.addEventListener('pagehide', () => { clearTimeout(dayTimer); controller?.abort(); discussionController?.abort(); personasController?.abort() })
   window.addEventListener('pageshow', mount)
   document.querySelectorAll('.nav-more a').forEach(link => link.addEventListener('click', () => { link.closest('details').open = false }))
   mount()

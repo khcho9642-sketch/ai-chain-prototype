@@ -10,12 +10,14 @@ import { validateCompanyDisclosures } from '../assets/company-disclosures-core.j
 import { validateTodaySnapshot } from '../assets/today-core.js'
 import { validateTodayDiscussion, TODAY_DISCUSSION_MAX_BYTES } from '../assets/today-discussion-core.js'
 import { verifyTodayDiscussionHashes } from './community/today-discussion.mjs'
+import { validateTodayPersonas, TODAY_PERSONAS_MAX_BYTES } from '../assets/today-persona-core.js'
+import { verifyTodayPersonaHashes } from './community/today-persona.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','comparison-history.json','epoch-ai.json']
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json']
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -39,6 +41,10 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   if (Buffer.byteLength(discussionText) > TODAY_DISCUSSION_MAX_BYTES) throw new Error('AI 교차 의견 크기 제한 초과')
   const discussion = validateTodayDiscussion(JSON.parse(discussionText), { today })
   verifyTodayDiscussionHashes(discussion, { today })
+  const personasText = await readFile(join(source, 'data', 'today-personas.json'), 'utf8')
+  if (Buffer.byteLength(personasText) > TODAY_PERSONAS_MAX_BYTES) throw new Error('AI 분석 표현 크기 제한 초과')
+  const personas = validateTodayPersonas(JSON.parse(personasText), { today })
+  verifyTodayPersonaHashes(personas, { today })
   const comparisonText = await readFile(join(source, 'data', 'comparison-history.json'), 'utf8')
   if (Buffer.byteLength(comparisonText) > MAX_COMPARISON_HISTORY_BYTES) throw new Error('비교 이력 크기 제한 초과')
   validateComparisonHistorySnapshot(JSON.parse(comparisonText))

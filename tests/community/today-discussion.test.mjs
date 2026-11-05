@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir, mkdtemp, readdir, rm } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join, resolve, relative, isAbsolute, sep } from 'node:path'
 import { validateTodayDiscussion, todayDiscussionForReport } from '../../assets/today-discussion-core.js'
-import { createTodayDiscussionResponse, verifyTodayDiscussionHashes, publishTodayDiscussion } from '../../scripts/community/today-discussion.mjs'
+import { createTodayDiscussionResponse, createTodayDiscussionFollowUp, verifyTodayDiscussionHashes, publishTodayDiscussion } from '../../scripts/community/today-discussion.mjs'
 
 const todayBytes = await readFile(new URL('../../data/today-picks.json', import.meta.url), 'utf8')
 const today = JSON.parse(todayBytes)
@@ -66,9 +66,9 @@ test('self replies, invented reports, wrong symbols and changed report hashes ca
   }
   const value = six(), parent = clone(today.reports[0])
   parent.provenance.responseSha256 = 'f'.repeat(64)
-  assert.deepEqual(todayDiscussionForReport(value, parent), { responses: [], states: [] })
+  assert.deepEqual(todayDiscussionForReport(value, parent), { responses: [], states: [], followUps: [] })
   parent.id = 'replacement-with-same-symbol'
-  assert.deepEqual(todayDiscussionForReport(value, parent), { responses: [], states: [] })
+  assert.deepEqual(todayDiscussionForReport(value, parent), { responses: [], states: [], followUps: [] })
 })
 
 test('each parent and peer pair, response id and authentic run identity stay unique', () => {
@@ -205,4 +205,59 @@ test('published peer snapshot retains raw hashes and covers both peers for every
     assert.equal(peers.responses.length + peers.states.length, 2)
     assert.deepEqual([...peers.responses, ...peers.states].map(row => row.agent).sort(), agents.filter(agent => agent !== parent.agent).sort())
   }
+})
+function withFollowUps() {
+  const value = six(); value.publishedAt = '2026-11-05T01:06:00Z'
+  value.followUps = today.reports.map(parent => {
+    const text = '둘 다 좋은 지적이네. 가정과 실제 실적을 분리해서 보자는 쪽은 나도 같아. 다음 확인 지점부터 같이 보자.'
+    return createTodayDiscussionFollowUp({ parent, text, rawResponse: JSON.stringify({ text }) + '\n',
+      replyToIds: value.responses.filter(row => row.parentId === parent.id).map(row => row.id), createdAt: '2026-11-05T01:05:00Z', id: 'return-' + parent.id,
+      provenance: { provider: parent.agent, requestedModel: parent.agent + '-pinned', reportedModel: null, cliName: names[parent.agent], cliVersion: '1.0.0',
+        generatedAt: '2026-11-05T01:04:00Z', promptVersion: 'owner-cross-return-v1', runId: 'return-run-' + parent.id,
+        execution: 'owner-reviewed-one-off', reviewedAt: '2026-11-05T01:04:30Z' } })
+  })
+  return value
+}
+
+test('original authors can each return once after reading authentic peer replies', () => {
+  const value = withFollowUps()
+  validate(value); verifyTodayDiscussionHashes(value, { today })
+  for (const parent of today.reports) {
+    const selected = todayDiscussionForReport(value, parent)
+    assert.equal(selected.responses.length, 2)
+    assert.equal(selected.followUps.length, 1)
+    assert.equal(selected.followUps[0].agent, parent.agent)
+  }
+  const old = six(); assert.deepEqual(todayDiscussionForReport(old, today.reports[0]).followUps, [])
+})
+
+test('return replies cannot impersonate another author, reference another report or create reply chains', () => {
+  for (const mutation of [
+    value => { value.followUps[0].agent = value.responses[0].agent },
+    value => { value.followUps[0].replyToIds = [] },
+    value => { value.followUps[0].replyToIds = [value.followUps[0].id] },
+    value => { value.followUps[0].replyToIds = [value.responses.find(row => row.parentId !== value.followUps[0].parentId).id] },
+    value => { value.followUps[0].replyToIds = [value.followUps[0].replyToIds[0], value.followUps[0].replyToIds[0]] },
+    value => { value.followUps.push({ ...clone(value.followUps[0]), id: 'another-return-id' }) },
+  ]) {
+    const value = withFollowUps(); mutation(value)
+    assert.throws(() => validate(value), /invalid_today_discussion/)
+  }
+})
+
+test('return replies preserve review chronology, informal speech and exact raw-byte hashes', () => {
+  const early = withFollowUps(); early.followUps[0].provenance.generatedAt = '2026-11-05T01:01:00Z'
+  assert.throws(() => validate(early), /invalid_today_discussion_chronology/)
+  const polite = withFollowUps(); polite.followUps[0].text = '그 지적에 동의합니다.'; polite.followUps[0].rawResponse = polite.followUps[0].text
+  assert.throws(() => validate(polite), /invalid_today_discussion_follow_up/)
+  const bytes = withFollowUps(); bytes.followUps[0].rawResponse += '\n'
+  validate(bytes)
+  assert.throws(() => verifyTodayDiscussionHashes(bytes, { today }), /today_discussion_response_hash_mismatch/)
+})
+test('new informal-voice peer prompts reject polite endings while legacy publications remain readable', () => {
+  const value = six(), row = value.responses[0]
+  row.text = '그 가정은 다시 확인해야 합니다.'; row.rawResponse = row.text
+  validate(value)
+  row.provenance.promptVersion = 'community-banmal-banter-v1'
+  assert.throws(() => validate(value), /invalid_today_discussion_response/)
 })

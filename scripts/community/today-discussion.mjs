@@ -15,14 +15,21 @@ export function createTodayDiscussionResponse({ parent, agent, text, rawResponse
     text, rawResponse, createdAt, provenance: { ...provenance, responseSha256: hash(rawResponse) } }
 }
 
+/** An original author can return once to one or both authentic peer opinions. */
+export function createTodayDiscussionFollowUp({ parent, text, rawResponse, replyToIds, provenance, createdAt, id = randomUUID() }) {
+  if (typeof rawResponse !== 'string' || !provenance || typeof parent?.provenance?.responseSha256 !== 'string') fail('invalid_today_discussion_import')
+  return { id, parentId: parent.id, parentReportSha256: parent.provenance.responseSha256, agent: parent.agent, symbol: parent.symbol,
+    text, rawResponse, replyToIds: [...(replyToIds || [])], createdAt, provenance: { ...provenance, responseSha256: hash(rawResponse) } }
+}
+
 /** Node publication check: browser validation alone cannot authenticate a SHA-256 claim. */
 export function verifyTodayDiscussionHashes(value, { today } = {}) {
   const parents = new Map([...(today?.reports || []), ...(today?.reportHistory || [])].map(report => [report.id, report]))
-  for (const response of value.responses) {
+  for (const response of [...value.responses, ...(value.followUps || [])]) {
     if (hash(response.rawResponse) !== response.provenance.responseSha256) fail('today_discussion_response_hash_mismatch')
   }
   if (today !== undefined) {
-    for (const response of [...value.responses, ...value.states]) {
+    for (const response of [...value.responses, ...value.states, ...(value.followUps || [])]) {
       const parent = parents.get(response.parentId)
       if (!parent || hash(parent.report) !== response.parentReportSha256 || parent.provenance.responseSha256 !== response.parentReportSha256) fail('today_discussion_parent_hash_mismatch')
     }
@@ -47,7 +54,7 @@ export async function publishTodayDiscussion({ snapshot, today, root = todayDisc
     await writeFile(temporary, encoded, { flag: 'wx' })
     await rename(temporary, output)
   } catch (error) { await rm(temporary, { force: true }); throw error }
-  return { output, responses: snapshot.responses.length, states: snapshot.states.length }
+  return { output, responses: snapshot.responses.length, states: snapshot.states.length, followUps: snapshot.followUps?.length || 0 }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

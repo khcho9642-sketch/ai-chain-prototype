@@ -79,6 +79,7 @@ async function fixtureRoot(t) {
       schemaVersion: 1, range: '3y', interval: '1d', generatedAt: '2024-01-01T00:00:00Z', source: 'Yahoo Finance', quotes: [],
     },
     'today-discussion.json': { schemaVersion: 1, publishedAt: null, responses: [], states: [] },
+    'today-personas.json': { schemaVersion: 1, publishedAt: null, rewrites: [] },
     'today-picks.json': {
       schemaVersion: 1, timezone: 'Asia/Seoul', editionDate: null, publishedAt: null, picks: [],
       providerStates: Object.fromEntries(['gpt', 'claude', 'gemini'].map(agent => [agent, { status: 'disabled', reason: 'verification_pending' }])),
@@ -129,7 +130,7 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), [...scenarioAssets].sort())
   assert.deepEqual((await readdir(join(output, 'data'))).sort(), [
     'ai-disclosures.json', 'ai-statistics.json', 'ai-tokens.json', 'company-disclosures.json',
-    'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market.json', 'today-discussion.json', 'today-picks.json',
+    'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market.json', 'today-discussion.json', 'today-personas.json', 'today-picks.json',
   ])
 
   const server = createSiteServer({ root: output })
@@ -143,6 +144,7 @@ test('static build publishes the scenario chapter without widening the public fi
     assert.equal(response.status, 200)
     assert.match(response.headers.get('content-type') || '', name.endsWith('.css') ? /^text\/css/u : /^text\/javascript/u)
   }
+  assert.deepEqual(await (await fetch(`${origin}/data/today-personas.json`)).json(), { schemaVersion: 1, publishedAt: null, rewrites: [] })
   const deepLink = await fetch(`${origin}/#scenario`)
   assert.equal(deepLink.status, 200)
   const html = await deepLink.text()

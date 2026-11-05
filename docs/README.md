@@ -19,7 +19,7 @@
 
 ## 사이트 배포
 
-[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 9종 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
+[정적 사이트·스냅샷·API 배포](deployment/overview.md)에서 GitHub Pages·Vercel의 차이, 공개 JSON 허용목록, 예약 수집·복원·배포 순서와 커뮤니티 패키지 준비를 확인한다.
 
 ## 커뮤니티와 운영
 
@@ -44,3 +44,4 @@
 - [추천 글 댓글: 저장·API·운영 범위](community/recommendation-comments.md)
 
 - [추천별 AI 교차 의견: 원문 연결·실제 응답 발행](community/today-discussion.md)
+- [AI 페르소나 분석과 티키타카: 원문 보존·3단계 실제 작성](community/today-personas.md)

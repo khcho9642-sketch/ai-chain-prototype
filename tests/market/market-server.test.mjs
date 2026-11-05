@@ -212,13 +212,15 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source,'data','today-picks.json'),JSON.stringify(today))
   const discussion = { schemaVersion: 1, publishedAt: null, responses: [], states: [] }
   await writeFile(join(source,'data','today-discussion.json'),JSON.stringify(discussion))
+  const personas = { schemaVersion: 1, publishedAt: null, rewrites: [] }
+  await writeFile(join(source,'data','today-personas.json'),JSON.stringify(personas))
   await writeFile(join(source,'data','private-research.json'),'PRIVATE')
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
-  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','epoch-ai.json','industry.json','market.json','today-discussion.json','today-picks.json'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','epoch-ai.json','industry.json','market.json','today-discussion.json','today-personas.json','today-picks.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })
@@ -233,6 +235,7 @@ test('build publishes only the public site; server handles API errors without ex
   assert.deepEqual(await (await fetch(`${origin}/data/market.json`)).json(), { quotes: [] })
   assert.deepEqual(await (await fetch(`${origin}/data/today-picks.json`)).json(),today)
   assert.deepEqual(await (await fetch(`${origin}/data/today-discussion.json`)).json(),discussion)
+  assert.deepEqual(await (await fetch(`${origin}/data/today-personas.json`)).json(),personas)
   assert.deepEqual(await (await fetch(`${origin}/data/industry.json`)).json(),industry)
   assert.deepEqual(await (await fetch(`${origin}/api/industry`)).json(),industry)
   assert.equal((await fetch(`${origin}/api/industry`,{method:'POST'})).status,405)
