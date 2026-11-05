@@ -1,3 +1,6 @@
+import { renderScenarioChoices, renderDragControls, syncDragControls, createDragInteraction } from './scenario-drag.js'
+import { renderExplorer, sectorConclusion } from './scenario-explorer.js'
+
 const root = document.getElementById('v-scenario')
 
 const STORAGE_KEY = 'ai-chain.scenario.v1'
@@ -41,6 +44,7 @@ let marketSnapshot = window.aiChainSnapshot || null
 let storageMessage = ''
 let inputMessage = ''
 let matrixCache = null
+let selectedSegmentId = null
 
 const active = () => root && !root.hidden
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -113,7 +117,8 @@ function defaultRequest(id) {
 
 function newSessionRequest(id) {
   const request = defaultRequest(id)
-  if (id === 'interest_rate' && 'rateChangePctPoints' in request.inputs) request.inputs.rateChangePctPoints = 1
+  if (id === 'interest_rate') request.inputs.rateChangePctPoints = 1
+  else Object.assign(request.inputs, scenarioById(id)?.presets?.upside?.inputs)
   request.durationMonths = 12
   return request
 }
@@ -163,7 +168,8 @@ function loadState() {
     if (!parsed || ![1, 2, STORAGE_VERSION].includes(parsed.version)) return fallback
     for (const id of Object.keys(requests)) {
       try {
-        const saved = sanitizeRequest(id, parsed.requests?.[id])
+        if (!parsed.requests?.[id]) continue
+        const saved = sanitizeRequest(id, parsed.requests[id])
         if (id === first) requests[id].companyOverrides = saved.companyOverrides
         else requests[id] = saved
       } catch { /* keep a verified default */ }
@@ -195,7 +201,7 @@ function saveState() {
 
 function currentRequest() { return uiState.requests[uiState.scenarioId] }
 
-function recalculate() {
+function recalculate({ persist = true } = {}) {
   try {
     const request = clone(currentRequest())
     const validated = coreModule.validateScenarioRequest(request)
@@ -209,7 +215,7 @@ function recalculate() {
     }
     engineError = null
     inputMessage = ''
-    saveState()
+    if (persist) saveState()
   } catch (error) {
     result = null
     scenarioView = null
@@ -396,26 +402,6 @@ function warnings() {
   return input + storage
 }
 
-function compactScenarioCards() {
-  return `<div class="scenario-picker compact" role="group" aria-label="시나리오 선택">${dataModule.SCENARIO_DEFINITIONS.map(item => `<button type="button" class="scenario-choice${item.id === uiState.scenarioId ? ' selected' : ''}" data-scenario-id="${esc(item.id)}" aria-pressed="${item.id === uiState.scenarioId}"><strong>${esc(item.name)}</strong></button>`).join('')}</div>`
-}
-
-function compactControls() {
-  const definition = scenarioById(uiState.scenarioId), request = currentRequest()
-  const presets = Object.entries(definition.presets || {})
-  const presetButtons = uiState.scenarioId === 'interest_rate'
-    ? [0.5, 1, 2].map(value => `<button type="button" data-control-preset-id="rateChangePctPoints" data-control-preset-value="${value}" aria-pressed="${Number(request.inputs.rateChangePctPoints) === value}">+${value}%p</button>`).join('')
-    : presets.map(([id, values]) => `<button type="button" data-scenario-preset="${esc(id)}">${esc(presetText(definition, values))}</button>`).join('')
-  return `<section class="scenario-panel scenario-inputs compact" aria-labelledby="scenario-input-heading">
-    <div class="scenario-input-top"><div><h2 id="scenario-input-heading">${esc(definition.name)}</h2></div>
-      <div class="scenario-presets" role="group" aria-label="수치 프리셋">${presetButtons}</div>
-      <button type="button" class="scenario-reset" data-scenario-reset>초기화</button></div>
-    <div class="scenario-compact-controls">${(definition.controls || []).map(control => `<label class="scenario-number-control"><span>${esc(control.label)}</span><span class="scenario-signed-input"><input type="number" inputmode="decimal" min="${control.min}" max="${control.max}" step="${control.step}" value="${request.inputs[control.id]}" data-scenario-control="${esc(control.id)}"><small>${esc(control.unit || '')}</small></span></label>`).join('')}
-      <div class="scenario-duration-shortcuts"><span>지속기간</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${Number(request.durationMonths) === months}">${months}개월</button>`).join('')}</div></div>
-    </div>${uiState.scenarioId === 'model_growth' ? `<div class="scenario-derived-input" data-model-growth-helper>${modelGrowthHelperContent()}</div>` : ''}
-  </section>`
-}
-
 const pct2 = value => !finite(value) ? '분해 불가' : `${Number(value) > 0 ? '+' : Number(value) < 0 ? '−' : ''}${Math.abs(Number(value)).toFixed(2)}%`
 
 const totalChange = value => finite(value) ? pct2(value) : '산정 불가'
@@ -435,7 +421,9 @@ function sharedBarScale() {
     const negative = Math.abs(values.filter(value => value < 0).reduce((sum, value) => sum + value, 0))
     max = Math.max(max, positive, negative, Math.abs(Number(row.totalPct) || 0))
   }
-  return max > 0 ? max : 1
+  if (max <= 1) return 1
+  const unit = 10 ** Math.floor(Math.log10(max))
+  return unit * [1, 2, 5, 10].find(tick => tick * unit >= max)
 }
 
 function divergingBar(row, scale) {
@@ -455,7 +443,7 @@ function divergingBar(row, scale) {
   }
   const total = Number(row.totalPct)
   const marker = Math.max(0, Math.min(100, 50 + total / scale * 50))
-  return `<div class="scenario-impact-bar" aria-label="직접 ${pct2(parts.direct)}, 밸류체인 ${pct2(parts.chain)}, 총 ${pct2(parts.total)}"><span class="scenario-bar-axis"></span>${pieces.join('')}<b class="scenario-total-marker" style="left:${marker.toFixed(4)}%" title="총 ${pct2(parts.total)}"></b></div>`
+  return `<span class="scenario-impact-bar" role="img" aria-label="직접 ${pct2(parts.direct)}, 밸류체인 ${pct2(parts.chain)}, 총 ${pct2(parts.total)}"><span class="scenario-bar-axis"></span>${pieces.join('')}<b class="scenario-total-marker" style="left:${marker.toFixed(4)}%" title="총 ${pct2(parts.total)}"></b></span>`
 }
 
 function resultSummary() {
@@ -542,7 +530,7 @@ function companyDetail() {
   const paths = company.paths || []
 
   return `<section class="scenario-panel scenario-company-detail" aria-labelledby="scenario-company-detail-heading">
-    <div class="scenario-detail-hero"><div><h2 id="scenario-company-detail-heading">${esc(company.name || source.name)} <small>${esc(company.symbol || source.symbol || '비상장')}</small></h2><p>${esc(pathSummary(company.topPath, company))}</p><button type="button" class="scenario-quote-button" data-toggle-quotes aria-pressed="${uiState.showObservedQuotes}">${uiState.showObservedQuotes ? '관측·환산주가 숨기기' : '관측·환산주가 보기'}</button></div><div class="scenario-detail-index"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong><small>가치지수 ${indexValue(company.scenarioValueIndex)}</small></div></div>
+    <div class="scenario-detail-hero"><div><h2 id="scenario-company-detail-heading" tabindex="-1">${esc(company.name || source.name)} <small>${esc(company.symbol || source.symbol || '비상장')}</small></h2><p>${esc(pathSummary(company.topPath, company))}</p><button type="button" class="scenario-quote-button" data-toggle-quotes aria-pressed="${uiState.showObservedQuotes}">${uiState.showObservedQuotes ? '관측·환산주가 숨기기' : '관측·환산주가 보기'}</button></div><div class="scenario-detail-index"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong><small>가치지수 ${indexValue(company.scenarioValueIndex)}</small></div></div>
     <div class="scenario-detail-breakdown"><div><span>직접</span><b>${pct2(parts.direct)}</b></div><div><span>밸류체인</span><b>${pct2(parts.chain)}</b></div><div><span>원시 잔차</span><b>${finite(company.residualPct) ? `${Number(company.residualPct).toFixed(4)}%p` : '—'}</b></div><div><span>전파 가정 신뢰등급</span><b>C</b></div></div>
     ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} + 밸류체인 ${pct2(parts.chain)} = 총 ${pct2(parts.total)}. 순위와 막대는 반올림 전 값을 사용합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
     <div data-financial-basis>${financialDetails(company)}</div>
@@ -562,12 +550,21 @@ function companyDetail() {
   </section>`
 }
 
+function explorerContent() {
+  if (!scenarioView) return calculationError()
+  return renderExplorer(scenarioView, { selectedSegmentId, selectedCompanyId: uiState.selectedCompanyId, renderBar: divergingBar, scale: sharedBarScale() })
+}
+
 function renderDynamic({ skipDetail = false } = {}) {
   if (!root || !initialized) return
   const summary = root.querySelector('[data-scenario-summary]')
   const companies = root.querySelector('[data-scenario-companies]')
   const detail = root.querySelector('[data-scenario-detail]')
   const warningHost = root.querySelector('[data-scenario-warnings]')
+  const explorer = root.querySelector('[data-scenario-explorer]')
+  const conclusion = root.querySelector('[data-drag-conclusion]')
+  if (explorer) explorer.innerHTML = explorerContent()
+  if (conclusion) conclusion.textContent = scenarioView ? sectorConclusion(scenarioView) : ''
   if (summary) summary.innerHTML = resultSummary()
   if (companies) {
     const otherOpen = companies.querySelector('.scenario-other-results')?.open
@@ -595,11 +592,15 @@ function renderDynamic({ skipDetail = false } = {}) {
 function renderReady() {
   const definition = scenarioById(uiState.scenarioId)
   root.innerHTML = `<div class="scenario-shell">
-    <header class="scenario-hero compact"><div><h1>밸류체인 충격, 기업가치까지</h1>${financialCoverage()}</div><span class="scenario-honesty">기준 기업가치 = 100</span></header>
-    <section class="scenario-panel scenario-select compact" aria-labelledby="scenario-select-heading"><div class="scenario-section-heading"><div><h2 id="scenario-select-heading">5개 시나리오</h2></div><span class="scenario-selected-name">현재 · ${esc(definition.name)}</span></div>${compactScenarioCards()}</section>
-    ${compactControls()}
+    <header class="scenario-hero compact"><h1>끌어보면, 기업가치가 움직여요</h1></header>
+    <section class="scenario-select compact" aria-label="5개 시나리오">${renderScenarioChoices(dataModule.SCENARIO_DEFINITIONS, uiState.scenarioId)}</section>
+    <div class="scenario-workbench">
+      ${renderDragControls(definition, currentRequest(), { presetText, modelGrowthHtml: modelGrowthHelperContent(), conclusionHtml: scenarioView ? esc(sectorConclusion(scenarioView)) : '' })}
+      <div data-scenario-warnings>${warnings()}</div>
+      <div data-scenario-explorer>${explorerContent()}</div>
+    </div>
     <div data-scenario-summary>${resultSummary()}</div>
-    <div data-scenario-warnings>${warnings()}</div>
+    <div class="scenario-coverage">${financialCoverage()}</div>
     <div data-scenario-companies>${resultsTables()}</div>
     <div data-scenario-detail>${companyDetail()}</div>
     ${methodology()}
@@ -652,7 +653,7 @@ function clearInputError(element) {
   element?.setCustomValidity?.('')
 }
 
-function updateControl(id, rawValue, { skipDetail = false, element = null } = {}) {
+function updateControl(id, rawValue, { skipDetail = false, element = null, persist = true } = {}) {
   const request = currentRequest()
   const control = id === 'durationMonths' ? { label: '충격 지속기간', unit: '개월', ...DURATION } : scenarioById(uiState.scenarioId)?.controls?.find(item => item.id === id)
   if (!control) return false
@@ -664,13 +665,16 @@ function updateControl(id, rawValue, { skipDetail = false, element = null } = {}
   if (id === 'durationMonths') request.durationMonths = numeric
   else request.inputs[id] = numeric
   uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
-  for (const button of root.querySelectorAll('[data-control-preset-id]')) {
-    if (button.dataset.controlPresetId === id) button.setAttribute('aria-pressed', String(Number(button.dataset.controlPresetValue) === numeric))
-  }
+  refreshControls(element, { persist, skipDetail })
+  return true
+}
+
+function refreshControls(element = null, { persist = true, skipDetail = false } = {}) {
+  syncDragControls(root, scenarioById(uiState.scenarioId), currentRequest(), element)
   const modelHelper = root.querySelector('[data-model-growth-helper]')
   if (modelHelper) modelHelper.innerHTML = modelGrowthHelperContent()
-  recalculate(); renderDynamic({ skipDetail })
-  return true
+  recalculate({ persist })
+  renderDynamic({ skipDetail })
 }
 
 function updateCompanyOverride(id, group, field, rawValue, element = null) {
@@ -697,12 +701,41 @@ function updateCompanyOverride(id, group, field, rawValue, element = null) {
   return true
 }
 
+const drag = createDragInteraction({
+  isActive: () => active() && !document.hidden,
+  onInput: (id, value, element) => updateControl(id, value, { element, persist: false }),
+  onCommit: () => { if (uiState) saveState() },
+})
+
 if (root) {
+  root.addEventListener('pointerdown', event => {
+    if (!event.target.closest('[data-drag-play]')) drag.stop()
+  })
   root.addEventListener('click', event => {
+    const play = event.target.closest('[data-drag-play]')
+    if (play) { drag.toggle(play); return }
+    drag.stop()
+    const sector = event.target.closest('[data-explore-sector]')
+    if (sector) {
+      selectedSegmentId = sector.dataset.exploreSector
+      const explorer = root.querySelector('[data-scenario-explorer]')
+      if (explorer) {
+        explorer.innerHTML = explorerContent()
+        explorer.querySelector(`[data-explore-sector="${selectedSegmentId}"]`)?.focus({ preventScroll: true })
+      }
+      return
+    }
     const scenario = event.target.closest('[data-scenario-id]')
-    if (scenario) { uiState.scenarioId = scenario.dataset.scenarioId; matrixCache = null; recalculate(); renderReady(); return }
+    if (scenario) {
+      uiState.scenarioId = scenario.dataset.scenarioId
+      selectedSegmentId = null
+      recalculate()
+      renderReady()
+      root.querySelector(`[data-scenario-id="${uiState.scenarioId}"]`)?.focus({ preventScroll: true })
+      return
+    }
     const numericPreset = event.target.closest('[data-control-preset-id]')
-    if (numericPreset) { updateControl(numericPreset.dataset.controlPresetId, numericPreset.dataset.controlPresetValue); renderReady(); return }
+    if (numericPreset) { updateControl(numericPreset.dataset.controlPresetId, numericPreset.dataset.controlPresetValue); return }
     const preset = event.target.closest('[data-scenario-preset]')
     if (preset) {
       const presetDefinition = scenarioById(uiState.scenarioId).presets?.[preset.dataset.scenarioPreset]
@@ -711,22 +744,37 @@ if (root) {
         Object.assign(currentRequest().inputs, values)
         for (const id of Object.keys(values)) uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
       }
-      recalculate(); renderReady(); return
+      refreshControls(); return
     }
     if (event.target.closest('[data-scenario-reset]')) {
-      uiState.requests[uiState.scenarioId] = newSessionRequest(uiState.scenarioId)
+      const request = currentRequest()
+      for (const control of scenarioById(uiState.scenarioId).controls) {
+        if (control.role === 'baseline') continue
+        request.inputs[control.id] = uiState.scenarioId === 'model_growth' ? request.inputs.modelBaselineGrowthPct : 0
+        uiState.touchedControls[`${uiState.scenarioId}:${control.id}`] = true
+      }
       inputMessage = ''
-      recalculate(); renderReady(); return
+      refreshControls(); return
     }
     const duration = event.target.closest('[data-duration]')
-    if (duration) { updateControl('durationMonths', Number(duration.dataset.duration)); renderReady(); return }
-    const company = event.target.closest('tr[data-company-row][data-company-id]')
-    if (company) { uiState.selectedCompanyId = company.dataset.companyId; saveState(); renderDynamic(); root.querySelector('.scenario-company-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return }
+    if (duration) { updateControl('durationMonths', Number(duration.dataset.duration)); return }
+    const company = event.target.closest('tr[data-company-row][data-company-id]') || event.target.closest('[data-explore-company]')
+    if (company) {
+      uiState.selectedCompanyId = company.dataset.companyId
+      saveState()
+      renderDynamic()
+      root.querySelector('#scenario-company-detail-heading')?.focus({ preventScroll: true })
+      root.querySelector('.scenario-company-detail')?.scrollIntoView({ block: 'start' })
+      return
+    }
     if (event.target.closest('[data-sort-representatives]')) { uiState.sortRepresentativesByAbs = !uiState.sortRepresentativesByAbs; saveState(); renderDynamic({ skipDetail: true }); return }
     if (event.target.closest('[data-toggle-quotes]')) { uiState.showObservedQuotes = !uiState.showObservedQuotes; saveState(); const detail = root.querySelector('[data-scenario-detail]'); if (detail) detail.innerHTML = companyDetail(); return }
     if (event.target.closest('[data-scenario-retry]')) initialize({ force: true })
   })
   root.addEventListener('input', event => {
+    const range = event.target.closest('[data-scenario-range]')
+    if (range) { drag.queueRange(range); return }
+    drag.stop()
     const control = event.target.closest('[data-scenario-control]')
     if (control) { updateControl(control.dataset.scenarioControl, control.value, { element: control }); return }
     const assumption = event.target.closest('[data-company-assumption]')
@@ -737,6 +785,8 @@ if (root) {
     if (search) { uiState.companySearch = search.value.slice(0, 80); saveState(); const host = root.querySelector('[data-other-table]'); if (host) host.innerHTML = companyTable(filteredOtherRows(), '기타 기업 결과', sharedBarScale()) }
   })
   root.addEventListener('change', event => {
+    const range = event.target.closest('[data-scenario-range]')
+    if (range) { drag.finishRange(range); return }
     const assumption = event.target.closest('[data-company-assumption]')
     if (assumption) {
       if (updateCompanyOverride(assumption.dataset.companyId, 'assumptions', assumption.dataset.companyAssumption, assumption.value, assumption)) renderDynamic()
@@ -749,6 +799,7 @@ if (root) {
     }
   })
   root.addEventListener('keydown', event => {
+    if (!event.target.closest('[data-drag-play]')) drag.stop()
     const row = event.target.closest('tr[data-company-row][data-company-id]')
     if (row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); row.click() }
   })
@@ -757,7 +808,10 @@ if (root) {
   }, true)
 }
 
+document.addEventListener?.('visibilitychange', () => { if (document.hidden) drag.stop() })
+window.addEventListener('pagehide', () => drag.stop())
 window.renderScenario = () => {
+  drag.stop()
   if (!active()) return
   if (initialized) renderReady()
   else initialize()

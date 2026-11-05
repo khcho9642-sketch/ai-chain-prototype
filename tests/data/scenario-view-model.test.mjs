@@ -159,3 +159,53 @@ test('a nonpositive baseline keeps the company visible and the nine-company aver
   assert.equal(view.summary.representativeAveragePct, null)
   assert.ok(view.summary.largestDecline.totalPct < 0)
 })
+
+test('sector explorer marks only actual direct origins and distinguishes the rate-wide shock and neutral state', async () => {
+  const { renderExplorer, sectorConclusion } = await import('../../assets/scenario-explorer.js')
+  const display = { renderBar: () => '', scale: 2 }
+  const origins = html => [...html.matchAll(/<button[^>]+data-explore-sector="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g)]
+    .filter(match => match[2].includes('충격 시작')).map(match => match[1])
+  for (const [gpuRentChangePct, dcRentChangePct, expected] of [[10, 0, ['SEG8']], [0, 10, ['SEG7']], [10, -10, ['SEG7', 'SEG8']], [0, 0, []]]) {
+    const view = buildScenarioView(evaluateScenario({ scenarioId: 'gpu_dc_rent', durationMonths: 12, inputs: { gpuRentChangePct, dcRentChangePct } }))
+    const html = renderExplorer(view, display)
+    assert.deepEqual(origins(html), expected)
+    if (!expected.length) {
+      assert.match(html, /현재 입력에서 기업가치 변화가 없습니다/)
+      assert.match(sectorConclusion(view), /9개 섹터 지수가 모두 기준 100/)
+    }
+  }
+  const rate = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }))
+  const html = renderExplorer(rate, display)
+  assert.deepEqual(origins(html), [])
+  assert.match(html, /금리 · 9개 섹터에 직접 적용/)
+  assert.match(html, /9개 섹터 가치 변화/)
+  assert.match(html, /공개 재무 없음 · 섹터 가정/)
+  for (const companyId of ['OPENAI', 'ANTHROPIC', 'DEEPSEEK']) assert.ok(html.includes(`data-company-id="${companyId}"`))
+  assert.match(sectorConclusion(rate), /9개 섹터 지수가 하락/)
+})
+
+test('explorer reuses the same company valuation in every membership and ranks available companies by absolute change', async () => {
+  const { renderExplorer } = await import('../../assets/scenario-explorer.js')
+  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hbm_market', durationMonths: 12, inputs: { hbmPriceChangePct: 10, hbmSupplyChangePct: 0 } }))
+  const both = []
+  // One row cannot be compared. It is still a member but should not enter the ranking.
+  const unavailable = view.companies.find(company => company.companyId === 'MU')
+  unavailable.totalPct = null
+  const expectedRanking = view.companies.filter(company => Number.isFinite(company.totalPct) && company.totalPct !== 0)
+    .sort((a, b) => Math.abs(b.totalPct) - Math.abs(a.totalPct)).slice(0, 8).map(company => company.companyId)
+  for (const selectedSegmentId of ['SEG2', 'SEG3']) {
+    const renderedCompanies = []
+    renderExplorer(view, { selectedSegmentId, scale: 2, renderBar(company, scale) {
+      renderedCompanies.push(company)
+      assert.equal(scale, 2)
+      return ''
+    } })
+    const count = view.segments.find(segment => segment.segmentId === selectedSegmentId).memberCompanyIds.length
+    const sector = renderedCompanies.slice(0, count)
+    if (selectedSegmentId === 'SEG3') assert.ok(sector.includes(unavailable))
+    both.push(sector.find(company => company.companyId === '005930.KS'))
+    assert.deepEqual(renderedCompanies.slice(count).map(company => company.companyId), expectedRanking)
+  }
+  assert.equal(both[0], view.companies.find(company => company.companyId === '005930.KS'))
+  assert.equal(both[1], both[0])
+})

@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import './scenario-drag.test.mjs'
 
 const waitFor = async (predicate, timeoutMs = 3000) => {
   const started = Date.now()
@@ -37,6 +38,10 @@ test('scenario chapter renders compact controls and view-model tables without in
   for (const label of ['가장 크게 빠지는 기업 · 전체 41개', '전파 효과가 가장 큰 기업 · 전체 41개', '9개 섹터 대표기업 단순평균']) assert.match(root.innerHTML, new RegExp(label))
   assert.match(root.innerHTML, /<th>직접효과<\/th><th>밸류체인 효과<\/th><th>총 EV 변화<\/th>/)
   assert.match(root.innerHTML, /scenario-impact-bar/)
+  assert.equal((root.innerHTML.match(/data-explore-sector="/g) || []).length, 9)
+  assert.match(root.innerHTML, /금리 · 9개 섹터에 직접 적용/)
+  assert.match(root.innerHTML, /공개 재무 없음 · 섹터 가정/)
+  assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
   assert.match(root.innerHTML, /공시 직접 \/ B · 공시 기반 추정 \/ C · 가정/)
   assert.match(root.innerHTML, /금리 \+1%p → 데이터센터 → 케펠 DC 리츠 수요·할인율에 즉시 반영/)
   assert.match(root.innerHTML, /96개월 현금흐름 전망/)
@@ -152,6 +157,8 @@ test('scenario chapter renders compact controls and view-model tables without in
     assert.equal(stored.scenarioId, 'interest_rate')
     assert.equal(stored.requests.interest_rate.companyOverrides.EQIX.assumptions.netDebtToEvPct, 12)
     assert.equal(stored.requests.hyperscaler_capex.durationMonths, 6)
+    assert.equal(stored.requests.hyperscaler_capex.inputs.capexChangePct, 0, 'restore an explicitly saved neutral shock')
+    assert.equal(stored.requests.gpu_dc_rent.inputs.gpuRentChangePct, 20, 'unvisited scenario starts with a visible example')
     assert.match(root.innerHTML, /data-control-preset-value="1" aria-pressed="true"/)
     assert.match(root.innerHTML, /data-duration="12" aria-pressed="true"/)
     assert.match(root.innerHTML, /data-sort-representatives aria-pressed="true"/)
