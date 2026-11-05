@@ -355,6 +355,7 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
   assert.ok(unavailable.valuation.baselineEnterpriseValueUnits <= 0)
   assert.equal(unavailable.valuation.comparisonStatus, 'nonpositive-baseline')
   assert.equal(unavailable.valueChangePct, null)
+  assert.deepEqual(unavailable.rateAttribution, { directPct: null, chainPct: null })
   assert.equal(unavailable.scenarioValueIndex, null)
   assert.equal(unavailable.valuation.enterpriseValueRatio, null)
   assert.equal(unavailable.valuation.equityValueRatio, null)
@@ -373,4 +374,83 @@ test('model revenue contraction and recovery preserve growth-rate arithmetic', (
   const recovery = evaluateScenario({ scenarioId: 'model_growth', durationMonths: 12, inputs: { modelBaselineGrowthPct: -20, modelTargetGrowthPct: 0 } })
   closeTo(recovery.scenario.drivers[0].normalizedShock, 0.25)
   assert.ok(segment(recovery, 'SEG9').scenarioValueIndex > 100)
+})
+
+const rateScenario = (rateChangePctPoints, rateCapexSensitivity, durationMonths = 12, companyOverrides = {}) =>
+  evaluateScenario({ scenarioId: 'interest_rate', durationMonths, inputs: { rateChangePctPoints, rateCapexSensitivity }, companyOverrides })
+
+test('rate-sensitive CAPEX uses the existing budget shock exactly once with existing supplier lags', () => {
+  const full = rateScenario(1)
+  const rateOnly = rateScenario(1, 0)
+  const capexOnly = evaluateScenario({ scenarioId: 'hyperscaler_capex', inputs: { capexChangePct: -5 } })
+  assert.deepEqual(full.scenario.rateCapexTransmission, {
+    version: 1, rateChangePctPoints: 1, rateCapexSensitivity: 5, derivedCapexChangePct: -5, budgetLagMonths: 0, grade: 'C',
+  })
+  assert.deepEqual(full.scenario.drivers.map(driver => [driver.driverId, driver.normalizedShock]), [
+    ['interestRate', -0.01], ['hyperscalerCapex', -0.05],
+  ])
+  assert.equal(full.scenario.drivers[1].mediatedBy, 'interestRate')
+  assert.equal(capexOnly.scenario.rateCapexTransmission, undefined)
+  assert.equal(capexOnly.scenario.drivers.length, 1)
+  for (const [id, expectedPath, lag] of [
+    ['NVDA', 'SEG8>SEG5>SEG4', 12], ['000660.KS', 'SEG8>SEG5>SEG4>SEG3', 18],
+  ]) {
+    const supplier = company(full, id)
+    const direct = company(rateOnly, id)
+    const capex = company(capexOnly, id)
+    assert.ok(supplier.paths.some(path => path.mediatedBy === 'interestRate' && path.segments.join('>') === expectedPath && path.lagMonths === lag))
+    assert.ok(capex.paths.every(path => !path.mediatedBy))
+    assert.deepEqual(supplier.valuation.scenarioDiscountRatesPct, direct.valuation.scenarioDiscountRatesPct)
+    supplier.valuation.operatingBridge.forEach((year, i) => {
+      closeTo(year.revenueVolumePct - direct.valuation.operatingBridge[i].revenueVolumePct, capex.valuation.operatingBridge[i].revenueVolumePct, 0.00015)
+    })
+    const incrementalEv = supplier.valuation.scenarioEnterpriseValueUnits - direct.valuation.scenarioEnterpriseValueUnits
+    closeTo(supplier.rateAttribution.chainPct, 100 * incrementalEv / supplier.valuation.baselineEnterpriseValueUnits, 1e-10)
+    assert.ok(supplier.rateAttribution.directPct < 0 && supplier.rateAttribution.chainPct < 0)
+  }
+  const cloudSeed = segment(full, 'SEG8').paths.find(path => path.primitive === 'capexCashout')
+  assert.deepEqual(cloudSeed.segments, ['SEG8'])
+  assert.equal(cloudSeed.mediatedBy, 'interestRate')
+  assert.equal(cloudSeed.lagMonths, 0)
+  for (const [group, fullRows] of [['segments', full.segments], ['companies', full.companies]]) {
+    fullRows.forEach((row, index) => {
+      assert.equal(row.rateAttribution.directPct, rateOnly[group][index].valueChangePct)
+      closeTo(row.rateAttribution.directPct + row.rateAttribution.chainPct, row.valueChangePct, 1e-12)
+      assert.ok(row.paths.filter(path => path.driverId === 'hyperscalerCapex').every(path => path.mediatedBy === 'interestRate'))
+      assert.equal(rateOnly[group][index].rateAttribution.chainPct, 0)
+    })
+  }
+})
+
+test('rate duration, direction, zero shock and sensitivity change the conditional CAPEX effects', () => {
+  const halfYear = rateScenario(1, 5, 6)
+  const fullYear = rateScenario(1, 5)
+  const cut = rateScenario(-1, 5)
+  const stronger = rateScenario(1, 10)
+  const none = rateScenario(0, 10)
+  assert.equal(cut.scenario.rateCapexTransmission.derivedCapexChangePct, 5)
+  assert.equal(none.scenario.rateCapexTransmission.derivedCapexChangePct, 0)
+  assert.equal(none.checks.zeroShockIdentity, true)
+  assert.ok([...none.companies, ...none.segments].every(row => row.valueChangePct === 0 && row.rateAttribution.chainPct === 0))
+  assert.equal(rateScenario(3, 10).scenario.rateCapexTransmission.derivedCapexChangePct, -30)
+  assert.equal(rateScenario(-2, 10).scenario.rateCapexTransmission.derivedCapexChangePct, 20)
+  for (const id of ['NVDA', '000660.KS']) {
+    const normal = company(fullYear, id).rateAttribution
+    assert.ok(Math.abs(company(halfYear, id).rateAttribution.chainPct) < Math.abs(normal.chainPct))
+    assert.ok(company(cut, id).rateAttribution.chainPct > 0)
+    assert.equal(company(stronger, id).rateAttribution.directPct, normal.directPct)
+    assert.ok(company(stronger, id).rateAttribution.chainPct < normal.chainPct)
+  }
+})
+
+test('sensitivity is an explicit assumption while company CAPEX exposure still scales the derived shock', () => {
+  const input = SCENARIO_DEFINITIONS.find(item => item.id === 'interest_rate').controls.find(control => control.id === 'rateCapexSensitivity')
+  assert.equal(input.role, 'assumption')
+  assert.equal(input.defaultValue, 5)
+  for (const bad of [-0.1, 10.1, Infinity]) assert.throws(() => rateScenario(1, bad), /0~10/)
+  assert.throws(() => evaluateScenario({ scenarioId: 'interest_rate', inputs: { capexChangePct: -5 } }), /지원하지 않는 입력/)
+  assert.throws(() => rateScenario(1, 5, 12, { NVDA: { exposures: { rateCapexSensitivity: 1 } } }), /알 수 없는 노출도/)
+  const custom = rateScenario(1, 5, 12, { NVDA: { exposures: { hyperscalerCapex: 0 } } })
+  assert.deepEqual(company(custom, 'NVDA').rateAttribution, company(rateScenario(1, 0), 'NVDA').rateAttribution)
+  assert.ok(company(custom, '000660.KS').rateAttribution.chainPct < 0)
 })

@@ -119,9 +119,10 @@ export const SCENARIO_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'interest_rate',
     name: '금리 변화',
-    description: '금리 충격이 자본비용과 자본집약적 수요에 미치는 일시적 영향을 봅니다.',
+    description: '금리 변화의 직접효과와 빅테크 AI 설비투자를 거쳐 기업에 전달되는 효과를 함께 봅니다.',
     controls: Object.freeze([
       control('rateChangePctPoints', 'interestRate', '금리 변화', '%p', -2, 3, 0.25),
+      control('rateCapexSensitivity', 'hyperscalerCapex', '금리 +1%p당 AI CAPEX 감소율', '%', 0, 10, 0.5, 5, 'assumption'),
     ]),
     presets: Object.freeze({
       downside: preset('금리 상승', { rateChangePctPoints: 1.5 }),

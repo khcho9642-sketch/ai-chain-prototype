@@ -39,11 +39,17 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /<th>직접효과<\/th><th>밸류체인 효과<\/th><th>총 EV 변화<\/th>/)
   assert.match(root.innerHTML, /scenario-impact-bar/)
   assert.equal((root.innerHTML.match(/data-explore-sector="/g) || []).length, 9)
-  assert.match(root.innerHTML, /금리 · 9개 섹터에 직접 적용/)
+  assert.match(root.innerHTML, /9개 섹터에 직접 적용/)
   assert.match(root.innerHTML, /공개 재무 없음 · 섹터 가정/)
   assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
   assert.match(root.innerHTML, /공시 직접 \/ B · 공시 기반 추정 \/ C · 가정/)
-  assert.match(root.innerHTML, /금리 \+1%p → 데이터센터 → 케펠 DC 리츠 수요·할인율에 즉시 반영/)
+  assert.match(root.innerHTML, /금리 \+1%p → 빅테크 AI CAPEX −5%/)
+  const focusRow = id => root.innerHTML.split(`data-rate-target="${id}"`)[1].split('</tr>')[0]
+  assert.match(focusRow('NVDA'), /서버·장비 → AI 칩 · 시차 12개월/)
+  assert.match(focusRow('000660.KS'), /메모리\(HBM 포함\) · 시차 18개월/)
+  const values = id => Array.from(focusRow(id).matchAll(/<td [^>]*>([^<]+)<\/td>/g), m => m[1])
+  assert.deepEqual(values('NVDA'), ['−0.59%', '−0.08%', '−0.67%'])
+  assert.deepEqual(values('000660.KS'), ['−0.54%', '−0.03%', '−0.57%'])
   assert.match(root.innerHTML, /96개월 현금흐름 전망/)
   assert.match(root.innerHTML, /관측·환산주가 보기/)
   assert.doesNotMatch(root.innerHTML, /scenario-quote-observation/, 'quotes are hidden until requested')
@@ -73,7 +79,10 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /참여 41개사 중 <strong>38개사<\/strong>/)
   assert.match(root.innerHTML, /3개 비상장사는 섹터 가정/)
   assert.match(root.innerHTML, /현금흐름 마진은 37개사/)
-  selectCompany('NVDA')
+  listeners.get('click')({ target: { closest: selector => selector === '[data-explore-company]' ? { dataset: { companyId: 'NVDA' } } : null } })
+  window.renderScenario()
+  assert.match(details(), /금리 \+1%p → 빅테크 AI CAPEX −5% →/)
+  assert.doesNotMatch(details(), /감소율 \+5% →/)
   assert.match(details(), /FY2026 · 2026-01-25 결산 · 연결 · 금액 단위 USD 백만/)
   assert.match(details(), /<dt>매출<\/dt><dd>215,938<\/dd>/)
   assert.match(details(), /<dt>FCF 대용치<\/dt><dd>96,676<\/dd>/)
@@ -149,12 +158,16 @@ test('scenario chapter renders compact controls and view-model tables without in
   }
   for (const version of [1, 2, 3]) {
     let stored
+    if (version === 3) previous.requests.interest_rate.inputs.rateCapexSensitivity = 7
     root.innerHTML = ''
     root.querySelector = () => null
     globalThis.localStorage = { getItem: () => JSON.stringify({ ...previous, version }), setItem: (_, value) => { stored = JSON.parse(value) } }
     await import(`../../assets/scenario.js?stored-launch=${version}-${Date.now()}`)
     await waitFor(() => root.innerHTML.includes('scenario-shell'))
     assert.equal(stored.scenarioId, 'interest_rate')
+    assert.equal(stored.requests.interest_rate.durationMonths, 12)
+    assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1)
+    assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, version === 3 ? 7 : 5)
     assert.equal(stored.requests.interest_rate.companyOverrides.EQIX.assumptions.netDebtToEvPct, 12)
     assert.equal(stored.requests.hyperscaler_capex.durationMonths, 6)
     assert.equal(stored.requests.hyperscaler_capex.inputs.capexChangePct, 0, 'restore an explicitly saved neutral shock')
@@ -178,5 +191,30 @@ test('scenario chapter renders compact controls and view-model tables without in
     rate.value = '2'
     typeRate()
     assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'true'])
+    const typeSensitivity = value => {
+      const input = { dataset: { scenarioControl: 'rateCapexSensitivity' }, value, removeAttribute() {} }
+      listeners.get('input')({ target: { closest: selector => selector === '[data-scenario-control]' ? input : null } })
+      window.renderScenario()
+    }
+    const click = (selector, dataset = {}) => {
+      listeners.get('click')({ target: { closest: candidate => candidate === selector ? { dataset } : null } })
+      window.renderScenario()
+    }
+    typeSensitivity('0')
+    assert.deepEqual(values('NVDA').slice(1), ['0.00%', values('NVDA')[0]])
+    assert.match(root.innerHTML, /CAPEX 감소율 가정 0% · 전파 꺼짐/)
+    typeSensitivity('8')
+    click('[data-duration]', { duration: '6' })
+    assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
+    assert.match(root.innerHTML, /금리 \+2%p → 빅테크 AI CAPEX −16%/)
+    click('[data-scenario-reset]')
+    assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
+    assert.deepEqual(values('000660.KS'), ['0.00%', '0.00%', '0.00%'])
+    rate.value = '-1'
+    typeRate()
+    window.renderScenario()
+    assert.match(root.innerHTML, /금리 −1%p → 빅테크 AI CAPEX \+8%/)
+    click('[data-scenario-id]', { scenarioId: 'hyperscaler_capex' })
+    assert.doesNotMatch(root.innerHTML, /data-rate-target=|data-scenario-control="rateCapexSensitivity"/)
   }
 })

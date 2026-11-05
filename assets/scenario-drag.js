@@ -51,11 +51,14 @@ function presetButtons(definition, request, presetText) {
 }
 
 export function renderDragControls(definition, request, { presetText, modelGrowthHtml = '', conclusionHtml = '' }) {
+  const assumptions = definition.controls.filter(control => control.role === 'assumption')
+  const inputs = definition.controls.filter(control => control.role !== 'assumption')
   return `<section class="scenario-panel scenario-inputs scenario-drive" aria-labelledby="scenario-input-heading">
     <div class="scenario-drive-header"><h2 id="scenario-input-heading">${escapeHtml(definition.name)}</h2><button type="button" class="scenario-reset" data-scenario-reset>충격 0으로</button></div>
-    <div class="scenario-drag-fields">${definition.controls.map(control => sliderField(control, request.inputs[control.id])).join('')}</div>
+    <div class="scenario-drag-fields">${inputs.map(control => sliderField(control, request.inputs[control.id])).join('')}</div>
     <div class="scenario-drive-options"><div class="scenario-presets" role="group" aria-label="수치 프리셋">${presetButtons(definition, request, presetText)}</div>
       <div class="scenario-duration-shortcuts"><span>지속기간</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${request.durationMonths === months}">${months}개월</button>`).join('')}</div></div></div>
+    ${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">C등급 가정 · 0%면 전파 끄기</small></div>`).join('')}
     ${definition.id === 'model_growth' ? `<div class="scenario-derived-input" data-model-growth-helper>${modelGrowthHtml}</div>` : ''}
     <div class="scenario-drag-conclusion" data-drag-conclusion>${conclusionHtml}</div>
   </section>`
@@ -65,16 +68,18 @@ export function syncDragControls(root, definition, request, activeElement) {
   for (const control of definition.controls) {
     const field = root.querySelector(`[data-drag-field="${control.id}"]`)
     if (!field) continue
-    const value = request.inputs[control.id]
-    const range = field.querySelector('[data-scenario-range]')
+    const value = request.inputs[control.id] ?? control.defaultValue
     const number = field.querySelector('[data-scenario-control]')
-    const text = signedValue(value, control.unit)
-    // Exact numeric entry can legitimately fall between native slider steps.
-    range.step = onGrid(value, control) ? String(control.step) : 'any'
-    if (Number(range.value) !== value) range.value = String(value)
-    range.setAttribute('aria-valuetext', text)
-    field.querySelector('[data-drag-value]').textContent = text
-    field.style.setProperty('--value-pct', position(value, control) + '%')
+    if (control.role !== 'assumption') {
+      const range = field.querySelector('[data-scenario-range]')
+      const text = signedValue(value, control.unit)
+      // Exact numeric entry can legitimately fall between native slider steps.
+      range.step = onGrid(value, control) ? String(control.step) : 'any'
+      if (Number(range.value) !== value) range.value = String(value)
+      range.setAttribute('aria-valuetext', text)
+      field.querySelector('[data-drag-value]').textContent = text
+      field.style.setProperty('--value-pct', position(value, control) + '%')
+    }
     if (activeElement !== number || number.value.trim() && Number(number.value) === value) {
       if (activeElement !== number && number.value !== String(value)) number.value = String(value)
       if (number.hasAttribute?.('aria-invalid')) {

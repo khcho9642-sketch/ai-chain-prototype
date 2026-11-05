@@ -11,6 +11,8 @@ import {
 import { financialProfile } from './scenario-actuals.js'
 import { SCENARIO_FINANCIAL_BASELINES } from './scenario-financial-baselines.js'
 
+const RATE_CAPEX_DRIVER_LABEL = '금리를 통한 빅테크 AI CAPEX 변화'
+const RATE_PATH_ATTRIBUTION_METHOD = 'Rate-only DCF followed by incremental CAPEX DCF; driver impact allocated by discounted path signal'
 const PRIMITIVES = Object.freeze(['revenueVolume', 'asp', 'unitCost', 'capexCashout'])
 const segmentById = new Map(SEGMENTS.map(item => [item.id, item]))
 const companyById = new Map(COMPANIES.map(item => [item.companyId, item]))
@@ -144,7 +146,37 @@ function annualEnvelope(lagMonths, durationMonths) {
   })
 }
 
-function normalizedDriverInputs(definition, inputs) {
+function rateCapexTransmissionFor(request) {
+  if (request.scenarioId !== 'interest_rate') return null
+  const { rateChangePctPoints, rateCapexSensitivity } = request.inputs
+  return {
+    version: 1,
+    rateChangePctPoints,
+    rateCapexSensitivity,
+    derivedCapexChangePct: -rateChangePctPoints * rateCapexSensitivity || 0,
+    budgetLagMonths: 0,
+    grade: 'C',
+  }
+}
+
+function normalizedDriverInputs(definition, inputs, rateCapexTransmission) {
+  if (rateCapexTransmission) {
+    const { rateChangePctPoints, derivedCapexChangePct } = rateCapexTransmission
+    return [
+      {
+        driverId: 'interestRate', label: DRIVER_DEFINITIONS.interestRate.label,
+        normalizedShock: -rateChangePctPoints / 100 || 0,
+        controlValues: { rateChangePctPoints },
+        calculation: 'negative demand overlay; discount-rate effect is modeled separately',
+      },
+      {
+        driverId: 'hyperscalerCapex', label: RATE_CAPEX_DRIVER_LABEL,
+        normalizedShock: derivedCapexChangePct / 100, mediatedBy: 'interestRate',
+        controlValues: { capexChangePct: derivedCapexChangePct },
+        calculation: '-(rate change in percentage points) × assumed CAPEX sensitivity / 100',
+      },
+    ]
+  }
   if (definition.id === 'model_growth') {
     const baseline = inputs.modelBaselineGrowthPct / 100
     const target = inputs.modelTargetGrowthPct / 100
@@ -160,19 +192,18 @@ function normalizedDriverInputs(definition, inputs) {
     }]
   }
   return definition.controls.map(control => {
-    let normalizedShock = inputs[control.id] / 100
-    if (control.driverId === 'interestRate') normalizedShock *= -1
+    const normalizedShock = inputs[control.id] / 100
     return {
       driverId: control.driverId,
       label: DRIVER_DEFINITIONS[control.driverId].label,
       normalizedShock,
       controlValues: { [control.id]: inputs[control.id] },
-      calculation: control.driverId === 'interestRate' ? 'negative demand overlay; discount-rate effect is modeled separately' : 'input percent / 100',
+      calculation: 'input percent / 100',
     }
   })
 }
 
-function buildDriverPaths(driverId, normalizedShock, durationMonths) {
+function buildDriverPaths(driverId, normalizedShock, durationMonths, mediatedBy = null) {
   const driver = DRIVER_DEFINITIONS[driverId]
   if (!driver || normalizedShock === 0) return []
   const edges = PROPAGATION_EDGES.filter(edge => edge.drivers.includes(driverId))
@@ -182,6 +213,7 @@ function buildDriverPaths(driverId, normalizedShock, durationMonths) {
       const envelope = annualEnvelope(lagMonths, durationMonths)
       paths.push({
         pathId: `${driverId}:${primitive}:${segments.join('>')}`,
+        ...(mediatedBy && { mediatedBy }),
         driverId,
         primitive,
         segmentId,
@@ -214,7 +246,7 @@ function buildDriverPaths(driverId, normalizedShock, durationMonths) {
     coefficient: item.weight,
     segments: [item.segmentId],
     lagMonths: item.lagMonths,
-    channels: ['직접 입력'],
+    channels: [mediatedBy ? '금리 변화에서 빅테크 AI CAPEX 예산' : '직접 입력'],
     visited: new Set([item.segmentId]),
     applyCurrent: item.applyToSeed,
     propagate: item.propagate,
@@ -366,7 +398,7 @@ function pathEconomicScore(path, assumptions) {
   }, 0)
 }
 
-function attributePaths(driverContribution, paths, assumptions) {
+function attributePaths(driverContribution, paths, assumptions, attributionMethod) {
   if (!paths.length || Math.abs(driverContribution) < 1e-12) return []
   const scored = paths.map(path => ({ path, score: pathEconomicScore(path, assumptions) }))
   const totalScore = sum(scored.map(item => item.score))
@@ -374,12 +406,13 @@ function attributePaths(driverContribution, paths, assumptions) {
   return scored.map(({ path, score }) => ({
     pathId: path.pathId,
     driverId: path.driverId,
+    ...(path.mediatedBy && { mediatedBy: path.mediatedBy }),
     primitive: path.primitive,
     segments: path.segments,
     lagMonths: path.lagMonths,
     channels: path.channels,
     impactPoints: driverContribution * score / totalScore,
-    attributionMethod: MODEL_ASSUMPTIONS.pathAttributionMethod,
+    attributionMethod,
   }))
 }
 
@@ -405,21 +438,40 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
   const primitiveBundle = buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver)
   const projection = projectDcf(assumptions, primitiveBundle, request, selectedDriverIds)
   const comparable = projection.scenarioValueIndex !== null
-  const contributions = comparable ? attributeDrivers(assumptions, primitiveBundle, request, selectedDriverIds).contributions : []
+  let contributions = []
+  let rateAttribution
+  if (request.scenarioId === 'interest_rate') {
+    rateAttribution = { directPct: null, chainPct: null }
+    if (comparable) {
+      // Apply the rate first; the conditional CAPEX effect includes its interaction with the changed discount rate.
+      const rateOnly = projectDcf(assumptions, primitiveBundle, request, ['interestRate'])
+      const directPct = rateOnly.scenarioValueIndex - 100
+      const chainPct = projection.scenarioValueIndex - rateOnly.scenarioValueIndex
+      rateAttribution = { directPct, chainPct }
+      contributions = [
+        { driverId: 'interestRate', label: DRIVER_DEFINITIONS.interestRate.label, valueIndexPoints: directPct },
+        { driverId: 'hyperscalerCapex', label: RATE_CAPEX_DRIVER_LABEL, valueIndexPoints: chainPct, mediatedBy: 'interestRate' },
+      ]
+    }
+  } else if (comparable) {
+    contributions = attributeDrivers(assumptions, primitiveBundle, request, selectedDriverIds).contributions
+  }
   const difference = comparable ? projection.scenarioValueIndex - 100 : null
   if (contributions.length) contributions[contributions.length - 1].valueIndexPoints += difference - sum(contributions.map(item => item.valueIndexPoints))
-  const paths = contributions.flatMap(item => attributePaths(item.valueIndexPoints, primitiveBundle.entityPaths[item.driverId] ?? [], assumptions))
+  const attributionMethod = rateAttribution ? RATE_PATH_ATTRIBUTION_METHOD : MODEL_ASSUMPTIONS.pathAttributionMethod
+  const paths = contributions.flatMap(item => attributePaths(item.valueIndexPoints, primitiveBundle.entityPaths[item.driverId] ?? [], assumptions, attributionMethod))
     .sort((left, right) => Math.abs(right.impactPoints) - Math.abs(left.impactPoints))
   const equityBridge = buildEquityBridge(projection, assumptionOverrides.netDebtToEvPct, listingStatus)
   return {
     id,
     name,
     financialBasis,
+    ...(rateAttribution && { rateAttribution }),
     baselineValueIndex: comparable ? 100 : null,
     scenarioValueIndex: comparable ? round(projection.scenarioValueIndex) : null,
-    valueChangePct: comparable ? round(difference) : null,
-    driverContributions: contributions.map(item => ({ ...item, valueIndexPoints: round(item.valueIndexPoints) })),
-    paths: paths.map(path => ({ ...path, impactPoints: round(path.impactPoints) })),
+    valueChangePct: rateAttribution || !comparable ? difference : round(difference),
+    driverContributions: rateAttribution ? contributions : contributions.map(item => ({ ...item, valueIndexPoints: round(item.valueIndexPoints) })),
+    paths: rateAttribution ? paths : paths.map(path => ({ ...path, impactPoints: round(path.impactPoints) })),
     assumptions: {
       baseGrowthPct: round(financialBasis.firstYearGrowthPct),
       fcffMarginPct: round(financialBasis.firstYearCashMarginPct),
@@ -480,9 +532,10 @@ function coverageForSegment(segmentId, selectedDriverIds, request) {
 export function evaluateScenario(unvalidatedRequest) {
   const request = validateScenarioRequest(unvalidatedRequest)
   const definition = scenarioById.get(request.scenarioId)
-  const drivers = normalizedDriverInputs(definition, request.inputs)
+  const rateCapexTransmission = rateCapexTransmissionFor(request)
+  const drivers = normalizedDriverInputs(definition, request.inputs, rateCapexTransmission)
   const selectedDriverIds = drivers.map(item => item.driverId)
-  const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, request.durationMonths)]))
+  const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, request.durationMonths, item.mediatedBy)]))
 
   const segments = SEGMENTS.map(segment => {
     const entity = buildEntityResult({
@@ -562,7 +615,7 @@ export function evaluateScenario(unvalidatedRequest) {
       terminalValueNormalizedToBaseline: true,
       assumptionSource: MODEL_ASSUMPTIONS.assumptionSource,
       baselineInterpretation: 'reported consolidated annual revenue when available; financial cash-flow proxy transitions to mature sector assumptions',
-      pathAttributionMethod: MODEL_ASSUMPTIONS.pathAttributionMethod,
+      pathAttributionMethod: rateCapexTransmission ? RATE_PATH_ATTRIBUTION_METHOD : MODEL_ASSUMPTIONS.pathAttributionMethod,
       unmodeledMitigants: MODEL_ASSUMPTIONS.unmodeledMitigants,
       limitation: MODEL_ASSUMPTIONS.limitation,
     },
@@ -573,6 +626,7 @@ export function evaluateScenario(unvalidatedRequest) {
       durationMonths: request.durationMonths,
       fadeMonths: MODEL_ASSUMPTIONS.shockFadeMonths,
       inputValues: request.inputs,
+      ...(rateCapexTransmission && { rateCapexTransmission }),
       inputs: drivers,
       drivers,
       longestPathLagMonths,

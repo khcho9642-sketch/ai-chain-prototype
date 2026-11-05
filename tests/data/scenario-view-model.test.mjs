@@ -100,20 +100,47 @@ test('real scenario view keeps 41 unique companies, nine reps and nonduplicated 
   }
 })
 
-test('largest propagation is null when every chain path is zero and populated otherwise', () => {
-  const rate = buildScenarioView(evaluateScenario({
-    scenarioId: 'interest_rate', durationMonths: 12,
-    inputs: { rateChangePctPoints: 1 },
+test('rate sensitivity zero reproduces direct-only EV; a nonzero coefficient adds incremental supplier EV', () => {
+  const scenario = rateCapexSensitivity => buildScenarioView(evaluateScenario({
+    scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1, rateCapexSensitivity },
   }))
-  assert.equal(rate.summary.largestPropagation, null)
-  assert.ok(rate.companies.every(company => company.chainPct === 0))
+  const rateOnly = scenario(0)
+  const combined = scenario(5)
+  assert.equal(rateOnly.summary.largestPropagation, null)
+  assert.ok(combined.summary.largestPropagation)
+  for (const company of combined.companies.filter(row => Number.isFinite(row.totalPct))) {
+    const control = rateOnly.companies.find(row => row.companyId === company.companyId)
+    assert.equal(company.breakdownAvailable, true)
+    closeTo(company.directPct, control.totalPct, 1e-12)
+    closeTo(company.directPct + company.chainPct, company.totalPct, 1e-12)
+  }
+  for (const [id, hops, lag] of [['NVDA', 2, 12], ['000660.KS', 3, 18]]) {
+    const supplier = combined.companies.find(company => company.companyId === id)
+    const directOnly = rateOnly.companies.find(company => company.companyId === id)
+    closeTo(supplier.directPct, directOnly.totalPct)
+    assert.ok(supplier.chainPct < 0)
+    closeTo(supplier.chainPct, supplier.totalPct - directOnly.totalPct)
+    assert.equal(supplier.topPath.hops, hops)
+    assert.equal(supplier.topPath.lagMonths, lag)
+    assert.match(supplier.oneLinePath, /금리 → 빅테크 AI CAPEX → SEG8.*SEG5.*SEG4/)
+    assert.ok(supplier.oneLinePath.endsWith(`${lag}개월 뒤`))
+  }
+  const cloud = combined.companies.find(company => company.companyId === 'MSFT')
+  assert.ok(cloud.paths.some(path => path.segments.length === 1 && path.hops === 0 && path.effectKind === 'chain'))
+  assert.ok(cloud.paths.some(path => path.driverId === 'interestRate' && path.effectKind === 'direct'))
+  assert.equal(cloud.chainPct, cloud.rateAttribution.chainPct)
+  assert.equal(cloud.directPct, cloud.rateAttribution.directPct)
+  assert.equal(cloud.reconciliationStatus, 'reconciled-counterfactual')
+})
 
-  const capex = buildScenarioView(evaluateScenario({
-    scenarioId: 'hyperscaler_capex', durationMonths: 12,
-    inputs: { capexChangePct: 20 },
-  }))
-  assert.ok(capex.summary.largestPropagation)
-  assert.ok(Math.abs(capex.summary.largestPropagation.chainPct) > 0)
+test('rate-level DCF components take precedence even if the path allocation is unavailable', () => {
+  const row = decomposeCompany({ companyId: 'RATE', valueChangePct: -1, paths: [], rateAttribution: { directPct: -0.25, chainPct: -0.75 } })
+  assert.equal(row.breakdownAvailable, true)
+  assert.equal(row.directPct, -0.25)
+  assert.equal(row.chainPct, -0.75)
+  assert.equal(row.oneLinePath, null)
+  const bad = decomposeCompany({ ...row, rateAttribution: { directPct: -0.5, chainPct: -0.75 } })
+  assert.equal(bad.breakdownAvailable, false)
 })
 
 test('CAPEX transmission reports catalog weights and individual lags only for an exact path match', () => {
@@ -133,7 +160,7 @@ test('CAPEX transmission reports catalog weights and individual lags only for an
   assert.deepEqual(decomposeCompany({ ...nvidia, paths: [mismatchedPath] }).paths[0].coefficientSteps, [])
 })
 
-test('six-month rate scenario changes direct allocation because rate has no propagation paths', () => {
+test('shorter rate shocks reduce the modeled direct and CAPEX-mediated EV components', () => {
   const view = duration => buildScenarioView(evaluateScenario({
     scenarioId: 'interest_rate', durationMonths: duration,
     inputs: { rateChangePctPoints: 1 },
@@ -142,8 +169,7 @@ test('six-month rate scenario changes direct allocation because rate has no prop
   const six = view(6)
   const eqix12 = twelve.companies.find(company => company.companyId === 'EQIX')
   const eqix6 = six.companies.find(company => company.companyId === 'EQIX')
-  assert.equal(eqix12.chainPct, 0)
-  assert.equal(eqix6.chainPct, 0)
+  assert.ok(Math.abs(eqix6.chainPct) < Math.abs(eqix12.chainPct))
   assert.ok(Math.abs(eqix6.directPct) < Math.abs(eqix12.directPct))
 })
 
@@ -177,7 +203,11 @@ test('sector explorer marks only actual direct origins and distinguishes the rat
   const rate = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }))
   const html = renderExplorer(rate, display)
   assert.deepEqual(origins(html), [])
-  assert.match(html, /금리 · 9개 섹터에 직접 적용/)
+  assert.match(html, /금리 · 9개 섹터에 직접 적용 · 빅테크 AI CAPEX 경유 전파/)
+  const off = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1, rateCapexSensitivity: 0 } }))
+  assert.match(renderExplorer(off, display), /CAPEX 민감도 0 · 전파효과 0%/)
+  const neutral = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 0 } }))
+  assert.match(renderExplorer(neutral, display), /금리 변화 0%p · CAPEX 경유 전파 0%/)
   assert.match(html, /9개 섹터 가치 변화/)
   assert.match(html, /공개 재무 없음 · 섹터 가정/)
   for (const companyId of ['OPENAI', 'ANTHROPIC', 'DEEPSEEK']) assert.ok(html.includes(`data-company-id="${companyId}"`))

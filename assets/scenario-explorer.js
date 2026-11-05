@@ -17,7 +17,7 @@ function percent(value) {
 
 function originsOf(segments) {
   return new Set(segments.filter(segment => segment.paths.some(path =>
-    path.segments.length === 1 && path.segments[0] === segment.segmentId && path.impactPoints !== 0,
+    !path.mediatedBy && path.segments.length === 1 && path.segments[0] === segment.segmentId && path.impactPoints !== 0,
   )).map(segment => segment.segmentId))
 }
 
@@ -92,7 +92,15 @@ export function renderExplorer(view, options) {
     .sort((a, b) => Math.abs(b.totalPct) - Math.abs(a.totalPct)).slice(0, 8)
   const bound = sectorScale(view.segments)
   const rows = companies => companies.map(company => companyButton(company, options)).join('')
-  const originText = isBroadShock ? `${view.scenario.id === 'interest_rate' ? '금리' : '충격'} · ${view.segments.length}개 섹터에 직접 적용` : ''
+  let originText = isBroadShock ? `충격 · ${view.segments.length}개 섹터에 직접 적용` : ''
+  const transmission = view.scenario.rateCapexTransmission
+  if (transmission) {
+    if (transmission.rateChangePctPoints === 0) originText = '금리 변화 0%p · CAPEX 경유 전파 0%'
+    else {
+      const capexLabel = transmission.rateCapexSensitivity > 0 ? '빅테크 AI CAPEX 경유 전파' : 'CAPEX 민감도 0 · 전파효과 0%'
+      originText = `금리 · ${view.segments.length}개 섹터에 직접 적용 · ${capexLabel}`
+    }
+  }
   const denominator = comparable.length === view.companies.length ? `전체 ${comparable.length}개사` : `산정 가능 ${comparable.length}/${view.companies.length}개사`
   return `<section class="scenario-explorer" aria-labelledby="scenario-explorer-heading">
     <div class="scenario-explorer-heading"><div><h2 id="scenario-explorer-heading">9개 섹터 가치 변화</h2><p>섹터별 가정으로 계산한 지수 · 기준 100 · 막대 눈금 ±${bound}%</p></div>${originText ? `<span class="scenario-explorer-origins">${originText}</span>` : ''}</div>

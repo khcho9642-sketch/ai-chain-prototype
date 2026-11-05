@@ -77,12 +77,15 @@ test('asymmetric range ticks and exact off-grid numeric input keep their own tru
   const d = SCENARIO_DEFINITIONS[0]
   const req = { inputs: { rateChangePctPoints: 1.13 }, durationMonths: 12 }
   const html = renderDragControls(d, req, { presetText: () => '' })
+  assert.match(html, /data-scenario-control="rateCapexSensitivity"/)
+  assert.doesNotMatch(html, /data-scenario-range="rateCapexSensitivity"/)
+  assert.equal((html.match(/data-drag-play[\\s=>]/g) || []).length, 1)
   assert.match(html, /data-tick="zero" style="--tick-pct:40%"/)
   assert.match(html, /step="any" value="1.13" data-scenario-range=/)
   const range = { value: '1', setAttribute() {} }, num = { value: '1.130' }, result = {}
   const field = { style: { setProperty: (key, value) => { result[key] = value } },
     querySelector: key => ({ '[data-scenario-range]': range, '[data-scenario-control]': num, '[data-drag-value]': result })[key] }
-  syncDragControls({ querySelector: () => field, querySelectorAll: () => [] }, d, req, num)
+  syncDragControls({ querySelector: selector => selector.includes('rateChangePctPoints') ? field : null, querySelectorAll: () => [] }, d, req, num)
   assert.equal(range.value, '1.13')
   assert.equal(num.value, '1.130')
   assert.equal(result.textContent, '+1.13%p')
@@ -102,7 +105,7 @@ test('preset selection repairs an invalid draft and updates the actual pressed b
   const current = button({ controlPresetId: 'rateChangePctPoints', controlPresetValue: '0.5' })
   const previous = button({ controlPresetId: 'rateChangePctPoints', controlPresetValue: '1' })
   const period = button({ duration: '6' })
-  const root = { querySelector: () => field, querySelectorAll: selector => ({
+  const root = { querySelector: selector => selector.includes('rateChangePctPoints') ? field : null, querySelectorAll: selector => ({
     '[data-duration]': [period], '[data-control-preset-id]': [current, previous],
   })[selector] || [] }
   syncDragControls(root, definition, request, current)

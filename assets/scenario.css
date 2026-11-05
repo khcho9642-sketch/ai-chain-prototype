@@ -676,3 +676,36 @@
   .scenario-sector-meter i { background: Highlight !important; }
   #v-scenario [aria-pressed=true] { outline: 2px solid Highlight; }
 }
+
+
+.scenario-rate-setting { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; font-size: 12px; }
+.scenario-rate-setting label { color: var(--ink); }
+.scenario-rate-setting .scenario-signed-input { width: 76px; }
+.scenario-rate-setting .scenario-signed-input input { padding-block: 5px; }
+.scenario-rate-setting > small, .scenario-rate-comparison small, .scenario-rate-caption { color: var(--desk-muted); font-size: 11px; line-height: 1.55; }
+.scenario-rate-comparison header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 6px 12px; }
+.scenario-rate-comparison h2 { margin: 0; font-size: 16px; letter-spacing: -.03em; }
+.scenario-rate-comparison header p { margin: 5px 0 0; font-size: clamp(16px, 2vw, 22px); color: var(--ink); font-weight: 700; }
+.scenario-rate-comparison table { width: 100%; margin-top: 12px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.scenario-rate-comparison :is(th, td) { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.scenario-rate-comparison th:first-child { text-align: left; padding-left: 0; }
+.scenario-rate-comparison thead th { color: var(--desk-muted); font-size: 11px; font-weight: 500; }
+.scenario-rate-comparison tbody th { font-weight: 400; }
+.scenario-rate-comparison th small { display: block; }
+#v-scenario .scenario-rate-comparison button { padding: 2px 2px 2px 0; border: 0; background: none; color: var(--ink); font-size: 14px; font-weight: 700; text-align: left; }
+#v-scenario .scenario-rate-comparison button::after { content: " ›"; color: var(--desk-accent); }
+#v-scenario .scenario-rate-comparison button:hover { text-decoration: underline; }
+.scenario-rate-comparison td { font: 600 15px/1.5 var(--desk-numerals); }
+.scenario-rate-comparison td:last-child { font-weight: 750; }
+.scenario-rate-comparison .positive { color: var(--scenario-up); }
+.scenario-rate-comparison .negative { color: var(--scenario-down); }
+.scenario-rate-caption { margin: 8px 0 0; }
+@media (max-width: 560px) {
+  .scenario-rate-setting .scenario-signed-input input { font-size: 16px; }
+  .scenario-rate-comparison table, .scenario-rate-comparison tbody { display: block; }
+  .scenario-rate-comparison thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .scenario-rate-comparison tbody tr { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .scenario-rate-comparison tbody :is(th, td) { padding: 0; border: 0; text-align: left; }
+  .scenario-rate-comparison tbody th { grid-column: 1 / -1; }
+  .scenario-rate-comparison td::before { display: block; content: attr(data-label); font-weight: 500; line-height: 1.6; font-family: var(--desk-font, sans-serif); font-size: 10px; color: var(--desk-muted); }
+}
