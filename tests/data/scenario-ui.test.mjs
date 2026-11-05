@@ -80,4 +80,43 @@ test('scenario chapter renders compact controls and view-model tables without in
   field.value = ''
   listeners.get('input')({ target: { closest: selector => selector === '[data-company-assumption]' ? field : null } })
   assert.match(outlet.innerHTML, /환산주가 미산정/)
+
+  const previous = {
+    scenarioId: 'hyperscaler_capex', showObservedQuotes: true, sortRepresentativesByAbs: true,
+    requests: {
+      interest_rate: { scenarioId: 'interest_rate', durationMonths: 36, inputs: { rateChangePctPoints: -2 },
+        companyOverrides: { EQIX: { assumptions: { netDebtToEvPct: 12 } } } },
+      hyperscaler_capex: { scenarioId: 'hyperscaler_capex', durationMonths: 6, inputs: { capexChangePct: 0 } },
+    },
+  }
+  for (const version of [1, 2, 3]) {
+    let stored
+    root.innerHTML = ''
+    root.querySelector = () => null
+    globalThis.localStorage = { getItem: () => JSON.stringify({ ...previous, version }), setItem: (_, value) => { stored = JSON.parse(value) } }
+    await import(`../../assets/scenario.js?stored-launch=${version}-${Date.now()}`)
+    await waitFor(() => root.innerHTML.includes('scenario-shell'))
+    assert.equal(stored.scenarioId, 'interest_rate')
+    assert.equal(stored.requests.interest_rate.companyOverrides.EQIX.assumptions.netDebtToEvPct, 12)
+    assert.equal(stored.requests.hyperscaler_capex.durationMonths, 6)
+    assert.match(root.innerHTML, /data-control-preset-value="1" aria-pressed="true"/)
+    assert.match(root.innerHTML, /data-duration="12" aria-pressed="true"/)
+    assert.match(root.innerHTML, /data-sort-representatives aria-pressed="true"/)
+    assert.match(root.innerHTML, /data-toggle-quotes aria-pressed="false"/)
+    assert.match(root.innerHTML, /<th>대표기업<\/th>/)
+
+    const buttons = [0.5, 1, 2].map(value => ({
+      dataset: { controlPresetId: 'rateChangePctPoints', controlPresetValue: String(value) },
+      setAttribute(key, pressed) { if (key === 'aria-pressed') this.pressed = pressed },
+    }))
+    root.querySelectorAll = selector => selector === '[data-control-preset-id]' ? buttons : []
+    const rate = { dataset: { scenarioControl: 'rateChangePctPoints' }, value: '0', removeAttribute() {} }
+    const typeRate = () => listeners.get('input')({ target: { closest: selector => selector === '[data-scenario-control]' ? rate : null } })
+    typeRate()
+    assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 0)
+    assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'false'])
+    rate.value = '2'
+    typeRate()
+    assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'true'])
+  }
 })

@@ -23,6 +23,7 @@
 .scenario-reset:hover,.scenario-presets button:hover,.scenario-duration-shortcuts button:hover,.scenario-unavailable button:hover{border-color:var(--accent);color:var(--ink)}
 .scenario-presets{display:flex;gap:7px;margin:14px 0}
 .scenario-presets button{min-width:72px}
+.scenario-presets button[aria-pressed="true"]{border-color:var(--accent);background:rgba(76,194,255,.12);color:var(--ink);font-weight:700}
 .scenario-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .scenario-control{display:flex;flex-direction:column;gap:10px;min-width:0;padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
 .scenario-control-head{display:flex;justify-content:space-between;align-items:center;gap:12px}

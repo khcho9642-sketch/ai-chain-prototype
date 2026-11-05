@@ -153,7 +153,7 @@ function sanitizeRequest(id, raw) {
 
 function loadState() {
   const requests = Object.fromEntries(dataModule.SCENARIO_DEFINITIONS.map(item => [item.id, newSessionRequest(item.id)]))
-  const first = dataModule.SCENARIO_DEFINITIONS[0].id
+  const first = 'interest_rate'
   const fallback = {
     version: STORAGE_VERSION, scenarioId: first, requests, selectedCompanyId: null,
     segmentFilter: 'all', companySearch: '', sortRepresentativesByAbs: false, showObservedQuotes: false, touchedControls: {},
@@ -162,16 +162,14 @@ function loadState() {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
     if (!parsed || ![1, 2, STORAGE_VERSION].includes(parsed.version)) return fallback
     for (const id of Object.keys(requests)) {
-      try { requests[id] = sanitizeRequest(id, parsed.requests?.[id]) } catch { /* keep a verified default */ }
-    }
-    if (parsed.version < STORAGE_VERSION && Number(requests.interest_rate?.inputs?.rateChangePctPoints) === 0) {
-      requests.interest_rate.inputs.rateChangePctPoints = 1
-      requests.interest_rate.durationMonths = 12
-      storageMessage = '이전 기본값(금리 0)을 새 시작값(+1%p·12개월)으로 이전했습니다.'
+      try {
+        const saved = sanitizeRequest(id, parsed.requests?.[id])
+        if (id === first) requests[id].companyOverrides = saved.companyOverrides
+        else requests[id] = saved
+      } catch { /* keep a verified default */ }
     }
     return {
       ...fallback,
-      scenarioId: scenarioById(parsed.scenarioId) ? parsed.scenarioId : first,
       requests,
       selectedCompanyId: parsed.version === STORAGE_VERSION && companyById(parsed.selectedCompanyId) ? parsed.selectedCompanyId : null,
       segmentFilter: parsed.segmentFilter === 'all' || segmentById(parsed.segmentFilter) ? parsed.segmentFilter : 'all',
@@ -338,7 +336,7 @@ function compactControls() {
   const definition = scenarioById(uiState.scenarioId), request = currentRequest()
   const presets = Object.entries(definition.presets || {})
   const presetButtons = uiState.scenarioId === 'interest_rate'
-    ? [0.5, 1, 2].map(value => `<button type="button" data-control-preset-id="rateChangePctPoints" data-control-preset-value="${value}">+${value}%p</button>`).join('')
+    ? [0.5, 1, 2].map(value => `<button type="button" data-control-preset-id="rateChangePctPoints" data-control-preset-value="${value}" aria-pressed="${Number(request.inputs.rateChangePctPoints) === value}">+${value}%p</button>`).join('')
     : presets.map(([id, values]) => `<button type="button" data-scenario-preset="${esc(id)}">${esc(presetText(definition, values))}</button>`).join('')
   return `<section class="scenario-panel scenario-inputs compact" aria-labelledby="scenario-input-heading">
     <div class="scenario-input-top"><div><h2 id="scenario-input-heading">${esc(definition.name)}</h2></div>
@@ -400,13 +398,13 @@ function resultSummary() {
   </section>`
 }
 
-function companyTable(rows, label, scale) {
+function companyTable(rows, label, scale, companyColumn = '기업') {
   if (!rows?.length) return '<p class="scenario-empty">표시할 기업이 없습니다.</p>'
-  return `<div class="scenario-table-scroll"><table class="scenario-data-table"><caption class="sr-only">${esc(label)}</caption><thead><tr><th>섹터</th><th>기업</th><th>직접효과</th><th>밸류체인 효과</th><th>총 EV 변화</th></tr></thead><tbody>${rows.map(row => {
+  return `<div class="scenario-table-scroll"><table class="scenario-data-table"><caption class="sr-only">${esc(label)}</caption><thead><tr><th>섹터</th><th>${esc(companyColumn)}</th><th>직접효과</th><th>밸류체인 효과</th><th>총 EV 변화</th></tr></thead><tbody>${rows.map(row => {
     const id = companyId(row), source = companyById(id) || {}, segment = segmentById(row.representativeSegmentId || row.primarySegmentId || source.primarySegmentId), parts = displayParts(row)
     return `<tr tabindex="0" class="scenario-company-row${id === uiState.selectedCompanyId ? ' selected' : ''}" data-company-row data-company-id="${esc(id)}" aria-selected="${id === uiState.selectedCompanyId}">
       <td data-label="섹터"><span class="scenario-sector-name">${esc(segment?.name || '미분류')}</span></td>
-      <td data-label="기업"><strong>${esc(row.name || source.name)}</strong><small>${esc(row.symbol || source.symbol || '비상장')}</small></td>
+      <td data-label="${esc(companyColumn)}"><strong>${esc(row.name || source.name)}</strong><small>${esc(row.symbol || source.symbol || '비상장')}</small></td>
       <td data-label="직접효과" class="${impactClass(parts.direct)}">${pct2(parts.direct)}</td>
       <td data-label="밸류체인 효과" class="${impactClass(parts.chain)}">${pct2(parts.chain)}</td>
       <td data-label="총 EV 변화" class="scenario-total-cell ${impactClass(parts.total)}"><b>${pct2(parts.total)}</b>${divergingBar(row, scale)}</td></tr>`
@@ -425,7 +423,7 @@ function resultsTables() {
   const reps = [...scenarioView.representativeRows]
   if (uiState.sortRepresentativesByAbs) reps.sort((a, b) => Math.abs(b.totalPct) - Math.abs(a.totalPct))
   return `<p class="scenario-attribution-note">직접·밸류체인 효과는 기존 경로 기여도에 비례해 배분한 C등급 추정치입니다.<br>진한 막대는 직접효과, 연한 막대는 밸류체인 효과, 세로선은 총 EV 변화입니다.</p><section class="scenario-panel scenario-results-section" aria-labelledby="scenario-big7-heading"><div class="scenario-section-heading"><div><h2 id="scenario-big7-heading">Big 7</h2></div><span class="scenario-honesty">가정 기반 계산 · 기준 100</span></div>${companyTable(big7, 'Big 7 결과', scale)}</section>
-    <section class="scenario-panel scenario-results-section" aria-labelledby="scenario-representative-heading"><div class="scenario-section-heading"><div><h2 id="scenario-representative-heading">9개 섹터 대표기업</h2></div><button type="button" class="scenario-sort" data-sort-representatives aria-pressed="${uiState.sortRepresentativesByAbs}">절대 변화폭순</button></div><p class="scenario-note">섹터당 한 기업의 조건부 결과입니다. 섹터 지수나 전체 기업 평균이 아닙니다.</p>${companyTable(reps, '9개 섹터 대표기업 결과', scale)}</section>
+    <section class="scenario-panel scenario-results-section" aria-labelledby="scenario-representative-heading"><div class="scenario-section-heading"><div><h2 id="scenario-representative-heading">9개 섹터 대표기업</h2></div><button type="button" class="scenario-sort" data-sort-representatives aria-pressed="${uiState.sortRepresentativesByAbs}">절대 변화폭순</button></div><p class="scenario-note">섹터당 한 기업의 조건부 결과입니다. 섹터 지수나 전체 기업 평균이 아닙니다.</p>${companyTable(reps, '9개 섹터 대표기업 결과', scale, '대표기업')}</section>
     <details class="scenario-panel scenario-results-section scenario-other-results"><summary><span>더 보기 · 기타 기업 ${scenarioView.summary?.otherCount || 0}개</span><small>Big 7과 9개 대표기업 제외 · 중복 없음</small></summary><div class="scenario-other-toolbar"><label>기업 검색<input type="search" data-company-search value="${esc(uiState.companySearch)}" placeholder="기업명 · 티커"></label></div><div data-other-table>${companyTable(filteredOtherRows(), '기타 기업 결과', scale)}</div></details>`
 }
 
@@ -584,10 +582,9 @@ function updateControl(id, rawValue, { skipDetail = false, element = null } = {}
   if (id === 'durationMonths') request.durationMonths = numeric
   else request.inputs[id] = numeric
   uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
-  for (const input of root.querySelectorAll(`[data-scenario-control="${CSS.escape(id)}"]`)) if (input !== document.activeElement || input.type === 'range') input.value = id === 'durationMonths' ? request.durationMonths : request.inputs[id]
-  const value = id === 'durationMonths' ? request.durationMonths : request.inputs[id]
-  const output = root.querySelector(`[data-control-output="${CSS.escape(id)}"]`)
-  if (output) output.textContent = `${Number(value) > 0 && id !== 'durationMonths' ? '+' : ''}${Number(value).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${control.unit || ''}`
+  for (const button of root.querySelectorAll('[data-control-preset-id]')) {
+    if (button.dataset.controlPresetId === id) button.setAttribute('aria-pressed', String(Number(button.dataset.controlPresetValue) === numeric))
+  }
   const modelHelper = root.querySelector('[data-model-growth-helper]')
   if (modelHelper) modelHelper.innerHTML = modelGrowthHelperContent()
   recalculate(); renderDynamic({ skipDetail })
