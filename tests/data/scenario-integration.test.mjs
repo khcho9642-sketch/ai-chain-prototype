@@ -21,15 +21,21 @@ import {
   evaluateScenario,
   validateScenarioRequest,
 } from '../../assets/scenario-core.js'
+import {
+  REPRESENTATIVE_COMPANY_IDS,
+  VIEW_MODEL_GRADE,
+  buildScenarioView,
+} from '../../assets/scenario-view-model.js'
 
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url))
-const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario.css', 'scenario.js']
+const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-view-model.js', 'scenario.css', 'scenario.js']
 const segmentNames = [
   '반도체 소부장', '파운드리·패키징', '메모리', 'AI 칩', 'AI 장비',
   '전력·냉각', '데이터센터', '클라우드·GPU 컴퓨팅', 'AI 모델',
 ]
 const scenarioIds = ['interest_rate', 'hyperscaler_capex', 'hbm_market', 'gpu_dc_rent', 'model_growth']
 const big7Symbols = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA']
+const representativeIds = ['ASML', 'TSM', '000660.KS', 'NVDA', 'SMCI', 'VRT', 'EQIX', 'MSFT', 'META']
 
 async function fixtureRoot(t) {
   const root = await mkdtemp(join(tmpdir(), 'ai-chain-scenario-integration-'))
@@ -99,11 +105,18 @@ test('scenario contract keeps five cases, nine named segments and the complete B
     assert.equal(output.big7.members.length, 7)
     assert.ok(output.companies.every(company => Number.isFinite(company.scenarioValueIndex)))
     assert.ok(output.segments.every(segment => Number.isFinite(segment.scenarioValueIndex)))
+    const view = buildScenarioView(output)
+    assert.equal(VIEW_MODEL_GRADE, 'C')
+    assert.deepEqual(REPRESENTATIVE_COMPANY_IDS, representativeIds)
+    assert.deepEqual(view.representativeRows.map(company => company.companyId), representativeIds)
+    assert.deepEqual(view.big7Rows.map(company => company.companyId), BIG7_COMPANY_IDS)
+    assert.equal(view.otherRows.length, 28)
+    assert.equal(new Set([...view.representativeRows, ...view.big7Rows, ...view.otherRows].map(company => company.companyId)).size, COMPANIES.length)
   }
 })
 
 test('scenario engine and browser module do not call external source endpoints', async () => {
-  for (const name of ['scenario-core.js', 'scenario-data.js', 'scenario.js']) {
+  for (const name of ['scenario-core.js', 'scenario-data.js', 'scenario-view-model.js', 'scenario.js']) {
     const source = await readFile(join(sourceRoot, 'assets', name), 'utf8')
     assert.doesNotMatch(source, /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource/u, `${name} must remain a local deterministic consumer`)
   }
@@ -136,6 +149,8 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.match(html, /id="v-scenario"/u)
   assert.match(html, /src="\.\/assets\/scenario\.js"/u)
   assert.match(html, /href="\.\/assets\/scenario\.css"/u)
+  assert.equal((html.match(/data-r="today"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>)?오늘의 변화<\/a>/gu) || []).length, 2)
+  assert.match(html, />가정 기반 조건부 계산값이며 목표주가·예측이 아님<\/p>/u)
   for (const route of ['today', 'map', 'data', 'compare', 'industry', 'ai-stats', 'talk', 'ai']) {
     assert.match(html, new RegExp(`(?:href="#${route}"|id="v-${route}")`, 'u'))
   }
