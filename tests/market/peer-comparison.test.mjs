@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildComparison, buildCompanyComparison, comparisonPeriods } from '../../assets/peer-comparison-core.js'
+import { buildHomeSectorReturns } from '../../assets/home-sector-returns.js'
+import { COMPANIES, SECTORS } from '../../assets/home-map-core.js'
 
 const now = '2026-01-10T22:00:00Z'
 const unix = date => Date.parse(date) / 1000
@@ -10,6 +12,49 @@ const instrument = (symbol, chains = [1]) => ({ symbol, name: symbol, chains })
 const chains = [{ id: 1, name: '메모리' }, { id: 2, name: '파운드리' }]
 const approx = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`)
 const build = (quotes, instruments = quotes.map(item => instrument(item.symbol)), extra = {}) => buildComparison({ quotes, instruments, chains, now, ...extra })
+
+test('home sector returns retain all nine primary sectors with collected prices only', () => {
+  const homeQuotes = ['NVDA', 'MSFT', 'GOOGL'].map(symbol => q(symbol, [['2025-10-08', 100], ['2026-01-06', 120]]))
+  const result = buildHomeSectorReturns({ schemaVersion: 1, quotes: homeQuotes, generatedAt: now, source: 'fixture' }, { now })
+  assert.deepEqual(result.groups.map(group => group.name), SECTORS.map(sector => sector.name))
+  assert.equal(result.groups.reduce((count, group) => count + group.peerCount, 0), COMPANIES.length)
+  for (const symbol of ['NVDA', 'MSFT', 'GOOGL']) {
+    const matchingGroups = result.groups.filter(group => group.peers.some(peer => peer.symbol === symbol))
+    assert.equal(matchingGroups.length, 1)
+    approx(matchingGroups[0].returnPercent, 20)
+    assert.equal(matchingGroups[0].includedCount, 1)
+  }
+  const emptySector = result.groups.find(group => group.name === '메모리')
+  assert.equal(emptySector.available, false)
+  assert.equal(emptySector.returnPercent, null)
+  assert.equal(emptySector.includedCount, 0)
+  assert.equal(emptySector.peers[0].reason, '시세 수집값 없음')
+  assert.equal(result.metadata.source, 'fixture')
+  assert.equal(result.metadata.generatedAt, now)
+})
+
+test('home comparison excludes short histories instead of silently shortening the 90-day period', () => {
+  const result = buildHomeSectorReturns({ schemaVersion: 1, quotes: [
+    q('TSM', [['2025-10-08', 100], ['2026-01-06', 110]]),
+    q('GFS', [['2026-01-02', 100], ['2026-01-06', 200]]),
+  ] }, { now })
+  const foundry = result.groups.find(group => group.name === '파운드리·패키징')
+  assert.equal(result.startDate, '2025-10-08')
+  assert.equal(result.endDate, '2026-01-06')
+  assert.equal(result.metadata.fullPeriodRequired, true)
+  assert.equal(foundry.includedCount, 1)
+  assert.equal(foundry.peers.find(peer => peer.symbol === 'GFS').reason, '선택 기간 이력 부족')
+  approx(foundry.returnPercent, 10)
+})
+
+test('home comparison rejects malformed transport data and leaves empty snapshots unavailable', () => {
+  for (const snapshot of [null, {}, { schemaVersion: 2, quotes: [] }, { schemaVersion: 1, quotes: {} }]) {
+    assert.throws(() => buildHomeSectorReturns(snapshot), TypeError)
+  }
+  const result = buildHomeSectorReturns({ schemaVersion: 1, quotes: [] }, { now })
+  assert.equal(result.groups.length, 9)
+  assert.ok(result.groups.every(group => !group.available && group.returnPercent === null))
+})
 
 test('averages normalized cumulative returns, not nominal prices or daily rebalanced returns', () => {
   const result = build([
