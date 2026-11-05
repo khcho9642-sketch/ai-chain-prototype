@@ -82,7 +82,7 @@ export function validateTodayDiscussion(value, { today, catalog = instruments, n
     ids.add(response.id); runs.set(provenance.runId, runSignature)
   }
   const responsesById = new Map(value.responses.map(response => [response.id, response]))
-  const followed = new Set()
+  const followed = new Set(), followCounts = new Map()
   for (const response of value.followUps || []) {
     if (!keysAre(response, FOLLOW_UP_KEYS) || !clean(response.id, 1, 160) || SIMULATION.test(response.id) || ids.has(response.id) ||
       !clean(response.parentId, 1, 160) || !clean(response.symbol, 1, 40) || !clean(response.text, 1, 300) ||
@@ -92,9 +92,9 @@ export function validateTodayDiscussion(value, { today, catalog = instruments, n
       !keysAre(response.provenance, PROVENANCE_KEYS)) fail('invalid_today_discussion_follow_up')
     const parent = parents.get(response.parentId)
     if (!parent || !Object.hasOwn(TODAY_AGENTS, response.agent) || response.agent !== parent.agent || response.symbol !== parent.symbol ||
-      response.parentReportSha256 !== parent.provenance.responseSha256 || !sha(response.parentReportSha256) || followed.has(parent.id)) fail('invalid_today_discussion_follow_up_parent')
-    if (!Array.isArray(response.replyToIds) || response.replyToIds.length < 1 || response.replyToIds.length > 2 ||
-      new Set(response.replyToIds).size !== response.replyToIds.length || response.replyToIds.some(id => {
+      response.parentReportSha256 !== parent.provenance.responseSha256 || !sha(response.parentReportSha256) || (followCounts.get(parent.id) || 0) >= 2) fail('invalid_today_discussion_follow_up_parent')
+    if (!Array.isArray(response.replyToIds) || response.replyToIds.length !== 1 ||
+      followed.has(response.replyToIds[0]) || response.replyToIds.some(id => {
         const peer = responsesById.get(id)
         return !peer || peer.parentId !== response.parentId || peer.parentReportSha256 !== response.parentReportSha256 || peer.symbol !== response.symbol
       })) fail('invalid_today_discussion_reply_to')
@@ -112,7 +112,7 @@ export function validateTodayDiscussion(value, { today, catalog = instruments, n
     if (generated < earliest || generated > reviewed || reviewed > created || created > published) fail('invalid_today_discussion_chronology')
     const runSignature = JSON.stringify([PROVENANCE_KEYS.map(key => provenance[key]), response.rawResponse])
     if (runs.has(provenance.runId) && runs.get(provenance.runId) !== runSignature) fail('invalid_today_discussion_provenance')
-    ids.add(response.id); followed.add(parent.id); runs.set(provenance.runId, runSignature)
+    ids.add(response.id); followed.add(response.replyToIds[0]); followCounts.set(parent.id, (followCounts.get(parent.id) || 0) + 1); runs.set(provenance.runId, runSignature)
   }
   for (const state of value.states) {
     if (!keysAre(state, STATE_KEYS) || !clean(state.parentId, 1, 160) || !clean(state.symbol, 1, 40) ||

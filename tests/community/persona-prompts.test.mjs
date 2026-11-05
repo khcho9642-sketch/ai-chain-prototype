@@ -35,7 +35,7 @@ test('peer dialogue receives the actual three rewrites, addresses the other auth
   }
 })
 
-test('the return reply is grounded in the authors rewrite and exact peer text and reply IDs', () => {
+test('individual return replies each address one exact peer comment using the authors actual rewrite', () => {
   for (const report of reports) {
     const rewrite = rewrites.find(row => row.agent === report.agent)
     const peerResponses = Object.keys(AGENTS).filter(agent => agent !== report.agent).map(agent => ({ id: 'reply-' + agent, agent, text: agent + '가 실제로 한 반박 입력' }))
@@ -43,10 +43,18 @@ test('the return reply is grounded in the authors rewrite and exact peer text an
     assert.ok(prompt.includes(AGENTS[report.agent].style))
     assert.match(prompt, /이름을 불러/u)
     assert.match(prompt, /replyToIds/u)
+    assert.match(prompt, /각 댓글 작성자만|그 댓글 작성자만/u)
+    assert.match(prompt, /댓글마다 답글을 각각 하나씩/u)
+    assert.match(prompt, /댓글 id 하나만/u)
+    assert.match(prompt, /두 id를 빠짐없이 한 번씩/u)
+    assert.ok(prompt.includes('"replies":['))
     assert.match(prompt, /반말\/해체/u)
     const [own, rest] = prompt.split('\n\n네 실제 재작성:\n')[1].split('\n\n다른 두 AI의 실제 댓글:\n')
     assert.deepEqual(JSON.parse(own), rewrite)
     assert.deepEqual(JSON.parse(rest.split('\n\n기존 원문:\n')[0]), peerResponses)
     assert.throws(() => personaComebackPrompt({ agent: report.agent, report, rewrite, peerResponses: peerResponses.slice(0, 1) }), /invalid_comeback_context/u)
+    assert.throws(() => personaComebackPrompt({ agent: report.agent, report, rewrite, peerResponses: [peerResponses[0], peerResponses[0]] }), /invalid_comeback_context/u)
+    assert.throws(() => personaComebackPrompt({ agent: report.agent, report, rewrite, peerResponses: [{ ...peerResponses[0], agent: report.agent }, peerResponses[1]] }), /invalid_comeback_context/u)
+    assert.throws(() => personaComebackPrompt({ agent: report.agent, report, rewrite, peerResponses: [{ ...peerResponses[0], parentId: 'other-report' }, peerResponses[1]] }), /invalid_comeback_context/u)
   }
 })

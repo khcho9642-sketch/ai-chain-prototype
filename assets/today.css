@@ -86,7 +86,7 @@
 .today-persona-analysis-body>h4{font-size:17px;line-height:1.6;font-weight:700;letter-spacing:-.025em;margin:0 0 14px}
 .today-persona-analysis-body>p{font-size:14px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 15px}
 .today-persona-analysis-body>.today-cross-sources{border-top:1px solid var(--line);padding-top:12px;margin-top:17px}
-.today-cross-opinion.today-cross-follow-up{margin-left:12px;padding:0 0 0 12px;border-left:2px solid var(--agent-color);border-bottom:0}
+.today-cross-opinion>.today-cross-follow-up{margin:14px 0 0 12px;padding:0 0 0 12px;border-left:2px solid var(--agent-color);border-bottom:0}
 .today-persona-error{font-size:11px;line-height:1.7;color:var(--muted);margin:0 0 14px}
 .today-persona-error p{margin:0 0 6px}
 .today-persona-error button{font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:6px;background:var(--card-on);padding:6px 9px;cursor:pointer}

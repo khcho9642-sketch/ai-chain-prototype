@@ -204,29 +204,33 @@ test('published peer snapshot retains raw hashes and covers both peers for every
     const peers = todayDiscussionForReport(value, parent)
     assert.equal(peers.responses.length + peers.states.length, 2)
     assert.deepEqual([...peers.responses, ...peers.states].map(row => row.agent).sort(), agents.filter(agent => agent !== parent.agent).sort())
+    assert.equal(peers.followUps.length, peers.responses.length)
+    assert.deepEqual(peers.followUps.flatMap(row => row.replyToIds).sort(), peers.responses.map(row => row.id).sort())
   }
 })
 function withFollowUps() {
   const value = six(); value.publishedAt = '2026-11-05T01:06:00Z'
-  value.followUps = today.reports.map(parent => {
-    const text = '둘 다 좋은 지적이네. 가정과 실제 실적을 분리해서 보자는 쪽은 나도 같아. 다음 확인 지점부터 같이 보자.'
+  value.followUps = value.responses.map(peer => {
+    const parent = today.reports.find(row => row.id === peer.parentId)
+    const text = peer.agent + '야 그 지적은 맞아. 가정과 실제 실적을 분리해서 보자는 쪽은 나도 같아. 다음 확인 지점부터 같이 보자.'
     return createTodayDiscussionFollowUp({ parent, text, rawResponse: JSON.stringify({ text }) + '\n',
-      replyToIds: value.responses.filter(row => row.parentId === parent.id).map(row => row.id), createdAt: '2026-11-05T01:05:00Z', id: 'return-' + parent.id,
+      replyToIds: [peer.id], createdAt: '2026-11-05T01:05:00Z', id: 'return-' + peer.id,
       provenance: { provider: parent.agent, requestedModel: parent.agent + '-pinned', reportedModel: null, cliName: names[parent.agent], cliVersion: '1.0.0',
-        generatedAt: '2026-11-05T01:04:00Z', promptVersion: 'owner-cross-return-v1', runId: 'return-run-' + parent.id,
+        generatedAt: '2026-11-05T01:04:00Z', promptVersion: 'community-banmal-per-comment-comeback-v2', runId: 'return-run-' + peer.id,
         execution: 'owner-reviewed-one-off', reviewedAt: '2026-11-05T01:04:30Z' } })
   })
   return value
 }
 
-test('original authors can each return once after reading authentic peer replies', () => {
+test('original authors reply individually to both authentic peer comments', () => {
   const value = withFollowUps()
   validate(value); verifyTodayDiscussionHashes(value, { today })
   for (const parent of today.reports) {
     const selected = todayDiscussionForReport(value, parent)
     assert.equal(selected.responses.length, 2)
-    assert.equal(selected.followUps.length, 1)
-    assert.equal(selected.followUps[0].agent, parent.agent)
+    assert.equal(selected.followUps.length, 2)
+    assert.ok(selected.followUps.every(row => row.agent === parent.agent && row.replyToIds.length === 1))
+    assert.deepEqual(selected.followUps.flatMap(row => row.replyToIds).sort(), selected.responses.map(row => row.id).sort())
   }
   const old = six(); assert.deepEqual(todayDiscussionForReport(old, today.reports[0]).followUps, [])
 })
@@ -237,12 +241,29 @@ test('return replies cannot impersonate another author, reference another report
     value => { value.followUps[0].replyToIds = [] },
     value => { value.followUps[0].replyToIds = [value.followUps[0].id] },
     value => { value.followUps[0].replyToIds = [value.responses.find(row => row.parentId !== value.followUps[0].parentId).id] },
+    value => { value.followUps[0].replyToIds = value.responses.filter(row => row.parentId === value.followUps[0].parentId).map(row => row.id) },
     value => { value.followUps[0].replyToIds = [value.followUps[0].replyToIds[0], value.followUps[0].replyToIds[0]] },
+    value => { value.followUps[1].replyToIds = [...value.followUps[0].replyToIds] },
+    value => { delete value.followUps[0].replyToIds },
     value => { value.followUps.push({ ...clone(value.followUps[0]), id: 'another-return-id' }) },
   ]) {
     const value = withFollowUps(); mutation(value)
     assert.throws(() => validate(value), /invalid_today_discussion/)
   }
+})
+
+test('an authentic two-reply batch keeps distinct peer targets and identical raw provenance', () => {
+  const value = withFollowUps(), rows = value.followUps.slice(0, 2)
+  const rawResponse = JSON.stringify({ replies: rows.map(row => ({ parentId: row.parentId, replyToIds: row.replyToIds, text: row.text })) })
+  for (const row of rows) {
+    row.rawResponse = rawResponse
+    row.provenance.runId = 'individual-batch-run'
+    row.provenance.responseSha256 = digest(rawResponse)
+  }
+  validate(value); verifyTodayDiscussionHashes(value, { today })
+  rows[1].provenance.runId = 'another-batch-run'
+  rows[1].replyToIds = rows[0].replyToIds
+  assert.throws(() => validate(value), /invalid_today_discussion_reply_to/)
 })
 
 test('return replies preserve review chronology, informal speech and exact raw-byte hashes', () => {

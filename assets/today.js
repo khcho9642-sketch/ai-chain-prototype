@@ -150,6 +150,7 @@ function discussionSourceDetails(response) {
   const info = node('div', null, { class: 'today-source-content' })
   const provenance = response.provenance
   const webProvider = getTodayWebProvider(provenance), webName = TODAY_AGENTS[webProvider]?.name
+  details.setAttribute('data-today-discussion-source', response.id)
   details.append(node('summary', '작성 출처 · 원문'))
   info.append(node('p', '요청 모델 ' + provenance.requestedModel),
     node('p', provenance.reportedModel ? '실제 응답 모델 ' + provenance.reportedModel : '실제 모델명 미확인'),
@@ -173,6 +174,7 @@ function discussionPanel(report) {
   const signature = JSON.stringify([result, state.discussionError, state.discussionBusy])
   if (entry.signature === signature) return entry.element
   entry.signature = signature
+  const openSources = new Set([...entry.element.querySelectorAll('details[data-today-discussion-source]')].filter(details => details.open).map(details => details.getAttribute('data-today-discussion-source')))
   const children = [node('h4', 'AI 티키타카', { class: 'today-cross-heading' })]
   for (const [agent, info] of Object.entries(TODAY_AGENTS)) {
     if (agent === report.agent) continue
@@ -182,13 +184,14 @@ function discussionPanel(report) {
     if (response) {
       article.setAttribute('data-today-cross-response', response.id)
       article.append(node('p', response.text, { class: 'today-cross-text', 'data-today-cross-text': '' }), discussionSourceDetails(response))
+      const followUp = result.followUps.find(item => item.replyToIds.length === 1 && item.replyToIds[0] === response.id)
+      if (followUp) {
+        const reply = node('article', null, { class: `today-cross-opinion today-cross-follow-up today-agent-${followUp.agent}`, 'data-today-follow-up': followUp.id, 'data-reply-to': response.id, 'aria-label': TODAY_AGENTS[followUp.agent].name + '의 ' + info.name + '에게 답글' })
+        reply.append(node('strong', TODAY_AGENTS[followUp.agent].name + ' → ' + info.name, { class: 'today-cross-name' }),
+          node('p', followUp.text, { class: 'today-cross-text', 'data-today-cross-text': '' }), discussionSourceDetails(followUp))
+        article.append(reply)
+      }
     } else article.append(node('p', '의견 대기', { class: 'today-cross-pending' }))
-    children.push(article)
-  }
-  for (const response of result.followUps) {
-    const article = node('article', null, { class: `today-cross-opinion today-cross-follow-up today-agent-${response.agent}`, 'data-today-follow-up': response.id })
-    article.append(node('strong', TODAY_AGENTS[response.agent].name, { class: 'today-cross-name' }),
-      node('p', response.text, { class: 'today-cross-text', 'data-today-cross-text': '' }), discussionSourceDetails(response))
     children.push(article)
   }
   if (state.discussionError) {
@@ -200,6 +203,7 @@ function discussionPanel(report) {
     children.push(error)
   }
   entry.element.replaceChildren(...children)
+  for (const details of entry.element.querySelectorAll('details[data-today-discussion-source]')) details.open = openSources.has(details.getAttribute('data-today-discussion-source'))
   return entry.element
 }
 

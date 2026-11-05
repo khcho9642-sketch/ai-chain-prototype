@@ -15,7 +15,7 @@ export function createTodayDiscussionResponse({ parent, agent, text, rawResponse
     text, rawResponse, createdAt, provenance: { ...provenance, responseSha256: hash(rawResponse) } }
 }
 
-/** An original author can return once to one or both authentic peer opinions. */
+/** Each original-author follow-up targets one authentic peer opinion. */
 export function createTodayDiscussionFollowUp({ parent, text, rawResponse, replyToIds, provenance, createdAt, id = randomUUID() }) {
   if (typeof rawResponse !== 'string' || !provenance || typeof parent?.provenance?.responseSha256 !== 'string') fail('invalid_today_discussion_import')
   return { id, parentId: parent.id, parentReportSha256: parent.provenance.responseSha256, agent: parent.agent, symbol: parent.symbol,
