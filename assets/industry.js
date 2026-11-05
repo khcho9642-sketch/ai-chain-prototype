@@ -1,60 +1,231 @@
-import {renderEpochPanel} from './epoch-ai.js'
-import {validateIndustry,windowPoints,monthNumber,yearOnYear,latestPoint,staleSeries,seriesCsv} from './industry-core.js'
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
-const num=v=>Number.isFinite(v)?v.toLocaleString('ko-KR',{maximumFractionDigits:2}):'—'
-const pct=v=>Number.isFinite(v)?`${v>0?'+':''}${v.toFixed(1)}%`:'—'
-const names=['소부장','파운드리·패키징','메모리','AI 칩','전력','인프라','모델','애플리케이션']
-const kinds={'value':'수출금액','value-index':'수출금액지수','volume-index':'수출물량지수','weight':'수출중량','revenue':'기업 월매출'}
-const states={provisional:'잠정',final:'확정',unaudited:'미감사',published:'공표값'}
-let industryTab='monthly'
-let data=null,error='',selected='kr-semiconductor-volume',chain=0,months=24,busy=false
-const stamp=v=>!v?'—':String(v).length===10?String(v):new Date(v).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+' KST'
-function applyMetrics(){
-  const mapping=[[2,'TSMC','tsmc-revenue'],[3,'한국 반도체 수출','kr-semiconductor-export-usd'],[5,'변압기 수출','kr-transformer-volume']]
-  for(const [id,label,seriesId] of mapping){
-    const group=window.S?.find(s=>s.id===id),series=data.series.find(s=>s.id===seriesId),point=latestPoint(series)
-    if(!group||!point)continue
-    const index=group.m.findIndex(m=>m[0].includes(label)),source=data.sources.find(s=>s.id===series.sourceId)
-    if(index>=0)group.m[index]=[series.name,`${num(point.value)} ${series.unit}`,`전년 동월 ${pct(yearOnYear(series,point))}`,`${source.name} · ${point.period} · ${states[point.status]}`]
+import { SECTORS } from './home-map-core.js'
+import { validateIndustry, latestPoint, yearOnYear } from './industry-core.js'
+import { safeSourceUrl, validateAiStatistics } from './ai-statistics-core.js'
+import { validateEpochSnapshot } from './epoch-ai-core.js'
+import { renderEpochPanel } from './epoch-ai.js'
+import { renderAiStatisticsPanel } from './ai-statistics.js'
+import { sectorMetrics } from './sector-metric-catalog.js'
+import { metricDetailHTML, metricCsv, formatMetricValue } from './sector-metric-chart.js'
+
+const root = document.getElementById('v-industry')
+const sources = {
+  industry: { label: '월별 산업통계', file: 'industry', validate: validateIndustry },
+  ai: { label: 'AI 통계', file: 'ai-statistics', validate: validateAiStatistics },
+  epoch: { label: 'Epoch AI', file: 'epoch-ai', validate: validateEpochSnapshot },
+}
+const snapshots = {}
+const pending = new Map()
+const warnings = new Map()
+let sector = 'memory'
+let chosenId = null
+let months = 24
+let metrics = []
+let active = null
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+}
+
+function sourceLink(metric) {
+  const url = safeSourceUrl(metric.sourceUrl)
+  return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(metric.source)}</a>` : esc(metric.source)
+}
+
+function sourceLinks() {
+  const links = [
+    ['#industry', '섹터별 지표'], ['#industry/monthly', '월별 산업통계 전체'],
+    ['#industry/ai/business', 'AI 통계 상세'], ['#industry/epoch', 'Epoch AI 상세'],
+  ]
+  return `<nav class="sector-source-links industry-links" aria-label="통계 탐색">${links.map(([url, title]) =>
+    `<a href="${url}"${location.hash === url ? ' aria-current="page"' : ''}>${title}</a>`).join('')}</nav>`
+}
+
+// The value-chain map also uses the most recent verified industrial releases.
+function updateMapMetrics(data) {
+  const shared = [[2, 'TSMC', 'tsmc-revenue'], [3, '한국 반도체 수출', 'kr-semiconductor-export-usd'], [5, '변압기 수출', 'kr-transformer-volume']]
+  const labels = { provisional: '잠정', final: '확정', unaudited: '미감사', published: '공표값' }
+  for (const [groupId, label, id] of shared) {
+    const group = window.S?.find(item => item.id === groupId)
+    const series = data.series.find(item => item.id === id)
+    const point = latestPoint(series)
+    if (!group || !point) continue
+    const source = data.sources.find(item => item.id === series.sourceId)
+    const row = group.m.findIndex(item => item[0].includes(label) || item[0] === series.name)
+    const change = yearOnYear(series, point)
+    const percent = Number.isFinite(change) ? `${change > 0 ? '+' : ''}${change.toFixed(1)}%` : '—'
+    if (row >= 0) group.m[row] = [series.name, `${point.value.toLocaleString('ko-KR', {maximumFractionDigits: 2})} ${series.unit}`,
+      `전년 동월 ${percent}`, `${source.name} · ${point.period} · ${labels[point.status]}`]
   }
   window.renderDetail?.()
-  if(location.hash==='#data')window.renderData?.()
+  if (location.hash === '#data') window.renderData?.()
 }
-function chart(series){
-  const points=windowPoints(series,months)
-  if(points.length<2)return `<p class="industry-empty">${points.length?'공식 자료에서 확보한 월이 1개입니다.':'이 지표의 공식 수치를 아직 확보하지 못했습니다.'} 월별 자료가 추가되면 추이를 표시합니다.</p>`
-  const w=1000,h=300,left=78,right=30,top=24,bottom=40,max=Math.max(...points.map(p=>p.value))*1.08||1
-  const first=monthNumber(points[0].period),last=monthNumber(points.at(-1).period)
-  const x=i=>left+(monthNumber(points[i].period)-first)/(last-first)*(w-left-right),y=v=>top+(1-v/max)*(h-top-bottom)
-  const ticks=[...new Set([0,.25,.5,.75,1].map(f=>Math.round(f*(points.length-1))))]
-  return `<div class="industry-chart"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(series.name)} 월별 추이, 단위 ${esc(series.unit)}"><title>${esc(series.name)}</title><desc>${points[0].period}부터 ${points.at(-1).period}까지 ${points.length}개 월. 아래 표에서 수치를 확인할 수 있습니다. 결측월은 연결하지 않습니다.</desc>${[0,.25,.5,.75,1].map(f=>`<line x1="${left}" x2="${w-right}" y1="${y(max*f)}" y2="${y(max*f)}" stroke="var(--line)"/><text x="${left-10}" y="${y(max*f)+4}" text-anchor="end">${num(max*f)}</text>`).join('')}${points.map((p,i)=>{if(!i)return '';const prev=points[i-1],a=new Date(prev.period+'-01Z'),b=new Date(p.period+'-01Z'),gap=(b.getUTCFullYear()-a.getUTCFullYear())*12+b.getUTCMonth()-a.getUTCMonth();return gap===1?`<line x1="${x(i-1)}" y1="${y(prev.value)}" x2="${x(i)}" y2="${y(p.value)}" stroke="var(--accent)" stroke-width="2.5"/>`:''}).join('')}${points.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.value)}" r="3" fill="var(--accent)"><title>${p.period} · ${num(p.value)} ${esc(series.unit)}</title></circle>`).join('')}${ticks.map(i=>`<text x="${x(i)}" y="${h-10}" text-anchor="middle">${points[i].period}</text>`).join('')}</svg></div>`
+
+async function readSnapshot(path, validate) {
+  const response = await fetch(path, { cache: 'no-cache', signal: AbortSignal.timeout(12000) })
+  if (!response.ok) throw new Error(String(response.status))
+  return validate(await response.json())
 }
-function render(){
-  const el=document.getElementById('v-industry');if(!el||el.hidden)return
-  const tabs=`<div class="industry-source-tabs" role="tablist" aria-label="산업데이터 출처"><button type="button" class="industry-source-tab" role="tab" id="industry-monthly-tab" data-industry-tab="monthly" tabindex="${industryTab==='monthly'?0:-1}" aria-selected="${industryTab==='monthly'}" aria-controls="industry-content">월별 산업통계</button><button type="button" class="industry-source-tab" role="tab" id="industry-epoch-tab" data-industry-tab="epoch" tabindex="${industryTab==='epoch'?0:-1}" aria-selected="${industryTab==='epoch'}" aria-controls="industry-content">Epoch AI</button></div>`
-  if(industryTab==='epoch'){
-    el.innerHTML=tabs+'<div id="industry-content" class="epoch-panel" role="tabpanel" aria-labelledby="industry-epoch-tab"></div>'
-    renderEpochPanel(el.querySelector('#industry-content'))
+
+async function requestSource(key) {
+  const {file, validate, label} = sources[key]
+  const staticHost = location.hostname.endsWith('.github.io') || location.protocol === 'file:'
+  if (key !== 'ai' && !staticHost) {
+    try {
+      return await readSnapshot(`./api/${file}`, validate)
+    } catch {
+      warnings.set(key, `${label}은 저장된 스냅샷을 표시합니다.`)
+    }
+  }
+  return readSnapshot(`./data/${file}.json`, validate)
+}
+
+function ensureSource(key, refresh = false) {
+  if (pending.has(key) || (!refresh && (snapshots[key] || warnings.has(key)))) return
+  warnings.delete(key)
+  const task = requestSource(key).then(data => {
+    snapshots[key] = data
+    if (key === 'industry') updateMapMetrics(data)
+  }).catch(() => {
+    warnings.set(key, snapshots[key] ? `${sources[key].label} 갱신 실패 · 이전 자료 표시` : `${sources[key].label}을 불러오지 못했습니다.`)
+  }).finally(() => {
+    pending.delete(key)
+    if (!root.hidden && root.querySelector('.sector-stat-view')) paintMetrics()
+  })
+  pending.set(key, task)
+}
+
+function metricRows() {
+  return metrics.map(metric => {
+    const value = metric.latestText ?? `${formatMetricValue(metric.latest)} ${metric.unit}`
+    const scope = metric.relation === 'reference' ? '참고 지표' : '직접 지표'
+    return `<tr data-sector-row="${esc(metric.id)}" data-selected="${active === metric}">
+      <th scope="row"><button type="button" class="metric-choice" data-metric="${esc(metric.id)}" aria-controls="sector-chart" aria-pressed="${active === metric}">${esc(metric.name)}</button>
+        <small class="metric-scope">${scope}</small></th>
+      <td>${esc(value)}</td><td>${esc(metric.periodText ?? metric.latest.label)}</td><td>${sourceLink(metric)}</td>
+    </tr>`
+  }).join('')
+}
+
+function relevantKeys() {
+  return sector === 'monthly' ? ['industry'] : Object.keys(sources)
+}
+
+function paintMetrics() {
+  const list = root.querySelector('.sector-metric-list')
+  if (!list) return
+  const keys = relevantKeys()
+  const loading = keys.some(key => pending.has(key))
+  metrics = sectorMetrics(sector, snapshots)
+  active = metrics.find(item => item.id === chosenId) || metrics[0] || null
+  const title = sector === 'monthly' ? '월별 산업통계 전체' : `${SECTORS.find(item => item.id === sector).name} 지표`
+  const focus = root.contains(document.activeElement) ? document.activeElement.dataset : {}
+  const previousScroll = list.querySelector('.sector-table-wrap')?.scrollTop || 0
+  const heading = `<h2>${esc(title)}</h2>`
+  list.innerHTML = heading + (metrics.length ? `<div class="sector-table-wrap"><table class="sector-metric-table">
+    <caption class="sr">${esc(title)} 최신값과 기준 시점</caption>
+    <thead><tr><th scope="col">지표명</th><th scope="col">최신값·단위</th><th scope="col">기준 시점</th><th scope="col">출처</th></tr></thead>
+    <tbody>${metricRows()}</tbody></table></div>` : `<p role="status">${loading ? '지표를 불러오는 중…' : keys.some(key => warnings.has(key) && !snapshots[key]) ? '자료를 불러오지 못했습니다.' : '연결된 지표 없음'}</p>`)
+  if (previousScroll && list.querySelector('.sector-table-wrap')) list.querySelector('.sector-table-wrap').scrollTop = previousScroll
+  paintChart()
+  root.querySelector('[data-load-status]').textContent = keys.map(key => warnings.get(key)).filter(Boolean).join(' ')
+  const refresh = root.querySelector('[data-refresh-metrics]')
+  refresh.disabled = loading
+  refresh.textContent = loading ? '자료 읽는 중…' : '자료 다시 읽기'
+  if (focus.metric) list.querySelector(`[data-metric="${CSS.escape(focus.metric)}"]`)?.focus({preventScroll: true})
+  if (focus.sectorMonths) root.querySelector(`[data-sector-months="${CSS.escape(focus.sectorMonths)}"]`)?.focus({preventScroll: true})
+}
+
+function paintChart() {
+  root.querySelector('#sector-chart').innerHTML = active ? metricDetailHTML(active, months) : ''
+}
+
+function picker() {
+  return `<div class="sector-picker" role="group" aria-label="섹터 선택">${SECTORS.map(item =>
+    `<button type="button" class="sector-choice" style="--sector-color:${esc(item.color)}" data-pick-sector="${esc(item.id)}" aria-pressed="${item.id === sector}">${esc(item.name)}</button>`).join('')}</div>`
+}
+
+function render() {
+  if (!root || root.hidden) return
+  const [, page, tab] = location.hash.slice(1).split('/')
+  if (page === 'ai' || page === 'epoch') {
+    root.innerHTML = sourceLinks() + '<div id="industry-content"></div>'
+    const content = root.querySelector('#industry-content')
+    if (page === 'ai') {
+      content.className = 'aist-panel'
+      renderAiStatisticsPanel(content, { tab, baseHash: '#industry/ai' })
+    } else {
+      content.className = 'epoch-panel'
+      renderEpochPanel(content)
+    }
     return
   }
-  const all=data?.series||[],available=all.filter(s=>!chain||s.chains.includes(chain))
-  if(!available.some(s=>s.id===selected))selected=available[0]?.id||''
-  const current=available.find(s=>s.id===selected),source=data?.sources.find(s=>s.id===current?.sourceId)
-    const points=windowPoints(current,months).reverse()
-  el.innerHTML=`<section class="panel sec industry-header"><div class="industry-heading"><div><p class="industry-kicker">REAL ECONOMY · OFFICIAL SOURCES</p><h1>수출 · 물량 · 산업통계</h1></div><button class="f" data-industry-refresh ${busy?'disabled':''}>${busy?'자료 읽는 중…':'최신 수집값 읽기'}</button></div><p>주가와 함께 실제 산업 흐름을 확인하세요. 수출금액·물량지수·중량은 각각 다른 지표입니다.</p><div class="industry-links"><a href="#compare">8개 고리 주가 비교 →</a><a href="#data">기업 목록 · 실제 시세 →</a></div>${error?`<p class="industry-alert" role="alert">${esc(error)}</p>`:''}<p class="note">통계 수집 시도 ${stamp(data?.attemptedAt||data?.generatedAt)} · 수치는 각 카드의 기준월·출처·확정 여부를 확인하세요.</p><div class="filters">${['전체',...names].map((n,i)=>`<button class="f${chain===i?' on':''}" data-industry-chain="${i}" aria-pressed="${chain===i}">${n}</button>`).join('')}</div></section>${!data?`<section class="panel sec">${busy?'공식 통계를 읽고 있습니다.':'자료를 읽지 못했습니다. 위의 최신 수집값 읽기를 눌러 다시 시도할 수 있습니다.'}</section>`:`<div class="industry-cards">${available.map(s=>{const p=latestPoint(s),src=data.sources.find(x=>x.id===s.sourceId);return `<button class="industry-card${s.id===selected?' selected':''}" data-industry-series="${esc(s.id)}" aria-pressed="${s.id===selected}"><span class="industry-tag">${kinds[s.kind]}</span><h2>${esc(s.name)}</h2><strong>${num(p?.value)} <small>${esc(s.unit)}</small></strong><p>${p?.period||'자료 미연결'} · 전년 동월 ${pct(yearOnYear(s,p))}</p><small>${esc(src?.name)} · ${states[p?.status]||'미연결'}${staleSeries(s)?' · 이전 자료':''}</small></button>`}).join('')}</div>${!available.length?'<section class="panel sec">이 고리의 공식 월별 통계는 아직 연결되지 않았습니다. 전체에서 현재 제공하는 지표를 확인할 수 있습니다.</section>':''}${current?`<section class="panel sec industry-detail"><div class="industry-heading"><div><span class="industry-tag">${kinds[current.kind]}</span><h2>${esc(current.name)}</h2></div><div class="industry-controls"><label for="industry-series-select" class="sr">산업통계 지표 선택</label><select id="industry-series-select" aria-label="산업통계 지표 선택">${available.map(s=>`<option value="${esc(s.id)}"${s.id===selected?' selected':''}>${esc(s.name)}</option>`).join('')}</select>${[12,24,36].map(n=>`<button class="f${months===n?' on':''}" data-industry-months="${n}">${n}개월</button>`).join('')}<button class="f" data-industry-csv>원자료 CSV</button></div></div><p class="industry-definition">${esc(current.definition)}</p><p class="note">단위: ${esc(current.unit)} · 기준월: ${latestPoint(current)?.period||'—'} · <a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.name)} 원문 ↗</a> · 마지막 성공 확인 ${stamp(current.checkedAt||source.checkedAt)}${current.error?' · 갱신 실패: 이전 성공 자료 유지':''}</p>${current.error?`<p class="industry-alert">${esc(current.error)}</p>`:''}${chart(current)}<details><summary>월별 수치 · 전년 동월 증감</summary><div class="industry-table"><table class="tbl"><thead><tr><th>기준월</th><th>${esc(current.unit)}</th><th>전년 동월</th><th>확정 여부</th><th>원문</th></tr></thead><tbody>${points.map(p=>`<tr><td>${p.period}</td><td class="mono">${num(p.value)}</td><td>${pct(yearOnYear(current,p))}</td><td>${states[p.status]}</td><td><a href="${esc(p.sourceUrl||source.url)}" target="_blank" rel="noopener noreferrer">출처 ↗</a></td></tr>`).join('')}</tbody></table></div></details></section>`:''}<section class="panel sec industry-method"><h2>금액과 물량을 함께 읽는 법</h2><p>수출금액은 가격과 제품 구성의 영향을 받습니다. 한국은행 수출물량지수는 가격 영향을 제거한 지수이며, 반도체 개수·HBM 비트 출하량과 다릅니다. 컴퓨터·전자·광학기기는 반도체 외 품목을 포함하고 전기장비도 변압기만을 뜻하지 않습니다.</p><p>관세청 수출중량(kg)은 물리적 무게입니다. 같은 무게라도 제품의 종류가 달라질 수 있어 달러/kg을 반도체 가격으로 해석할 수 없습니다. 월별 자료와 월중 잠정치, 누계를 섞어 그리지 않습니다.</p>${(data.gaps||[]).map(g=>`<p class="industry-alert"><b>${esc(g.name)}</b> · ${esc(g.reason)}${g.sourceUrl?` <a href="${esc(g.sourceUrl)}" target="_blank" rel="noopener noreferrer">공식 안내 ↗</a>`:''}</p>`).join('')}<p class="note">고리별 분류는 관련 산업을 찾기 위한 연결입니다. 해당 고리 전체 기업의 매출이나 개별 기업 실적을 뜻하지 않습니다. 잠정 통계는 추후 수정될 수 있습니다.</p></section>`}`
-  const detail=el.querySelector('.industry-detail');if(detail)el.querySelector('.industry-header').after(detail)
-  const content=document.createElement('div');content.id='industry-content';content.className='industry-monthly-panel';content.setAttribute('role','tabpanel');content.setAttribute('aria-labelledby','industry-monthly-tab')
-  while(el.firstChild)content.append(el.firstChild)
-  el.innerHTML=tabs;el.append(content)
+  sector = page === 'monthly' ? 'monthly' : 'memory'
+  chosenId = null
+  months = 24
+  root.innerHTML = `<div class="sector-stat-view">
+    <header class="sector-stat-heading"><h1>산업·AI 통계</h1>${sector === 'monthly' ? '' : picker()}</header>
+    <section class="panel sec sector-metric-list"></section>
+    <div class="sector-metric-detail" id="sector-chart"></div>
+    <footer>${sourceLinks()}<p class="note" data-load-status role="status"></p><button type="button" class="f" data-refresh-metrics>자료 다시 읽기</button></footer>
+  </div>`
+  relevantKeys().forEach(key => ensureSource(key))
+  paintMetrics()
 }
-async function load(){
-  if(busy)return;busy=true;render()
-  try{const staticHost=location.hostname.endsWith('.github.io')||location.protocol==='file:',url=staticHost?'./data/industry.json':'./api/industry';const res=await fetch(url+'?t='+Math.floor(Date.now()/60000),{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!res.ok)throw new Error(`자료 HTTP ${res.status}`);data=validateIndustry(await res.json());error='';applyMetrics()}catch(e){error=`산업 통계를 불러오지 못했습니다. ${e.message}${data?' 마지막 성공 자료를 표시합니다.':''}`}finally{busy=false;render()}
+
+function downloadCsv() {
+  const url = URL.createObjectURL(new Blob([metricCsv(active)], { type: 'text/csv;charset=utf-8' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = active.id + '.csv'
+  document.body.append(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-window.renderIndustry=render
-document.addEventListener('click',event=>{const tab=event.target.closest('[data-industry-tab]');if(!tab||!['monthly','epoch'].includes(tab.dataset.industryTab))return;industryTab=tab.dataset.industryTab;render();document.querySelector(`[data-industry-tab="${industryTab}"]`)?.focus()})
-document.addEventListener('keydown',event=>{const tab=event.target.closest('[data-industry-tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();industryTab=event.key==='Home'?'monthly':event.key==='End'?'epoch':industryTab==='monthly'?'epoch':'monthly';render();document.querySelector(`[data-industry-tab="${industryTab}"]`)?.focus()})
-document.addEventListener('click',event=>{const e=event.target.closest('[data-industry-series],[data-industry-chain],[data-industry-months],[data-industry-refresh],[data-industry-csv]');if(!e)return;if(e.dataset.industrySeries!==undefined)selected=e.dataset.industrySeries;if(e.dataset.industryChain!==undefined)chain=Number(e.dataset.industryChain);if(e.dataset.industryMonths!==undefined)months=Number(e.dataset.industryMonths);if(e.hasAttribute('data-industry-refresh')){load();return}if(e.hasAttribute('data-industry-csv')){const series=data.series.find(s=>s.id===selected),source=data.sources.find(s=>s.id===series.sourceId),url=URL.createObjectURL(new Blob([seriesCsv(series,source)],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=series.id+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}render();if(e.hasAttribute('data-industry-series'))document.querySelector('.industry-detail')?.scrollIntoView({behavior:'smooth',block:'start'})})
-document.addEventListener('change',event=>{if(event.target.id==='industry-series-select'){selected=event.target.value;render()}})
-window.addEventListener('hashchange',render)
-load()
+
+root.addEventListener('click', event => {
+  const button = event.target.closest('button')
+  if (button?.dataset.pickSector) {
+    sector = button.dataset.pickSector
+    months = 24
+    chosenId = null
+    for (const element of root.querySelectorAll('[data-pick-sector]')) element.setAttribute('aria-pressed', String(element === button))
+    const wrapper = root.querySelector('.sector-table-wrap')
+    if (wrapper) wrapper.scrollTop = 0
+    paintMetrics()
+    return
+  }
+  if (button?.hasAttribute('data-refresh-metrics')) {
+    relevantKeys().forEach(key => ensureSource(key, true))
+    paintMetrics()
+    return
+  }
+  if (button?.hasAttribute('data-sector-csv') && active) {
+    downloadCsv()
+    return
+  }
+  if (button?.dataset.sectorMonths) {
+    months = Number(button.dataset.sectorMonths)
+    paintChart()
+    root.querySelector(`[data-sector-months="${months}"]`)?.focus({preventScroll: true})
+    return
+  }
+  const row = event.target.closest('[data-sector-row]')
+  if (!row || event.target.closest('a')) return
+  chosenId = row.dataset.sectorRow
+  active = metrics.find(item => item.id === chosenId)
+  months = 24
+  for (const entry of row.parentElement.rows) {
+    entry.dataset.selected = String(entry === row)
+    entry.querySelector('.metric-choice').setAttribute('aria-pressed', String(entry === row))
+  }
+  paintChart()
+  const chart = root.querySelector('#sector-chart')
+  if (window.matchMedia('(max-width: 600px)').matches && chart.getBoundingClientRect().bottom > window.innerHeight) {
+    chart.scrollIntoView({ block: 'start' })
+  }
+})
+
+window.renderIndustry = render
+ensureSource('industry')
+render()

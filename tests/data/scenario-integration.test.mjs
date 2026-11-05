@@ -163,9 +163,20 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.match(html, /href="\.\/assets\/scenario\.css"/u)
   assert.equal((html.match(/data-r="today"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>)?오늘의 변화<\/a>/gu) || []).length, 3)
   assert.match(html, />가정 기반 조건부 계산값이며 목표주가·예측이 아님<\/p>/u)
-  for (const route of ['today', 'map', 'data', 'compare', 'industry', 'ai-stats', 'talk', 'ai']) {
+  for (const route of ['today', 'map', 'data', 'compare', 'industry', 'talk', 'ai']) {
     assert.match(html, new RegExp(`(?:href="#${route}"|id="v-${route}")`, 'u'))
   }
+  assert.equal((html.match(/data-r="industry"/gu) || []).length, 3)
+  assert.equal((html.match(/data-r="ai-stats"/gu) || []).length, 0)
+  assert.doesNotMatch(html, /id="v-ai-stats"/u)
+  assert.match(html, /if\(h\[0\]===['"]ai-stats['"]\)/u)
+  assert.match(html, /history\.replaceState\(null,'','#'\+h\.join\('\/'\)\)/u)
+  const industryModule = await readFile(join(sourceRoot, 'assets', 'industry.js'), 'utf8')
+  assert.match(industryModule, /import \{ SECTORS \} from ['"]\.\/home-map-core\.js['"]/u)
+  assert.match(industryModule, /renderAiStatisticsPanel\(content/u)
+  assert.match(industryModule, /월별 산업통계/u)
+  assert.match(industryModule, /AI 통계/u)
+  assert.match(industryModule, /Epoch AI/u)
   assert.equal((await fetch(`${origin}/api/snapshot`)).status, 200)
   for (const path of ['/assets/private.txt', '/data/private-research.json', '/design/notes.md', '/.env']) {
     assert.equal((await fetch(origin + path)).status, 404)

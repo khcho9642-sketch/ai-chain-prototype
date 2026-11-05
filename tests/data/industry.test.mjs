@@ -5,6 +5,8 @@ import {validateIndustry,yearOnYear,seriesCsv,staleSeries,windowPoints} from '..
 import {parseTsmcRevenue,collectTsmc} from '../../scripts/data/collect-tsmc.mjs'
 import {instruments} from '../../assets/instruments.js'
 import {companyProfiles} from '../../assets/company-profiles.js'
+import {sectorMetrics} from '../../assets/sector-metric-catalog.js'
+import {metricDetailHTML, metricCsv} from '../../assets/sector-metric-chart.js'
 const now=new Date('2026-10-26T00:00:00Z')
 const series={id:'test',name:'월별 수출물량',kind:'volume-index',unit:'2020=100',frequency:'monthly',chains:[3],definition:'가격 영향을 제거한 지수',sourceId:'bok',points:[{period:'2025-09',value:100,status:'final'},{period:'2026-09',value:130.5,status:'provisional'}]}
 const fixture=()=>({schemaVersion:1,sources:[{id:'bok',name:'한국은행',url:'https://ecos.bok.or.kr/',checkedAt:'2026-10-26'}],series:[structuredClone(series)]})
@@ -47,4 +49,72 @@ test('published industrial snapshot has distinct monthly grain and traceable off
   assert.ok(data.series.some(s=>s.kind==='volume-index'&&s.chains.includes(3)&&s.points.length>=24))
   assert.ok(data.series.some(s=>s.kind==='volume-index'&&s.chains.includes(5)&&s.points.length>=24))
   assert.ok(data.series.some(s=>s.kind==='weight'))
+})
+
+const snapshot = async name => JSON.parse(await readFile(new URL(`../../data/${name}.json`, import.meta.url), 'utf8'))
+const figure = html => html.match(/<figure\b[^>]*>([\s\S]*?)<\/figure>/u)?.[1] || ''
+const dotCount = plot => (plot.match(/<circle\b/gu) || []).length
+
+test('memory starts with the semiconductor reference and Micron business, each with its own unit, period and source', async () => {
+  const [industry, ai] = await Promise.all([snapshot('industry'), snapshot('ai-statistics')])
+  const [exports, micron] = sectorMetrics('memory', { industry, ai })
+  const series = industry.series.find(item => item.id === 'kr-semiconductor-volume')
+  const business = ai.metrics.find(item => item.id === 'micron_cloud_memory_revenue')
+  assert.deepEqual([exports.id, micron.id], [series.id, business.id])
+  assert.equal(exports.relation, 'reference')
+  assert.equal(exports.unit, series.unit)
+  assert.equal(micron.unit, business.unitLabel)
+  assert.equal(micron.latest.sourceUrl, business.observations[business.latestIndex].sourceUrl)
+  assert.match(exports.sourceUrl, /ecos\.bok\.or\.kr/u)
+
+  const monthlyPlot = figure(metricDetailHTML(exports))
+  const expected = windowPoints(series, 24)
+  assert.equal(dotCount(monthlyPlot), expected.length)
+  assert.ok(monthlyPlot.includes(expected[0].period) && monthlyPlot.includes(expected.at(-1).period))
+  assert.match(metricDetailHTML(exports), /반도체 전체 기준 · 메모리 참고 지표 · 2020=100/u)
+
+  const quarterPlot = figure(metricDetailHTML(micron))
+  assert.equal(dotCount(quarterPlot), business.observations.length)
+  for (const period of ['FY2025-Q4', 'FY2026-Q3', 'FY2026-Q4']) assert.ok(quarterPlot.includes(period), period)
+  const actualPeriods = new Set(business.observations.map(point => point.period))
+  for (const label of quarterPlot.match(/FY\d{4}-Q[1-4]/gu) || []) assert.ok(actualPeriods.has(label), label)
+  assert.doesNotMatch(quarterPlot, /2020=100/u)
+})
+
+test('monthly graphs break at missing months and a single observation keeps its own dated point', () => {
+  const unit = '2020=100'
+  const points = [
+    { label: '2024-09', ordinal: 0, value: 90 },
+    { label: '2026-06', ordinal: 21, value: 12 },
+    { label: '2026-08', ordinal: 23, value: 16 },
+    { label: '2026-09', ordinal: 24, value: 17 },
+  ]
+  const metric = { name: '반도체 수출물량지수', unit, kind: 'monthly', points }
+  const plot = figure(metricDetailHTML(metric))
+  assert.equal(dotCount(plot), 3)
+  assert.equal((plot.match(/class="sector-chart-line"/gu) || []).length, 1)
+  assert.doesNotMatch(plot, /2024-09/u)
+  const single = figure(metricDetailHTML({ ...metric, kind: 'observations', points: [points[2]] }))
+  assert.equal(dotCount(single), 1)
+  assert.match(single, /2026-08/u)
+  assert.doesNotMatch(single, /class="sector-chart-line"/u)
+})
+
+test('Epoch product ranks compare available values, include zero and export the complete original sample', () => {
+  const rows = Array.from({ length: 10 }, (_, i) => ({ name: `GPU ${i}`, memory: i }))
+  const epoch = { datasets: [{ id: 'hardware', lastSuccessAt: '2026-11-01T00:00:00Z', rows: [...rows, { name: '미공개', memory: null }] }] }
+  const [metric] = sectorMetrics('memory', { epoch })
+  assert.equal(metric.kind, 'comparison')
+  assert.equal(metric.points.length, 10)
+  const html = metricDetailHTML(metric)
+  const plot = figure(html)
+  assert.match(plot, /상위 8개/u)
+  assert.ok(plot.indexOf('GPU 9') >= 0 && plot.indexOf('GPU 9') < plot.indexOf('GPU 8'))
+  assert.doesNotMatch(plot, /GPU 0|GPU 1</u)
+  assert.match(html.slice(html.indexOf('</figure>')), /GPU 0/u)
+  const csv = metricCsv(metric)
+  assert.equal(csv.split('\r\n').length, 11)
+  assert.ok(csv.includes('"GPU 0"') && csv.includes(metric.sourceUrl))
+  assert.doesNotMatch(csv, /미공개/u)
+  assert.deepEqual(sectorMetrics('memory', {}), [])
 })

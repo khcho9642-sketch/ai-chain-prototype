@@ -5,7 +5,9 @@ import {
   latestTokenDate, tokenRowsForDate, formatTokens, tokenTotalsCsv,
 } from './token-core.js'
 
-const view = document.getElementById('v-ai-stats')
+let view = null
+let baseHash = '#industry/ai'
+let headingLevel = 'h1'
 const categories = {
   usage: '사용자·이용량', revenue: '매출', customers: '고객·유료 사용자',
   profitability: '수익성·비용', tokens: '토큰', adoption: 'AI 도입',
@@ -92,7 +94,7 @@ function headerHTML() {
   const stats = state.stats
   const metrics = stats?.metrics || []
   return `<section class="panel sec">
-    <div class="aist-heading"><div><p class="aist-kicker">USAGE · BUSINESS · INFRASTRUCTURE</p><h1>AI 통계</h1>
+    <div class="aist-heading"><div><p class="aist-kicker">USAGE · BUSINESS · INFRASTRUCTURE</p><${headingLevel}>AI 통계</${headingLevel}>
       <p class="aist-intro">ChatGPT·Claude의 사용자와 매출부터 중국·일본의 AI 산업, 공개 토큰 사용량까지. 각 숫자의 집계 범위와 발표 시점을 함께 확인하세요.</p></div>
       <button type="button" class="aist-button" data-aist-action="refresh"${state.loading ? ' disabled' : ''}>${state.loading ? '불러오는 중…' : '새로고침'}</button></div>
     <div class="aist-meta">${stats ? `<span><b>${stats.definitionCount}개 지표 정의</b> · ${metrics.length}개 표시 항목</span><span>자료 확인일 <b>${esc(stats.asOf)}</b></span><span>공개문서 검토본</span>` : '<span>출처와 관측 시점을 담은 공개 데이터</span>'}</div>
@@ -101,7 +103,7 @@ function headerHTML() {
     ['business', '모델·서비스', definitionCount(groupMetrics('business'))],
     ['industry', '산업·국가', definitionCount(groupMetrics('industry'))],
     ['tokens', '토큰 사용량', null],
-  ].map(([id, name, count]) => `<a href="#ai-stats/${id}"${state.tab === id ? ' aria-current="page"' : ''}>${name}${count ? `<small>${count}</small>` : ''}</a>`).join('')}</nav>`
+  ].map(([id, name, count]) => `<a href="${baseHash}/${id}"${state.tab === id ? ' aria-current="page"' : ''}>${name}${count ? `<small>${count}</small>` : ''}</a>`).join('')}</nav>`
 }
 
 function toolbarHTML(metrics) {
@@ -290,7 +292,7 @@ function tokensHTML() {
 }
 
 function render() {
-  if (!view || view.hidden) return
+  if (!view?.isConnected || view.hidden) return
   const active = document.activeElement
   const focusId = view.contains(active) ? active.id : ''
   const focusAction = view.contains(active) && active.tagName === 'BUTTON' ? Object.entries(active.dataset).find(([key]) => key.startsWith('aist')) : null
@@ -298,7 +300,7 @@ function render() {
   view.setAttribute('aria-busy', String(state.loading))
   view.innerHTML = headerHTML() + (state.tab === 'tokens' ? tokensHTML() : metricsHTML())
   if (focusId) {
-    const replacement = document.getElementById(focusId)
+    const replacement = view.querySelector(`#${CSS.escape(focusId)}`)
     replacement?.focus({ preventScroll: true })
     if (selection && replacement?.setSelectionRange) replacement.setSelectionRange(...selection)
   } else if (focusAction) {
@@ -371,7 +373,10 @@ function updateFilter(key, value) {
   render()
 }
 
-view?.addEventListener('click', event => {
+function ownsEvent(event) { return view?.isConnected && view.contains(event.target) }
+
+document.addEventListener('click', event => {
+  if (!ownsEvent(event)) return
   const button = event.target.closest('button')
   if (!button) return
   if (button.dataset.aistMetric) {
@@ -389,22 +394,34 @@ view?.addEventListener('click', event => {
   else if (button.dataset.aistAction === 'export-stats') download(`ai-statistics-${state.tab}-${state.stats.asOf}.csv`, statsCsv(filteredMetrics()))
   else if (button.dataset.aistAction === 'export-tokens') download(`ai-tokens-${latestTokenDate(state.tokens) || 'empty'}.csv`, tokenTotalsCsv(state.tokens))
 })
-view?.addEventListener('change', event => {
+document.addEventListener('change', event => {
+  if (!ownsEvent(event)) return
   if (event.target.dataset.aistFilter) updateFilter(event.target.dataset.aistFilter, event.target.value)
   else if (event.target.id === 'aist-token-date') { state.tokenDate = event.target.value; render() }
 })
-view?.addEventListener('input', event => {
+document.addEventListener('input', event => {
+  if (!ownsEvent(event)) return
   if (event.target.id === 'aist-search' && !event.isComposing) updateFilter('query', event.target.value)
 })
-view?.addEventListener('compositionend', event => {
+document.addEventListener('compositionend', event => {
+  if (!ownsEvent(event)) return
   if (event.target.id === 'aist-search') updateFilter('query', event.target.value)
 })
 
-window.renderAiStatistics = function () {
-  if (!view || view.hidden) return
-  const tab = location.hash.slice(1).split('/')[1]
-  state.tab = ['business', 'industry', 'tokens'].includes(tab) ? tab : 'business'
+export function renderAiStatisticsPanel(host, options = {}) {
+  if (!host) return
+  view = host
+  baseHash = options.baseHash || '#industry/ai'
+  headingLevel = options.headingLevel === 'h2' ? 'h2' : 'h1'
+  state.tab = ['business', 'industry', 'tokens'].includes(options.tab) ? options.tab : 'business'
+  view.dataset.aiStatisticsRoot = ''
   if (!state.attempted && !state.loading) load()
   else render()
 }
-if (view && !view.hidden) window.renderAiStatistics()
+
+window.renderAiStatistics = function () {
+  const legacyView = document.getElementById('v-ai-stats')
+  if (!legacyView || legacyView.hidden) return
+  const parts = location.hash.slice(1).split('/')
+  renderAiStatisticsPanel(legacyView, { tab: parts[1], baseHash: '#ai-stats' })
+}
