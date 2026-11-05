@@ -26,9 +26,11 @@ export const ASSUMPTION_LIMITS = Object.freeze({
 })
 
 export const MODEL_ASSUMPTIONS = Object.freeze({
-  modelId: 'financial-actuals-value-chain-v2',
-  modelVersion: 2,
-  valuationBasis: 'mixed-financial-actuals-8y-dcf-proxy',
+  modelId: 'financial-actuals-value-chain-v3',
+  modelVersion: 3,
+  valuationBasis: 'monthly-dcf-with-incremental-operating-cashflows',
+  asOfDate: '2026-11-05',
+  calibrationStatus: '연결 재무비율·전사 CAPEX 회귀 반영, AI 거래 노출도·시차 C등급',
   normalizedStartingRevenue: 100,
   forecastYears: 8,
   horizonMonths: 96,
@@ -43,7 +45,7 @@ export const MODEL_ASSUMPTIONS = Object.freeze({
     segments: 'standalone segment profiles; segment indices are not additive',
     big7: 'equal-weighted normalized company indices; not market-cap weighted',
   }),
-  pathAttributionMethod: 'Shapley driver impact allocated by discounted path signal; interpretive, not a causal estimate',
+  pathAttributionMethod: 'Sequential DCF repricing: direct paths first, then supply-chain paths in catalog order; interactions assigned to the path added',
   unmodeledMitigants: Object.freeze([
     '재고 버퍼, 장기계약 가격전가, 대체 공급처와 회사별 병목 용량은 실증 입력이 없어 별도 계수화하지 않았습니다.',
     '전파계수와 시차는 설명용 비례 가정이며 실제 고객·공급자 계약 또는 거래관계를 뜻하지 않습니다.',
@@ -133,7 +135,7 @@ export const SCENARIO_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'hyperscaler_capex',
     name: 'CAPEX 변화',
-    description: '기준 AI 투자계획 대비 예산 변화가 클라우드 현금유출과 장비·칩·생산 공급망으로 전파되는 경로를 봅니다.',
+    description: 'MS·아마존·알파벳·메타의 AI 투자 예산을 조정해 네 회사의 투자 지출과 공급사 주문이 어떻게 달라지는지 봅니다.',
     controls: Object.freeze([
       control('capexChangePct', 'hyperscalerCapex', '기준 CAPEX 예산 대비 변화', '%', -40, 40, 5),
     ]),
@@ -284,6 +286,7 @@ export const PROPAGATION_EDGES = Object.freeze([
 ])
 
 export const BIG7_COMPANY_IDS = Object.freeze(['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA'])
+export const HYPERSCALER_CAPEX_OWNER_IDS = Object.freeze(['MSFT', 'AMZN', 'GOOGL', 'META'])
 
 const company = ({ companyId, symbol = companyId, name, listingStatus = 'listed', primarySegmentId,
   segmentWeights = { [primarySegmentId]: 1 }, scenarioExposureScale = 1, driverExposureMultipliers = {} }) => {

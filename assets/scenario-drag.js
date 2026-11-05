@@ -49,15 +49,15 @@ function presetButtons(definition, request, presetText) {
   }).join('')
 }
 
-export function renderDragControls(definition, request, { presetText, modelGrowthHtml = '' }) {
+export function renderDragControls(definition, request, { presetText, modelGrowthHtml = '', rateFitHtml = '' }) {
   const assumptions = definition.controls.filter(control => control.role === 'assumption')
   const inputs = definition.controls.filter(control => control.role !== 'assumption')
   return `<section class="scenario-panel scenario-inputs scenario-drive" aria-labelledby="scenario-input-heading">
     <div class="scenario-drive-header"><h2 id="scenario-input-heading">${escapeHtml(definition.name)}</h2></div>
     <div class="scenario-drag-fields">${inputs.map(control => sliderField(control, request.inputs[control.id], definition.name)).join('')}</div>
     <div class="scenario-drive-options"><div class="scenario-presets" role="group" aria-label="수치 프리셋">${presetButtons(definition, request, presetText)}</div>
-      <div class="scenario-duration-shortcuts"><span>지속기간</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${request.durationMonths === months}">${months}개월</button>`).join('')}</div></div></div>
-    ${assumptions.length ? `<details class="scenario-advanced-assumptions"><summary>가정 설정</summary>${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">C등급 가정 · 0%면 전파 끄기</small></div>`).join('')}</details>` : ''}
+      <div class="scenario-duration-shortcuts"><span>${definition.id === 'interest_rate' ? 'CAPEX 전파 기간' : '지속기간'}</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${request.durationMonths === months}">${months}개월</button>`).join('')}</div></div></div>
+    ${assumptions.length ? `<details class="scenario-advanced-assumptions"><summary>가정 설정</summary><label class="scenario-rate-setting">금리·투자 관계<select data-rate-capex-mode><option value="historical" ${request.rateCapexMode !== 'manual' ? 'selected' : ''}>4개사 과거 재무·금리</option><option value="manual" ${request.rateCapexMode === 'manual' ? 'selected' : ''}>공통 감소율 직접 설정</option></select></label>${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" ${request.rateCapexMode === 'historical' ? 'disabled' : ''} inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">공통 감소율은 직접 설정 시 적용됩니다. 0%면 CAPEX 전파가 꺼집니다.</small></div>`).join('')}${rateFitHtml}</details>` : ''}
     ${definition.id === 'model_growth' ? `<div class="scenario-derived-input" data-model-growth-helper>${modelGrowthHtml}</div>` : ''}
   </section>`
 }
@@ -77,6 +77,7 @@ export function syncDragControls(root, definition, request, activeElement) {
       continue
     }
     const number = field.querySelector('[data-scenario-control]')
+    number.disabled = request.rateCapexMode === 'historical'
     if (activeElement !== number || number.value.trim() && Number(number.value) === value) {
       if (activeElement !== number && number.value !== String(value)) number.value = String(value)
       if (number.hasAttribute?.('aria-invalid')) {

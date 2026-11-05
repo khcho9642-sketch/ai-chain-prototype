@@ -160,7 +160,7 @@ test('CAPEX transmission reports catalog weights and individual lags only for an
   assert.deepEqual(decomposeCompany({ ...nvidia, paths: [mismatchedPath] }).paths[0].coefficientSteps, [])
 })
 
-test('shorter rate shocks reduce the modeled direct and CAPEX-mediated EV components', () => {
+test('shortening the budget period keeps direct rate EV fixed and reduces the CAPEX-mediated effect', () => {
   const view = duration => buildScenarioView(evaluateScenario({
     scenarioId: 'interest_rate', durationMonths: duration,
     inputs: { rateChangePctPoints: 1 },
@@ -170,7 +170,58 @@ test('shorter rate shocks reduce the modeled direct and CAPEX-mediated EV compon
   const eqix12 = twelve.companies.find(company => company.companyId === 'EQIX')
   const eqix6 = six.companies.find(company => company.companyId === 'EQIX')
   assert.ok(Math.abs(eqix6.chainPct) < Math.abs(eqix12.chainPct))
-  assert.ok(Math.abs(eqix6.directPct) < Math.abs(eqix12.directPct))
+  closeTo(eqix6.directPct, eqix12.directPct, 1e-12)
+})
+
+test('only the four budget setters change their own outlay and earn returns from that spending', () => {
+  for (const capexChangePct of [-20, 20]) {
+    const view = buildScenarioView(evaluateScenario({ scenarioId: 'hyperscaler_capex', inputs: { capexChangePct } }))
+    const budgetSetters = view.companies.filter(row => row.capexRole === 'budget-owner')
+    assert.deepEqual(budgetSetters.map(row => row.companyId).sort(), ['AMZN', 'GOOGL', 'META', 'MSFT'])
+    for (const row of view.companies) {
+      if (row.capexRole === 'budget-owner') {
+        assert.equal(Math.sign(row.valuation.operatingBridge[0].incrementalCapexCashoutUnits), Math.sign(capexChangePct))
+      } else {
+        assert.ok(row.valuation.operatingBridge.every(year => year.incrementalCapexCashoutUnits === 0))
+        closeTo(row.directPct, 0, 1e-10)
+      }
+    }
+    const coreWeave = view.companies.find(row => row.companyId === 'CRWV')
+    assert.equal(coreWeave.capexRole, 'no-covered-customer-path')
+    assert.equal(coreWeave.totalPct, 0)
+  }
+})
+
+test('Alphabet direct CAPEX equals discounted budget and own capacity cash flows alone', () => {
+  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hyperscaler_capex', durationMonths: 12, inputs: { capexChangePct: 20 } }))
+  const row = view.companies.find(item => item.companyId === 'GOOGL')
+  const exposure = row.segmentWeights.SEG8 * row.assumptions.scenarioExposureScale
+  const effectiveBudgetShock = 0.20 * exposure
+  const { volumePassThrough, capexPassThrough, discountRatePct } = row.assumptions
+  const { baselineRevenue, baselineEnterpriseValueUnits } = row.valuation
+  const weight = m => m <= 0 ? 0 : Math.min(1, Math.max(0, (24 - m) / 12))
+  let directPV = 0
+  for (let month = 1; month <= 96; month++) {
+    const year = Math.floor((month - 1) / 12)
+    const profile = row.financialBasis.forecast[year]
+    const spending = effectiveBudgetShock * weight(month) * capexPassThrough * profile.capexToRevenuePct / 100
+    const capacity = effectiveBudgetShock * 0.35 * weight(month - 12) * volumePassThrough * profile.volumeContributionMarginPct / 100
+    directPV += baselineRevenue[year] / 12 * (capacity - spending) / (1 + discountRatePct / 100) ** (month / 12)
+  }
+  closeTo(row.directPct, 100 * directPV / baselineEnterpriseValueUnits, 1e-9)
+  assert.ok(row.chainPct > 0)
+  closeTo(row.directPct + row.chainPct, row.totalPct, 1e-12)
+})
+
+test('historical rate mode applies each individual owner shock to its own budget', () => {
+  const result = evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 }, durationMonths: 12 })
+  const { ownerChangesPct } = result.scenario.rateCapexTransmission
+  for (const owner of result.companies.filter(row => row.capexRole === 'budget-owner')) {
+    const expectedOutlay = owner.valuation.baselineRevenue[0] * owner.financialBasis.forecast[0].capexToRevenuePct / 100 *
+      owner.segmentWeights.SEG8 * owner.assumptions.scenarioExposureScale * owner.assumptions.capexPassThrough * ownerChangesPct[owner.id] / 100
+    closeTo(owner.valuation.operatingBridge[0].incrementalCapexCashoutUnits, expectedOutlay, 0.001)
+  }
+  assert.ok(ownerChangesPct.MSFT > 0 && ownerChangesPct.AMZN < 0)
 })
 
 test('a nonpositive baseline keeps the company visible and the nine-company average unavailable', () => {

@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { DatabaseSync } from 'node:sqlite'
-import { COMPANIES } from '../../assets/scenario-data.js'
+import { COMPANIES, SEGMENTS } from '../../assets/scenario-data.js'
+import { financialProfile } from '../../assets/scenario-actuals.js'
 import { extractFinancialBaselines, serializeFinancialBaselines } from '../../scripts/data/export-scenario-financials.mjs'
 
 function database() {
@@ -82,6 +83,44 @@ test('missing latest sales keeps its actual year and never substitutes an older 
   assert.equal(company.years[0].fiscalYear,2025)
   assert.equal(company.years[0].facts.revenue,undefined)
   assert.equal(company.years[1].facts.revenue.value,30)
+})
+
+test('income-statement calibration pools amounts, excludes loss years from tax and never charges historical capex on incremental price', t => {
+  const db = database()
+  t.after(() => db.close())
+  for (const [year, sales, gross, pretax, net] of [
+    [2022, 1000, 999, 900, 900], // Outside the three-year calibration window.
+    [2023, 100, -10, -20, -40],
+    [2024, 100, 40, 10, 6],
+    [2025, 200, 110, 40, 34],
+  ]) {
+    period(db, year)
+    for (const [metric, value] of [['revenue',sales],['gross_profit',gross],['pretax_income',pretax],['net_income',net]]) {
+      fact(db, year, metric, String(value))
+    }
+  }
+  fact(db, 2025, 'operating_cash_flow', '10')
+  fact(db, 2025, 'capital_expenditure', '-300')
+  const record = extractFinancialBaselines(db,'2026-11-05').baselines.AAPL
+  const profile = financialProfile(record, SEGMENTS[0].illustrativeAssumptions)
+  const margins = profile.incrementalMargins
+  assert.equal(margins.grossMarginPct,35)
+  assert.equal(margins.taxRetentionPct,80)
+  assert.equal(margins.priceContributionMarginPct,80)
+  assert.equal(margins.volumeContributionMarginPct,28)
+  assert.equal(margins.costOfRevenueSharePct,65)
+  assert.deepEqual(margins.taxRetentionFiscalYears,[2025,2024])
+  assert.deepEqual(margins.grossMarginFiscalYears,[2025,2024,2023])
+  assert.equal(profile.historicalCashMarginPct,-145)
+  assert.equal(record.years[0].facts.grossProfit.url,'https://finance.yahoo.com/quote/AAPL/financials/')
+  assert.ok(record.years[3].facts.grossProfit === undefined)
+  assert.ok(profile.forecast.every(year => year.volumeContributionMarginPct === 28))
+  for (const year of record.years) delete year.facts.netIncome
+  const fallback = financialProfile(record, SEGMENTS[0].illustrativeAssumptions).incrementalMargins
+  assert.equal(fallback.taxRetentionSource,'sector-peer-median')
+  assert.deepEqual(fallback.taxRetentionFiscalYears,[])
+  assert.ok(fallback.taxRetentionPeerIds.length > 0)
+  assert.equal(fallback.grade,'C')
 })
 
 test('an open decision excludes even a filing on an official hostname', t => {

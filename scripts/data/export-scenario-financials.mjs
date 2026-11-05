@@ -11,7 +11,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const fields = new Map([
   ['revenue', 'revenue'], ['operating_cash_flow', 'operatingCashFlow'],
   ['capital_expenditure', 'capitalExpenditure'], ['free_cash_flow', 'freeCashFlow'],
+  ['gross_profit', 'grossProfit'], ['pretax_income', 'pretaxIncome'], ['net_income', 'netIncome'],
 ])
+const incomeMetrics = new Set(['revenue', 'gross_profit', 'pretax_income', 'net_income'])
 const officialHosts = {
   SEC: ['www.sec.gov', 'data.sec.gov'],
   SGX: ['links.sgx.com'],
@@ -20,14 +22,15 @@ const officialHosts = {
   MOPS: ['mopsov.twse.com.tw', 'mops.twse.com.tw'],
   ISSUER_IR: ['www.se.com', 'www.asml.com', 'investor.tsmc.com', 'investor.oracle.com',
     'investors.delltechnologies.com', 'abc.xyz', 'investor.atmeta.com', 'investors.coreweave.com',
-    'investor.digitalrealty.com', 'investors.hpe.com', 'investors.ironmountain.com'],
+    'investor.digitalrealty.com', 'investors.hpe.com', 'investors.ironmountain.com',
+    'media-aseholdco.todayir.com', 'ir.supermicro.com', 'www.gevernova.com', 'ir.tesla.com'],
 }
 
 // Only the browser-facing finance page or a known public filing is exported, never collector credentials.
 function publicSource(row, ticker) {
   const provider = row.selected_provider_id
   if (provider === 'YAHOO') {
-    const statement = row.metric_id === 'revenue' ? 'financials' : 'cash-flow'
+    const statement = incomeMetrics.has(row.metric_id) ? 'financials' : 'cash-flow'
     return { provider, url: 'https://finance.yahoo.com/quote/' + encodeURIComponent(ticker) + '/' + statement + '/', grade: 'C' }
   }
   const u = new URL(row.source_url)
@@ -123,7 +126,7 @@ export function extractFinancialBaselines(db, today = new Date().toISOString().s
     "AND n.normalization_status='accepted' AND n.period_id=f.period_id AND n.metric_id=f.metric_id " +
     "JOIN raw_financial_observations r ON r.raw_observation_id=n.raw_observation_id AND r.company_id=f.company_id " +
     "JOIN source_documents d ON d.document_id=r.document_id AND d.company_id=r.company_id AND d.provider_id=f.selected_provider_id " +
-    "WHERE f.metric_id IN ('revenue','operating_cash_flow','capital_expenditure','free_cash_flow') " +
+    "WHERE f.metric_id IN ('revenue','operating_cash_flow','capital_expenditure','free_cash_flow','gross_profit','pretax_income','net_income') " +
     "AND date(d.retrieved_at)<=? AND (d.published_at IS NULL OR date(d.published_at)<=?) " +
     "AND NOT EXISTS (SELECT 1 FROM reconciliation_issues i WHERE i.company_id=f.company_id " +
       "AND (i.period_id IS NULL OR i.period_id=f.period_id) AND (i.metric_id IS NULL OR i.metric_id=f.metric_id) " +
@@ -133,8 +136,11 @@ export function extractFinancialBaselines(db, today = new Date().toISOString().s
     const year = byPeriod.get(row.period_id)
     if (!year || year.scope !== 'consolidated') continue
     const company = dbCompanies.get(row.company_id)
-    // Growth uses prior sales; the cash-flow and investment bases use only the latest year.
-    if (year !== company.years[0] && row.metric_id !== 'revenue') continue
+    // Use the three most recent completed income statements to estimate contribution margins.
+    // The fourth year's sales anchor growth, and the latest year's cash flows anchor the baseline.
+    const yearIndex = company.years.indexOf(year)
+    if (yearIndex > 0 && !incomeMetrics.has(row.metric_id)) continue
+    if (yearIndex > 2 && row.metric_id !== 'revenue') continue
     const value = eligibleValue(row, year.currency)
     if (value === null) continue
     const source = publicSource(row, company.companyId)

@@ -97,7 +97,8 @@ export function renderExplorer(view, options) {
   if (transmission) {
     if (transmission.rateChangePctPoints === 0) originText = '금리 변화 0%p · CAPEX 경유 전파 0%'
     else {
-      const capexLabel = transmission.rateCapexSensitivity > 0 ? '빅테크 AI CAPEX 경유 전파' : 'CAPEX 민감도 0 · 전파효과 0%'
+      const hasBudgetChange = Object.values(transmission.ownerChangesPct ?? {}).some(change => change !== 0) || transmission.derivedCapexChangePct !== 0
+      const capexLabel = hasBudgetChange ? '빅테크 AI CAPEX 경유 전파' : 'CAPEX 민감도 0 · 전파효과 0%'
       originText = `금리 · ${view.segments.length}개 섹터에 직접 적용 · ${capexLabel}`
     }
   }

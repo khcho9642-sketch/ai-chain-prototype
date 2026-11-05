@@ -206,14 +206,16 @@ test('company overrides are explicit, and observed-price ratio needs same-date n
   assert.equal(company(overridden, 'OPENAI').valuation.quoteLinkStatus, 'not-applicable-private')
 })
 
-test('driver attribution reconciles while path allocation is labeled interpretive', () => {
+test('each repriced HBM path reconciles to its direct or transmitted effect', () => {
   const result = evaluateScenario({
     scenarioId: 'hbm_market', durationMonths: 18,
     inputs: { hbmPriceChangePct: 15, hbmSupplyChangePct: -10 },
   })
   for (const item of [...result.segments, ...result.companies]) {
-    closeTo(item.driverContributions.reduce((total, driver) => total + driver.valueIndexPoints, 0), item.valueChangePct, 2e-4)
-    assert.ok(item.paths.every(path => /interpretive/.test(path.attributionMethod)))
+    closeTo(item.driverContributions.reduce((total, driver) => total + driver.valueIndexPoints, 0), item.valueChangePct, 1e-10)
+    const pathSum = paths => paths.reduce((total, path) => total + path.impactPoints, 0)
+    closeTo(pathSum(item.paths.filter(path => path.segments.length === 1)), item.effectAttribution.directPct, 1e-10)
+    closeTo(pathSum(item.paths.filter(path => path.segments.length > 1)), item.effectAttribution.chainPct, 1e-10)
   }
 })
 
@@ -394,12 +396,22 @@ test('model revenue contraction and recovery preserve growth-rate arithmetic', (
 const rateScenario = (rateChangePctPoints, rateCapexSensitivity, durationMonths = 12, companyOverrides = {}) =>
   evaluateScenario({ scenarioId: 'interest_rate', durationMonths, inputs: { rateChangePctPoints, rateCapexSensitivity }, companyOverrides })
 
+test('a rate-only request uses fitted company budgets; an explicit common sensitivity preserves manual behavior', () => {
+  const estimated = rateScenario(1).scenario.rateCapexTransmission
+  assert.equal(estimated.mode, 'historical')
+  closeTo(estimated.derivedCapexChangePct, -5.03805, 0.00001)
+  assert.ok(estimated.ownerChangesPct.MSFT > 0 && estimated.ownerChangesPct.AMZN < -14)
+  assert.equal(rateScenario(1, 0).scenario.rateCapexTransmission.derivedCapexChangePct, 0)
+  assert.equal(rateScenario(0).scenario.rateCapexTransmission.derivedCapexChangePct, 0)
+})
+
 test('rate-sensitive CAPEX uses the existing budget shock exactly once with existing supplier lags', () => {
-  const full = rateScenario(1)
+  const full = rateScenario(1, 5)
   const rateOnly = rateScenario(1, 0)
   const capexOnly = evaluateScenario({ scenarioId: 'hyperscaler_capex', inputs: { capexChangePct: -5 } })
   assert.deepEqual(full.scenario.rateCapexTransmission, {
-    version: 1, rateChangePctPoints: 1, rateCapexSensitivity: 5, derivedCapexChangePct: -5, budgetLagMonths: 0, grade: 'C',
+    version: 2, mode: 'manual', ownerChangesPct: { MSFT: -5, AMZN: -5, GOOGL: -5, META: -5 },
+    rateChangePctPoints: 1, rateCapexSensitivity: 5, derivedCapexChangePct: -5, budgetLagMonths: 0, grade: 'C',
   })
   assert.deepEqual(full.scenario.drivers.map(driver => [driver.driverId, driver.normalizedShock]), [
     ['interestRate', -0.01], ['hyperscalerCapex', -0.05],
@@ -451,6 +463,7 @@ test('rate duration, direction, zero shock and sensitivity change the conditiona
   assert.equal(rateScenario(-2, 10).scenario.rateCapexTransmission.derivedCapexChangePct, 20)
   for (const id of ['NVDA', '000660.KS']) {
     const normal = company(fullYear, id).rateAttribution
+    assert.equal(company(halfYear, id).rateAttribution.directPct, normal.directPct)
     assert.ok(Math.abs(company(halfYear, id).rateAttribution.chainPct) < Math.abs(normal.chainPct))
     assert.ok(company(cut, id).rateAttribution.chainPct > 0)
     assert.equal(company(stronger, id).rateAttribution.directPct, normal.directPct)

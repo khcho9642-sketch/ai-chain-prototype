@@ -1,10 +1,11 @@
 import { renderScenarioChoices, renderDragControls, syncDragControls, createDragInteraction } from './scenario-drag.js'
 import { renderExplorer } from './scenario-explorer.js'
+import { RATE_CAPEX_FITS } from './scenario-rate-fits.js'
 
 const root = document.getElementById('v-scenario')
 
 const STORAGE_KEY = 'ai-chain.scenario.v1'
-const STORAGE_VERSION = 3
+const STORAGE_VERSION = 4
 const DURATION = { min: 6, max: 36, step: 6, defaultValue: 12 }
 const EXPECTED_SCENARIOS = ['interest_rate', 'hyperscaler_capex', 'hbm_market', 'gpu_dc_rent', 'model_growth']
 const EXPECTED_SEGMENTS = [
@@ -150,6 +151,7 @@ function sanitizeRequest(id, raw) {
     if (finite(value)) base.inputs[control.id] = clamp(value, control.min, control.max)
   }
   if (finite(raw.durationMonths)) base.durationMonths = clamp(raw.durationMonths, DURATION.min, DURATION.max)
+  if (id === 'interest_rate' && raw.rateCapexMode === 'manual') base.rateCapexMode = 'manual'
   base.companyOverrides = cleanOverrides(raw.companyOverrides)
   const validated = coreModule.validateScenarioRequest(clone(base))
   if (validated === false) throw new Error('저장된 입력 검증 실패')
@@ -165,7 +167,7 @@ function loadState() {
   }
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
-    if (!parsed || ![1, 2, STORAGE_VERSION].includes(parsed.version)) return fallback
+    if (!parsed || ![1, 2, 3, STORAGE_VERSION].includes(parsed.version)) return fallback
     for (const id of Object.keys(requests)) {
       try {
         if (!parsed.requests?.[id]) continue
@@ -173,6 +175,9 @@ function loadState() {
         if (id === first) {
           requests[id].companyOverrides = saved.companyOverrides
           requests[id].inputs.rateCapexSensitivity = saved.inputs.rateCapexSensitivity
+          const previouslyEdited = parsed.version < STORAGE_VERSION &&
+            (saved.inputs.rateCapexSensitivity !== 5 || parsed.touchedControls?.['interest_rate:rateCapexSensitivity'])
+          requests[id].rateCapexMode = previouslyEdited ? 'manual' : saved.rateCapexMode
         } else requests[id] = saved
       } catch { /* keep a verified default */ }
     }
@@ -264,9 +269,10 @@ function modelGrowthHelperContent() {
   if (uiState.scenarioId !== 'model_growth') return ''
   const inputs = currentRequest().inputs, baseline = inputs.modelBaselineGrowthPct, target = inputs.modelTargetGrowthPct
   if (!finite(baseline) || !finite(target) || 1 + Number(baseline) / 100 <= 0) return ''
-  const relative = ((1 + Number(target) / 100) / (1 + Number(baseline) / 100) - 1) * 100
+  const duration = currentRequest().durationMonths
+  const relative = (((1 + Number(target) / 100) / (1 + Number(baseline) / 100)) ** (duration / 12) - 1) * 100
   const pointChange = Number(target) - Number(baseline)
-  return `기준 전망 대비 모델매출 <strong>${signed(relative)}</strong> <span>(성장률 ${Number(pointChange) > 0 ? '+' : Number(pointChange) < 0 ? '−' : ''}${Math.abs(pointChange).toFixed(1)}%p)</span><small>사용자가 입력한 모형 가정이며 실제 회사 전망이 아닙니다.</small>`
+  return `${duration}개월 말 기준 대비 모델매출 <strong>${signed(relative)}</strong> <span>(연성장률 ${Number(pointChange) > 0 ? '+' : Number(pointChange) < 0 ? '−' : ''}${Math.abs(pointChange).toFixed(1)}%p)</span><small>회사별 노출 적용 전 매출 차이입니다. 종료 후 12개월간 기준 매출 수준으로 복귀한다고 가정합니다.</small>`
 }
 
 function calculationError() {
@@ -338,6 +344,12 @@ function financialDetails(company) {
     return `<tr><th scope="row">${label}</th><td>${signed(previous, 2)}</td><td>${signed(next, 2)}</td><td>${source}${kind === 'sector' && fallbackReasons[reason] ? ` · ${fallbackReasons[reason]}` : ''}</td></tr>`
   }
   const growthPeriod = basis.growthStartFiscalYear && basis.growthEndFiscalYear ? ` (FY${esc(basis.growthStartFiscalYear)}–${esc(basis.growthEndFiscalYear)})` : ''
+  const margins = basis.incrementalMargins
+  const marginSource = (source, years = [], peers = []) => {
+    if (source === 'company-db') return `회사 재무 DB · FY${years.join(', ')}`
+    if (source === 'sector-peer-median') return `같은 섹터 ${peers.length}개사 중앙값`
+    return source === 'universe-peer-median' ? `전체 표본 ${peers.length}개사 중앙값` : '모형 가정'
+  }
   return `<section class="scenario-financial-detail"><h3>기업 재무와 현금흐름 전망</h3>
     ${actual ? `<p>FY${esc(basis.fiscalYear)} · ${esc(basis.endDate)} 결산 · ${basis.scope === 'consolidated' ? '연결' : esc(basis.scope)} · 금액 단위 ${unit} · DB 기준 ${esc(basis.asOfDate)}</p>
       <dl class="scenario-history-facts">${sourceAmount('revenue', '매출')}${sourceAmount('operatingCashFlow', '영업현금흐름')}${sourceAmount('capitalExpenditure', 'CAPEX (원천 부호)')}${historical('FCF 대용치', cash, finite(cash) ? '영업현금흐름 − |CAPEX|' : cashComparable ? 'CAPEX 또는 영업현금흐름 미확인' : '공시 회계기준 불일치')}</dl>
@@ -347,8 +359,9 @@ function financialDetails(company) {
       ${projected('현금흐름 마진', basis.historicalCashMarginPct, basis.firstYearCashMarginPct, 'fcffMarginPct', basis.marginFallbackReason)}
       ${projected('CAPEX / 매출', basis.historicalCapexToRevenuePct, basis.firstYearCapexToRevenuePct, 'capexToRevenuePct', basis.capexFallbackReason)}
     </tbody></table>
+    ${margins ? `<p class="scenario-note">추가 판매량에 따른 매출의 ${signed(margins.volumeContributionMarginPct, 2)}를 현금흐름으로 반영합니다. 매출총이익률 ${signed(margins.grossMarginPct, 2)} (${esc(marginSource(margins.grossMarginSource, margins.grossMarginFiscalYears, margins.grossMarginPeerIds))}) × 세후 잔존율 ${signed(margins.taxRetentionPct, 2)} (${esc(marginSource(margins.taxRetentionSource, margins.taxRetentionFiscalYears, margins.taxRetentionPeerIds))})입니다. 판매량이 고정된 가격 변화에는 세후 잔존율만 적용합니다. 이 비율을 추가 매출에 적용하는 것은 C등급 가정입니다.</p>` : ''}
     ${basis.growthStartRevenueFact ? `<p class="scenario-note">성장률 계산의 시작 매출 · FY${esc(basis.growthStartFiscalYear)} ${monetaryAmount(basis.growthStartRevenueFact.value, basis.currency)} ${unit} · ${factSource(basis.growthStartRevenueFact)}${basis.growthEndRevenueFact ? `<br>마지막 매출 · FY${esc(basis.growthEndFiscalYear)} ${monetaryAmount(basis.growthEndRevenueFact.value, basis.currency)} ${unit} · ${factSource(basis.growthEndRevenueFact)}` : ''}</p>` : ''}
-    <p class="scenario-note">전망 가정 C · 실적 기반 매출 성장률은 1년차에 −5~30% 범위로 적용합니다. 실적 기반 지표는 2년차에 섹터 가정과 절반씩 반영하고 3년차부터 섹터 가정을 씁니다. 직접 입력한 지표는 8년간 입력값을 적용합니다.</p></section>`
+    <p class="scenario-note">전망 가정 C · 실적 기반 매출 성장률은 1년차에 −5~30% 범위로 적용합니다. 기준 매출 성장률·현금흐름 마진·투자 비율은 2년차에 섹터 가정과 절반씩 반영하고 3년차부터 섹터 가정을 씁니다. 직접 입력한 지표는 8년간 입력값을 적용합니다.</p></section>`
 }
 
 function operatingBridge(company) {
@@ -359,7 +372,7 @@ function operatingBridge(company) {
   const delta = value => finite(value) && Number(value) > 0 ? `+${amount(value)}` : amount(value)
   const cashLabel = valuation.cashFlowMeasure === 'fcf-proxy' ? 'FCF 대용치' : '모형 현금흐름'
   const units = currency ? `금액 단위 ${esc(currency)} 백만.${company.financialBasis?.fieldSources?.fcffMarginPct === 'user' ? ' 현금흐름 마진은 사용자 가정을 적용했습니다.' : ''}` : '금액은 시작 매출 100을 기준으로 한 정규화 단위입니다.'
-  return `<div class="scenario-operating-bridge"><div><h3>연도별 재무 전망</h3><p class="scenario-note">${units}${valuation.cashFlowMeasure === 'fcf-proxy' ? ' 현금흐름 마진을 산출할 때 별도의 이자 조정은 적용하지 않았습니다.' : ''}</p><p class="scenario-note">현금흐름 할인값(EV) · 기준 ${amount(valuation.baselineEnterpriseValueUnits)} → 시나리오 ${amount(valuation.scenarioEnterpriseValueUnits)}. 관측시가는 별도 토글에서 확인할 수 있습니다.</p></div><div class="scenario-bridge-scroll"><table><thead><tr><th>전망 연도</th><th>물량 변화</th><th>ASP 변화</th><th>단위원가 증감</th><th>CAPEX 현금유출 증감</th><th>할인율</th><th>기준 ${cashLabel}</th><th>시나리오 ${cashLabel}</th></tr></thead><tbody>${rows.map((row, index) => `<tr><th>${esc(row.year)}년</th><td>${signed(row.revenueVolumePct, 2)}</td><td>${signed(row.aspPct, 2)}</td><td>${delta(row.incrementalUnitCostUnits)}</td><td>${delta(row.incrementalCapexCashoutUnits)}</td><td>${finite(valuation.scenarioDiscountRatesPct?.[index]) ? `${Number(valuation.scenarioDiscountRatesPct[index]).toFixed(2)}%` : '—'}</td><td>${amount(valuation.baselineFcff?.[index])}</td><td>${amount(valuation.scenarioFcff?.[index])}</td></tr>`).join('')}</tbody></table></div></div>`
+  return `<div class="scenario-operating-bridge"><div><h3>월별 현금흐름의 연도별 합계</h3><p class="scenario-note">연간 기준 실적을 12개월에 균등 배분하고 매월 말에 할인했습니다. ${units}${valuation.cashFlowMeasure === 'fcf-proxy' ? ' 현금흐름 마진을 산출할 때 별도의 이자 조정은 적용하지 않았습니다.' : ''}</p><p class="scenario-note">현금흐름 할인값(EV) · 기준 ${amount(valuation.baselineEnterpriseValueUnits)} → 시나리오 ${amount(valuation.scenarioEnterpriseValueUnits)}. 관측시가는 별도 토글에서 확인할 수 있습니다.</p></div><div class="scenario-bridge-scroll"><table><thead><tr><th>전망 연도</th><th>물량 변화</th><th>ASP 변화</th><th>단위원가 증감</th><th>CAPEX 현금유출 증감</th><th>할인율</th><th>기준 ${cashLabel}</th><th>시나리오 ${cashLabel}</th></tr></thead><tbody>${rows.map((row, index) => `<tr><th>${esc(row.year)}년</th><td>${signed(row.revenueVolumePct, 2)}</td><td>${signed(row.aspPct, 2)}</td><td>${delta(row.incrementalUnitCostUnits)}</td><td>${delta(row.incrementalCapexCashoutUnits)}</td><td>${finite(valuation.scenarioDiscountRatesPct?.[index]) ? `${Number(valuation.scenarioDiscountRatesPct[index]).toFixed(2)}%` : '—'}</td><td>${amount(valuation.baselineFcff?.[index])}</td><td>${amount(valuation.scenarioFcff?.[index])}</td></tr>`).join('')}</tbody></table></div></div>`
 }
 
 function defaultMatrix() {
@@ -386,7 +399,7 @@ function methodology() {
   const unmodeled = Array.isArray(result?.model?.unmodeledMitigants) ? result.model.unmodeledMitigants.join(' · ') : result?.model?.unmodeledMitigants
   return `<section class="scenario-methodology">
     <details><summary><span><b>방법론 · 9×5 기본 영향표</b><small>계산 구조, 기본 충격, 출처 상태 확인</small></span><i aria-hidden="true">＋</i></summary><div class="scenario-method-body">
-      <div class="scenario-method-callouts"><p><b>조건부 가치지수</b> 기준값을 100으로 놓고 시나리오 충격에 따른 상대 변화를 표시합니다. 현재 주가나 내재가치의 절대 추정이 아닙니다.</p><p><b>전파 구조</b> 외생 충격 → 섹터 → 기업 노출 → ${esc(result?.model?.horizonMonths ? `${result.model.horizonMonths}개월` : `${assumptions.forecastYears}년`)} 명시적 현금흐름을 분리합니다. 기간을 줄이면 엔진 정의에 따라 직접효과도 함께 달라집니다.</p><p><b>직접·전파 배분</b> ${uiState.scenarioId === 'interest_rate' ? '금리만 반영한 결과와 CAPEX 전파까지 포함한 결과를 비교합니다. 개별 공급망 경로의 기여도는 모형 비중으로 나눕니다.' : esc(viewModule?.VIEW_MODEL_NOTE || '화면용 설명값입니다.')} 충격 민감도와 전파계수에는 가정 등급 C를 적용합니다.</p></div>
+      <div class="scenario-method-callouts"><p><b>조건부 가치지수</b> 기준값을 100으로 놓고 시나리오 충격에 따른 상대 변화를 표시합니다. 현재 주가나 내재가치의 절대 추정이 아닙니다.</p><p><b>전파 구조</b> 외생 충격 → 섹터 → 기업 노출 → ${esc(result?.model?.horizonMonths ? `${result.model.horizonMonths}개월` : `${assumptions.forecastYears}년`)} 명시적 현금흐름을 분리합니다. 금리 직접 충격은 12개월이고 CAPEX 전파 기간은 따로 선택합니다. 각 충격은 종료 후 12개월에 걸쳐 사라집니다.</p><p><b>직접·전파 배분</b> ${uiState.scenarioId === 'interest_rate' ? '금리만 반영한 결과와 CAPEX 전파까지 포함한 결과를 비교합니다. 각 경로를 순서대로 추가해 현금흐름을 다시 할인합니다.' : esc(viewModule?.VIEW_MODEL_NOTE || '화면용 설명값입니다.')} 충격 민감도와 전파계수에는 가정 등급 C를 적용합니다.</p></div>
       <div class="scenario-grade-key"><span><b>A</b> 공시 직접</span><span><b>B</b> 공시 기반 추정</span><span><b>C</b> 모형 가정 / 2차 출처 실적 (항목별 구분)</span></div>
       <div class="scenario-matrix-wrap"><table class="scenario-matrix"><caption>고정 참조 충격과 섹터 가정으로 계산한 섹터별 가치지수 변화율</caption><thead><tr><th>섹터</th>${matrix.map(column => `<th>${esc(column.scenario.name)}<small>${esc(column.inputLabel)}</small></th>`).join('')}</tr></thead><tbody>${dataModule.SEGMENTS.map(segment => { const id = segment.segmentId ?? segment.id; return `<tr><th>${esc(segment.name)}</th>${matrix.map(column => { const value = column.values.get(String(id)); return `<td class="${impactClass(value)}">${signed(value)}</td>` }).join('')}</tr>` }).join('')}</tbody></table></div>
       <div class="scenario-source-ledger"><p><b>모형 가정 기준일</b> ${esc(sourceDate)}</p><p><b>가정 상태</b> ${esc(assumptions.calibrationStatus || '예시 전파계수 · 미보정')}</p><p><b>회사 범위</b> Big 7과 9개 섹터의 대표기업. 전체 업종·지수 구성종목이 아닙니다.</p></div>
@@ -411,12 +424,7 @@ const totalChange = value => finite(value) ? pct2(value) : '산정 불가'
 function displayParts(row) {
   if (!row?.breakdownAvailable || !finite(row.totalPct) || !finite(row.chainPct)) return { direct: null, chain: null, total: finite(row?.totalPct) ? Number(row.totalPct) : null }
   const total = Number(Number(row.totalPct).toFixed(2))
-  if (row.rateAttribution && finite(row.directPct)) {
-    const direct = Number(Number(row.directPct).toFixed(2))
-    return { direct, chain: Number((total - direct).toFixed(2)), total }
-  }
-  const chain = Number(Number(row.chainPct).toFixed(2))
-  return { direct: Number((total - chain).toFixed(2)), chain, total }
+  return { direct: Number(row.directPct), chain: Number(row.chainPct), total }
 }
 
 function sharedBarScale() {
@@ -489,7 +497,7 @@ function resultsTables() {
   const big7 = [...scenarioView.big7Rows].sort((a, b) => BIG7_ORDER.indexOf(a.symbol) - BIG7_ORDER.indexOf(b.symbol))
   const reps = [...scenarioView.representativeRows]
   if (uiState.sortRepresentativesByAbs) reps.sort((a, b) => (finite(b.totalPct) ? Math.abs(b.totalPct) : -1) - (finite(a.totalPct) ? Math.abs(a.totalPct) : -1))
-  return `<p class="scenario-attribution-note">${scenarioView.scenario.rateCapexTransmission ? '금리 직접효과는 투자 예산을 고정한 계산값이고, CAPEX 전파효과는 예산 변화까지 반영한 추가 EV 변화입니다.' : '직접·밸류체인 효과는 기존 경로 기여도에 비례해 배분한 C등급 추정치입니다.'}<br>진한 막대는 직접효과, 연한 막대는 밸류체인 효과, 세로선은 기준 대비 총 EV 변화입니다. EV는 96개월 현금흐름과 잔존가치를 할인해 비교합니다.</p><section class="scenario-panel scenario-results-section" aria-labelledby="scenario-big7-heading"><div class="scenario-section-heading"><div><h2 id="scenario-big7-heading">Big 7</h2></div><span class="scenario-honesty">기준 기업가치 = 100</span></div>${companyTable(big7, 'Big 7 결과', scale)}</section>
+  return `<p class="scenario-attribution-note">${scenarioView.scenario.rateCapexTransmission ? '금리 직접효과는 투자 예산을 고정한 계산값이고, CAPEX 전파효과는 예산 변화까지 반영한 추가 EV 변화입니다.' : '직접 경로만 반영한 기업가치를 먼저 계산합니다. 공급망 경로까지 반영했을 때 더해진 변화가 밸류체인 효과입니다.'}<br>진한 막대는 직접효과, 연한 막대는 밸류체인 효과, 세로선은 기준 대비 총 EV 변화입니다. EV는 96개월 현금흐름과 잔존가치를 할인해 비교합니다.</p><section class="scenario-panel scenario-results-section" aria-labelledby="scenario-big7-heading"><div class="scenario-section-heading"><div><h2 id="scenario-big7-heading">Big 7</h2></div><span class="scenario-honesty">기준 기업가치 = 100</span></div>${companyTable(big7, 'Big 7 결과', scale)}</section>
     <section class="scenario-panel scenario-results-section" aria-labelledby="scenario-representative-heading"><div class="scenario-section-heading"><div><h2 id="scenario-representative-heading">9개 섹터 대표기업</h2></div><button type="button" class="scenario-sort" data-sort-representatives aria-pressed="${uiState.sortRepresentativesByAbs}">절대 변화폭순</button></div><p class="scenario-note">섹터당 한 기업의 조건부 결과입니다. 섹터 지수나 전체 기업 평균이 아닙니다.</p>${companyTable(reps, '9개 섹터 대표기업 결과', scale, '대표기업')}</section>
     <details class="scenario-panel scenario-results-section scenario-other-results"><summary><span>더 보기 · 기타 기업 ${scenarioView.summary?.otherCount || 0}개</span><small>Big 7과 9개 대표기업 제외 · 중복 없음</small></summary><div class="scenario-other-toolbar"><label>기업 검색<input type="search" data-company-search value="${esc(uiState.companySearch)}" placeholder="기업명 · 티커"></label></div><div data-other-table>${companyTable(filteredOtherRows(), '기타 기업 결과', scale)}</div></details>`
 }
@@ -509,7 +517,14 @@ const shockAmount = (value, unit) => finite(value)
   ? `${value < 0 ? '−' : value > 0 ? '+' : ''}${compactNumber.format(Math.abs(value))}${unit}` : '—'
 
 function rateCapexHeadline(transmission) {
-  return `금리 ${shockAmount(transmission.rateChangePctPoints, '%p')} → 빅테크 AI CAPEX ${shockAmount(transmission.derivedCapexChangePct, '%')}`
+  const label = transmission.mode === 'historical' ? '4사 전사 CAPEX 추정' : '빅테크 AI CAPEX'
+  return `금리 ${shockAmount(transmission.rateChangePctPoints, '%p')} → ${label} ${shockAmount(transmission.derivedCapexChangePct, '%')}`
+}
+
+function rateFitDetails() {
+  const total = RATE_CAPEX_FITS.reduce((value, fit) => value + fit.cashCapexUsd, 0)
+  const rows = RATE_CAPEX_FITS.map(fit => `<tr><th>${esc(companyById(fit.companyId)?.name || fit.companyId)}</th><td>${signed(100 * Math.expm1(fit.logBeta / 100), 2)}</td><td>${signed(fit.low95Pct, 2)} ~ ${signed(fit.high95Pct, 2)}</td><td>${(100 * fit.cashCapexUsd / total).toFixed(1)}%</td></tr>`).join('')
+  return `<p class="scenario-note">과거 재무 모드는 금리 +1%p와 이후 4분기 전사 현금 CAPEX의 관계를 씁니다. 4사 합산은 2026년 9월 말까지 최근 4분기 투자액으로 가중했습니다. 같은 비율을 AI 예산·공급망에 적용하는 것은 C등급 가정입니다.</p><table class="scenario-forecast-inputs"><thead><tr><th>투자 기업</th><th>+1%p당 CAPEX</th><th>개별 95% 구간</th><th>투자 비중</th></tr></thead><tbody>${rows}</tbody></table><small>2014~2025년 기준분기 47개 · 연결 현금 CAPEX · <a href="https://www.sec.gov/search-filings/edgar-application-programming-interfaces">SEC 공시</a> · <a href="https://fred.stlouisfed.org/series/DFF">실효 연방기금금리</a></small>`
 }
 
 // Shared comparison windows, in EV percentage points, for 6, 12, 24 and 36 months.
@@ -567,7 +582,7 @@ function featuredImpactContent(companies = scenarioView?.companies, scenario = s
   const title = transmission ? '엔비디아·SK하이닉스 금리 영향' : '주요 기업 가치 변화'
   const headline = transmission ? rateCapexHeadline(transmission) : presetText(scenarioById(request.scenarioId), request.inputs)
   const rows = featuredCompanyIds(request.scenarioId).map(id => companies.find(row => companyId(row) === id))
-  return `<section class="scenario-panel scenario-live-panel" aria-labelledby="scenario-live-heading"><header class="scenario-live-head"><div><h2 id="scenario-live-heading">${title}</h2><p class="scenario-live-shock">${esc(headline)}</p></div><small>${duration}개월 지속 · 전파 가정 C</small></header>
+  return `<section class="scenario-panel scenario-live-panel" aria-labelledby="scenario-live-heading"><header class="scenario-live-head"><div><h2 id="scenario-live-heading">${title}</h2><p class="scenario-live-shock">${esc(headline)}</p></div><small>${transmission ? `직접 12개월 · 전파 ${duration}개월` : `${duration}개월 지속`} · 전파 가정 C</small></header>
     <div class="scenario-live-rows">${rows.filter(Boolean).map(row => featuredImpactRow(row, transmission, scale)).join('')}</div>
     <p class="scenario-live-axis">막대 눈금 −${scale}% ~ +${scale}% · 진한색 직접 · 연한색 전파</p></section>`
 }
@@ -577,7 +592,13 @@ function pathSummary(path, company) {
   const controlValues = result.scenario.drivers.find(driver => driver.driverId === path.driverId)?.controlValues || {}
   const transmission = result.scenario.rateCapexTransmission
   const mediated = path.mediatedBy === 'interestRate' && transmission
-  const shock = mediated ? rateCapexHeadline(transmission) : Object.entries(controlValues).filter(([id]) =>
+  if (path.primitive === 'discountRate') return '금리 → 기업 할인율 → 미래 현금흐름의 현재가치'
+  const ownerChange = mediated && path.segments.length === 1 && company.capexRole === 'budget-owner'
+    ? transmission.ownerChangesPct?.[companyId(company)] : null
+  const rateBudget = finite(ownerChange)
+    ? `금리 ${shockAmount(transmission.rateChangePctPoints, '%p')} → ${company.name} CAPEX ${shockAmount(ownerChange, '%')}`
+    : mediated && rateCapexHeadline(transmission)
+  const shock = mediated ? rateBudget : Object.entries(controlValues).filter(([id]) =>
     scenarioById(uiState.scenarioId).controls.find(item => item.id === id)?.role !== 'assumption'
   ).map(([id, value]) => {
     const control = scenarioById(uiState.scenarioId).controls.find(item => item.id === id)
@@ -610,9 +631,10 @@ function companyDetail() {
   return `<section class="scenario-panel scenario-company-detail" aria-labelledby="scenario-company-detail-heading">
     <div class="scenario-detail-hero"><div><h2 id="scenario-company-detail-heading" tabindex="-1">${esc(company.name || source.name)} <small>${esc(company.symbol || source.symbol || '비상장')}</small></h2><p>${esc(pathSummary(company.topPath, company))}</p><button type="button" class="scenario-quote-button" data-toggle-quotes aria-pressed="${uiState.showObservedQuotes}">${uiState.showObservedQuotes ? '관측·환산주가 숨기기' : '관측·환산주가 보기'}</button></div><div class="scenario-detail-index"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong><small>가치지수 ${indexValue(company.scenarioValueIndex)}</small></div></div>
     <div class="scenario-detail-breakdown"><div><span>직접</span><b>${pct2(parts.direct)}</b></div><div><span>밸류체인</span><b>${pct2(parts.chain)}</b></div><div><span>원시 잔차</span><b>${finite(company.residualPct) ? `${Number(company.residualPct).toFixed(4)}%p` : '—'}</b></div><div><span>전파 가정 신뢰등급</span><b>C</b></div></div>
-    ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} + 밸류체인 ${pct2(parts.chain)} = 총 ${pct2(parts.total)}. 순위와 막대는 반올림 전 값을 사용합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
+    ${company.capexRole === 'no-covered-customer-path' ? '<p class="scenario-note">4개사의 외부 클라우드 발주 노출 자료 없음 · 해당 경로 미산정</p>' : ''}
+    ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} · 밸류체인 ${pct2(parts.chain)} · 총 ${pct2(parts.total)}. 합계와 순위는 반올림 전 값으로 계산합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
     <div data-financial-basis>${financialDetails(company)}</div>
-    <div class="scenario-detail-grid"><div><h3>주요 경로</h3>${paths.length ? `<ol class="scenario-path-list">${paths.slice().sort((a, b) => Math.abs(b.impactPoints) - Math.abs(a.impactPoints)).map(path => `<li><div><strong>${esc(pathSummary(path, company))}</strong><small>${esc(driverLabel(path.driverId))} · 섹터 간 전파 ${path.hops || 0}회</small></div><b class="${impactClass(path.impactPoints)}">${pct2(path.impactPoints)}</b>${pathCoefficients(path)}<p>경로 계수 출처 · ${esc(sourceLabel(path.source || dataModule.MODEL_ASSUMPTIONS.assumptionSource))} · 등급 C</p></li>`).join('')}</ol>` : '<p class="scenario-note">이 시나리오에 표시할 경로가 없습니다.</p>'}</div>
+    <div class="scenario-detail-grid"><div><h3>경로별 추가 효과</h3>${paths.length ? `<ol class="scenario-path-list">${paths.slice().sort((a, b) => a.calculationOrder - b.calculationOrder).map(path => `<li><div><strong>${esc(pathSummary(path, company))}</strong><small>${esc(driverLabel(path.driverId))} · 섹터 간 전파 ${path.hops || 0}회</small></div><b class="${impactClass(path.impactPoints)}">${pct2(path.impactPoints)}</b>${pathCoefficients(path)}<p>경로 계수 출처 · ${esc(sourceLabel(path.source || dataModule.MODEL_ASSUMPTIONS.assumptionSource))} · 등급 C</p></li>`).join('')}</ol>` : '<p class="scenario-note">이 시나리오에 표시할 경로가 없습니다.</p>'}</div>
       <div><h3>기업별 충격 민감도</h3>${coefficients ? `<ul class="scenario-coefficient-list">${coefficients}</ul>` : '<p class="scenario-note">표시 가능한 기업 계수가 없습니다.</p>'}<p class="scenario-note">신뢰등급 A · 공시 직접 / B · 공시 기반 추정 / C · 가정. 기업별 충격 민감도와 전파 계수는 C등급 가정입니다.</p></div></div>
     <details class="scenario-detail-fold"><summary>기업별 가정 편집</summary><p class="scenario-note">값을 지우면 기본 가정이 복원됩니다. 순차입금/EV는 관측시가 환산 브리지를 위해 선택 입력합니다.</p><div class="scenario-assumption-grid">${assumptionFields().map(field => {
       const projectionFields = { baseGrowthPct: 'firstYearGrowthPct', fcffMarginPct: 'firstYearCashMarginPct', capexToRevenuePct: 'firstYearCapexToRevenuePct' }
@@ -673,7 +695,7 @@ function renderReady() {
     <header class="scenario-hero compact"><h1>끌어보면, 기업가치가 움직여요</h1></header>
     <section class="scenario-select compact" aria-label="5개 시나리오">${renderScenarioChoices(dataModule.SCENARIO_DEFINITIONS, uiState.scenarioId)}</section>
     <div class="scenario-workbench">
-      ${renderDragControls(definition, currentRequest(), { presetText, modelGrowthHtml: modelGrowthHelperContent() })}
+      ${renderDragControls(definition, currentRequest(), { presetText, modelGrowthHtml: modelGrowthHelperContent(), rateFitHtml: definition.id === 'interest_rate' ? rateFitDetails() : '' })}
       <div data-scenario-live>${featuredImpactContent()}</div>
       <div data-scenario-warnings>${warnings()}</div>
       <div data-scenario-explorer>${explorerContent()}</div>
@@ -743,6 +765,7 @@ function updateControl(id, rawValue, { skipDetail = false, element = null, persi
   clearInputError(element)
   if (id === 'durationMonths') request.durationMonths = numeric
   else request.inputs[id] = numeric
+  if (id === 'rateCapexSensitivity') request.rateCapexMode = 'manual'
   uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
   refreshControls(element, { persist, skipDetail, preview })
   return true
@@ -866,6 +889,12 @@ if (root) {
     if (search) { uiState.companySearch = search.value.slice(0, 80); saveState(); const host = root.querySelector('[data-other-table]'); if (host) host.innerHTML = companyTable(filteredOtherRows(), '기타 기업 결과', sharedBarScale()) }
   })
   root.addEventListener('change', event => {
+    const mode = event.target.closest('[data-rate-capex-mode]')
+    if (mode && ['historical', 'manual'].includes(mode.value)) {
+      currentRequest().rateCapexMode = mode.value
+      refreshControls()
+      return
+    }
     const range = event.target.closest('[data-scenario-range]')
     if (range) { drag.finishRange(range); return }
     const assumption = event.target.closest('[data-company-assumption]')
