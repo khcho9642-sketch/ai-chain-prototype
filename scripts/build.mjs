@@ -8,12 +8,14 @@ import { validateTokenSnapshot } from '../assets/token-core.js'
 import { validateDisclosureSnapshot } from '../assets/ai-disclosure-core.js'
 import { validateCompanyDisclosures } from '../assets/company-disclosures-core.js'
 import { validateTodaySnapshot } from '../assets/today-core.js'
+import { validateTodayDiscussion, TODAY_DISCUSSION_MAX_BYTES } from '../assets/today-discussion-core.js'
+import { verifyTodayDiscussionHashes } from './community/today-discussion.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','comparison-history.json','epoch-ai.json']
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','comparison-history.json','epoch-ai.json']
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -31,7 +33,12 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   validateTokenSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-tokens.json'), 'utf8')))
   validateDisclosureSnapshot(JSON.parse(await readFile(join(source, 'data', 'ai-disclosures.json'), 'utf8')))
   validateCompanyDisclosures(JSON.parse(await readFile(join(source, 'data', 'company-disclosures.json'), 'utf8')))
-  validateTodaySnapshot(JSON.parse(await readFile(join(source, 'data', 'today-picks.json'), 'utf8')))
+  const today = JSON.parse(await readFile(join(source, 'data', 'today-picks.json'), 'utf8'))
+  validateTodaySnapshot(today)
+  const discussionText = await readFile(join(source, 'data', 'today-discussion.json'), 'utf8')
+  if (Buffer.byteLength(discussionText) > TODAY_DISCUSSION_MAX_BYTES) throw new Error('AI 교차 의견 크기 제한 초과')
+  const discussion = validateTodayDiscussion(JSON.parse(discussionText), { today })
+  verifyTodayDiscussionHashes(discussion, { today })
   const comparisonText = await readFile(join(source, 'data', 'comparison-history.json'), 'utf8')
   if (Buffer.byteLength(comparisonText) > MAX_COMPARISON_HISTORY_BYTES) throw new Error('비교 이력 크기 제한 초과')
   validateComparisonHistorySnapshot(JSON.parse(comparisonText))

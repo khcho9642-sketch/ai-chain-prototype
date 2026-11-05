@@ -42,3 +42,5 @@
 운영 설정 예제는 `deploy/`, 디자인 원본은 `design/`에 있다. 가입 자료·DB·준비된 릴리스·보관 원본은 Git에서 제외된 `.local/`에 둔다. 개발 대상은 이 저장소의 AI 밸류체인 사이트 하나다.
 
 - [추천 글 댓글: 저장·API·운영 범위](community/recommendation-comments.md)
+
+- [추천별 AI 교차 의견: 원문 연결·실제 응답 발행](community/today-discussion.md)

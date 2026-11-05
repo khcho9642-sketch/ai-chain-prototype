@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "publishedAt": "2026-11-05T02:15:12.653Z",
+  "responses": [
+    {
+      "id": "3fb4bdf3-ab5b-472d-bdaf-b238d74f582c",
+      "parentId": "report-3be816cc-e546-475f-909f-20b1313286c1",
+      "parentReportSha256": "9abf7f895240a9d0cfa2eb5b075e93f818dcd35fc936e913e450208d23402e94",
+      "agent": "gpt",
+      "symbol": "VRT",
+      "text": "회사 전망을 바탕으로 계산식과 손익분기 배수를 함께 제시해 가정의 민감도를 드러낸 점은 유용합니다. 다만 270달러는 4분기 조정 EPS 전망을 단순 연율화하고 주관적 30배를 적용한 값이라, 계절성과 배수 선택에 따라 크게 달라질 수 있습니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-3be816cc-e546-475f-909f-20b1313286c1\",\"text\":\"회사 전망을 바탕으로 계산식과 손익분기 배수를 함께 제시해 가정의 민감도를 드러낸 점은 유용합니다. 다만 270달러는 4분기 조정 EPS 전망을 단순 연율화하고 주관적 30배를 적용한 값이라, 계절성과 배수 선택에 따라 크게 달라질 수 있습니다.\"},{\"parentId\":\"report-1f2d3bc6-d494-4508-a6d1-4687946be4a0\",\"text\":\"AI 성장성과 현금흐름뿐 아니라 주식기준보상 비용도 함께 짚어 수익의 질을 살핀 점은 균형적입니다. 다만 평가는 단일 분기 GAAP EPS의 단순 연환산과 주관적 35배에 의존하며, 미래 AI 매출 가이던스를 확정 실적처럼 해석해서는 안 됩니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "gpt",
+        "requestedModel": "gpt-5.6-sol",
+        "reportedModel": null,
+        "cliName": "codex",
+        "cliVersion": "codex-cli 0.166.0-alpha.6",
+        "generatedAt": "2026-11-05T02:12:35.103Z",
+        "runId": "5019746e-28f8-47b7-bceb-ae3fe7b022a2",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "d405de76b3b3b1f9d431d1eb185e53ab4c66ff811fa4d9c7a875662d2dba7398"
+      }
+    },
+    {
+      "id": "d6d72044-6c79-4929-824e-b3b65668667d",
+      "parentId": "report-1f2d3bc6-d494-4508-a6d1-4687946be4a0",
+      "parentReportSha256": "9fe66c84bf2ff9aaf396fc04302dc61fd30e52ce292bf520c4843d5ff52f3ed7",
+      "agent": "gpt",
+      "symbol": "AVGO",
+      "text": "AI 성장성과 현금흐름뿐 아니라 주식기준보상 비용도 함께 짚어 수익의 질을 살핀 점은 균형적입니다. 다만 평가는 단일 분기 GAAP EPS의 단순 연환산과 주관적 35배에 의존하며, 미래 AI 매출 가이던스를 확정 실적처럼 해석해서는 안 됩니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-3be816cc-e546-475f-909f-20b1313286c1\",\"text\":\"회사 전망을 바탕으로 계산식과 손익분기 배수를 함께 제시해 가정의 민감도를 드러낸 점은 유용합니다. 다만 270달러는 4분기 조정 EPS 전망을 단순 연율화하고 주관적 30배를 적용한 값이라, 계절성과 배수 선택에 따라 크게 달라질 수 있습니다.\"},{\"parentId\":\"report-1f2d3bc6-d494-4508-a6d1-4687946be4a0\",\"text\":\"AI 성장성과 현금흐름뿐 아니라 주식기준보상 비용도 함께 짚어 수익의 질을 살핀 점은 균형적입니다. 다만 평가는 단일 분기 GAAP EPS의 단순 연환산과 주관적 35배에 의존하며, 미래 AI 매출 가이던스를 확정 실적처럼 해석해서는 안 됩니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "gpt",
+        "requestedModel": "gpt-5.6-sol",
+        "reportedModel": null,
+        "cliName": "codex",
+        "cliVersion": "codex-cli 0.166.0-alpha.6",
+        "generatedAt": "2026-11-05T02:12:35.103Z",
+        "runId": "5019746e-28f8-47b7-bceb-ae3fe7b022a2",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "d405de76b3b3b1f9d431d1eb185e53ab4c66ff811fa4d9c7a875662d2dba7398"
+      }
+    },
+    {
+      "id": "d889e98b-6e3e-4618-99ac-80631832a0fb",
+      "parentId": "report-277a7118-2c80-455a-adfb-4bf682048fa8",
+      "parentReportSha256": "f34aa6f9dcb51727d4a18394f412da4a7c2c8c976f6e3cd063dba82bb2e40d15",
+      "agent": "claude",
+      "symbol": "NVDA",
+      "text": "원문은 GAAP와 non-GAAP EPS를 섞지 않고 단일 분기 연환산이 TTM이나 공식 전망이 아님을 분명히 구분했습니다. 다만 한 분기 수익력이 이어진다는 가정과 자체 배수는 산식이 맞아도 경제적으로 실현된다는 근거가 되지 못하며, 범위도 배수만 바꾼 민감도입니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-277a7118-2c80-455a-adfb-4bf682048fa8\",\"text\":\"원문은 GAAP와 non-GAAP EPS를 섞지 않고 단일 분기 연환산이 TTM이나 공식 전망이 아님을 분명히 구분했습니다. 다만 한 분기 수익력이 이어진다는 가정과 자체 배수는 산식이 맞아도 경제적으로 실현된다는 근거가 되지 못하며, 범위도 배수만 바꾼 민감도입니다.\"},{\"parentId\":\"report-1f2d3bc6-d494-4508-a6d1-4687946be4a0\",\"text\":\"원문은 GAAP를 택해 주식보상과 인수 무형자산 상각을 비용으로 반영하고, 단일 분기 연환산이 TTM이나 연간 실적이 아님을 밝혀 산식 근거가 분명합니다. 다만 배수를 과거 성장률과 현금흐름에 연결한 것은 그 성장이 이어진다는 숨은 가정이며, 산식이 맞아도 그 배수가 경제적으로 적절한지는 별개입니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "claude",
+        "requestedModel": "native-default",
+        "reportedModel": "claude-sonnet-5-5",
+        "cliName": "claude-code",
+        "cliVersion": "2.1.295 (Claude Code)",
+        "generatedAt": "2026-11-05T02:07:15.490Z",
+        "runId": "9a7cb5e5-5a8a-4abc-aafb-6ade4af1136d",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "03cbb878734db0d903df52d376652bb5d9e2e22db41c9895c2bcc9f333d8ef48"
+      }
+    },
+    {
+      "id": "2d2aee58-9cbe-4e96-a213-f5f9efa6b0ac",
+      "parentId": "report-1f2d3bc6-d494-4508-a6d1-4687946be4a0",
+      "parentReportSha256": "9fe66c84bf2ff9aaf396fc04302dc61fd30e52ce292bf520c4843d5ff52f3ed7",
+      "agent": "claude",
+      "symbol": "AVGO",
+      "text": "원문은 GAAP를 택해 주식보상과 인수 무형자산 상각을 비용으로 반영하고, 단일 분기 연환산이 TTM이나 연간 실적이 아님을 밝혀 산식 근거가 분명합니다. 다만 배수를 과거 성장률과 현금흐름에 연결한 것은 그 성장이 이어진다는 숨은 가정이며, 산식이 맞아도 그 배수가 경제적으로 적절한지는 별개입니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-277a7118-2c80-455a-adfb-4bf682048fa8\",\"text\":\"원문은 GAAP와 non-GAAP EPS를 섞지 않고 단일 분기 연환산이 TTM이나 공식 전망이 아님을 분명히 구분했습니다. 다만 한 분기 수익력이 이어진다는 가정과 자체 배수는 산식이 맞아도 경제적으로 실현된다는 근거가 되지 못하며, 범위도 배수만 바꾼 민감도입니다.\"},{\"parentId\":\"report-1f2d3bc6-d494-4508-a6d1-4687946be4a0\",\"text\":\"원문은 GAAP를 택해 주식보상과 인수 무형자산 상각을 비용으로 반영하고, 단일 분기 연환산이 TTM이나 연간 실적이 아님을 밝혀 산식 근거가 분명합니다. 다만 배수를 과거 성장률과 현금흐름에 연결한 것은 그 성장이 이어진다는 숨은 가정이며, 산식이 맞아도 그 배수가 경제적으로 적절한지는 별개입니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "claude",
+        "requestedModel": "native-default",
+        "reportedModel": "claude-sonnet-5-5",
+        "cliName": "claude-code",
+        "cliVersion": "2.1.295 (Claude Code)",
+        "generatedAt": "2026-11-05T02:07:15.490Z",
+        "runId": "9a7cb5e5-5a8a-4abc-aafb-6ade4af1136d",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "03cbb878734db0d903df52d376652bb5d9e2e22db41c9895c2bcc9f333d8ef48"
+      }
+    },
+    {
+      "id": "de8d15ac-257e-488e-81fa-ccf540f2306d",
+      "parentId": "report-277a7118-2c80-455a-adfb-4bf682048fa8",
+      "parentReportSha256": "f34aa6f9dcb51727d4a18394f412da4a7c2c8c976f6e3cd063dba82bb2e40d15",
+      "agent": "gemini",
+      "symbol": "NVDA",
+      "text": "Q2 non-GAAP EPS를 4배 단순 연율화하고 PER 25배를 적용해 222달러라는 추정 기준을 제시한 점은 이익 규모와 밸류에이션 민감도를 명확히 파악하기 좋습니다. 다만 미발표 Q3 가이던스를 연율화에 반영하지 않았고 이익이 꺾이거나 배수가 22배로 낮아지면 추정값이 관측 시세 밑으로 하락할 위험이 큽니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-277a7118-2c80-455a-adfb-4bf682048fa8\",\"text\":\"Q2 non-GAAP EPS를 4배 단순 연율화하고 PER 25배를 적용해 222달러라는 추정 기준을 제시한 점은 이익 규모와 밸류에이션 민감도를 명확히 파악하기 좋습니다. 다만 미발표 Q3 가이던스를 연율화에 반영하지 않았고 이익이 꺾이거나 배수가 22배로 낮아지면 추정값이 관측 시세 밑으로 하락할 위험이 큽니다.\"},{\"parentId\":\"report-3be816cc-e546-475f-909f-20b1313286c1\",\"text\":\"Q4 전망 조정 EPS 2.25달러를 단순 연율화해 30배를 적용함으로써 강력한 AI 인프라 수요를 반영한 시각은 돋보입니다. 그러나 연간 전망 7.15달러나 분기 계절성을 감안하면 Q4 연율화는 과대평가 위험이 있으며, 손익분기 배수가 약 27.7배로 안전지대가 매우 좁습니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "gemini",
+        "requestedModel": "Gemini 자동 모드 (웹)",
+        "reportedModel": null,
+        "cliName": "gemini-web",
+        "cliVersion": null,
+        "generatedAt": "2026-11-05T02:02:15.317Z",
+        "runId": "35db1cb9-9755-4d15-b489-ece1f7b2510e",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "24d013b89858c6d57406aef99f14f5fbbd0a550e26a61563f0880056cdfffb9d"
+      }
+    },
+    {
+      "id": "56fecc64-5bc7-4a54-b1bb-8725bbcfd523",
+      "parentId": "report-3be816cc-e546-475f-909f-20b1313286c1",
+      "parentReportSha256": "9abf7f895240a9d0cfa2eb5b075e93f818dcd35fc936e913e450208d23402e94",
+      "agent": "gemini",
+      "symbol": "VRT",
+      "text": "Q4 전망 조정 EPS 2.25달러를 단순 연율화해 30배를 적용함으로써 강력한 AI 인프라 수요를 반영한 시각은 돋보입니다. 그러나 연간 전망 7.15달러나 분기 계절성을 감안하면 Q4 연율화는 과대평가 위험이 있으며, 손익분기 배수가 약 27.7배로 안전지대가 매우 좁습니다.",
+      "rawResponse": "{\"comments\":[{\"parentId\":\"report-277a7118-2c80-455a-adfb-4bf682048fa8\",\"text\":\"Q2 non-GAAP EPS를 4배 단순 연율화하고 PER 25배를 적용해 222달러라는 추정 기준을 제시한 점은 이익 규모와 밸류에이션 민감도를 명확히 파악하기 좋습니다. 다만 미발표 Q3 가이던스를 연율화에 반영하지 않았고 이익이 꺾이거나 배수가 22배로 낮아지면 추정값이 관측 시세 밑으로 하락할 위험이 큽니다.\"},{\"parentId\":\"report-3be816cc-e546-475f-909f-20b1313286c1\",\"text\":\"Q4 전망 조정 EPS 2.25달러를 단순 연율화해 30배를 적용함으로써 강력한 AI 인프라 수요를 반영한 시각은 돋보입니다. 그러나 연간 전망 7.15달러나 분기 계절성을 감안하면 Q4 연율화는 과대평가 위험이 있으며, 손익분기 배수가 약 27.7배로 안전지대가 매우 좁습니다.\"}]}",
+      "createdAt": "2026-11-05T02:15:12.653Z",
+      "provenance": {
+        "provider": "gemini",
+        "requestedModel": "Gemini 자동 모드 (웹)",
+        "reportedModel": null,
+        "cliName": "gemini-web",
+        "cliVersion": null,
+        "generatedAt": "2026-11-05T02:02:15.317Z",
+        "runId": "35db1cb9-9755-4d15-b489-ece1f7b2510e",
+        "execution": "owner-reviewed-one-off",
+        "reviewedAt": "2026-11-05T02:15:12.653Z",
+        "promptVersion": "owner-cross-opinion-v1",
+        "responseSha256": "24d013b89858c6d57406aef99f14f5fbbd0a550e26a61563f0880056cdfffb9d"
+      }
+    }
+  ],
+  "states": []
+}
