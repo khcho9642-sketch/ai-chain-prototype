@@ -149,7 +149,7 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.match(html, /id="v-scenario"/u)
   assert.match(html, /src="\.\/assets\/scenario\.js"/u)
   assert.match(html, /href="\.\/assets\/scenario\.css"/u)
-  assert.equal((html.match(/data-r="today"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>)?오늘의 변화<\/a>/gu) || []).length, 2)
+  assert.equal((html.match(/data-r="today"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>)?오늘의 변화<\/a>/gu) || []).length, 3)
   assert.match(html, />가정 기반 조건부 계산값이며 목표주가·예측이 아님<\/p>/u)
   for (const route of ['today', 'map', 'data', 'compare', 'industry', 'ai-stats', 'talk', 'ai']) {
     assert.match(html, new RegExp(`(?:href="#${route}"|id="v-${route}")`, 'u'))
