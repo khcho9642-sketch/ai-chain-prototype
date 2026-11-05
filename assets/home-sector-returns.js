@@ -1,9 +1,9 @@
 import { COMPANIES, SECTORS } from './home-map-core.js';
 import { buildComparison } from './peer-comparison-core.js';
 
-const chains = SECTORS.map((sector, index) => ({ id: index + 1, name: sector.name }));
-const chainByName = new Map(chains.map(chain => [chain.name, chain.id]));
-const instruments = COMPANIES.map(company => ({
+export const sectorChains = SECTORS.map((sector, index) => ({ id: index + 1, name: sector.name }));
+const chainByName = new Map(sectorChains.map(chain => [chain.name, chain.id]));
+export const sectorInstruments = COMPANIES.map(company => ({
   symbol: company.ticker,
   name: company.name,
   chains: [chainByName.get(company.sector)],
@@ -17,8 +17,8 @@ export function buildHomeSectorReturns(snapshot, { now = Date.now() } = {}) {
   }
   const comparison = buildComparison({
     quotes: snapshot.quotes,
-    instruments,
-    chains,
+    instruments: sectorInstruments,
+    chains: sectorChains,
     days: 90,
     requireFullPeriod: true,
     generatedAt: snapshot.generatedAt,

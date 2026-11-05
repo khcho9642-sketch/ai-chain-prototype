@@ -1,4 +1,5 @@
 import { instruments } from './instruments.js'
+import { COMPANIES, SECTORS } from './home-map-core.js'
 import { TODAY_AGENTS, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
 import { recommendationComments, retainRecommendationComments } from './recommendation-comments.js'
@@ -274,6 +275,14 @@ function renderCard(card, { archived = false } = {}) {
   const title = node('div', null, { class: 'today-company' })
   title.append(node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
   if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
+  const primarySectorName = COMPANIES.find(item => item.ticker === pick.symbol)?.sector
+  const sector = SECTORS.find(item => item.name === primarySectorName)
+  if (sector) {
+    const link = node('a', sector.name + ' 섹터 비교 →', { href: '#sector-compare/' + encodeURIComponent(sector.id) })
+    const sectorLink = node('p', null, { class: 'today-chain' })
+    sectorLink.append(link)
+    title.append(sectorLink)
+  }
   content.append(title, priceFields(pick, { showComparison: !archived && !factualReview }))
   const thread = node('section', null, { class: 'today-comment-thread', 'data-today-thread': pick.id, 'aria-label': `${card.name}의 AI 댓글` })
   const initial = node('article', null, { class: 'today-initial-comment', 'data-today-message': pick.id })

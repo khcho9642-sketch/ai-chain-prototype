@@ -1,0 +1,51 @@
+.sector-flow-chart-widget {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  isolation: isolate;
+  border-radius: 4px;
+  touch-action: pan-y;
+}
+
+.sector-flow-chart-widget:focus-visible {
+  outline: 2px solid #8fbfff;
+  outline-offset: 3px;
+}
+
+.sector-flow-chart-widget svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.sector-flow-chart-tip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  min-width: 134px;
+  max-width: min(255px, 85%);
+  padding: 10px 12px;
+  border: 1px solid #3d4e5b;
+  border-radius: 7px;
+  background: #16212b;
+  box-shadow: 0 6px 20px #03070c59;
+  color: #e4edf3;
+  font-size: 12px;
+  line-height: 1.42;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-flow-chart-tip[hidden] { display: none; }
+.sector-flow-chart-tip time { display: block; padding-bottom: 6px; font-weight: 700; color: #f1f4f6; }
+
+.sector-flow-chart-tip-row {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+.sector-flow-chart-tip-row + .sector-flow-chart-tip-row { margin-top: 3px; }
+.sector-flow-chart-tip-row i { width: 6px; height: 6px; border-radius: 50%; }
+.sector-flow-chart-tip-row b { justify-self: end; font-weight: 600; }
+.sector-flow-chart-empty { padding: 60px 10px; text-align: center; color: #9ca9b8; }
