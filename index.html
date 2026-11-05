@@ -175,7 +175,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#home" data-r="home" class="on">시장 지도</a>
       <a href="#today" data-r="today">오늘의 변화</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
-      <a href="#data" data-r="data">기업 상세</a>
+      <a href="#data" data-r="data">기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
       <a href="#compare" data-r="compare">고리 비교</a>
       <a href="#industry" data-r="industry">산업통계</a>
@@ -189,7 +189,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#home" data-r="home" class="on">시장 지도</a>
       <a href="#today" data-r="today">오늘의 변화</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
-      <a href="#data" data-r="data">기업 상세</a>
+      <a href="#data" data-r="data">기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
       <a href="#compare" data-r="compare">고리 비교</a>
       <a href="#industry" data-r="industry">산업통계</a>
@@ -272,7 +272,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
   <a href="#home" data-r="home" class="on"><span aria-hidden="true">▦</span>시장 지도</a>
   <a href="#today" data-r="today"><span aria-hidden="true">◈</span>오늘의 변화</a>
   <a href="#sector-compare" data-r="sector-compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 17l5-5 5 2 8-10M3 17l5-1 5 2 8-5"/></svg>섹터 비교</a>
-  <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>기업 상세</a>
+  <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>기업정보</a>
   <a href="#map" data-r="map"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
   <a href="#compare" data-r="compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 18L9 11L14 14L21 5M3 10L9 15L14 7L21 11"/></svg>고리 비교</a>
   <a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업통계</a>
@@ -366,7 +366,7 @@ function route(){
   if(r==='home')window.renderHomeMap?.();
   if(r==='sector-compare')window.renderSectorCompare?.(h[1]);
   if(r==='scenario')window.renderScenario?.();if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='ai-stats')window.renderAiStatistics?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
-  var titles={home:'AI 시장 지도',today:'오늘의 추천','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업 상세',compare:'고리 비교',industry:'산업통계','ai-stats':'AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
+  var titles={home:'AI 시장 지도',today:'오늘의 추천','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업정보',compare:'고리 비교',industry:'산업통계','ai-stats':'AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
   document.title=titles[r]+' | AI Value Chain';
   document.getElementById('site-ai-note').hidden=(r==='scenario'||r==='home'||r==='sector-compare');
   document.getElementById('site-model-note').hidden=(r==='sector-compare');

@@ -11,7 +11,7 @@ AI 체인의 시세·차트·관심종목과 고리별 비교는 같은 카탈�
 - 직접 티커 조회와 추가 종목 저장(API 서버에서 제공), 숫자 6자리는 .KS로 처리하며 코스닥은 .KQ 명시
 - 1일·5일·1개월·3개월·1년·5년 실제 차트, 최근 OHLCV 표, CSV
 - 가격·등락률·거래량·당일 고가/저가·52주 범위·출처·시세 기준시각
-- 기업 상세(`#data`)는 AI 기업 75개의 사업·국가·공식 자료와 실제 시세를 함께 제공한다. 8개 고리, 국내·해외, 기업명·티커·사업 검색을 지원한다. 목록과 비교는 같은 `assets/instruments.js` 카탈로그를 쓴다.
+- 기업정보(`#data`)는 AI 기업 75개의 사업·국가·공식 자료와 실제 시세를 함께 제공한다. 8개 고리, 국내·해외, 기업명·티커·사업 검색을 지원한다. 목록과 비교는 같은 `assets/instruments.js` 카탈로그를 쓴다.
 - 기업 역할·국가·공식 출처는 `assets/company-profiles.js`, 시세·차트·관심종목 화면은 `assets/dashboard.js`, 비교 계산은 `assets/peer-comparison-core.js`가 담당한다. 비교 화면은 dashboard의 `market-snapshot` 이벤트를 공유한다.
 - 기업 카드의 공시와 토론 연결은 [DART 공시](company-disclosures.md), [커뮤니티 현황](../community/ai-community.md)을 따른다.
 
