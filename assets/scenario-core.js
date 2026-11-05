@@ -529,13 +529,49 @@ function coverageForSegment(segmentId, selectedDriverIds, request) {
   }
 }
 
-export function evaluateScenario(unvalidatedRequest) {
+function prepareScenario(unvalidatedRequest) {
   const request = validateScenarioRequest(unvalidatedRequest)
   const definition = scenarioById.get(request.scenarioId)
   const rateCapexTransmission = rateCapexTransmissionFor(request)
   const drivers = normalizedDriverInputs(definition, request.inputs, rateCapexTransmission)
   const selectedDriverIds = drivers.map(item => item.driverId)
   const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, request.durationMonths, item.mediatedBy)]))
+  return { request, definition, rateCapexTransmission, drivers, selectedDriverIds, pathsByDriver }
+}
+
+function valueCompany(company, { request, selectedDriverIds, pathsByDriver }) {
+  const override = request.companyOverrides[company.companyId] ?? {}
+  const exposureMultipliers = { ...company.driverExposureMultipliers, ...(override.exposures ?? {}) }
+  const entity = buildEntityResult({
+    id: company.companyId, name: company.name, listingStatus: company.listingStatus,
+    segmentWeights: company.segmentWeights,
+    exposureScale: override.scenarioExposureScale ?? company.scenarioExposureScale,
+    exposureMultipliers, assumptionOverrides: override.assumptions ?? {},
+    request, selectedDriverIds, pathsByDriver,
+  })
+  return {
+    companyId: company.companyId, symbol: company.symbol, name: company.name,
+    listingStatus: company.listingStatus, primarySegmentId: company.primarySegmentId,
+    segmentIds: company.segmentIds, segmentWeights: company.segmentWeights, isBig7: company.isBig7,
+    ...entity,
+  }
+}
+
+// A moving slider needs only the visible rows; use the same DCF and attributed paths as the full report.
+export function evaluateCompanyPreview(request, companyIds) {
+  const context = prepareScenario(request)
+  return {
+    scenario: {
+      id: context.definition.id, durationMonths: context.request.durationMonths,
+      ...(context.rateCapexTransmission && { rateCapexTransmission: context.rateCapexTransmission }),
+    },
+    companies: companyIds.map(id => valueCompany(companyById.get(id), context)),
+  }
+}
+
+export function evaluateScenario(unvalidatedRequest) {
+  const context = prepareScenario(unvalidatedRequest)
+  const { request, definition, rateCapexTransmission, drivers, selectedDriverIds, pathsByDriver } = context
 
   const segments = SEGMENTS.map(segment => {
     const entity = buildEntityResult({
@@ -559,33 +595,7 @@ export function evaluateScenario(unvalidatedRequest) {
     }
   })
 
-  const companies = COMPANIES.map(company => {
-    const override = request.companyOverrides[company.companyId] ?? {}
-    const exposureMultipliers = { ...company.driverExposureMultipliers, ...(override.exposures ?? {}) }
-    const entity = buildEntityResult({
-      id: company.companyId,
-      name: company.name,
-      listingStatus: company.listingStatus,
-      segmentWeights: company.segmentWeights,
-      exposureScale: override.scenarioExposureScale ?? company.scenarioExposureScale,
-      exposureMultipliers,
-      assumptionOverrides: override.assumptions ?? {},
-      request,
-      selectedDriverIds,
-      pathsByDriver,
-    })
-    return {
-      companyId: company.companyId,
-      symbol: company.symbol,
-      name: company.name,
-      listingStatus: company.listingStatus,
-      primarySegmentId: company.primarySegmentId,
-      segmentIds: company.segmentIds,
-      segmentWeights: company.segmentWeights,
-      isBig7: company.isBig7,
-      ...entity,
-    }
-  })
+  const companies = COMPANIES.map(company => valueCompany(company, context))
 
   const big7Members = BIG7_COMPANY_IDS.map(companyId => companies.find(company => company.companyId === companyId))
   const equalWeightIndex = members => members.every(item => Number.isFinite(item.scenarioValueIndex))

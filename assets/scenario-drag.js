@@ -12,10 +12,13 @@ function escapeHtml(value) {
   })[c])
 }
 
-const formatNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 8 })
-const signedValue = (value, unit) => (value > 0 ? '+' : value < 0 ? '−' : '') + formatNumber.format(Math.abs(value)) + unit
+const formatNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
+function signedValue(value, unit) {
+  const shown = formatNumber.format(Math.abs(value))
+  const sign = shown === '0' ? '' : value > 0 ? '+' : '−'
+  return sign + shown + unit
+}
 const position = (value, control) => 100 * (value - control.min) / (control.max - control.min)
-const onGrid = (value, control) => Math.abs((value - control.min) / control.step - Math.round((value - control.min) / control.step)) < 1e-8
 
 export function renderScenarioChoices(definitions, selectedId) {
   return `<div class="scenario-picker scenario-questions" role="group" aria-label="시나리오 선택">${definitions.map(definition => {
@@ -24,18 +27,14 @@ export function renderScenarioChoices(definitions, selectedId) {
   }).join('')}</div>`
 }
 
-function sliderField(control, value) {
+function sliderField(control, value, panelTitle) {
   const id = escapeHtml(control.id), label = escapeHtml(control.label), unit = escapeHtml(control.unit)
   const text = signedValue(value, unit)
-  const zero = position(0, control)
-  const tick = (value, name) => `<span data-tick="${name}" style="--tick-pct:${position(value, control)}%">${signedValue(value, unit)}</span>`
   const rangeId = 'scenario-range-' + id
-  return `<div class="scenario-slider-field" data-drag-field="${id}" style="--zero-pct:${zero}%;--value-pct:${position(value, control)}%">
-    <div class="scenario-slider-heading"><label for="${rangeId}">${label}</label><strong class="scenario-slider-value" data-drag-value>${text}</strong></div>
-    <div class="scenario-range-wrap"><input class="scenario-range" id="${rangeId}" type="range" min="${control.min}" max="${control.max}" step="${onGrid(value, control) ? control.step : 'any'}" value="${value}" data-scenario-range="${id}" data-drag-step="${control.step}" aria-valuetext="${text}"></div>
-    <div class="scenario-range-ticks" aria-hidden="true">${tick(control.min, 'min')}${zero > 0 && zero < 100 ? tick(0, 'zero') : ''}${tick(control.max, 'max')}</div>
-    <div class="scenario-field-actions"><label class="scenario-exact"><span>직접 입력</span><span class="scenario-signed-input"><input type="number" inputmode="decimal" aria-label="${label} 직접 입력 (${unit})" min="${control.min}" max="${control.max}" step="any" value="${value}" data-scenario-control="${id}"><small>${unit}</small></span></label>
-      <button type="button" class="scenario-play" data-drag-play="${id}" aria-label="${label} 자동으로 끌어보기" aria-pressed="false">자동으로 끌어보기</button></div>
+  return `<div class="scenario-slider-field" data-drag-field="${id}" style="--value-pct:${position(value, control)}%">
+    ${control.label === panelTitle ? '' : `<div class="scenario-slider-heading"><label for="${rangeId}">${label}</label></div>`}
+    <div class="scenario-range-wrap"><strong class="scenario-slider-value" data-drag-value aria-hidden="true">${text}</strong><input class="scenario-range" id="${rangeId}" type="range" ${control.label === panelTitle ? 'aria-labelledby="scenario-input-heading"' : ''} min="${control.min}" max="${control.max}" step="any" value="${value}" data-scenario-range="${id}" data-key-step="${control.step}" aria-valuetext="${text}"></div>
+    <div class="scenario-range-ticks" aria-hidden="true"><span data-tick="min" style="--tick-pct:0%">${signedValue(control.min, unit)}</span><span data-tick="max" style="--tick-pct:100%">${signedValue(control.max, unit)}</span></div>
   </div>`
 }
 
@@ -50,17 +49,16 @@ function presetButtons(definition, request, presetText) {
   }).join('')
 }
 
-export function renderDragControls(definition, request, { presetText, modelGrowthHtml = '', conclusionHtml = '' }) {
+export function renderDragControls(definition, request, { presetText, modelGrowthHtml = '' }) {
   const assumptions = definition.controls.filter(control => control.role === 'assumption')
   const inputs = definition.controls.filter(control => control.role !== 'assumption')
   return `<section class="scenario-panel scenario-inputs scenario-drive" aria-labelledby="scenario-input-heading">
-    <div class="scenario-drive-header"><h2 id="scenario-input-heading">${escapeHtml(definition.name)}</h2><button type="button" class="scenario-reset" data-scenario-reset>충격 0으로</button></div>
-    <div class="scenario-drag-fields">${inputs.map(control => sliderField(control, request.inputs[control.id])).join('')}</div>
+    <div class="scenario-drive-header"><h2 id="scenario-input-heading">${escapeHtml(definition.name)}</h2></div>
+    <div class="scenario-drag-fields">${inputs.map(control => sliderField(control, request.inputs[control.id], definition.name)).join('')}</div>
     <div class="scenario-drive-options"><div class="scenario-presets" role="group" aria-label="수치 프리셋">${presetButtons(definition, request, presetText)}</div>
       <div class="scenario-duration-shortcuts"><span>지속기간</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${request.durationMonths === months}">${months}개월</button>`).join('')}</div></div></div>
-    ${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">C등급 가정 · 0%면 전파 끄기</small></div>`).join('')}
+    ${assumptions.length ? `<details class="scenario-advanced-assumptions"><summary>가정 설정</summary>${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">C등급 가정 · 0%면 전파 끄기</small></div>`).join('')}</details>` : ''}
     ${definition.id === 'model_growth' ? `<div class="scenario-derived-input" data-model-growth-helper>${modelGrowthHtml}</div>` : ''}
-    <div class="scenario-drag-conclusion" data-drag-conclusion>${conclusionHtml}</div>
   </section>`
 }
 
@@ -69,17 +67,16 @@ export function syncDragControls(root, definition, request, activeElement) {
     const field = root.querySelector(`[data-drag-field="${control.id}"]`)
     if (!field) continue
     const value = request.inputs[control.id] ?? control.defaultValue
-    const number = field.querySelector('[data-scenario-control]')
     if (control.role !== 'assumption') {
       const range = field.querySelector('[data-scenario-range]')
       const text = signedValue(value, control.unit)
-      // Exact numeric entry can legitimately fall between native slider steps.
-      range.step = onGrid(value, control) ? String(control.step) : 'any'
-      if (Number(range.value) !== value) range.value = String(value)
+      if (range !== activeElement && Number(range.value) !== value) range.value = String(value)
       range.setAttribute('aria-valuetext', text)
       field.querySelector('[data-drag-value]').textContent = text
       field.style.setProperty('--value-pct', position(value, control) + '%')
+      continue
     }
+    const number = field.querySelector('[data-scenario-control]')
     if (activeElement !== number || number.value.trim() && Number(number.value) === value) {
       if (activeElement !== number && number.value !== String(value)) number.value = String(value)
       if (number.hasAttribute?.('aria-invalid')) {
@@ -102,94 +99,58 @@ export function syncDragControls(root, definition, request, activeElement) {
   }
 }
 
-function quantizeRange(range) {
-  const min = Number(range.min), max = Number(range.max), step = Number(range.dataset.dragStep)
-  return Math.max(min, Math.min(max, Number((min + Math.round((Number(range.value) - min) / step) * step).toFixed(8))))
-}
-
 export function createDragInteraction({
-  onInput, onCommit, isActive,
+  onInput, onCommit,
   requestFrame = callback => window.requestAnimationFrame(callback),
   cancelFrame = handle => window.cancelAnimationFrame(handle),
 }) {
   let renderFrame = null
-  let demoFrame = null
-  let playback = null
-  let dirty = false
   const pending = new Map()
-
-  function emit(range, value) {
-    onInput(range.dataset.scenarioRange, value, range)
-    dirty = true
-  }
+  const applied = new Map()
 
   function flush() {
     if (renderFrame !== null) cancelFrame(renderFrame)
     renderFrame = null
-    for (const [range, value] of pending) emit(range, value)
+    for (const [range, value] of pending) {
+      if (applied.get(range) === value) continue
+      applied.set(range, value)
+      onInput(range.dataset.scenarioRange, value, range)
+    }
     pending.clear()
   }
 
-  function commit() {
-    if (!dirty) return
-    dirty = false
-    onCommit()
-  }
-
   function stop() {
-    if (demoFrame !== null) cancelFrame(demoFrame)
-    demoFrame = null
-    if (playback) {
-      playback.button.textContent = '자동으로 끌어보기'
-      playback.button.setAttribute('aria-pressed', 'false')
-      playback.button.setAttribute('aria-label', playback.originalLabel)
-      playback = null
-    }
     flush()
-    commit()
+    if (applied.size) {
+      applied.clear()
+      onCommit()
+    }
   }
 
   function queueRange(range) {
-    if (playback) stop()
-    pending.set(range, quantizeRange(range))
+    pending.set(range, Number(range.value))
     if (renderFrame === null) renderFrame = requestFrame(flush)
   }
 
   function finishRange(range) {
-    if (playback) stop()
-    if (!dirty && !pending.has(range)) pending.set(range, quantizeRange(range))
-    flush()
-    commit()
-  }
-
-  function toggle(button) {
-    const alreadyPlaying = playback?.button === button
+    pending.set(range, Number(range.value))
     stop()
-    if (alreadyPlaying || !isActive()) return
-    const field = button.closest('[data-drag-field]')
-    const range = field.querySelector('[data-scenario-range]')
-    const min = Number(range.min), max = Number(range.max), step = Number(range.dataset.dragStep)
-    const steps = Math.round((max - min) / step)
-    const duration = Math.max(2800, 160 * steps)
-    playback = { button, originalLabel: button.getAttribute('aria-label') }
-    button.textContent = '멈춤'
-    button.setAttribute('aria-pressed', 'true')
-    button.setAttribute('aria-label', field.querySelector('label').textContent + ' 자동 재생 멈춤')
-    let startTime = null, lastIndex = -1
-    function advance(now) {
-      demoFrame = null
-      if (!isActive() || !button.isConnected) { stop(); return }
-      if (startTime === null) startTime = now
-      const index = Math.min(steps, Math.floor((now - startTime) / duration * steps))
-      if (index !== lastIndex) {
-        lastIndex = index
-        emit(range, Number((min + step * index).toFixed(8)))
-      }
-      if (index === steps) stop()
-      else demoFrame = requestFrame(advance)
-    }
-    demoFrame = requestFrame(advance)
   }
 
-  return { queueRange, finishRange, stop, toggle }
+  function adjustWithKey(range, event) {
+    const value = Number(range.value), min = Number(range.min), max = Number(range.max)
+    const step = Number(range.dataset.keyStep)
+    const movements = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step, PageDown: -5 * step, PageUp: 5 * step }
+    let next
+    if (event.key === 'Home') next = min
+    else if (event.key === 'End') next = max
+    else if (Object.hasOwn(movements, event.key)) next = value + movements[event.key]
+    else return false
+    event.preventDefault()
+    range.value = String(Math.min(max, Math.max(min, Number(next.toFixed(8)))))
+    queueRange(range)
+    return true
+  }
+
+  return { queueRange, finishRange, stop, adjustWithKey }
 }

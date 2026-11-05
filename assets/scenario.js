@@ -1,5 +1,5 @@
 import { renderScenarioChoices, renderDragControls, syncDragControls, createDragInteraction } from './scenario-drag.js'
-import { renderExplorer, sectorConclusion } from './scenario-explorer.js'
+import { renderExplorer } from './scenario-explorer.js'
 
 const root = document.getElementById('v-scenario')
 
@@ -504,7 +504,7 @@ function pathCoefficients(path) {
   }).join('')}</ul>`
 }
 
-const compactNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 4 })
+const compactNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
 const shockAmount = (value, unit) => finite(value)
   ? `${value < 0 ? '−' : value > 0 ? '+' : ''}${compactNumber.format(Math.abs(value))}${unit}` : '—'
 
@@ -512,29 +512,64 @@ function rateCapexHeadline(transmission) {
   return `금리 ${shockAmount(transmission.rateChangePctPoints, '%p')} → 빅테크 AI CAPEX ${shockAmount(transmission.derivedCapexChangePct, '%')}`
 }
 
-function rateTransmissionContent() {
-  const transmission = scenarioView?.scenario.rateCapexTransmission
-  if (!transmission) return ''
-  const targetIds = ['NVDA', '000660.KS']
-  const rows = targetIds.map(id => {
-    const company = scenarioView.companies.find(row => row.companyId === id)
-    if (!company) return ''
-    const path = company.paths.filter(item => item.mediatedBy === 'interestRate')
-      .sort((a, b) => Math.abs(b.impactPoints) - Math.abs(a.impactPoints))[0]
-    let pathText = '현재 노출에서 CAPEX 경로 기여도 0'
-    if (!finite(company.totalPct)) pathText = '기준 기업가치로 변화율 산정 불가'
-    else if (transmission.rateChangePctPoints === 0) pathText = '금리 변화 0%p · CAPEX 전파 0'
-    else if (transmission.rateCapexSensitivity === 0) pathText = 'CAPEX 감소율 가정 0% · 전파 꺼짐'
-    else if (path) {
-      const names = { SEG8: '빅테크 투자', SEG5: '서버·장비', SEG4: 'AI 칩', SEG3: '메모리(HBM 포함)' }
-      const route = path.segments.map(segment => names[segment] || segmentById(segment)?.name || segment).join(' → ')
-      pathText = `주요 경로 · ${route} · 시차 ${path.lagMonths}개월`
-    }
-    const parts = displayParts(company)
-    const cell = (value, label) => `<td data-label="${label}" class="${impactClass(value)}">${finite(value) ? pct2(value) : '산정 불가'}</td>`
-    return `<tr data-rate-target="${esc(id)}"><th scope="row"><button type="button" data-explore-company data-company-id="${esc(id)}">${esc(company.name)}</button><small>${esc(pathText)}</small></th>${cell(parts.direct, '금리 직접')}${cell(parts.chain, 'CAPEX 전파')}${cell(parts.total, '총 EV 변화')}</tr>`
-  }).join('')
-  return `<section class="scenario-panel scenario-rate-comparison" aria-labelledby="rate-impact-heading"><header><div><h2 id="rate-impact-heading">엔비디아·SK하이닉스 금리 영향</h2><p>${esc(rateCapexHeadline(transmission))}</p></div><small>${scenarioView.scenario.durationMonths}개월 지속 · 전파 가정 C</small></header><table><thead><tr><th scope="col">기업 · 전파 경로</th><th scope="col">금리 직접</th><th scope="col">CAPEX 전파</th><th scope="col">총 EV 변화</th></tr></thead><tbody>${rows}</tbody></table><p class="scenario-rate-caption">CAPEX 전파는 같은 금리에서 투자 예산 변화를 추가했을 때의 EV 차이입니다. 시차는 표시된 경로에서 영향이 전달되기까지의 가정 기간입니다.</p></section>`
+// Shared comparison windows, in EV percentage points, for 6, 12, 24 and 36 months.
+// One scale per scenario and duration keeps the same move the same length throughout a drag.
+const FEATURED_IMPACTS = {
+  interest_rate: { ids: ['NVDA', '000660.KS'], scales: [2, 2.5, 4, 5] },
+  hyperscaler_capex: { ids: ['MSFT', 'NVDA'], scales: [1, 1.5, 2.5, 4] },
+  hbm_market: { ids: ['000660.KS', 'NVDA'], scales: [2.5, 4, 6, 8] },
+  gpu_dc_rent: { ids: ['EQIX', 'MSFT'], scales: [0.5, 0.5, 0.75, 1] },
+  model_growth: { ids: ['META', 'MSFT'], scales: [4, 6, 10, 12] },
+}
+
+function featuredCompanyIds(id) {
+  return FEATURED_IMPACTS[id]?.ids || []
+}
+
+function featuredPath(company, transmission) {
+  if (!finite(company.totalPct)) return '기준 기업가치로 변화율 산정 불가'
+  if (transmission?.rateChangePctPoints === 0) return '금리 변화 0%p · CAPEX 전파 0'
+  if (transmission?.rateCapexSensitivity === 0) return 'CAPEX 감소율 가정 0% · 전파 꺼짐'
+  let strongest
+  for (const path of company.paths || []) {
+    if (transmission && path.mediatedBy !== 'interestRate') continue
+    if (!strongest || Math.abs(path.impactPoints) > Math.abs(strongest.impactPoints)) strongest = path
+  }
+  if (!strongest) return transmission ? '현재 노출에서 CAPEX 경로 기여도 0' : '현재 입력에서 경로 기여도 0'
+  const labels = transmission ? { SEG8: '빅테크 투자', SEG5: '서버·장비', SEG4: 'AI 칩', SEG3: '메모리(HBM 포함)' } : {}
+  const route = strongest.segments.map(id => labels[id] || segmentById(id)?.name || id).join(' → ')
+  return `주요 경로 · ${route} · ${strongest.lagMonths ? `시차 ${strongest.lagMonths}개월` : '즉시 반영'}`
+}
+
+function featuredImpactRow(company, transmission, scale) {
+  const parts = displayParts(company)
+  const directLabel = transmission ? '금리 직접' : '직접효과'
+  const chainLabel = transmission ? 'CAPEX 전파' : '밸류체인 효과'
+  const positiveExtent = Math.max(0, company.directPct) + Math.max(0, company.chainPct)
+  const negativeExtent = -Math.min(0, company.directPct) - Math.min(0, company.chainPct)
+  const clipped = Math.max(positiveExtent, negativeExtent, Math.abs(company.totalPct)) > scale
+  const id = esc(companyId(company))
+  return `<article class="scenario-live-row" data-live-company="${id}">
+    <div class="scenario-live-row-head"><button type="button" class="scenario-live-name" data-explore-company data-company-id="${id}">${esc(company.name)}</button><div class="scenario-live-total"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong></div></div>
+    ${divergingBar(company, scale)}
+    <div class="scenario-live-parts"><span>${directLabel} <b class="${impactClass(parts.direct)}">${pct2(parts.direct)}</b></span><span>${chainLabel} <b class="${impactClass(parts.chain)}">${pct2(parts.chain)}</b></span>${clipped ? '<small>막대 눈금 초과</small>' : ''}</div>
+    <small class="scenario-live-path">${esc(featuredPath(company, transmission))}</small>
+  </article>`
+}
+
+function featuredImpactContent(companies = scenarioView?.companies, scenario = scenarioView?.scenario, request = currentRequest()) {
+  if (!companies || !scenario) return calculationError()
+  const config = FEATURED_IMPACTS[request.scenarioId]
+  if (!config) return ''
+  const duration = scenario.durationMonths
+  const scale = config.scales[duration <= 6 ? 0 : duration <= 12 ? 1 : duration <= 24 ? 2 : 3]
+  const transmission = scenario.rateCapexTransmission
+  const title = transmission ? '엔비디아·SK하이닉스 금리 영향' : '주요 기업 가치 변화'
+  const headline = transmission ? rateCapexHeadline(transmission) : presetText(scenarioById(request.scenarioId), request.inputs)
+  const rows = featuredCompanyIds(request.scenarioId).map(id => companies.find(row => companyId(row) === id))
+  return `<section class="scenario-panel scenario-live-panel" aria-labelledby="scenario-live-heading"><header class="scenario-live-head"><div><h2 id="scenario-live-heading">${title}</h2><p class="scenario-live-shock">${esc(headline)}</p></div><small>${duration}개월 지속 · 전파 가정 C</small></header>
+    <div class="scenario-live-rows">${rows.filter(Boolean).map(row => featuredImpactRow(row, transmission, scale)).join('')}</div>
+    <p class="scenario-live-axis">막대 눈금 −${scale}% ~ +${scale}% · 진한색 직접 · 연한색 전파</p></section>`
 }
 
 function pathSummary(path, company) {
@@ -546,7 +581,7 @@ function pathSummary(path, company) {
     scenarioById(uiState.scenarioId).controls.find(item => item.id === id)?.role !== 'assumption'
   ).map(([id, value]) => {
     const control = scenarioById(uiState.scenarioId).controls.find(item => item.id === id)
-    return `${CONTROL_SHORT_LABELS[id] || control?.label || driverLabel(path.driverId)} ${value > 0 ? '+' : ''}${value}${control?.unit || ''}`
+    return `${CONTROL_SHORT_LABELS[id] || control?.label || driverLabel(path.driverId)} ${shockAmount(value, control?.unit || '')}`
   }).join(' · ')
   const sectors = path.segments.map(id => segmentById(id)?.name || id)
   const primitive = { revenueVolume: '판매 물량', capexCashout: '투자 지출', asp: '평균판매가격', unitCost: '단위원가' }[path.primitive] || path.primitive
@@ -604,12 +639,10 @@ function renderDynamic({ skipDetail = false } = {}) {
   const companies = root.querySelector('[data-scenario-companies]')
   const detail = root.querySelector('[data-scenario-detail]')
   const warningHost = root.querySelector('[data-scenario-warnings]')
-  const rateComparison = root.querySelector('[data-rate-comparison]')
-  if (rateComparison) rateComparison.innerHTML = rateTransmissionContent()
+  const live = root.querySelector('[data-scenario-live]')
+  if (live) live.innerHTML = featuredImpactContent()
   const explorer = root.querySelector('[data-scenario-explorer]')
-  const conclusion = root.querySelector('[data-drag-conclusion]')
   if (explorer) explorer.innerHTML = explorerContent()
-  if (conclusion) conclusion.textContent = scenarioView ? sectorConclusion(scenarioView) : ''
   if (summary) summary.innerHTML = resultSummary()
   if (companies) {
     const otherOpen = companies.querySelector('.scenario-other-results')?.open
@@ -640,9 +673,9 @@ function renderReady() {
     <header class="scenario-hero compact"><h1>끌어보면, 기업가치가 움직여요</h1></header>
     <section class="scenario-select compact" aria-label="5개 시나리오">${renderScenarioChoices(dataModule.SCENARIO_DEFINITIONS, uiState.scenarioId)}</section>
     <div class="scenario-workbench">
-      ${renderDragControls(definition, currentRequest(), { presetText, modelGrowthHtml: modelGrowthHelperContent(), conclusionHtml: scenarioView ? esc(sectorConclusion(scenarioView)) : '' })}
+      ${renderDragControls(definition, currentRequest(), { presetText, modelGrowthHtml: modelGrowthHelperContent() })}
+      <div data-scenario-live>${featuredImpactContent()}</div>
       <div data-scenario-warnings>${warnings()}</div>
-      ${uiState.scenarioId === 'interest_rate' ? `<div data-rate-comparison>${rateTransmissionContent()}</div>` : ''}
       <div data-scenario-explorer>${explorerContent()}</div>
     </div>
     <div data-scenario-summary>${resultSummary()}</div>
@@ -699,7 +732,7 @@ function clearInputError(element) {
   element?.setCustomValidity?.('')
 }
 
-function updateControl(id, rawValue, { skipDetail = false, element = null, persist = true } = {}) {
+function updateControl(id, rawValue, { skipDetail = false, element = null, persist = true, preview = false } = {}) {
   const request = currentRequest()
   const control = id === 'durationMonths' ? { label: '충격 지속기간', unit: '개월', ...DURATION } : scenarioById(uiState.scenarioId)?.controls?.find(item => item.id === id)
   if (!control) return false
@@ -711,14 +744,32 @@ function updateControl(id, rawValue, { skipDetail = false, element = null, persi
   if (id === 'durationMonths') request.durationMonths = numeric
   else request.inputs[id] = numeric
   uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
-  refreshControls(element, { persist, skipDetail })
+  refreshControls(element, { persist, skipDetail, preview })
   return true
 }
 
-function refreshControls(element = null, { persist = true, skipDetail = false } = {}) {
+function previewControl(id, value, element) {
+  updateControl(id, value, { element, preview: true })
+}
+
+function commitPreview() {
+  recalculate()
+  renderDynamic()
+}
+
+function refreshControls(element = null, { persist = true, skipDetail = false, preview = false } = {}) {
   syncDragControls(root, scenarioById(uiState.scenarioId), currentRequest(), element)
   const modelHelper = root.querySelector('[data-model-growth-helper]')
   if (modelHelper) modelHelper.innerHTML = modelGrowthHelperContent()
+  if (preview) {
+    const request = currentRequest()
+    const live = root.querySelector('[data-scenario-live]')
+    if (live) {
+      const partial = coreModule.evaluateCompanyPreview(request, featuredCompanyIds(request.scenarioId))
+      live.innerHTML = featuredImpactContent(partial.companies.map(viewModule.decomposeCompany), partial.scenario, request)
+    }
+    return
+  }
   recalculate({ persist })
   renderDynamic({ skipDetail })
 }
@@ -748,18 +799,12 @@ function updateCompanyOverride(id, group, field, rawValue, element = null) {
 }
 
 const drag = createDragInteraction({
-  isActive: () => active() && !document.hidden,
-  onInput: (id, value, element) => updateControl(id, value, { element, persist: false }),
-  onCommit: () => { if (uiState) saveState() },
+  onInput: (id, value, element) => previewControl(id, value, element),
+  onCommit: () => commitPreview(),
 })
 
 if (root) {
-  root.addEventListener('pointerdown', event => {
-    if (!event.target.closest('[data-drag-play]')) drag.stop()
-  })
   root.addEventListener('click', event => {
-    const play = event.target.closest('[data-drag-play]')
-    if (play) { drag.toggle(play); return }
     drag.stop()
     const sector = event.target.closest('[data-explore-sector]')
     if (sector) {
@@ -790,16 +835,6 @@ if (root) {
         Object.assign(currentRequest().inputs, values)
         for (const id of Object.keys(values)) uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
       }
-      refreshControls(); return
-    }
-    if (event.target.closest('[data-scenario-reset]')) {
-      const request = currentRequest()
-      for (const control of scenarioById(uiState.scenarioId).controls) {
-        if (control.role === 'baseline' || control.role === 'assumption') continue
-        request.inputs[control.id] = uiState.scenarioId === 'model_growth' ? request.inputs.modelBaselineGrowthPct : 0
-        uiState.touchedControls[`${uiState.scenarioId}:${control.id}`] = true
-      }
-      inputMessage = ''
       refreshControls(); return
     }
     const duration = event.target.closest('[data-duration]')
@@ -845,10 +880,16 @@ if (root) {
     }
   })
   root.addEventListener('keydown', event => {
-    if (!event.target.closest('[data-drag-play]')) drag.stop()
+    const range = event.target.closest('[data-scenario-range]')
+    if (range && drag.adjustWithKey(range, event)) return
     const row = event.target.closest('tr[data-company-row][data-company-id]')
     if (row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); row.click() }
   })
+  for (const eventName of ['keyup', 'focusout', 'pointercancel']) {
+    root.addEventListener(eventName, event => {
+      if (event.target.closest('[data-scenario-range]')) drag.stop()
+    })
+  }
   root.addEventListener('toggle', event => {
     if (event.target.matches('.scenario-methodology details')) event.target.querySelector('summary i').textContent = event.target.open ? '−' : '＋'
   }, true)

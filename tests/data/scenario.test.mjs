@@ -11,6 +11,7 @@ import {
 } from '../../assets/scenario-data.js'
 import {
   buildDefaultScenarioRequest,
+  evaluateCompanyPreview,
   evaluateScenario,
   validateScenarioRequest,
 } from '../../assets/scenario-core.js'
@@ -22,6 +23,20 @@ const segment = (result, id) => result.segments.find(item => item.segmentId === 
 const company = (result, id) => result.companies.find(item => item.companyId === id)
 const bridgeYear = (result, id, year = 1) => segment(result, id).valuation.operatingBridge[year - 1]
 const closeTo = (actual, expected, tolerance = 1e-4) => assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`)
+
+test('visible companies during a drag exactly match the committed result across scenarios', () => {
+  const ids = ['NVDA', '000660.KS']
+  for (const definition of SCENARIO_DEFINITIONS) {
+    const request = buildDefaultScenarioRequest(definition.id)
+    Object.assign(request.inputs, definition.presets.upside.inputs)
+    if (definition.id === 'interest_rate') request.inputs.rateChangePctPoints = -0.83
+    request.companyOverrides.NVDA = { scenarioExposureScale: 0.68 }
+    const preview = evaluateCompanyPreview(request, ids)
+    const full = evaluateScenario(request)
+    assert.deepEqual(preview.companies, ids.map(id => company(full, id)))
+    assert.deepEqual(preview.scenario.rateCapexTransmission, full.scenario.rateCapexTransmission)
+  }
+})
 
 test('catalog exposes five scenarios, nine segments, bounds and unique consolidated companies', () => {
   assert.equal(SCENARIO_DEFINITIONS.length, 5)

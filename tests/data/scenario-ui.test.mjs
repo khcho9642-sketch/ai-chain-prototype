@@ -22,7 +22,13 @@ test('scenario chapter renders compact controls and view-model tables without in
   const prior = { window: globalThis.window, document: globalThis.document, localStorage: globalThis.localStorage }
   globalThis.document = { getElementById: id => id === 'v-scenario' ? root : null, activeElement: null }
   globalThis.localStorage = { getItem: () => null, setItem: () => {} }
-  globalThis.window = { aiChainSnapshot: null, addEventListener(type, listener) { listeners.set(`window:${type}`, listener) } }
+  let queuedFrame
+  globalThis.window = {
+    aiChainSnapshot: null,
+    addEventListener(type, listener) { listeners.set(`window:${type}`, listener) },
+    requestAnimationFrame(callback) { queuedFrame = callback; return 1 },
+    cancelAnimationFrame() { queuedFrame = null },
+  }
   t.after(() => {
     if (prior.window === undefined) delete globalThis.window; else globalThis.window = prior.window
     if (prior.document === undefined) delete globalThis.document; else globalThis.document = prior.document
@@ -33,7 +39,8 @@ test('scenario chapter renders compact controls and view-model tables without in
   await waitFor(() => root.innerHTML.includes('scenario-shell') || root.innerHTML.includes('scenario-unavailable'))
   assert.doesNotMatch(root.innerHTML, /scenario-unavailable/, 'UI, engine, and view-model contracts integrate')
   assert.equal((root.innerHTML.match(/class="scenario-choice/g) || []).length, 5)
-  assert.match(root.innerHTML, /value="1" data-scenario-control="rateChangePctPoints"/)
+  assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
+  assert.doesNotMatch(root.innerHTML, /data-scenario-reset|data-drag-play|data-scenario-control="rateChangePctPoints"/)
   assert.match(root.innerHTML, /data-duration="12" aria-pressed="true"/)
   for (const label of ['가장 크게 빠지는 기업 · 전체 41개', '전파 효과가 가장 큰 기업 · 전체 41개', '9개 섹터 대표기업 단순평균']) assert.match(root.innerHTML, new RegExp(label))
   assert.match(root.innerHTML, /<th>직접효과<\/th><th>밸류체인 효과<\/th><th>총 EV 변화<\/th>/)
@@ -44,10 +51,10 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
   assert.match(root.innerHTML, /공시 직접 \/ B · 공시 기반 추정 \/ C · 가정/)
   assert.match(root.innerHTML, /금리 \+1%p → 빅테크 AI CAPEX −5%/)
-  const focusRow = id => root.innerHTML.split(`data-rate-target="${id}"`)[1].split('</tr>')[0]
+  const focusRow = id => root.innerHTML.split(`data-live-company="${id}"`)[1].split('</article>')[0]
   assert.match(focusRow('NVDA'), /서버·장비 → AI 칩 · 시차 12개월/)
   assert.match(focusRow('000660.KS'), /메모리\(HBM 포함\) · 시차 18개월/)
-  const values = id => Array.from(focusRow(id).matchAll(/<td [^>]*>([^<]+)<\/td>/g), m => m[1])
+  const values = id => focusRow(id).match(/aria-label="직접 ([^,]+), 밸류체인 ([^,]+), 총 ([^"]+)"/).slice(1)
   assert.deepEqual(values('NVDA'), ['−0.59%', '−0.08%', '−0.67%'])
   assert.deepEqual(values('000660.KS'), ['−0.54%', '−0.03%', '−0.57%'])
   assert.match(root.innerHTML, /96개월 현금흐름 전망/)
@@ -183,13 +190,29 @@ test('scenario chapter renders compact controls and view-model tables without in
       setAttribute(key, pressed) { if (key === 'aria-pressed') this.pressed = pressed },
     }))
     root.querySelectorAll = selector => selector === '[data-control-preset-id]' ? buttons : []
-    const rate = { dataset: { scenarioControl: 'rateChangePctPoints' }, value: '0', removeAttribute() {} }
-    const typeRate = () => listeners.get('input')({ target: { closest: selector => selector === '[data-scenario-control]' ? rate : null } })
-    typeRate()
+    const live = { innerHTML: '' }
+    root.querySelector = selector => selector === '[data-scenario-live]' ? live : null
+    const range = { dataset: { scenarioRange: 'rateChangePctPoints' }, min: '-2', max: '3', value: '0', removeAttribute() {} }
+    const rangeEvent = { target: { closest: selector => selector === '[data-scenario-range]' ? range : null } }
+    const dragRate = value => {
+      range.value = String(value)
+      listeners.get('input')(rangeEvent)
+      queuedFrame()
+    }
+    dragRate(0)
+    assert.match(live.innerHTML, /0\.00%/)
+    const barScale = html => html.match(/class="scenario-live-axis">([^<]+)/)[1]
+    const zeroScale = barScale(live.innerHTML)
+    assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1, 'preview precedes commit')
+    listeners.get('change')(rangeEvent)
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 0)
     assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'false'])
-    rate.value = '2'
-    typeRate()
+    dragRate(2)
+    assert.equal(barScale(live.innerHTML), zeroScale, 'moving the handle preserves the panel scale')
+    const previewed = live.innerHTML
+    assert.match(previewed, /data-live-company="NVDA"[\s\S]*?scenario-live-total[^>]*><span>총 EV 변화<\/span><strong class="negative">−/)
+    listeners.get('change')(rangeEvent)
+    assert.equal(live.innerHTML, previewed, 'committing the full engine result preserves both live rows')
     assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'true'])
     const typeSensitivity = value => {
       const input = { dataset: { scenarioControl: 'rateCapexSensitivity' }, value, removeAttribute() {} }
@@ -207,14 +230,22 @@ test('scenario chapter renders compact controls and view-model tables without in
     click('[data-duration]', { duration: '6' })
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
     assert.match(root.innerHTML, /금리 \+2%p → 빅테크 AI CAPEX −16%/)
-    click('[data-scenario-reset]')
+    dragRate(0)
+    listeners.get('change')(rangeEvent)
+    window.renderScenario()
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
     assert.deepEqual(values('000660.KS'), ['0.00%', '0.00%', '0.00%'])
-    rate.value = '-1'
-    typeRate()
+    dragRate(-1)
+    listeners.get('change')(rangeEvent)
     window.renderScenario()
     assert.match(root.innerHTML, /금리 −1%p → 빅테크 AI CAPEX \+8%/)
-    click('[data-scenario-id]', { scenarioId: 'hyperscaler_capex' })
-    assert.doesNotMatch(root.innerHTML, /data-rate-target=|data-scenario-control="rateCapexSensitivity"/)
+    for (const [scenarioId, expected] of [
+      ['hyperscaler_capex', ['MSFT', 'NVDA']], ['hbm_market', ['000660.KS', 'NVDA']],
+      ['gpu_dc_rent', ['EQIX', 'MSFT']], ['model_growth', ['META', 'MSFT']],
+    ]) {
+      click('[data-scenario-id]', { scenarioId })
+      assert.doesNotMatch(root.innerHTML, /data-scenario-control="rateCapexSensitivity"/)
+      assert.deepEqual([...root.innerHTML.matchAll(/data-live-company="([^"]+)"/g)].map(match => match[1]), expected)
+    }
   }
 })
