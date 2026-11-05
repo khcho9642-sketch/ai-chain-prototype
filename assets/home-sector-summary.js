@@ -1,4 +1,4 @@
-import { SECTORS, COMPANIES } from './home-map-core.js';
+import { SECTORS } from './home-map-core.js';
 import { buildHomeSectorReturns } from './home-sector-returns.js';
 
 const percent = value => {
@@ -67,11 +67,16 @@ export function mountHomeSectorSummary(container, { onSelect }) {
     const groups = model?.groups || [];
     cards.forEach((card, index) => {
       const group = groups[index];
-      const count = COMPANIES.filter(company => company.sector === card.sector.name).length;
       const result = group?.available ? group.returnPercent : null;
       card.value.textContent = percent(result);
       card.value.className = 'sector-return-value' + (result > 0 ? ' positive' : result < 0 ? ' negative' : '');
-      card.coverage.textContent = group ? `${group.includedCount}/${group.peerCount}개 종목 반영` : loadError ? `0/${count}개 종목 반영` : '수집값 확인 중';
+      if (group?.available) {
+        card.coverage.textContent = `${group.includedCount}/${group.peerCount}개 종목 반영`;
+      } else if (group) {
+        card.coverage.textContent = `유효 이력 ${group.includedCount}/${group.peerCount}개`;
+      } else {
+        card.coverage.textContent = loadError ? '수집값 조회 실패' : '수집값 확인 중';
+      }
       card.button.setAttribute('aria-label', `${card.sector.name} ${percent(result)}, ${card.coverage.textContent}, 아래 지도에서 보기`);
       card.button.title = group?.available ? '누르면 아래 지도의 섹터를 선택합니다.' : group?.unavailableReason || '수집값을 확인하고 있습니다.';
     });
@@ -97,7 +102,8 @@ export function mountHomeSectorSummary(container, { onSelect }) {
       const section = element('details', 'sector-member-group');
       section.dataset.sector = String(group.id);
       section.open = openGroups.has(section.dataset.sector);
-      section.append(element('summary', '', `${group.name} · ${group.includedCount}/${group.peerCount}개 반영`));
+      const coverage = group.available ? `${group.includedCount}/${group.peerCount}개 반영` : `유효 이력 ${group.includedCount}/${group.peerCount}개`;
+      section.append(element('summary', '', `${group.name} · ${coverage}`));
       const list = element('ul', 'sector-member-list');
       group.peers.forEach(peer => {
         const row = element('li');
