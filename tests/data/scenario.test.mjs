@@ -15,6 +15,9 @@ import {
   validateScenarioRequest,
 } from '../../assets/scenario-core.js'
 
+import { financialProfile } from '../../assets/scenario-actuals.js'
+import { SCENARIO_FINANCIAL_BASELINES, SCENARIO_FINANCIAL_AS_OF } from '../../assets/scenario-financial-baselines.js'
+
 const segment = (result, id) => result.segments.find(item => item.segmentId === id)
 const company = (result, id) => result.companies.find(item => item.companyId === id)
 const bridgeYear = (result, id, year = 1) => segment(result, id).valuation.operatingBridge[year - 1]
@@ -38,7 +41,9 @@ test('catalog exposes five scenarios, nine segments, bounds and unique consolida
 test('default inputs are a computed zero-shock identity for all five scenarios', () => {
   for (const definition of SCENARIO_DEFINITIONS) {
     const result = evaluateScenario(buildDefaultScenarioRequest(definition.id))
-    assert.equal(result.model.actualCompanyFinancialsUsed, false)
+    assert.equal(result.model.actualCompanyFinancialsUsed, true)
+    assert.equal(result.model.actualFinancialCompanyCount, 38)
+    assert.equal(result.model.illustrativeFinancialCompanyCount, 3)
     assert.equal(result.model.currentPricesUsed, false)
     assert.equal(result.big7.scenarioValueIndex, 100)
     assert.equal(result.universe.scenarioValueIndex, 100)
@@ -46,7 +51,7 @@ test('default inputs are a computed zero-shock identity for all five scenarios',
     assert.ok(result.companies.every(item => item.scenarioValueIndex === 100))
     assert.equal(result.checks.zeroShockIdentity, true)
     assert.equal(result.checks.finiteResults, true)
-    assert.equal(result.checks.positiveBaselineFcff, true)
+    assert.equal(result.checks.positiveBaselineFcff, false)
     assert.equal(result.checks.terminalShockApplied, false)
     assert.equal(result.checks.latestShockEndWithinForecastHorizon, true)
   }
@@ -214,6 +219,151 @@ test('invalid ranges, unknown fields and invalid terminal or equity assumptions 
     scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 0 },
     companyOverrides: { NVDA: { assumptions: { netDebtToEvPct: 95 } } },
   }), /-50~90/)
+})
+
+
+test('latest consolidated accounts anchor revenue and first-year cash flow in original currency units', () => {
+  const result = evaluateScenario(buildDefaultScenarioRequest('interest_rate'))
+  const nvidia = company(result, 'NVDA')
+  const history = SCENARIO_FINANCIAL_BASELINES.NVDA.years
+  const { facts, currency } = history[0]
+  const basis = nvidia.financialBasis
+  const { revenue, operatingCashFlow, capitalExpenditure } = facts
+  const capex = Math.abs(capitalExpenditure.value)
+  assert.equal(basis.status, 'actual')
+  assert.equal(basis.startingRevenue, revenue.value)
+  assert.equal(basis.asOfDate, SCENARIO_FINANCIAL_AS_OF)
+  assert.equal(basis.currency, currency)
+  assert.equal(basis.fiscalYear, history[0].fiscalYear)
+  assert.equal(basis.scope, 'consolidated')
+  assert.equal(basis.marginMethod, 'cfo-minus-capex')
+  const growthPeriod = history.find(year => year.fiscalYear === basis.growthStartFiscalYear)
+  const historicalGrowth = 100 * ((revenue.value / growthPeriod.facts.revenue.value) ** (1 / basis.growthYears) - 1)
+  closeTo(basis.historicalGrowthPct, historicalGrowth)
+  assert.ok(basis.historicalGrowthPct > ASSUMPTION_LIMITS.baseGrowthPct[1])
+  assert.equal(basis.firstYearGrowthPct, ASSUMPTION_LIMITS.baseGrowthPct[1])
+  closeTo(basis.historicalCashMarginPct, (operatingCashFlow.value - capex) / revenue.value * 100)
+  closeTo(basis.firstYearCashMarginPct, basis.historicalCashMarginPct)
+  closeTo(basis.firstYearCapexToRevenuePct, capex / revenue.value * 100)
+  assert.equal(nvidia.valuation.cashFlowMeasure, 'fcf-proxy')
+  assert.equal(nvidia.valuation.normalizedStartingRevenue, null)
+  const firstRevenue = revenue.value * (1 + basis.firstYearGrowthPct / 100)
+  closeTo(nvidia.valuation.baselineRevenue[0], firstRevenue, firstRevenue * 1e-12)
+  const baseCash = firstRevenue * (operatingCashFlow.value - capex) / revenue.value
+  closeTo(nvidia.valuation.baselineFcff[0], baseCash, Math.abs(baseCash) * 1e-12)
+  assert.deepEqual(nvidia.valuation.baselineFcff, nvidia.valuation.scenarioFcff)
+  assert.ok(nvidia.valuation.operatingBridge.every(year => year.incrementalCapexCashoutUnits === 0))
+  for (const field of ['fcffMarginPct', 'baseGrowthPct', 'capexToRevenuePct']) {
+    const mature = Object.entries(nvidia.segmentWeights).reduce((total, [id, weight]) => total + weight * segment(result, id).assumptions[field], 0)
+    closeTo(basis.forecast[1][field], (basis.forecast[0][field] + mature) / 2)
+    for (const year of basis.forecast.slice(2)) closeTo(year[field], mature)
+  }
+  const skHynix = company(result, '000660.KS')
+  assert.equal(skHynix.valuation.currency, 'KRW')
+  assert.equal(skHynix.valuation.startingRevenue, SCENARIO_FINANCIAL_BASELINES['000660.KS'].years[0].facts.revenue.value)
+})
+
+test('missing gross capex stays missing and private profiles keep explicit illustrative units', () => {
+  const result = evaluateScenario(buildDefaultScenarioRequest('gpu_dc_rent'))
+  const dlr = company(result, 'DLR')
+  assert.equal(dlr.financialBasis.status, 'actual')
+  assert.equal(dlr.financialBasis.historicalCapexToRevenuePct, null)
+  assert.equal(dlr.financialBasis.historicalCashMarginPct, null)
+  assert.ok(dlr.financialBasis.facts.freeCashFlow)
+  assert.equal(dlr.financialBasis.fieldSources.fcffMarginPct, 'sector')
+  assert.equal(dlr.financialBasis.fieldSources.capexToRevenuePct, 'sector')
+  assert.equal(dlr.financialBasis.marginMethod, 'sector')
+  assert.equal(dlr.financialBasis.marginFallbackReason, 'missing-gross-capex')
+  assert.equal(dlr.valuation.basis, 'reported-revenue-sector-margin-dcf')
+  const privateCompany = company(result, 'OPENAI')
+  assert.equal(privateCompany.financialBasis.status, 'illustrative')
+  assert.equal(privateCompany.financialBasis.fiscalYear, null)
+  assert.equal(privateCompany.financialBasis.sourceGrade, 'C')
+  assert.equal(privateCompany.valuation.currency, null)
+  assert.equal(privateCompany.valuation.startingRevenue, 100)
+  assert.equal(privateCompany.valuation.basis, 'illustrative-normalized-8y-fcff-dcf')
+  assert.ok(result.segments.every(item => item.valuation.startingRevenue === 100))
+})
+
+test('cash ratios use the same accounting basis while growth and starting revenue retain canonical values', () => {
+  const result = evaluateScenario(buildDefaultScenarioRequest('interest_rate'))
+  for (const id of ['TSM', 'ASX']) {
+    const { financialBasis: basis } = company(result, id)
+    assert.equal(basis.status, 'actual')
+    assert.ok(basis.facts.capitalExpenditure.value < 0)
+    assert.notEqual(basis.facts.revenue.accountingStandard, basis.facts.capitalExpenditure.accountingStandard)
+    const { revenue, operatingCashFlow, capitalExpenditure, cashFlowBasisRevenue } = basis.facts
+    assert.equal(basis.cashFlowRevenueFactKey, 'cashFlowBasisRevenue')
+    assert.equal(cashFlowBasisRevenue.accountingStandard, capitalExpenditure.accountingStandard)
+    assert.equal(cashFlowBasisRevenue.accountingStandard, operatingCashFlow.accountingStandard)
+    assert.equal(basis.marginFallbackReason, null)
+    assert.equal(basis.capexFallbackReason, null)
+    closeTo(basis.historicalCashMarginPct, (operatingCashFlow.value - Math.abs(capitalExpenditure.value)) / cashFlowBasisRevenue.value * 100)
+    closeTo(basis.historicalCapexToRevenuePct, Math.abs(capitalExpenditure.value) / cashFlowBasisRevenue.value * 100)
+    assert.equal(basis.startingRevenue, revenue.value)
+    assert.equal(basis.fieldSources.baseGrowthPct, 'historical')
+    assert.equal(basis.fieldSources.fcffMarginPct, 'historical')
+    assert.equal(basis.fieldSources.capexToRevenuePct, 'historical')
+    assert.equal(basis.growthYears, 3)
+    assert.equal(basis.growthStartRevenueFact.accountingStandard, cashFlowBasisRevenue.accountingStandard)
+    assert.equal(basis.growthStartRevenueFact.provider, cashFlowBasisRevenue.provider)
+    assert.deepEqual(basis.growthEndRevenueFact, cashFlowBasisRevenue)
+    closeTo(basis.historicalGrowthPct, ((cashFlowBasisRevenue.value / basis.growthStartRevenueFact.value) ** (1 / basis.growthYears) - 1) * 100)
+    const record = structuredClone(SCENARIO_FINANCIAL_BASELINES[id])
+    delete record.years[0].facts.cashFlowBasisRevenue
+    const withoutComparableRevenue = financialProfile(record, basis.forecast.at(-1))
+    assert.equal(withoutComparableRevenue.marginFallbackReason, 'incompatible-accounting-standards')
+    assert.equal(withoutComparableRevenue.capexFallbackReason, 'incompatible-accounting-standards')
+    assert.equal(withoutComparableRevenue.historicalCashMarginPct, null)
+    assert.equal(withoutComparableRevenue.historicalCapexToRevenuePct, null)
+    assert.equal(withoutComparableRevenue.cashFlowRevenueFactKey, null)
+  }
+})
+
+test('cash-flow proxy deducts only incremental capex and respects forecast overrides', () => {
+  const request = { scenarioId: 'hyperscaler_capex', durationMonths: 12, inputs: { capexChangePct: 20 } }
+  const actual = company(evaluateScenario(request), 'MSFT')
+  const customRatio = 35
+  const adjusted = company(evaluateScenario({
+    ...request,
+    companyOverrides: { MSFT: { assumptions: { capexToRevenuePct: customRatio } } },
+  }), 'MSFT')
+  const { forecast, historicalCapexToRevenuePct, fieldSources } = adjusted.financialBasis
+  assert.equal(fieldSources.capexToRevenuePct, 'user')
+  assert.equal(fieldSources.fcffMarginPct, 'historical')
+  assert.ok(forecast.every(year => year.capexToRevenuePct === customRatio))
+  assert.equal(actual.financialBasis.firstYearCapexToRevenuePct, historicalCapexToRevenuePct)
+  assert.deepEqual(actual.valuation.baselineFcff, adjusted.valuation.baselineFcff)
+  const baseIncrement = actual.valuation.operatingBridge[0].incrementalCapexCashoutUnits
+  const newIncrement = adjusted.valuation.operatingBridge[0].incrementalCapexCashoutUnits
+  assert.ok(baseIncrement > 0)
+  closeTo(newIncrement / baseIncrement, customRatio / historicalCapexToRevenuePct)
+  closeTo(adjusted.valuation.scenarioFcff[0] - actual.valuation.scenarioFcff[0], baseIncrement - newIncrement, 0.01)
+})
+
+test('negative observed cash margins remain in the forecast and a nonpositive baseline cannot produce ratios', () => {
+  const request = { scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }
+  const base = company(evaluateScenario(request), 'CRWV')
+  assert.ok(base.financialBasis.historicalCashMarginPct < 0)
+  assert.equal(base.financialBasis.firstYearCashMarginPct, base.financialBasis.historicalCashMarginPct)
+  assert.ok(base.valuation.baselineFcff[0] < 0)
+  const result = evaluateScenario({
+    ...request,
+    companyOverrides: { CRWV: { assumptions: { discountRatePct: 25, terminalGrowthPct: -1, baseGrowthPct: -5, netDebtToEvPct: 20 } } },
+  })
+  const unavailable = company(result, 'CRWV')
+  assert.ok(unavailable.valuation.baselineEnterpriseValueUnits <= 0)
+  assert.equal(unavailable.valuation.comparisonStatus, 'nonpositive-baseline')
+  assert.equal(unavailable.valueChangePct, null)
+  assert.equal(unavailable.scenarioValueIndex, null)
+  assert.equal(unavailable.valuation.enterpriseValueRatio, null)
+  assert.equal(unavailable.valuation.equityValueRatio, null)
+  assert.equal(unavailable.valuation.quoteLinkStatus, 'unavailable-nonpositive-baseline')
+  assert.deepEqual(unavailable.driverContributions, [])
+  assert.deepEqual(unavailable.paths, [])
+  assert.equal(result.universe.valuedCompanyCount, result.universe.companyCount - 1)
+  assert.equal(result.universe.scenarioValueIndex, null)
+  assert.ok(Number.isFinite(result.big7.scenarioValueIndex))
 })
 
 test('model revenue contraction and recovery preserve growth-rate arithmetic', () => {

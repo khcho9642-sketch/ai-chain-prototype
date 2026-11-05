@@ -26,9 +26,9 @@ export const ASSUMPTION_LIMITS = Object.freeze({
 })
 
 export const MODEL_ASSUMPTIONS = Object.freeze({
-  modelId: 'normalized-fcff-value-chain-v1',
-  modelVersion: 1,
-  valuationBasis: 'illustrative-normalized-8y-fcff-dcf',
+  modelId: 'financial-actuals-value-chain-v2',
+  modelVersion: 2,
+  valuationBasis: 'mixed-financial-actuals-8y-dcf-proxy',
   normalizedStartingRevenue: 100,
   forecastYears: 8,
   horizonMonths: 96,
@@ -48,7 +48,7 @@ export const MODEL_ASSUMPTIONS = Object.freeze({
     '재고 버퍼, 장기계약 가격전가, 대체 공급처와 회사별 병목 용량은 실증 입력이 없어 별도 계수화하지 않았습니다.',
     '전파계수와 시차는 설명용 비례 가정이며 실제 고객·공급자 계약 또는 거래관계를 뜻하지 않습니다.',
   ]),
-  limitation: '설명용 정상상태 가정 기반 가치지수입니다. 실제 재무, 현재 수익성, 컨센서스, 현재 주가, 목표주가 또는 투자 의견이 아닙니다.',
+  limitation: '재무자료가 있는 기업은 연간 실적을 출발점으로 계산합니다. 미래 성장, 할인율과 전파 민감도에는 가정이 포함됩니다.',
 })
 
 const segment = (id, name, description, assumptions) => Object.freeze({

@@ -67,6 +67,15 @@ function enrichPath(path) {
 
 export function decomposeCompany(company) {
   if (!company || typeof company !== 'object') throw new TypeError('company 결과가 필요합니다.')
+  if (company.valueChangePct === null && company.valuation?.comparisonStatus === 'nonpositive-baseline') {
+    return {
+      ...company, totalPct: null, directPct: null, chainPct: null, residualPct: null,
+      rawDirectPct: null, rawChainPct: null, breakdownAvailable: false,
+      reconciliationStatus: 'nonpositive-baseline', grade: VIEW_MODEL_GRADE,
+      method: VIEW_MODEL_METHOD, breakdownNote: '기준가치가 0 이하라 변화율을 산정할 수 없습니다.',
+      paths: [], topPath: null, oneLinePath: null, maxPropagation: { hops: 0, lagMonths: 0 },
+    }
+  }
   if (!finite(company.valueChangePct)) throw new TypeError('company.valueChangePct는 유한한 숫자여야 합니다.')
   const totalPct = round(company.valueChangePct)
   const paths = Array.isArray(company.paths) ? company.paths.filter(path => pathImpact(path) !== null).map(enrichPath) : []
@@ -116,7 +125,7 @@ export function decomposeCompany(company) {
 
 function average(rows, field) {
   const values = rows.map(row => row[field]).filter(finite)
-  return values.length ? round(sum(values) / values.length) : null
+  return values.length && values.length === rows.length ? round(sum(values) / values.length) : null
 }
 
 export function buildScenarioView(result) {
@@ -152,6 +161,8 @@ export function buildScenarioView(result) {
       representativeDirectAveragePct: missingRepresentativeIds.length ? null : average(representativeRows, 'directPct'),
       representativeChainAveragePct: missingRepresentativeIds.length ? null : average(representativeRows, 'chainPct'),
       companyCount: companies.length,
+      comparableCompanyCount: companies.filter(company => finite(company.totalPct)).length,
+      comparableRepresentativeCount: representativeRows.filter(company => finite(company.totalPct)).length,
       representativeCount: representativeRows.length,
       big7Count: big7Rows.length,
       otherCount: otherRows.length,

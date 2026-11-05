@@ -28,7 +28,7 @@ import {
 } from '../../assets/scenario-view-model.js'
 
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url))
-const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-view-model.js', 'scenario.css', 'scenario.js']
+const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-view-model.js', 'scenario.css', 'scenario.js']
 const segmentNames = [
   '반도체 소부장', '파운드리·패키징', '메모리', 'AI 칩', 'AI 장비',
   '전력·냉각', '데이터센터', '클라우드·GPU 컴퓨팅', 'AI 모델',
@@ -105,7 +105,16 @@ test('scenario contract keeps five cases, nine named segments and the complete B
     assert.equal(output.companies.length, COMPANIES.length)
     assert.deepEqual(output.big7.members.map(member => member.companyId), BIG7_COMPANY_IDS)
     assert.equal(output.big7.members.length, 7)
-    assert.ok(output.companies.every(company => Number.isFinite(company.scenarioValueIndex)))
+    for (const company of output.companies) {
+      if (company.valuation.baselineEnterpriseValueUnits <= 0) {
+        assert.equal(company.scenarioValueIndex, null)
+        assert.equal(company.valuation.comparisonStatus, 'nonpositive-baseline')
+      } else {
+        assert.ok(Number.isFinite(company.scenarioValueIndex))
+      }
+    }
+    assert.equal(output.companies.filter(company => company.financialBasis.status === 'actual').length, 38)
+    assert.equal(output.companies.filter(company => company.financialBasis.status === 'illustrative').length, 3)
     assert.ok(output.segments.every(segment => Number.isFinite(segment.scenarioValueIndex)))
     const view = buildScenarioView(output)
     assert.equal(VIEW_MODEL_GRADE, 'C')
@@ -118,7 +127,7 @@ test('scenario contract keeps five cases, nine named segments and the complete B
 })
 
 test('scenario engine and browser module do not call external source endpoints', async () => {
-  for (const name of ['scenario-core.js', 'scenario-data.js', 'scenario-view-model.js', 'scenario.js']) {
+  for (const name of ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-view-model.js', 'scenario.js']) {
     const source = await readFile(join(sourceRoot, 'assets', name), 'utf8')
     assert.doesNotMatch(source, /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource/u, `${name} must remain a local deterministic consumer`)
   }

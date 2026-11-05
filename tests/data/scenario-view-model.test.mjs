@@ -146,3 +146,16 @@ test('six-month rate scenario changes direct allocation because rate has no prop
   assert.equal(eqix6.chainPct, 0)
   assert.ok(Math.abs(eqix6.directPct) < Math.abs(eqix12.directPct))
 })
+
+test('a nonpositive baseline keeps the company visible and the nine-company average unavailable', () => {
+  const companies = REPRESENTATIVE_COMPANY_IDS.map(companyId => ({ companyId, valueChangePct: -1, paths: [] }))
+  companies[0] = { ...companies[0], valueChangePct: null, valuation: { comparisonStatus: 'nonpositive-baseline' } }
+  const view = buildScenarioView({ companies })
+  const row = view.representativeRows[0]
+  assert.equal(row.totalPct, null)
+  assert.equal(row.breakdownAvailable, false)
+  assert.equal(view.representativeRows.length, 9)
+  assert.equal(view.summary.comparableRepresentativeCount, 8)
+  assert.equal(view.summary.representativeAveragePct, null)
+  assert.ok(view.summary.largestDecline.totalPct < 0)
+})

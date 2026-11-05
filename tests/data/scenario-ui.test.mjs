@@ -39,7 +39,7 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /scenario-impact-bar/)
   assert.match(root.innerHTML, /공시 직접 \/ B · 공시 기반 추정 \/ C · 가정/)
   assert.match(root.innerHTML, /금리 \+1%p → 데이터센터 → 케펠 DC 리츠 수요·할인율에 즉시 반영/)
-  assert.match(root.innerHTML, /96개월 FCFF 상세/)
+  assert.match(root.innerHTML, /96개월 현금흐름 전망/)
   assert.match(root.innerHTML, /관측·환산주가 보기/)
   assert.doesNotMatch(root.innerHTML, /scenario-quote-observation/, 'quotes are hidden until requested')
 
@@ -59,6 +59,59 @@ test('scenario chapter renders compact controls and view-model tables without in
   } } })
   window.renderScenario()
   assert.equal(selected(), selectedBefore, 'an assumption input cannot be mistaken for a selectable company row')
+
+  const selectCompany = id => {
+    listeners.get('click')({ target: { closest: selector => selector === 'tr[data-company-row][data-company-id]' ? { dataset: { companyId: id } } : null } })
+    window.renderScenario()
+  }
+  const details = () => root.innerHTML.split('aria-labelledby="scenario-company-detail-heading"')[1].split('class="scenario-methodology"')[0]
+  assert.match(root.innerHTML, /참여 41개사 중 <strong>38개사<\/strong>/)
+  assert.match(root.innerHTML, /3개 비상장사는 섹터 가정/)
+  assert.match(root.innerHTML, /현금흐름 마진은 37개사/)
+  selectCompany('NVDA')
+  assert.match(details(), /FY2026 · 2026-01-25 결산 · 연결 · 금액 단위 USD 백만/)
+  assert.match(details(), /<dt>매출<\/dt><dd>215,938<\/dd>/)
+  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>96,676<\/dd>/)
+  assert.match(details(), /네이버페이 증권<\/a> · 2차 출처 C/)
+  assert.match(details(), /Yahoo Finance<\/a> · 2차 출처 C/)
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+44.77%<\/td><td>실적 기반/)
+  assert.match(details(), /현금흐름 할인값\(EV\) · 기준 /)
+  assert.doesNotMatch(details(), /정규화 단위/)
+  selectCompany('DLR')
+  assert.match(details(), /<dt>CAPEX \(원천 부호\)<\/dt><dd>—<\/dd><dd>자료 없음/)
+  assert.match(details(), /현금흐름 마진<\/th><td>—<\/td><td>[^<]+<\/td><td>섹터 가정 C/)
+  assert.match(details(), /금액 단위 USD 백만/)
+  assert.match(details(), /<th>기준 모형 현금흐름<\/th>/)
+  selectCompany('TSM')
+  assert.match(details(), /현금흐름 비율 계산용 매출/)
+  assert.match(details(), /T-IFRS/)
+  assert.match(details(), /IFRS-IASB/)
+  assert.match(details(), /현금흐름 마진<\/th><td>[^<]+<\/td><td>[^<]+<\/td><td>실적 기반/)
+  selectCompany('OPENAI')
+  assert.match(details(), /재무 미공개 · 가정\. 시작 매출 100/)
+  assert.match(root.innerHTML, /비상장 · 재무 미공개 · 가정/)
+  assert.match(details(), /정규화 단위/)
+  assert.doesNotMatch(details(), /금액 단위 USD|2차 출처|<dt>매출/)
+  selectCompany('CRWV')
+  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>-7,251<\/dd>/)
+  const enterAssumption = (field, value, id) => {
+    const input = { dataset: { companyId: id, companyAssumption: field }, value, removeAttribute() {} }
+    listeners.get('input')({ target: { closest: selector => selector === '[data-company-assumption]' ? input : null } })
+    window.renderScenario()
+  }
+  enterAssumption('discountRatePct', '25', 'CRWV')
+  enterAssumption('terminalGrowthPct', '-1', 'CRWV')
+  assert.match(details(), /기준 기업가치가 0 이하라 EV 변화율/)
+  const missingRow = root.innerHTML.split('data-company-row data-company-id="CRWV"')[1].split('</tr>')[0]
+  assert.match(missingRow, /<b>산정 불가<\/b>/)
+  assert.doesNotMatch(missingRow, /scenario-total-marker|scenario-impact-bar/)
+  assert.match(root.innerHTML, /산정 가능 40\/41개사/)
+  selectCompany('NVDA')
+  enterAssumption('fcffMarginPct', '20', 'NVDA')
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+20.00%<\/td><td>사용자 가정 C/)
+  enterAssumption('fcffMarginPct', '', 'NVDA')
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+44.77%<\/td><td>실적 기반/)
+  selectCompany(selectedBefore)
 
   // Editing a live field must update the quote without replacing the input or waiting for blur.
   const outlet = { innerHTML: '' }

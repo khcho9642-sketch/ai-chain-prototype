@@ -375,3 +375,22 @@
 }
 
 @media(prefers-reduced-motion:reduce){#v-scenario .scenario-data-table tbody tr{transition:none}}
+
+.scenario-financial-detail{min-width:0;margin:20px 0;padding:16px 0;border-block:1px solid var(--line)}
+.scenario-financial-detail h3{margin:0 0 4px;font-size:16px}
+.scenario-financial-detail>p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6}
+.scenario-history-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:13px 0}
+.scenario-history-facts dt,.scenario-history-facts dd:last-child{font-size:11px;color:var(--muted)}
+.scenario-history-facts dd{margin:4px 0;font-size:16px;font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.scenario-history-facts dd:last-child{font-weight:400}
+.scenario-history-facts a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.scenario-forecast-inputs{width:100%;border-collapse:collapse;margin:12px 0 6px;font-size:12px;font-variant-numeric:tabular-nums}
+.scenario-forecast-inputs th,.scenario-forecast-inputs td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+.scenario-forecast-inputs thead th{color:var(--muted);font-size:11px}
+.scenario-forecast-inputs th:first-child{text-align:left}
+@media(max-width:760px){
+  .scenario-history-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .scenario-forecast-inputs th,.scenario-forecast-inputs td{padding:5px 3px}
+  #v-scenario .scenario-data-table td[data-label="대표기업"]{display:block;grid-area:1/1;padding:0 4px 9px 0;text-align:left}
+  #v-scenario .scenario-data-table td[data-label="대표기업"]:before{display:none}
+}

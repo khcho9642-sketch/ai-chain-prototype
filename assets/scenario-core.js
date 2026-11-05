@@ -8,6 +8,8 @@ import {
   SCENARIO_DEFINITIONS,
   SEGMENTS,
 } from './scenario-data.js'
+import { financialProfile } from './scenario-actuals.js'
+import { SCENARIO_FINANCIAL_BASELINES } from './scenario-financial-baselines.js'
 
 const PRIMITIVES = Object.freeze(['revenueVolume', 'asp', 'unitCost', 'capexCashout'])
 const segmentById = new Map(SEGMENTS.map(item => [item.id, item]))
@@ -258,25 +260,23 @@ function discountRateSeries(assumptions, request, activeDriverIds) {
 }
 
 function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
-  const baseGrowth = assumptions.baseGrowthPct / 100
-  const baseMargin = assumptions.fcffMarginPct / 100
-  const capexRatio = assumptions.capexToRevenuePct / 100
+  const { startingRevenue, forecast } = assumptions.financialBasis
   const baseDiscountRate = assumptions.discountRatePct / 100
   const terminalGrowth = assumptions.terminalGrowthPct / 100
-  const startingRevenue = MODEL_ASSUMPTIONS.normalizedStartingRevenue
 
   let baseRevenue = startingRevenue
   let baseDiscountFactor = 1
   let basePresentValue = 0
   const baseline = []
   for (let index = 0; index < years; index += 1) {
-    baseRevenue *= 1 + baseGrowth
-    const fcff = baseRevenue * baseMargin
+    const { baseGrowthPct, fcffMarginPct } = forecast[index]
+    baseRevenue *= 1 + baseGrowthPct / 100
+    const fcff = baseRevenue * (fcffMarginPct / 100)
     baseDiscountFactor *= 1 + baseDiscountRate
     basePresentValue += fcff / baseDiscountFactor
     baseline.push({ year: index + 1, revenue: baseRevenue, fcff, discountRate: baseDiscountRate })
   }
-  const baseTerminalFcff = baseRevenue * (1 + terminalGrowth) * baseMargin
+  const baseTerminalFcff = baseline.at(-1).fcff * (1 + terminalGrowth)
   const baseTerminalValue = baseTerminalFcff / (baseDiscountRate - terminalGrowth)
   const baselineEnterpriseValue = basePresentValue + baseTerminalValue / baseDiscountFactor
 
@@ -292,8 +292,9 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
     const aspDelta = clamp(primitiveSignals.asp * assumptions.aspPassThrough, -0.85, 1.50)
     const scenarioRevenue = baseline[index].revenue * (1 + revenueVolumeDelta) * (1 + aspDelta)
     const incrementalUnitCost = baseline[index].revenue * primitiveSignals.unitCost * assumptions.unitCostPassThrough
-    const incrementalCapexCashout = baseline[index].revenue * capexRatio * primitiveSignals.capexCashout * assumptions.capexPassThrough
-    const fcffBeforeBridge = scenarioRevenue * baseMargin
+    // Baseline cash margin already includes investment. Only the scenario's incremental outlay is deducted.
+    const incrementalCapexCashout = baseline[index].revenue * (forecast[index].capexToRevenuePct / 100) * primitiveSignals.capexCashout * assumptions.capexPassThrough
+    const fcffBeforeBridge = scenarioRevenue * (forecast[index].fcffMarginPct / 100)
     const fcff = fcffBeforeBridge - incrementalUnitCost - incrementalCapexCashout
     const discountRate = rates[index]
     if (discountRate <= terminalGrowth + 0.005) fail('시나리오 할인율이 터미널 성장률에 너무 가깝습니다.')
@@ -314,7 +315,7 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
   // All operating primitives are temporary overlays. Terminal FCFF and terminal value normalize to the baseline path.
   const scenarioTerminalValue = baseTerminalValue
   const scenarioEnterpriseValue = scenarioPresentValue + scenarioTerminalValue / scenarioDiscountFactor
-  const scenarioValueIndex = scenarioEnterpriseValue / baselineEnterpriseValue * 100
+  const scenarioValueIndex = baselineEnterpriseValue > 0 ? scenarioEnterpriseValue / baselineEnterpriseValue * 100 : null
   return {
     baselineEnterpriseValue,
     scenarioEnterpriseValue,
@@ -357,9 +358,12 @@ function pathEconomicScore(path, assumptions) {
     revenueVolume: assumptions.volumePassThrough,
     asp: assumptions.aspPassThrough,
     unitCost: -assumptions.unitCostPassThrough,
-    capexCashout: -assumptions.capexToRevenuePct / 100 * assumptions.capexPassThrough,
+    capexCashout: -assumptions.capexPassThrough,
   }[path.primitive]
-  return path.annualSeries.reduce((total, value, index) => total + value * coefficient / (1 + index * 0.25), 0)
+  return path.annualSeries.reduce((total, value, index) => {
+    const scale = path.primitive === 'capexCashout' ? assumptions.financialBasis.forecast[index].capexToRevenuePct / 100 : 1
+    return total + value * coefficient * scale / (1 + index * 0.25)
+  }, 0)
 }
 
 function attributePaths(driverContribution, paths, assumptions) {
@@ -381,6 +385,7 @@ function attributePaths(driverContribution, paths, assumptions) {
 
 function buildEquityBridge(projection, netDebtToEvPct, listingStatus) {
   if (listingStatus === 'private') return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'not-applicable-private' }
+  if (projection.scenarioValueIndex === null) return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'unavailable-nonpositive-baseline' }
   if (netDebtToEvPct === undefined) return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'missing-same-date-net-debt-to-ev' }
   const enterpriseValueRatio = projection.scenarioEnterpriseValue / projection.baselineEnterpriseValue
   const debtRatio = netDebtToEvPct / 100
@@ -393,11 +398,15 @@ function buildEquityBridge(projection, netDebtToEvPct, listingStatus) {
 function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exposureScale, exposureMultipliers,
   assumptionOverrides, request, selectedDriverIds, pathsByDriver }) {
   const assumptions = weightedAssumptions(segmentWeights, assumptionOverrides)
+  const financialBasis = financialProfile(SCENARIO_FINANCIAL_BASELINES[id], assumptions, assumptionOverrides)
+  assumptions.financialBasis = financialBasis
+  const actual = financialBasis.status === 'actual'
+  const marginBasis = { historical: 'fcf-proxy', sector: 'sector-margin', user: 'user-margin' }[financialBasis.fieldSources.fcffMarginPct]
   const primitiveBundle = buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver)
-  const attribution = attributeDrivers(assumptions, primitiveBundle, request, selectedDriverIds)
   const projection = projectDcf(assumptions, primitiveBundle, request, selectedDriverIds)
-  const contributions = attribution.contributions.map(item => ({ ...item }))
-  const difference = projection.scenarioValueIndex - 100
+  const comparable = projection.scenarioValueIndex !== null
+  const contributions = comparable ? attributeDrivers(assumptions, primitiveBundle, request, selectedDriverIds).contributions : []
+  const difference = comparable ? projection.scenarioValueIndex - 100 : null
   if (contributions.length) contributions[contributions.length - 1].valueIndexPoints += difference - sum(contributions.map(item => item.valueIndexPoints))
   const paths = contributions.flatMap(item => attributePaths(item.valueIndexPoints, primitiveBundle.entityPaths[item.driverId] ?? [], assumptions))
     .sort((left, right) => Math.abs(right.impactPoints) - Math.abs(left.impactPoints))
@@ -405,15 +414,16 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
   return {
     id,
     name,
-    baselineValueIndex: 100,
-    scenarioValueIndex: round(projection.scenarioValueIndex),
-    valueChangePct: round(projection.scenarioValueIndex - 100),
+    financialBasis,
+    baselineValueIndex: comparable ? 100 : null,
+    scenarioValueIndex: comparable ? round(projection.scenarioValueIndex) : null,
+    valueChangePct: comparable ? round(difference) : null,
     driverContributions: contributions.map(item => ({ ...item, valueIndexPoints: round(item.valueIndexPoints) })),
     paths: paths.map(path => ({ ...path, impactPoints: round(path.impactPoints) })),
     assumptions: {
-      baseGrowthPct: round(assumptions.baseGrowthPct),
-      fcffMarginPct: round(assumptions.fcffMarginPct),
-      capexToRevenuePct: round(assumptions.capexToRevenuePct),
+      baseGrowthPct: round(financialBasis.firstYearGrowthPct),
+      fcffMarginPct: round(financialBasis.firstYearCashMarginPct),
+      capexToRevenuePct: round(financialBasis.firstYearCapexToRevenuePct),
       discountRatePct: round(assumptions.discountRatePct),
       terminalGrowthPct: round(assumptions.terminalGrowthPct),
       volumePassThrough: round(assumptions.volumePassThrough),
@@ -427,16 +437,21 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
       netDebtToEvPct: assumptionOverrides.netDebtToEvPct ?? null,
       netDebtSource: assumptionOverrides.netDebtToEvPct === undefined ? null : 'user-supplied-same-valuation-date-assumption',
       source: MODEL_ASSUMPTIONS.assumptionSource,
-      interpretation: 'normalized mature-state profile; not current reported profitability',
+      interpretation: financialBasis.forecastMethod,
     },
     valuation: {
-      basis: MODEL_ASSUMPTIONS.valuationBasis,
-      normalizedStartingRevenue: MODEL_ASSUMPTIONS.normalizedStartingRevenue,
+      basis: actual ? `reported-revenue-${marginBasis}-dcf` : 'illustrative-normalized-8y-fcff-dcf',
+      comparisonStatus: comparable ? 'available' : 'nonpositive-baseline',
+      cashFlowMeasure: financialBasis.fieldSources.fcffMarginPct === 'historical' ? 'fcf-proxy' : 'illustrative-fcff',
+      startingRevenue: financialBasis.startingRevenue,
+      currency: financialBasis.currency,
+      normalizedStartingRevenue: actual ? null : financialBasis.startingRevenue,
       horizonMonths: MODEL_ASSUMPTIONS.horizonMonths,
       baselineEnterpriseValueUnits: round(projection.baselineEnterpriseValue),
       scenarioEnterpriseValueUnits: round(projection.scenarioEnterpriseValue),
-      enterpriseValueRatio: round(projection.scenarioEnterpriseValue / projection.baselineEnterpriseValue, 6),
+      enterpriseValueRatio: comparable ? round(projection.scenarioValueIndex / 100, 6) : null,
       ...equityBridge,
+      baselineRevenue: projection.baseline.map(item => round(item.revenue)),
       baselineFcff: projection.baseline.map(item => round(item.fcff)),
       scenarioFcff: projection.scenario.map(item => round(item.fcff)),
       scenarioDiscountRatesPct: projection.scenario.map(item => round(item.discountRate * 100)),
@@ -520,8 +535,11 @@ export function evaluateScenario(unvalidatedRequest) {
   })
 
   const big7Members = BIG7_COMPANY_IDS.map(companyId => companies.find(company => company.companyId === companyId))
-  const big7ValueIndex = sum(big7Members.map(company => company.scenarioValueIndex)) / big7Members.length
-  const universeValueIndex = sum(companies.map(company => company.scenarioValueIndex)) / companies.length
+  const equalWeightIndex = members => members.every(item => Number.isFinite(item.scenarioValueIndex))
+    ? sum(members.map(item => item.scenarioValueIndex)) / members.length : null
+  const big7ValueIndex = equalWeightIndex(big7Members)
+  const universeValueIndex = equalWeightIndex(companies)
+  const actualFinancialCompanyCount = companies.filter(item => item.financialBasis.status === 'actual').length
   const allEntityIndices = [...segments, ...companies].map(item => item.scenarioValueIndex)
   const allDriverShocksZero = drivers.every(item => Math.abs(item.normalizedShock) < 1e-12)
   const baselineFcffPositive = companies.every(company => company.valuation.baselineFcff.every(value => value > 0))
@@ -536,12 +554,14 @@ export function evaluateScenario(unvalidatedRequest) {
       valuationBasis: MODEL_ASSUMPTIONS.valuationBasis,
       forecastYears: MODEL_ASSUMPTIONS.forecastYears,
       horizonMonths: MODEL_ASSUMPTIONS.horizonMonths,
-      actualCompanyFinancialsUsed: false,
+      actualCompanyFinancialsUsed: actualFinancialCompanyCount > 0,
+      actualFinancialCompanyCount,
+      illustrativeFinancialCompanyCount: companies.length - actualFinancialCompanyCount,
       currentPricesUsed: false,
       terminalShockApplied: false,
       terminalValueNormalizedToBaseline: true,
       assumptionSource: MODEL_ASSUMPTIONS.assumptionSource,
-      baselineInterpretation: 'normalized mature-state profile; not current reported profitability',
+      baselineInterpretation: 'reported consolidated annual revenue when available; financial cash-flow proxy transitions to mature sector assumptions',
       pathAttributionMethod: MODEL_ASSUMPTIONS.pathAttributionMethod,
       unmodeledMitigants: MODEL_ASSUMPTIONS.unmodeledMitigants,
       limitation: MODEL_ASSUMPTIONS.limitation,
@@ -563,9 +583,10 @@ export function evaluateScenario(unvalidatedRequest) {
     big7: {
       name: 'Big7',
       method: MODEL_ASSUMPTIONS.aggregation.big7,
-      baselineValueIndex: 100,
-      scenarioValueIndex: round(big7ValueIndex),
-      valueChangePct: round(big7ValueIndex - 100),
+      valuedCompanyCount: big7Members.filter(item => Number.isFinite(item.scenarioValueIndex)).length,
+      baselineValueIndex: big7ValueIndex === null ? null : 100,
+      scenarioValueIndex: big7ValueIndex === null ? null : round(big7ValueIndex),
+      valueChangePct: big7ValueIndex === null ? null : round(big7ValueIndex - 100),
       members: big7Members.map(company => ({
         companyId: company.companyId,
         symbol: company.symbol,
@@ -579,12 +600,15 @@ export function evaluateScenario(unvalidatedRequest) {
     universe: {
       method: 'equal-weighted unique company results; not market-cap weighted',
       companyCount: companies.length,
-      baselineValueIndex: 100,
-      scenarioValueIndex: round(universeValueIndex),
-      valueChangePct: round(universeValueIndex - 100),
+      valuedCompanyCount: companies.filter(item => Number.isFinite(item.scenarioValueIndex)).length,
+      baselineValueIndex: universeValueIndex === null ? null : 100,
+      scenarioValueIndex: universeValueIndex === null ? null : round(universeValueIndex),
+      valueChangePct: universeValueIndex === null ? null : round(universeValueIndex - 100),
     },
     checks: {
-      zeroShockIdentity: !allDriverShocksZero || allEntityIndices.every(value => Math.abs(value - 100) < 1e-9) && Math.abs(big7ValueIndex - 100) < 1e-9,
+      zeroShockIdentity: !allDriverShocksZero || [...segments, ...companies].every(item =>
+        item.valuation.baselineEnterpriseValueUnits === item.valuation.scenarioEnterpriseValueUnits &&
+        (item.valuation.comparisonStatus === 'nonpositive-baseline' || Math.abs(item.scenarioValueIndex - 100) < 1e-9)),
       finiteResults: allEntityIndices.every(Number.isFinite) && Number.isFinite(big7ValueIndex),
       positiveBaselineFcff: baselineFcffPositive,
       uniqueCompanies: companyById.size === COMPANIES.length,
@@ -598,7 +622,8 @@ export function evaluateScenario(unvalidatedRequest) {
     },
     warnings: [
       MODEL_ASSUMPTIONS.limitation,
-      '회사별 기준 재무, 사업 노출도와 전파계수는 역할별 설명용 가정이며 실제 기업 수치로 보정되지 않았습니다.',
+      '재무 DB가 있는 회사는 결산 매출에서 시작합니다. 영업현금흐름과 설비투자액이 모두 있으면 두 금액의 차이를 현금흐름 대용치로 사용합니다.',
+      '사업 노출도, 충격 전파계수, 할인율과 장기 가정은 설명용 설정입니다.',
       '비상장 AI 모델 기업의 양(+) FCFF는 현재 흑자를 뜻하지 않고 정상상태 가정에 불과합니다.',
       'SEG 지수는 독립 프로필 결과이며 서로 더해 전체 기업가치를 만들 수 없습니다.',
       '경로별 impactPoints는 모델 내 driver 기여를 신호 크기로 배분한 설명값이며 개별 경로의 인과 추정치가 아닙니다.',
