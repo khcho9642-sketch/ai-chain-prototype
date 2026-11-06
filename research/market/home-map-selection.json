@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://docs.google.com/spreadsheets/d/1A9Az4RgoxQMcKdkD1nVrgBECtL7HxVQP/edit",
+    "sheet": "핵심기업 49",
+    "modifiedAt": "2026-11-06T15:21:47.237Z",
+    "sha256": "33ba8de435afbaf08dc9fdb2f6d6ec5da8d8f7f59b4b89c31aadd1cad4cc8bf1"
+  },
+  "companyCount": 49,
+  "listedCompanyCount": 46,
+  "unlistedCompanyCount": 3,
+  "companies": [
+    {
+      "order": 1,
+      "companyId": "C0051",
+      "name": "ASML",
+      "sector": "반도체 소부장",
+      "ticker": "ASML.AS",
+      "listed": true,
+      "change": "유지",
+      "role": "EUV 노광 장비"
+    },
+    {
+      "order": 2,
+      "companyId": "C0043",
+      "name": "어플라이드 머티어리얼즈",
+      "sector": "반도체 소부장",
+      "ticker": "AMAT",
+      "listed": true,
+      "change": "유지",
+      "role": "증착·식각 장비"
+    },
+    {
+      "order": 3,
+      "companyId": "C0277",
+      "name": "램리서치",
+      "sector": "반도체 소부장",
+      "ticker": "LRCX",
+      "listed": true,
+      "change": "유지",
+      "role": "식각 장비"
+    },
+    {
+      "order": 4,
+      "companyId": "C0270",
+      "name": "KLA",
+      "sector": "반도체 소부장",
+      "ticker": "KLAC",
+      "listed": true,
+      "change": "유지",
+      "role": "검사·계측"
+    },
+    {
+      "order": 5,
+      "companyId": "C0473",
+      "name": "도쿄일렉트론",
+      "sector": "반도체 소부장",
+      "ticker": "8035.T",
+      "listed": true,
+      "change": "신규",
+      "role": "코터·식각 장비"
+    },
+    {
+      "order": 6,
+      "companyId": "C0582",
+      "name": "한미반도체",
+      "sector": "반도체 소부장",
+      "ticker": "042700.KS",
+      "listed": true,
+      "change": "유지",
+      "role": "HBM용 TC 본더"
+    },
+    {
+      "order": 7,
+      "companyId": "C0483",
+      "name": "TSMC",
+      "sector": "파운드리·패키징",
+      "ticker": "2330.TW",
+      "listed": true,
+      "change": "유지",
+      "role": "파운드리·CoWoS"
+    },
+    {
+      "order": 8,
+      "companyId": "C0237",
+      "name": "인텔",
+      "sector": "파운드리·패키징",
+      "ticker": "INTC",
+      "listed": true,
+      "change": "유지",
+      "role": "파운드리·첨단 패키징"
+    },
+    {
+      "order": 9,
+      "companyId": "C0427",
+      "name": "SMIC",
+      "sector": "파운드리·패키징",
+      "ticker": "0981.HK",
+      "listed": true,
+      "change": "신규",
+      "role": "중국 파운드리"
+    },
+    {
+      "order": 10,
+      "companyId": "C0048",
+      "name": "ASE 테크놀로지",
+      "sector": "파운드리·패키징",
+      "ticker": "3711.TW",
+      "listed": true,
+      "change": "유지",
+      "role": "반도체 후공정"
+    },
+    {
+      "order": 11,
+      "companyId": "C0031",
+      "name": "앰코테크놀로지",
+      "sector": "파운드리·패키징",
+      "ticker": "AMKR",
+      "listed": true,
+      "change": "유지",
+      "role": "반도체 후공정"
+    },
+    {
+      "order": 12,
+      "companyId": "C0543",
+      "name": "삼성전자",
+      "sector": "메모리",
+      "ticker": "005930.KS",
+      "listed": true,
+      "change": "섹터 이동",
+      "role": "HBM·D램"
+    },
+    {
+      "order": 13,
+      "companyId": "C0426",
+      "name": "SK하이닉스",
+      "sector": "메모리",
+      "ticker": "000660.KS",
+      "listed": true,
+      "change": "유지",
+      "role": "HBM·D램"
+    },
+    {
+      "order": 14,
+      "companyId": "C0308",
+      "name": "마이크론",
+      "sector": "메모리",
+      "ticker": "MU",
+      "listed": true,
+      "change": "유지",
+      "role": "HBM·D램"
+    },
+    {
+      "order": 15,
+      "companyId": "C0395",
+      "name": "샌디스크",
+      "sector": "메모리",
+      "ticker": "SNDK",
+      "listed": true,
+      "change": "신규",
+      "role": "데이터센터 SSD"
+    },
+    {
+      "order": 16,
+      "companyId": "C0268",
+      "name": "키옥시아 홀딩스",
+      "sector": "메모리",
+      "ticker": "285A.T",
+      "listed": true,
+      "change": "유지",
+      "role": "낸드"
+    },
+    {
+      "order": 17,
+      "companyId": "C0347",
+      "name": "엔비디아",
+      "sector": "AI 칩",
+      "ticker": "NVDA",
+      "listed": true,
+      "change": "유지",
+      "role": "AI GPU"
+    },
+    {
+      "order": 18,
+      "companyId": "C0078",
+      "name": "브로드컴",
+      "sector": "AI 칩",
+      "ticker": "AVGO",
+      "listed": true,
+      "change": "유지",
+      "role": "맞춤형 AI 칩·네트워킹 칩"
+    },
+    {
+      "order": 19,
+      "companyId": "C0028",
+      "name": "AMD",
+      "sector": "AI 칩",
+      "ticker": "AMD",
+      "listed": true,
+      "change": "유지",
+      "role": "AI GPU·CPU"
+    },
+    {
+      "order": 20,
+      "companyId": "C0047",
+      "name": "ARM",
+      "sector": "AI 칩",
+      "ticker": "ARM",
+      "listed": true,
+      "change": "신규",
+      "role": "서버 CPU 설계 IP"
+    },
+    {
+      "order": 21,
+      "companyId": "C0299",
+      "name": "마벨 테크놀로지",
+      "sector": "AI 칩",
+      "ticker": "MRVL",
+      "listed": true,
+      "change": "유지",
+      "role": "맞춤형 칩·광 DSP"
+    },
+    {
+      "order": 22,
+      "companyId": "C0104",
+      "name": "시스코",
+      "sector": "AI 장비",
+      "ticker": "CSCO",
+      "listed": true,
+      "change": "신규",
+      "role": "데이터센터 네트워크"
+    },
+    {
+      "order": 23,
+      "companyId": "C0046",
+      "name": "아리스타 네트웍스",
+      "sector": "AI 장비",
+      "ticker": "ANET",
+      "listed": true,
+      "change": "유지",
+      "role": "AI 클러스터 스위치"
+    },
+    {
+      "order": 24,
+      "companyId": "C0129",
+      "name": "델 테크놀로지스",
+      "sector": "AI 장비",
+      "ticker": "DELL",
+      "listed": true,
+      "change": "유지",
+      "role": "AI 서버"
+    },
+    {
+      "order": 25,
+      "companyId": "C0212",
+      "name": "혼하이(폭스콘)",
+      "sector": "AI 장비",
+      "ticker": "2317.TW",
+      "listed": true,
+      "change": "신규",
+      "role": "AI 서버 위탁생산"
+    },
+    {
+      "order": 26,
+      "companyId": "C0110",
+      "name": "코히어런트",
+      "sector": "AI 장비",
+      "ticker": "COHR",
+      "listed": true,
+      "change": "유지",
+      "role": "광트랜시버"
+    },
+    {
+      "order": 27,
+      "companyId": "C0563",
+      "name": "이수페타시스",
+      "sector": "AI 장비",
+      "ticker": "007660.KS",
+      "listed": true,
+      "change": "섹터 이동",
+      "role": "AI 서버·스위치용 PCB"
+    },
+    {
+      "order": 28,
+      "companyId": "C0184",
+      "name": "GE 버노바",
+      "sector": "전력·냉각",
+      "ticker": "GEV",
+      "listed": true,
+      "change": "유지",
+      "role": "가스터빈·전력망"
+    },
+    {
+      "order": 29,
+      "companyId": "C0416",
+      "name": "지멘스 에너지",
+      "sector": "전력·냉각",
+      "ticker": "ENR.DE",
+      "listed": true,
+      "change": "신규",
+      "role": "가스터빈·전력망"
+    },
+    {
+      "order": 30,
+      "companyId": "C0400",
+      "name": "슈나이더 일렉트릭",
+      "sector": "전력·냉각",
+      "ticker": "SU.PA",
+      "listed": true,
+      "change": "유지",
+      "role": "배전·냉각"
+    },
+    {
+      "order": 31,
+      "companyId": "C0142",
+      "name": "이튼",
+      "sector": "전력·냉각",
+      "ticker": "ETN",
+      "listed": true,
+      "change": "유지",
+      "role": "배전"
+    },
+    {
+      "order": 32,
+      "companyId": "C0494",
+      "name": "버티브",
+      "sector": "전력·냉각",
+      "ticker": "VRT",
+      "listed": true,
+      "change": "유지",
+      "role": "데이터센터 냉각·전원"
+    },
+    {
+      "order": 33,
+      "companyId": "C0290",
+      "name": "LS ELECTRIC",
+      "sector": "전력·냉각",
+      "ticker": "010120.KS",
+      "listed": true,
+      "change": "유지",
+      "role": "배전·변압기"
+    },
+    {
+      "order": 34,
+      "companyId": "C0207",
+      "name": "HD현대일렉트릭",
+      "sector": "전력·냉각",
+      "ticker": "267260.KS",
+      "listed": true,
+      "change": "유지",
+      "role": "초고압 변압기"
+    },
+    {
+      "order": 35,
+      "companyId": "C0154",
+      "name": "에퀴닉스",
+      "sector": "데이터센터",
+      "ticker": "EQIX",
+      "listed": true,
+      "change": "유지",
+      "role": "코로케이션"
+    },
+    {
+      "order": 36,
+      "companyId": "C0137",
+      "name": "디지털 리얼티",
+      "sector": "데이터센터",
+      "ticker": "DLR",
+      "listed": true,
+      "change": "유지",
+      "role": "하이퍼스케일 데이터센터 임대"
+    },
+    {
+      "order": 37,
+      "companyId": "C0246",
+      "name": "아이언마운틴",
+      "sector": "데이터센터",
+      "ticker": "IRM",
+      "listed": true,
+      "change": "유지",
+      "role": "기록물 보관·데이터센터 운영 리츠"
+    },
+    {
+      "order": 38,
+      "companyId": "C0182",
+      "name": "GDS 홀딩스",
+      "sector": "데이터센터",
+      "ticker": "GDS",
+      "listed": true,
+      "change": "신규",
+      "role": "중국 데이터센터 운영"
+    },
+    {
+      "order": 39,
+      "companyId": "C0309",
+      "name": "마이크로소프트",
+      "sector": "클라우드·GPU",
+      "ticker": "MSFT",
+      "listed": true,
+      "change": "유지",
+      "role": "Azure"
+    },
+    {
+      "order": 40,
+      "companyId": "C0026",
+      "name": "아마존",
+      "sector": "클라우드·GPU",
+      "ticker": "AMZN",
+      "listed": true,
+      "change": "유지",
+      "role": "AWS"
+    },
+    {
+      "order": 41,
+      "companyId": "C0353",
+      "name": "오라클",
+      "sector": "클라우드·GPU",
+      "ticker": "ORCL",
+      "listed": true,
+      "change": "유지",
+      "role": "OCI"
+    },
+    {
+      "order": 42,
+      "companyId": "C0022",
+      "name": "알리바바",
+      "sector": "클라우드·GPU",
+      "ticker": "BABA",
+      "listed": true,
+      "change": "신규",
+      "role": "클라우드 인프라"
+    },
+    {
+      "order": 43,
+      "companyId": "C0115",
+      "name": "코어위브",
+      "sector": "클라우드·GPU",
+      "ticker": "CRWV",
+      "listed": true,
+      "change": "유지",
+      "role": "GPU 클라우드"
+    },
+    {
+      "order": 44,
+      "companyId": "C0330",
+      "name": "네비우스",
+      "sector": "클라우드·GPU",
+      "ticker": "NBIS",
+      "listed": true,
+      "change": "신규",
+      "role": "GPU 클라우드"
+    },
+    {
+      "order": 45,
+      "companyId": "C0024",
+      "name": "알파벳",
+      "sector": "AI 모델",
+      "ticker": "GOOGL",
+      "listed": true,
+      "change": "섹터 이동",
+      "role": "Gemini"
+    },
+    {
+      "order": 46,
+      "companyId": "C0305",
+      "name": "메타",
+      "sector": "AI 모델",
+      "ticker": "META",
+      "listed": true,
+      "change": "유지",
+      "role": "Llama"
+    },
+    {
+      "order": 47,
+      "companyId": "C0351",
+      "name": "OpenAI",
+      "sector": "AI 모델",
+      "ticker": null,
+      "listed": false,
+      "change": "유지",
+      "role": "GPT"
+    },
+    {
+      "order": 48,
+      "companyId": "C0037",
+      "name": "Anthropic",
+      "sector": "AI 모델",
+      "ticker": null,
+      "listed": false,
+      "change": "유지",
+      "role": "Claude"
+    },
+    {
+      "order": 49,
+      "companyId": "C0128",
+      "name": "DeepSeek",
+      "sector": "AI 모델",
+      "ticker": null,
+      "listed": false,
+      "change": "유지",
+      "role": "가중치 공개 AI 모델"
+    }
+  ]
+}

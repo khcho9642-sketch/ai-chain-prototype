@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, readFile, writeFile, readdir, rm } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { resolveBuildRippleSnapshot, publicSnapshotFiles } from '../../scripts/build.mjs'
-import { buildRippleSnapshot, validateRippleSnapshot } from '../../assets/ripple-core.js'
+import { buildRippleSnapshot, validateRippleSnapshot, rippleMatchesSelection, rippleSelectionKey } from '../../assets/ripple-core.js'
 import rippleHandler from '../../api/ripple.js'
 
 const now = Date.parse('2026-11-06T08:00:00Z')
@@ -48,6 +48,26 @@ test('a valid ripple is retained only when it belongs to the exact market collec
   assert.equal(rebuilt.generatedAt, new Date(now).toISOString())
   assert.notEqual(rebuilt.sourceSnapshotGeneratedAt, saved.sourceSnapshotGeneratedAt)
   assert.deepEqual(JSON.parse(await readFile(file, 'utf8')), saved)
+})
+
+test('a changed roster or sector rebuilds derived data even when the market timestamp and issuer count match', async t => {
+  const { focusCompanies } = await import('../../assets/home-focus.js')
+  const { root, file } = await fixture(t)
+  const current = market('2026-11-05T23:20:00Z')
+  const changed = focusCompanies.map((company, index) => index ? company : { ...company, ticker: 'AAPL' })
+  const saved = buildRippleSnapshot({ marketSnapshot: current, companies: changed, now: now - 3600000 })
+  assert.equal(saved.coverage.targetCompanies, focusCompanies.length)
+  assert.equal(rippleMatchesSelection(saved), false)
+  await writeFile(file, JSON.stringify(saved))
+  const rebuilt = await resolveBuildRippleSnapshot(root, current, { now })
+  assert.equal(rippleMatchesSelection(rebuilt), true)
+  assert.equal(rebuilt.selectionKey, rippleSelectionKey(focusCompanies))
+  assert.notEqual(rebuilt.selectionKey, saved.selectionKey)
+  const legacy = { ...rebuilt }; delete legacy.selectionKey
+  await writeFile(file, JSON.stringify(legacy))
+  assert.equal(rippleMatchesSelection(await resolveBuildRippleSnapshot(root, current, { now })), true)
+  const moved = focusCompanies.map((company, index) => index ? company : { ...company, sectorId: 'ai-models' })
+  assert.notEqual(rippleSelectionKey(moved), rippleSelectionKey(focusCompanies))
 })
 
 test('malformed derived data is never copied into a public build', async t => {

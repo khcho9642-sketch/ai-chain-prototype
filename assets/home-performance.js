@@ -4,7 +4,7 @@ import { buildComparison } from './peer-comparison-core.js'
 
 const DAY = 86400000
 const PERIODS = Object.freeze({ '1d': 1, '1w': 7, '1m': 30, '1mo': 30, '3m': 90, '3mo': 90, '1y': 365 })
-const FX_SYMBOLS = Object.freeze({ KRW: 'KRW=X', JPY: 'JPY=X', TWD: 'TWD=X' })
+const FX_SYMBOLS = Object.freeze({ KRW: 'KRW=X', JPY: 'JPY=X', TWD: 'TWD=X', EUR: 'EUR=X', HKD: 'HKD=X' })
 const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
   && Number.isFinite(Date.parse(value + 'T00:00:00Z')) && new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value
@@ -68,7 +68,8 @@ function exactFx(snapshot, normalizedQuotes, currency, date) {
   if (currency === 'USD') return 1
   const entry = snapshot?.fxHistory?.[currency]
   const observations = Array.isArray(entry) ? entry : entry?.observations
-  if ((!entry?.currency || entry.currency === currency) && Array.isArray(observations)) {
+  if ((!entry?.currency || entry.currency === currency) && (!entry?.baseCurrency || entry.baseCurrency === 'USD')
+    && (!entry?.quoteConvention || entry.quoteConvention === 'currency-per-USD') && Array.isArray(observations)) {
     const values = observations.filter(row => row?.date === date && positive(row.unitsPerUSD)).map(row => row.unitsPerUSD)
     if (new Set(values).size === 1) return values[0]
     if (new Set(values).size > 1) return null

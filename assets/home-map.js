@@ -4,7 +4,8 @@ import { companyHrefForTicker } from './company-links.js';
 import { focusCompanies } from './home-focus.js';
 import { buildSectorReturns } from './home-performance.js';
 import { buildActualMap, buildMapCatalogue } from './home-map-data.js';
-import { validateRippleSnapshot } from './ripple-core.js';
+import { MAP_UNIVERSE } from './home-map-universe.js';
+import { validateRippleSnapshot, rippleMatchesSelection } from './ripple-core.js';
 const MAP_CATALOGUE = buildMapCatalogue();
 const MAP_LISTED_COUNT = MAP_CATALOGUE.filter(company => company.listed).length;
 const MAP_PRIVATE_COUNT = MAP_CATALOGUE.length - MAP_LISTED_COUNT;
@@ -18,14 +19,14 @@ const content = document.createElement('div');
 content.innerHTML = `<div class="map-main">
     <section class="intro" aria-label="시장 지도">
       <div><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1><p>반도체에서 모델까지, AI 산업의 움직임을 한눈에.</p></div>
-      <div class="home-badges"><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${focusCompanies.length}개</span></div>
+      <div class="home-badges"><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div>
     </section>
     <section id="home-sector-summary" class="home-sector-summary" aria-label="AI 밸류체인 업종별 수익률">
-      <div class="sector-summary-heading"><div><h2>업종별 수익률</h2><p data-home-card-caption>핵심 기업의 최근 90일 종가 수익률</p></div><div class="home-summary-controls"><label class="home-card-period-label">기간 <select aria-label="업종 수익률 기간" data-home-card-period><option value="1d">1일</option><option value="1w">1주</option><option value="1m">1개월</option><option value="3mo" selected>3개월</option><option value="1y">1년</option></select></label><div class="home-weight-switch" role="group" aria-label="업종별 수익률 가중 방식"><button type="button" data-home-weight="eq" aria-pressed="true">동일가중</button><button type="button" data-home-weight="cap" aria-pressed="false">시총가중</button></div></div></div>
+      <div class="sector-summary-heading"><div><h2>업종별 수익률</h2><p data-home-card-caption>선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 최근 90일 종가 수익률</p></div><div class="home-summary-controls"><label class="home-card-period-label">기간 <select aria-label="업종 수익률 기간" data-home-card-period><option value="1d">1일</option><option value="1w">1주</option><option value="1m">1개월</option><option value="3mo" selected>3개월</option><option value="1y">1년</option></select></label><div class="home-weight-switch" role="group" aria-label="업종별 수익률 가중 방식"><button type="button" data-home-weight="eq" aria-pressed="true">동일가중</button><button type="button" data-home-weight="cap" aria-pressed="false">시총가중</button></div></div></div>
       <p class="sector-summary-meta" data-home-summary-meta role="status">수집된 종가를 확인하고 있습니다.</p>
       <div class="sector-summary-grid" data-home-sector-cards role="group" aria-label="9개 섹터 선택"></div>
       <p class="sector-summary-status" data-home-summary-status hidden></p>
-      <details class="sector-summary-details"><summary>계산 기준·구성 종목 보기</summary><p class="sector-methodology">각 종목의 현지통화 종가 수익률을 평균합니다. 시총가중은 기간 시작일 시총을 확인할 수 있는 종목만 사용합니다. 배당 재투자와 환율 변동은 제외하며 결측을 0으로 채우지 않습니다. 아래 지도는 최근 관측 시총의 USD 환산값으로 크기를 정하고 확정 종가 수익률을 표시합니다.</p><div class="sector-member-groups" data-home-sector-members></div></details>
+      <details class="sector-summary-details"><summary>계산 기준·구성 종목 보기</summary><p class="sector-methodology">선정표의 ${MAP_CATALOGUE.length}개 기업 중 상장 ${MAP_LISTED_COUNT}개의 현지통화 종가 수익률을 평균합니다. 시총가중은 기간 시작일 시총을 확인할 수 있는 종목만 사용합니다. 비상장 ${MAP_PRIVATE_COUNT}개는 이름과 역할을 별도 표시하고 시총·수익률 계산에서 제외합니다. 배당 재투자와 환율 변동은 제외하며 결측을 0으로 채우지 않습니다. 아래 지도의 크기는 최근 관측 시총 USD, 색상은 확정 종가 수익률입니다. <a data-home-selection-source target="_blank" rel="noopener noreferrer" hidden>선정표 보기 ↗</a></p><div class="sector-member-groups" data-home-sector-members></div></details>
     </section>
     <section id="home-ripple" class="home-ripple" aria-labelledby="ripple-title">
       <div class="ripple-heading"><div><p class="ripple-eyebrow">TODAY'S CO-MOVEMENT</p><h2 id="ripple-title">오늘의 파급</h2></div><div class="ripple-chips" data-ripple-chips role="group" aria-label="크게 움직인 기업 선택"></div></div>
@@ -45,9 +46,10 @@ content.innerHTML = `<div class="map-main">
         <div class="period-switch" role="group" aria-label="수익률 기간"><button data-period="1d" class="active" aria-pressed="true">1일</button><button data-period="1w" aria-pressed="false">1주</button><button data-period="1m" aria-pressed="false">1개월</button><button data-period="1y" aria-pressed="false">1년</button></div>
       </div>
       <div class="sector-row"><div class="sector-chips" id="sector-chips" role="group" aria-label="분야 선택"></div><button class="reset" id="reset" aria-label="조회 조건 초기화"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 6a6 6 0 1 1-.2 5M3 2v4h4"/></svg><span>초기화</span></button></div>
-      <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>전체 ${MAP_CATALOGUE.length} · 상장 ${MAP_LISTED_COUNT} · 비상장 ${MAP_PRIVATE_COUNT} · 수집 확인 중</span><span>표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
+      <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>지도 선정 ${MAP_CATALOGUE.length} · 상장 ${MAP_LISTED_COUNT} · 비상장 ${MAP_PRIVATE_COUNT} · 수집 확인 중</span><span>상장 표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
       <p class="map-data-status" id="map-data-status" role="status">시총과 확정 종가를 확인하고 있습니다.</p>
       <details class="map-data-details" id="map-data-details" hidden><summary>미반영·수집 상태 보기</summary><ul id="map-exclusions"></ul></details>
+      <section class="map-private-roster" data-map-private data-map-private-roster aria-label="AI 모델 비상장 기업" hidden><div class="map-private-heading"><h2>AI 모델 · 비상장 기업</h2><p>시총·종가 없음 · 면적·수익률 계산에서 제외</p></div><div class="map-private-grid" data-map-private-cards></div></section>
       <div class="chart-meta"><div class="breadcrumb"><button id="overview">전체 산업</button><span id="crumb-sector"></span></div><div id="chart-explainer">크기: <b>최근 관측 시총 USD</b><span>·</span>색상: <b>확정 종가 등락률</b></div></div>
       <div class="chart-stage" id="chart-stage" aria-label="히트맵 차트">
         <div class="heatmap" id="heatmap"></div>
@@ -58,7 +60,7 @@ content.innerHTML = `<div class="map-main">
       <div class="chart-footer"><span id="chart-hint"><span class="hint-dot"></span>분야 확대·기업 검색으로 작은 기업 찾기 · 기업을 누르면 정보 확인</span><button type="button" class="map-zoom" id="map-zoom" aria-pressed="false">지도 확대</button><div class="return-legend" id="return-legend"><span>−3%</span><div class="gradient"></div><span>0</span><div class="gradient positive-gradient"></div><span>+3%</span><span class="missing-legend">회색 — 미확보</span></div><span id="bubble-legend" hidden>가로: 분야 · 세로·색상: 확정 종가 등락률 · 면적: 최근 관측 시총 USD</span></div>
       <aside class="selection" id="selection" aria-label="선택 기업 정보" hidden></aside>
     </section>
-    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 비상장은 이름과 제외 사유를 표시하며 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 전체 ${MAP_CATALOGUE.length}개</span></footer>
+    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 비상장은 이름과 역할을 별도 표시하며 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 지도 선정 ${MAP_CATALOGUE.length}개</span></footer>
 </div>`;
 root.append(content);
 const $=s=>root.querySelector(s), $$=s=>[...root.querySelectorAll(s)];
@@ -223,6 +225,26 @@ function htmlElement(tag, className, text) {
   if (text !== undefined) element.textContent = text;
   return element;
 }
+function renderPrivateCompanies(matchingCatalog) {
+  const companies = matchingCatalog.filter(company => !company.listed);
+  const section = $('[data-map-private]'), cards = $('[data-map-private-cards]');
+  section.hidden = !companies.length;
+  cards.replaceChildren();
+  host.dataset.mapPrivateCount = companies.length;
+  section.querySelector('h2').textContent = `AI 모델 · 비상장 ${companies.length}개`;
+  for (const company of companies) {
+    const card = htmlElement('article', 'map-private-company');
+    card.dataset.mapPrivateCompany = company.id;
+    card.dataset.companyId = company.id;
+    const name = htmlElement('h3', '', company.name); name.id = `map-private-${company.id}`;
+    card.setAttribute('aria-labelledby', name.id);
+    card.append(name);
+    if (company.role) card.append(htmlElement('p', 'map-private-role', company.role));
+    card.append(htmlElement('span', 'map-private-country', COUNTRY_NAMES[company.country] || company.countryName || company.country));
+    card.append(htmlElement('small', 'map-private-status', '비상장 · 시총·종가 없음'));
+    cards.append(card);
+  }
+}
 function shortDate(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value.slice(5).replace('-', '.') : '—'; }
 function marketName(value) { return ({KR:'한국',US:'미국',ETC:'기타 시장'})[value] || '기타 시장'; }
 function summaryPeriodName() { return ({'1d':'최근 1거래일','1w':'최근 1주','1m':'최근 1개월','3mo':'최근 90일','1y':'최근 1년'})[summaryPeriod]; }
@@ -245,13 +267,16 @@ function renderHeader() {
   badge.textContent = dates.length ? `${shortDate(dates.at(-1))} 종가 기준${old ? ' · 이전 수집값' : ''}` : '확정 종가 수집 대기';
   badge.classList.toggle('is-stale', old);
   badge.title = dates.length ? `각 거래소 현지 종가 기준일: ${dates.join(', ')}` : '확정 종가를 수집한 뒤 기준일을 표시합니다.';
-  const count = marketSnapshot?.coverage?.companyCount;
-  $('[data-home-coverage]').textContent = `${Number.isInteger(count) && count > 0 ? count.toLocaleString('ko-KR') + '개 추적' : '원장 확인 중'} · 핵심 ${focusCompanies.length}개`;
+  const count = marketSnapshot?.coverage?.companyCount || MAP_UNIVERSE.masterCompanyCount;
+  $('[data-home-coverage]').textContent = `${Number.isInteger(count) && count > 0 ? '전체 ' + count.toLocaleString('ko-KR') + '개 추적' : '원장 확인 중'} · 핵심 ${MAP_CATALOGUE.length}개`;
 }
 function renderSectorSummary() {
   renderHeader();
   const model = summaryModel();
-  $('[data-home-card-caption]').textContent = `핵심 기업의 ${summaryPeriodName()} 종가 수익률`;
+  $('[data-home-card-caption]').textContent = `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 ${summaryPeriodName()} 종가 수익률`;
+  const sourceLink = $('[data-home-selection-source]');
+  sourceLink.hidden = !MAP_UNIVERSE.sourceUrl;
+  if (MAP_UNIVERSE.sourceUrl) { sourceLink.href = MAP_UNIVERSE.sourceUrl; sourceLink.title = MAP_UNIVERSE.sourceSheet || '기업 선정표'; }
   const groups = new Map((model?.sectors || []).map(group => [group.sectorId, group]));
   $$('[data-home-weight]').forEach(button => {
     const active = button.dataset.homeWeight === weightMode;
@@ -269,7 +294,7 @@ function renderSectorSummary() {
       const identity = htmlElement('span', 'sector-return-identity');
       const name = htmlElement('span', 'sector-return-name');
       name.append(htmlElement('small', 'sector-return-step', String(index + 1).padStart(2, '0')), document.createTextNode(sector.name));
-      const companies = focusCompanies.filter(company => company.sectorId === sector.id);
+      const companies = MAP_CATALOGUE.filter(company => company.sectorId === sector.id);
       identity.append(name, htmlElement('span', 'sector-return-representatives', companies.slice(0, 2).map(company => company.name).join(' · ')));
       const value = htmlElement('strong', 'sector-return-value', '—');
       const gap = htmlElement('small', 'sector-return-gap');
@@ -282,13 +307,17 @@ function renderSectorSummary() {
     const members = $('[data-home-sector-members]');
     for (const sector of SECTORS) {
       const details = htmlElement('details', 'sector-member-group');
-      details.append(htmlElement('summary', '', sector.name));
+      const companies = MAP_CATALOGUE.filter(company => company.sectorId === sector.id);
+      const listed = companies.filter(company => company.listed).length, privateCount = companies.length - listed;
+      details.append(htmlElement('summary', '', `${sector.name} · 상장 ${listed}개${privateCount ? ` · 비상장 ${privateCount}개` : ''}`));
       const list = htmlElement('ul', 'sector-member-list');
-      for (const company of focusCompanies.filter(company => company.sectorId === sector.id)) {
+      for (const company of companies) {
         const row = htmlElement('li');
+        row.dataset.homeMember = company.id;
         const name = htmlElement('span', '', company.name);
-        name.append(htmlElement('small', '', company.ticker));
+        name.append(htmlElement('small', '', company.listed ? company.primaryTicker || company.ticker : '비상장 · 시총·수익률 계산 제외'));
         row.append(name);
+        if (company.role) row.append(htmlElement('em', '', company.role));
         list.append(row);
       }
       details.append(list); members.append(details);
@@ -312,10 +341,11 @@ function renderSectorSummary() {
     card.gap.textContent = difference !== null && Math.abs(difference) >= 3 ? difference < 0 ? '대형주 쏠림' : '중소형↑' : '';
     card.gap.hidden = !card.gap.textContent;
     const count = weightMode === 'cap' ? group?.capCount : group?.eqCount;
-    const total = focusCompanies.filter(company => company.sectorId === sector.id).length;
-    card.coverage.textContent = Number.isInteger(count) ? `${count}/${total}개 반영` : '종가 확인 중';
+    const companies = MAP_CATALOGUE.filter(company => company.sectorId === sector.id);
+    const total = companies.filter(company => company.listed).length, privateCount = companies.length - total;
+    card.coverage.textContent = (Number.isInteger(count) ? `${count}/${total}개 반영` : `상장 ${total}개 · 종가 확인 중`) + (privateCount ? ` · 비상장 ${privateCount}개 별도` : '');
   }
-  $('[data-home-summary-meta]').textContent = model ? `핵심 ${focusCompanies.length}개 · ${summaryPeriodName()} · ${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 카드를 누르면 아래 지도에서 보기` : '확정 종가와 기간별 자료를 확인하고 있습니다.';
+  $('[data-home-summary-meta]').textContent = model ? `지도 선정 ${MAP_CATALOGUE.length}개 · 수익률 대상 상장 ${MAP_LISTED_COUNT}개 · ${summaryPeriodName()} · ${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 카드를 누르면 아래 지도에서 보기` : `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 확정 종가와 기간별 자료를 확인하고 있습니다.`;
   const warnings = [...(model?.warnings || [])];
   if (capMissing) warnings.push('* 기간 시작일 시총 미확인 종목 제외');
   if (marketError) warnings.push('최신 수집 파일을 읽지 못해 이전 확인값을 표시합니다.');
@@ -420,7 +450,9 @@ async function loadRipple() {
   const read = async path => {
     const response = await fetch(`${path}?t=${Math.floor(Date.now()/60000)}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error('파급 자료 수신 실패');
-    return validateRippleSnapshot(await response.json());
+    const value = validateRippleSnapshot(await response.json());
+    if (!rippleMatchesSelection(value)) throw new Error('현재 선정표와 파급 대상이 다릅니다.');
+    return value;
   };
   try {
     let value;
@@ -439,7 +471,7 @@ function renderMapStatus(model, matchingCatalog, sizedItems) {
   const count = coverage?.catalogCount ?? MAP_CATALOGUE.length;
   const listed = coverage?.listedCompanyCount ?? MAP_LISTED_COUNT;
   const unlisted = coverage?.unlistedCompanyCount ?? MAP_PRIVATE_COUNT;
-  const universe = `전체 ${count} · 상장 ${listed} · 비상장 ${unlisted}`;
+  const universe = `지도 선정 ${count} · 상장 ${listed} · 비상장 ${unlisted}`;
   const reflected = coverage?.renderableCount ?? model?.companies?.length ?? 0;
   $('[data-map-coverage]').textContent = model
     ? `${universe} · 실제 반영 ${reflected} · 시총 미확보 ${coverage?.missingCap || 0} · 환율 미확보 ${coverage?.missingFx || 0} · 종가 미확보 ${coverage?.missingPrice || 0} · 코드 미연결 ${coverage?.unmappedCompanyCount || 0}`
@@ -487,8 +519,8 @@ function renderEmptyState(model, matchingCatalog, sizedItems) {
     title = '조건에 맞는 기업이 없어요';
     message = '검색어를 바꾸거나 조회 조건을 초기화해 보세요.';
   } else if (matchingCatalog.every(company => !company.listed)) {
-    title = '비상장 기업은 주가 지도에서 제외해요';
-    message = `${matchingCatalog.length}개 비상장 기업의 이름과 제외 사유를 위의 수집 상태에서 확인할 수 있습니다.`;
+    title = '비상장 기업은 별도 명단으로 표시해요';
+    message = `${matchingCatalog.length}개 비상장 기업의 이름과 역할을 위의 AI 모델 명단에서 확인할 수 있습니다. 공개 시총·종가가 없어 면적과 수익률 계산에서 제외합니다.`;
   } else if (matchingCatalog.every(company => !company.listed || company.unmappedReason)) {
     title = '시세 종목코드가 연결되지 않았어요';
     message = '기업 이름과 코드 미연결 사유를 위의 수집 상태에서 확인할 수 있습니다.';
@@ -511,6 +543,7 @@ function render() {
   renderRipple();
   const model = actualMapModel();
   const matchingCatalog = filterMapCompanies(MAP_CATALOGUE);
+  renderPrivateCompanies(matchingCatalog);
   const sizedItems = filterMapCompanies(model?.companies || []).filter(company => Number.isFinite(company.capUSD) && company.capUSD > 0 && Number.isFinite(company.cap) && company.cap > 0);
   currentItems = state.view === 'bubble' ? sizedItems.filter(company => Number.isFinite(getReturn(company, state.period))) : sizedItems;
   if (!currentItems.some(company => company.id === state.selected)) state.selected = null;

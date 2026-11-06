@@ -395,3 +395,27 @@
   .map-zoom{min-height:44px;padding:8px 12px;font-size:10px}
   .chart-footer #chart-hint{flex-basis:100%;line-height:1.7}
 }
+
+/* Selected private model makers are a named roster, never market-cap tiles. */
+.map-private-roster{margin:12px 21px 3px;padding:12px;border:1px solid #3b3e54;border-radius:8px;background:#111b27}
+.map-private-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.map-private-heading h2{margin:0;color:#cfbadf;font-size:11px;font-weight:600}
+.map-private-heading p{margin:0;color:#8598ad;font-size:9px;line-height:1.7}
+.map-private-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.map-private-company{min-width:0;border:1px solid #333d4d;border-radius:6px;background:#16212f;padding:11px 12px}
+.map-private-company h3{margin:0;color:#e0dbea;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.map-private-role{margin:5px 0;color:#b4c4d4;font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+.map-private-country{color:#8097ad;font-size:9px;line-height:1.6}
+.map-private-status{display:block;margin-top:5px;color:#8f9eae;font-size:9px;line-height:1.6}
+.sector-methodology a{color:#a9d4f4;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+@media(max-width:720px){
+  .map-private-roster{margin:10px 13px 3px;padding:10px}
+  .map-private-heading{gap:4px;margin-bottom:8px}
+  .map-private-heading h2{font-size:10px}
+  .map-private-heading p{font-size:8px}
+  .map-private-grid{gap:6px}
+  .map-private-company{padding:9px 8px}
+  .map-private-company h3{font-size:11px}
+  .map-private-role{font-size:9px}
+  .map-private-country,.map-private-status{font-size:8px}
+}

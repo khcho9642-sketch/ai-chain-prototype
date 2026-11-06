@@ -12,6 +12,18 @@ const sectorOrder = new Map(SECTORS.map((sector, index) => [sector.id, index + 1
 const marketNames = { KR: '한국', US: '미국', ETC: '기타' }
 const formatters = new Map()
 
+export function rippleSelectionKey(companies = focusCompanies) {
+  return JSON.stringify(companies.map(company => [company.ticker, company.sectorId, company.name])
+    .sort((a, b) => a[0].localeCompare(b[0])))
+}
+
+export function rippleMatchesSelection(value, companies = focusCompanies) {
+  if (value?.selectionKey !== rippleSelectionKey(companies) || value?.coverage?.targetCompanies !== companies.length) return false
+  const approved = new Map(companies.map(company => [company.ticker, company.sectorId]))
+  return (value.ripples || []).every(ripple => [ripple.trigger, ...ripple.upstream, ...ripple.downstream]
+    .every(company => approved.get(company.ticker) === company.sectorId))
+}
+
 function milliseconds(value) {
   const actual = typeof value === 'function' ? value() : value
   const result = actual instanceof Date ? actual.getTime() : typeof actual === 'string' ? Date.parse(actual) : Number(actual)
@@ -122,9 +134,9 @@ function node(company, series, observation, sync = null) {
 
 function label(market, date) { return marketNames[market] + ' ' + date.slice(5).replace('-', '.') + ' 종가' }
 
-export function createUnavailableRippleSnapshot({ sourceSnapshotGeneratedAt = null, now = Date.now(), companyCount = focusCompanies.length, reason = 'insufficient-closed-history' } = {}) {
+export function createUnavailableRippleSnapshot({ sourceSnapshotGeneratedAt = null, now = Date.now(), companyCount = focusCompanies.length, selectionKey = rippleSelectionKey(), reason = 'insufficient-closed-history' } = {}) {
   return validateRippleSnapshot({ schemaVersion: 1, generatedAt: new Date(milliseconds(now)).toISOString(),
-    sourceSnapshotGeneratedAt, source: 'Yahoo Finance', priceBasis: 'previous-completed-session', ...RIPPLE_RULES,
+    sourceSnapshotGeneratedAt, selectionKey, source: 'Yahoo Finance', priceBasis: 'previous-completed-session', ...RIPPLE_RULES,
     status: 'unavailable', reason, triggers: [], ripples: [],
     coverage: { targetCompanies: companyCount, usableCompanies: 0, unavailable: [], legacySnapshot: true,
       calendarMethod: 'observed-equity-session-union', sampleDenominator: 'paired-observed-event-sessions' }, notes: [RIPPLE_NOTE] })
@@ -133,7 +145,7 @@ export function createUnavailableRippleSnapshot({ sourceSnapshotGeneratedAt = nu
 export function buildRippleSnapshot({ marketSnapshot, companies = focusCompanies, now = Date.now() } = {}) {
   const nowMs = milliseconds(now)
   if (marketSnapshot && Array.isArray(marketSnapshot.quotes) && !marketSnapshot.quotes.length && !timestamp(marketSnapshot.generatedAt)) {
-    return createUnavailableRippleSnapshot({ now: nowMs, companyCount: companies?.length || 0 })
+    return createUnavailableRippleSnapshot({ now: nowMs, companyCount: companies?.length || 0, selectionKey: rippleSelectionKey(companies) })
   }
   if (!marketSnapshot || !Array.isArray(marketSnapshot.quotes) || !timestamp(marketSnapshot.generatedAt)
     || Date.parse(marketSnapshot.generatedAt) > nowMs + 300000) throw new Error('파급 계산에 유효한 종가 스냅샷이 필요합니다.')
@@ -190,6 +202,7 @@ export function buildRippleSnapshot({ marketSnapshot, companies = focusCompanies
   }
   return validateRippleSnapshot({
     schemaVersion: 1, generatedAt: new Date(nowMs).toISOString(), sourceSnapshotGeneratedAt: marketSnapshot.generatedAt,
+    selectionKey: rippleSelectionKey(companies),
     source: 'Yahoo Finance', priceBasis: 'previous-completed-session', ...RIPPLE_RULES,
     status: !usable.length ? 'unavailable' : unavailable.length ? 'partial' : 'ok',
     reason: !usable.length ? 'insufficient-closed-history' : !triggers.length ? 'no-large-moves' : null,
