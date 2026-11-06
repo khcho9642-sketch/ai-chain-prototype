@@ -40,15 +40,22 @@ export function parseCustomsXml(xml, code, start, end) {
   const entries = response.body?.items?.item
   const rows = entries ? (Array.isArray(entries) ? entries : [entries]) : []
   const periods = new Map()
+  const seen = new Set()
   for (const row of rows) {
     const year = String(row.year ?? '').trim()
     if (/^(총계|합계|총 계|합 계)$/.test(year)) continue
     const match = /^(\d{4})\.(0[1-9]|1[0-2])$/.exec(year)
     const period = match ? match[1] + '-' + match[2] : ''
-    if (String(row.hsCode).trim() !== code) throw new Error('CUSTOMS_HS_MISMATCH')
+    const itemCode = String(row.hsCode).trim()
+    if (!/^\d{10}$/.test(itemCode) || !itemCode.startsWith(code)) throw new Error('CUSTOMS_HS_MISMATCH')
     if (!period) throw new Error('CUSTOMS_PERIOD_FORMAT')
-    if (period < start || period > end || periods.has(period)) throw new Error('CUSTOMS_PERIOD_RANGE')
-    periods.set(period, { period, usd: amount(row.expDlr), kg: amount(row.expWgt) })
+    const identity = period + '/' + itemCode
+    if (period < start || period > end || seen.has(identity)) throw new Error('CUSTOMS_PERIOD_RANGE')
+    seen.add(identity)
+    const total = periods.get(period) ?? { period, usd: 0, kg: 0 }
+    total.usd += amount(row.expDlr)
+    total.kg += amount(row.expWgt)
+    periods.set(period, total)
   }
   if (periods.size !== periodsBetween(start, end).length) throw new Error('Incomplete customs monthly response')
   return periods

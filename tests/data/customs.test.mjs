@@ -5,7 +5,7 @@ import { validateIndustry } from '../../assets/industry-core.js'
 
 const now = new Date('2026-11-06T00:00:00Z')
 const fixture = (rows, resultCode = '00') => `<?xml version="1.0"?><response><header><resultCode>${resultCode}</resultCode><resultMsg>NORMAL SERVICE</resultMsg></header><body><items>${rows.join('')}</items></body></response>`
-const row = (code, year, usd = '100', kg = '5') => `<item><hsCode>${code}</hsCode><year>${year}</year><expDlr>${usd}</expDlr><expWgt>${kg}</expWgt></item>`
+const row = (code, year, usd = '100', kg = '5') => `<item><hsCode>${code.length === 6 ? code + '0000' : code}</hsCode><year>${year}</year><expDlr>${usd}</expDlr><expWgt>${kg}</expWgt></item>`
 const fetchImpl = async url => {
   assert.equal(url.hostname, 'apis.data.go.kr')
   assert.equal(url.searchParams.get('serviceKey'), 'secret+/=')
@@ -23,6 +23,13 @@ test('Customs excludes totals, rejects duplicate periods, missing rows and diffe
   assert.deepEqual(parseCustomsXml(fixture([month, row('-', '총계')]), '854232', '2026-09', '2026-09').get('2026-09'), { period: '2026-09', usd: 1234, kg: 12.5 })
   for (const xml of [fixture([month, month]), fixture([month.replace('854232', '854231')]), fixture([month.replace('1,234', '-')]), fixture([month], '30'), fixture([]), '<!DOCTYPE a>' + fixture([month]), fixture([month]).replace('</item>', '')]) assert.throws(() => parseCustomsXml(xml, '854232', '2026-09', '2026-09'))
   assert.throws(() => parseCustomsXml(fixture([month]), '854232', '2026-08', '2026-09'))
+})
+
+test('Customs sums actual HSK10 leaf rows once per month and rejects simultaneous parent totals', () => {
+  const leaves = [row('8542321010', '2026.09', '10', '2'), row('8542321020', '2026.09', '20', '3')]
+  assert.deepEqual(parseCustomsXml(fixture([...leaves, row('-', '총계', '30', '5')]), '854232', '2026-09', '2026-09').get('2026-09'), { period: '2026-09', usd: 30, kg: 5 })
+  const parent = '<item><hsCode>854232</hsCode><year>2026.09</year><expDlr>30</expDlr><expWgt>5</expWgt></item>'
+  assert.throws(() => parseCustomsXml(fixture([...leaves, parent]), '854232', '2026-09', '2026-09'))
 })
 
 test('Customs collects 36 months in annual windows, sums exactly seven transformer codes and retains units', async () => {
