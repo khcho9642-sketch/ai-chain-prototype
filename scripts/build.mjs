@@ -14,6 +14,7 @@ import { validateTodayPersonas, TODAY_PERSONAS_MAX_BYTES } from '../assets/today
 import { verifyTodayPersonaHashes } from './community/today-persona.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
 import { buildRippleSnapshot, validateRippleSnapshot } from '../assets/ripple-core.js'
+import { buildDebatePublication } from './deployment/debate-publication.mjs'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
 
@@ -78,6 +79,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
   await Promise.all(publicSnapshotFiles.filter(name => name !== 'ripple.json').map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
   await writeFile(join(output, 'data', 'ripple.json'), JSON.stringify(ripple) + '\n')
+  await buildDebatePublication(source, output)
   if (assets.some(entry => entry.name === 'community.js')) await writeFile(join(output, 'assets', 'community-runtime.js'), `export const communityApiOrigin = ${JSON.stringify(communityOrigin)}\n`)
   return output
 }

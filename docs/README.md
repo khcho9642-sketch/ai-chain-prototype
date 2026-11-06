@@ -47,3 +47,5 @@
 
 - [추천별 AI 교차 의견: 원문 연결·실제 응답 발행](community/today-discussion.md)
 - [AI 페르소나 분석과 티키타카: 원문 보존·3단계 실제 작성](community/today-personas.md)
+
+- [오늘의 토론](community/today-debate.md): 별도 #debate 화면, 같은 자료의 AI 논리 토론, 발행 검증과 서버 논리 투표.
