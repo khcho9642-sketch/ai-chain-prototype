@@ -1,5 +1,6 @@
 import { renderFlowChart } from './sector-compare-chart.js';
 import { companyHrefForTicker } from './company-links.js';
+import { mountEventPins } from './sector-event-pins.js';
 
 const periods = new Map([
   [30, '1개월'], [90, '3개월'], [180, '6개월'], [365, '1년'], [730, '2년'], [1095, '3년'],
@@ -116,6 +117,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
           </div>
           <div data-field="metric" class="scv-readout"></div>
           <div class="scv-plot" data-field="plot"></div>
+          <section data-field="eventPins" class="scv-events" aria-label="주요 사건" hidden></section>
           <div class="scv-chart-foot"><span>시작일 0% · 현지 통화 종가 기준</span><span>날짜 탐색 ← →</span></div>
         </section>
         <section class="scv-panel scv-rail">
@@ -148,6 +150,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </dialog></div>`;
 
   const ui = Object.fromEntries([...host.querySelectorAll('[data-field]')].map(el => [el.dataset.field, el]));
+  const eventPins = mountEventPins(ui.eventPins);
   const drawer = host.querySelector('dialog');
   const choose = host.querySelector('[data-action="choose"]');
   const apply = host.querySelector('[data-action="apply"]');
@@ -265,8 +268,10 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       (!sectorMode && (stockScope === 'all' || stockScope === 'custom') ? '<small class="scv-stock-sector">' + escape(row.sectorName) + '</small>' : '') +
       '</span></span><b class="' + tone(row.rate) + '">' + pct(row.rate) +
       '</b><span class="scv-drawdown">' + pct(row.belowPeak) + '</span></button>').join('');
+    eventPins.update(sectorMode ? model : null, sectorId);
     renderFlowChart(ui.plot, {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
+      onLayout: sectorMode ? eventPins.layout : undefined,
       lines: rows.map(row => ({ id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused })),
     });
 

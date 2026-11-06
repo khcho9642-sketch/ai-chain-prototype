@@ -1,6 +1,6 @@
 const flowChartDisposers = new WeakMap();
 
-export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, showPeak = true } = {}) {
+export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, showPeak = true } = {}) {
   flowChartDisposers.get(container)?.();
   container.replaceChildren();
 
@@ -130,6 +130,7 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
     const compact = width < 540;
     height = compact ? 245 : Math.max(280, Math.min(365, width * .42));
     top = 15; bottom = height - 29; left = compact ? 39 : 49; right = width - (compact ? 12 : 21);
+    onLayout?.({ left, right, width });
     const bounds = { min: 0, max: 0 };
     for (const line of plotted) {
       for (let i = 0; i <= last; i++) {
