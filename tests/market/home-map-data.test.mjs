@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { COMPANIES, getReturn } from '../../assets/home-map-core.js'
-import { buildActualMap } from '../../assets/home-map-data.js'
+import { getReturn } from '../../assets/home-map-core.js'
+import { buildActualMap, buildMapCatalogue } from '../../assets/home-map-data.js'
 
 const now = Date.parse('2026-11-10T12:00:00Z')
 const captured = '2026-11-06T23:00:00Z'
@@ -21,8 +21,8 @@ const near = (value, expected) => assert.ok(Math.abs(value - expected) < 1e-8, `
 
 
 test('both map views receive actual capitalization and returns rather than catalog demonstration values', () => {
-  const identity = company('AAA',{country:'TW',sector:'파운드리·패키징',returns:{'1d':99,'1w':99}})
-  const actual = run([quote()],{companies:[identity]})
+  const identity = company('AAA',{country:'TW',sector:'파운드리·패키징',mappingStatus:'candidate',sourceStatus:'review-draft',returns:{'1d':99,'1w':99}})
+  const actual = run([quote('AAA',undefined,undefined,{identityStatus:'unverified'})],{companies:[identity]})
   const row = actual.companies[0]
   assert.equal(row.capUSD,1e12)
   assert.equal(row.cap,1000)
@@ -35,6 +35,9 @@ test('both map views receive actual capitalization and returns rather than catal
   assert.equal(row.country,'TW')
   assert.equal(row.sector,'파운드리·패키징')
   assert.equal(row.id,'aaa')
+  assert.equal(row.identityStatus,'unverified')
+  assert.equal(row.mappingStatus,'candidate')
+  assert.equal(row.sourceStatus,'review-draft')
   assert.deepEqual(actual.dates,['2026-11-06'])
   assert.equal(actual.coverage.catalogCount,1)
   assert.equal(actual.coverage.renderableCount,1)
@@ -190,10 +193,79 @@ test('stale actual values retain original dates and timestamps instead of becomi
 
 test('default catalog is retained for coverage while empty snapshots cannot display demonstration tiles', () => {
   const empty=buildActualMap({snapshot:null,now})
-  assert.equal(empty.coverage.catalogCount,COMPANIES.length)
+  assert.equal(empty.coverage.catalogCount,586)
+  assert.equal(empty.coverage.companyCount,586)
+  assert.equal(empty.coverage.listedCompanyCount,537)
+  assert.equal(empty.coverage.unlistedCompanyCount,49)
+  assert.equal(empty.coverage.unmappedPrimaryCompanyCount,12)
+  assert.equal(empty.coverage.unmappedCompanyCount,11)
   assert.equal(empty.coverage.renderableCount,0)
   assert.equal(empty.companies.length,0)
-  assert.equal(empty.coverage.exclusions.length,COMPANIES.length)
+  assert.equal(empty.coverage.exclusions.length,586)
+  assert.equal(empty.coverage.exclusions.filter(item=>item.kind==='unlisted').length,49)
   assert.equal(empty.status,'unavailable')
   assert.throws(()=>buildActualMap({period:'made-up',now}),/수익률 기간/)
+})
+
+test('the full issuer master retains every company once with normalized country and primary sector metadata', () => {
+  const catalogue=buildMapCatalogue()
+  assert.equal(catalogue.length,586)
+  assert.equal(new Set(catalogue.map(company=>company.id)).size,586)
+  assert.equal(catalogue.filter(company=>company.listed).length,537)
+  assert.equal(catalogue.filter(company=>!company.listed).length,49)
+  assert.ok(catalogue.every(company=>company.countryCodes.includes(company.country) && company.countryName && company.sector))
+  assert.ok(catalogue.every(company=>company.mappingStatus==='candidate' && company.sourceStatus==='review-draft'))
+  assert.ok(catalogue.every(company=>!Object.hasOwn(company,'cap') && !Object.hasOwn(company,'day') && !Object.hasOwn(company,'returns')))
+  const tsmc=catalogue.find(company=>company.candidateTickers.includes('TSM'))
+  assert.ok(tsmc.candidateTickers.includes('2330.TW'))
+  const preliminary=buildMapCatalogue(snapshot([quote('TSM')])).find(company=>company.id===tsmc.id)
+  assert.equal(preliminary.ticker,'TSM')
+  assert.equal(preliminary.primaryTicker,tsmc.primaryTicker)
+  assert.equal(buildMapCatalogue({quotes:{invalid:true}}).length,586)
+})
+
+test('primary and alternate listings produce a single issuer cap, preferring the usable primary', () => {
+  const issuer=company('AAA',{id:'C9999',listed:true,primaryTicker:'AAA',countryName:'한국·미국',countryCodes:['KR','US'],
+    listings:[{ticker:'AAA',primary:true},{ticker:'BBB',primary:false}]})
+  const primary=quote('AAA',undefined,undefined,{marketCap:1e12}),alternate=quote('BBB',undefined,undefined,{marketCap:2e12})
+  const data=run([alternate,primary],{companies:[issuer]})
+  assert.equal(data.companies.length,1)
+  assert.equal(data.companies[0].ticker,'AAA')
+  assert.equal(data.companies[0].capUSD,1e12)
+  assert.equal(data.companies[0].alternateListing,false)
+  assert.deepEqual(data.companies[0].countryCodes,['KR','US'])
+  assert.equal(data.coverage.companyCount,1)
+  assert.equal(data.coverage.renderableCount,1)
+})
+
+test('alternate listing fallback validates the entire same-listing cap, price and FX combination', () => {
+  const issuer=company('AAA',{listed:true,primaryTicker:'AAA',listings:[{ticker:'AAA',primary:true},{ticker:'BBB',primary:false}]})
+  for(const missing of [{marketCap:null},{bars:[]},{marketCapCurrency:'KRW'}]){
+    const primary=quote('AAA',undefined,undefined,missing),alternate=quote('BBB',undefined,undefined,{marketCap:2e12})
+    const data=run([primary,alternate],{companies:[issuer]})
+    assert.equal(data.companies.length,1)
+    assert.equal(data.companies[0].ticker,'BBB')
+    assert.equal(data.companies[0].primaryTicker,'AAA')
+    assert.equal(data.companies[0].capUSD,2e12)
+    assert.equal(data.companies[0].alternateListing,true)
+  }
+  const split=run([quote('AAA',undefined,undefined,{marketCap:null}),quote('BBB',undefined,undefined,{bars:[]})],{companies:[issuer]})
+  assert.equal(split.companies.length,0)
+  assert.match(split.coverage.exclusions[0].reason,/동일 상장/)
+})
+
+test('private and unresolved issuers stay visible in coverage with explicit exclusion reasons', () => {
+  const companies=[company('AAA',{id:'private',listed:false,listings:[],primaryTicker:null}),
+    company('UNMAPPED',{id:'unmapped',ticker:null,listed:true,listings:[],primaryTicker:null,unmappedReason:'거래소 연결 미확인'}),
+    company('BBB',{id:'missing',listed:true})]
+  const data=run([],{companies})
+  assert.equal(data.coverage.companyCount,3)
+  assert.equal(data.coverage.listedCompanyCount,2)
+  assert.equal(data.coverage.unlistedCompanyCount,1)
+  assert.equal(data.coverage.unmappedCompanyCount,1)
+  assert.equal(data.coverage.missingCap,1)
+  assert.equal(data.coverage.missingPrice,1)
+  assert.equal(data.coverage.exclusions.find(item=>item.id==='private').reason,'비상장 기업')
+  assert.equal(data.coverage.exclusions.find(item=>item.id==='unmapped').reason,'거래소 연결 미확인')
+  assert.equal(data.companies.length,0)
 })

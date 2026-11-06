@@ -1,10 +1,13 @@
-import {SECTORS,COMPANIES,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map-core.js';
+import {SECTORS,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map-core.js';
 import { instruments } from './instruments.js';
 import { companyHrefForTicker } from './company-links.js';
 import { focusCompanies } from './home-focus.js';
 import { buildSectorReturns } from './home-performance.js';
-import { buildActualMap } from './home-map-data.js';
+import { buildActualMap, buildMapCatalogue } from './home-map-data.js';
 import { validateRippleSnapshot } from './ripple-core.js';
+const MAP_CATALOGUE = buildMapCatalogue();
+const MAP_LISTED_COUNT = MAP_CATALOGUE.filter(company => company.listed).length;
+const MAP_PRIVATE_COUNT = MAP_CATALOGUE.length - MAP_LISTED_COUNT;
 const host = document.getElementById('v-home');
 const root = host.attachShadow({mode:'open'});
 const stylesheet = document.createElement('link');
@@ -38,11 +41,11 @@ content.innerHTML = `<div class="map-main">
           <button data-view="bubble" aria-pressed="false"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6" cy="6" r="4"/><circle cx="12.5" cy="11.5" r="3.5"/><circle cx="4" cy="14" r="2"/></svg>버블</button>
         </div>
         <div class="search-wrap"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input id="search" type="search" aria-label="기업명 또는 티커 검색" placeholder="기업명 · 티커 검색" autocomplete="off"><kbd>/</kbd></div>
-        <div class="country-wrap"><label for="country">국가</label><select id="country" aria-label="국가"><option value="all">전체 국가</option><option value="US">미국</option><option value="KR">한국</option><option value="TW">대만</option><option value="JP">일본</option><option value="CN">중국</option><option value="EU">유럽</option><option value="SG">싱가포르</option></select></div>
+        <div class="country-wrap"><label for="country">국가</label><select id="country" aria-label="국가"><option value="all">전체 국가</option></select></div>
         <div class="period-switch" role="group" aria-label="수익률 기간"><button data-period="1d" class="active" aria-pressed="true">1일</button><button data-period="1w" aria-pressed="false">1주</button><button data-period="1m" aria-pressed="false">1개월</button><button data-period="1y" aria-pressed="false">1년</button></div>
       </div>
       <div class="sector-row"><div class="sector-chips" id="sector-chips" role="group" aria-label="분야 선택"></div><button class="reset" id="reset" aria-label="조회 조건 초기화"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 6a6 6 0 1 1-.2 5M3 2v4h4"/></svg><span>초기화</span></button></div>
-      <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>지도 대상 ${COMPANIES.length} · 수집 확인 중</span><span>표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
+      <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>전체 ${MAP_CATALOGUE.length} · 상장 ${MAP_LISTED_COUNT} · 비상장 ${MAP_PRIVATE_COUNT} · 수집 확인 중</span><span>표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
       <p class="map-data-status" id="map-data-status" role="status">시총과 확정 종가를 확인하고 있습니다.</p>
       <details class="map-data-details" id="map-data-details" hidden><summary>미반영·수집 상태 보기</summary><ul id="map-exclusions"></ul></details>
       <div class="chart-meta"><div class="breadcrumb"><button id="overview">전체 산업</button><span id="crumb-sector"></span></div><div id="chart-explainer">크기: <b>최근 관측 시총 USD</b><span>·</span>색상: <b>확정 종가 등락률</b></div></div>
@@ -52,14 +55,14 @@ content.innerHTML = `<div class="map-main">
         <div class="empty-state" id="empty-state" hidden><div class="empty-icon">⌕</div><h2>시총과 종가를 확인하고 있어요</h2><p>확인된 자료가 준비되면 지도에 표시합니다.</p><button id="empty-reset">조건 초기화</button></div>
         <div class="tooltip" id="tooltip" role="status" hidden></div>
       </div>
-      <div class="chart-footer"><span id="chart-hint"><span class="hint-dot"></span>분야 이름을 누르면 확대 · 기업을 누르면 정보 확인</span><div class="return-legend" id="return-legend"><span>−3%</span><div class="gradient"></div><span>0</span><div class="gradient positive-gradient"></div><span>+3%</span><span class="missing-legend">회색 — 미확보</span></div><span id="bubble-legend" hidden>가로: 분야 · 세로·색상: 확정 종가 등락률 · 면적: 최근 관측 시총 USD</span></div>
+      <div class="chart-footer"><span id="chart-hint"><span class="hint-dot"></span>분야 확대·기업 검색으로 작은 기업 찾기 · 기업을 누르면 정보 확인</span><button type="button" class="map-zoom" id="map-zoom" aria-pressed="false">지도 확대</button><div class="return-legend" id="return-legend"><span>−3%</span><div class="gradient"></div><span>0</span><div class="gradient positive-gradient"></div><span>+3%</span><span class="missing-legend">회색 — 미확보</span></div><span id="bubble-legend" hidden>가로: 분야 · 세로·색상: 확정 종가 등락률 · 면적: 최근 관측 시총 USD</span></div>
       <aside class="selection" id="selection" aria-label="선택 기업 정보" hidden></aside>
     </section>
-    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 시총·환율과 종가의 기준일은 기업별로 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 지도 대상 ${COMPANIES.length}개</span></footer>
+    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 비상장은 이름과 제외 사유를 표시하며 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 전체 ${MAP_CATALOGUE.length}개</span></footer>
 </div>`;
 root.append(content);
 const $=s=>root.querySelector(s), $$=s=>[...root.querySelectorAll(s)];
-const state={view:new URLSearchParams(location.search).get('view')==='bubble'?'bubble':'heatmap',country:'all',sector:'all',period:'1d',query:'',selected:null};
+const state={view:new URLSearchParams(location.search).get('view')==='bubble'?'bubble':'heatmap',country:'all',sector:'all',period:'1d',query:'',selected:null,zoom:1};
 let marketSnapshot = window.aiChainSnapshot || null;
 let marketError = '';
 let weightMode = 'eq';
@@ -67,7 +70,9 @@ let summaryPeriod = '3mo';
 try { if (localStorage.getItem('ai-chain.home-weight.v1') === 'cap') weightMode = 'cap'; } catch {}
 let rippleSnapshot = null, rippleError = '', rippleBusy = false, selectedRipple = null, rippleRequest = 0;
 const sectorCardNodes = new Map();
-const COUNTRY_NAMES={US:'미국',KR:'한국',TW:'대만',JP:'일본',CN:'중국',NL:'네덜란드',DE:'독일',FR:'프랑스',GB:'영국',IE:'아일랜드',CH:'스위스',HK:'홍콩',SG:'싱가포르'};
+const COUNTRY_NAMES={US:'미국',KR:'한국',TW:'대만',JP:'일본',CN:'중국',NL:'네덜란드',DE:'독일',FR:'프랑스',GB:'영국',IE:'아일랜드',CH:'스위스',HK:'홍콩',SG:'싱가포르',MY:'말레이시아',BE:'벨기에',IL:'이스라엘',IN:'인도',TH:'태국',AU:'호주',AT:'오스트리아',CA:'캐나다',FI:'핀란드',DK:'덴마크',BR:'브라질',SE:'스웨덴',ES:'스페인',IT:'이탈리아',ZA:'남아프리카공화국',NZ:'뉴질랜드',BH:'바레인',VN:'베트남',SA:'사우디아라비아',ID:'인도네시아',QA:'카타르',TR:'튀르키예',PH:'필리핀',RU:'러시아',AE:'아랍에미리트'};
+const EUROPE_COUNTRIES = new Set(['NL','DE','FR','GB','IE','CH','BE','AT','FI','DK','SE','ES','IT']);
+const SEARCH_NAMES = new Map(instruments.map(instrument => [instrument.symbol, instrument.name]));
 const NS='http://www.w3.org/2000/svg';
 let currentItems=[],resizeFrame=0;
 const sign=v=>v==null?'—':`${v>0?'+':''}${v.toFixed(2)}%`;
@@ -86,7 +91,7 @@ function actualMapModel() {
     const minute = Math.floor(Date.now() / 60000);
     let cached = mapModels.get(marketSnapshot);
     if (!cached || cached.minute !== minute) { cached = { minute, periods: new Map() }; mapModels.set(marketSnapshot, cached); }
-    if (!cached.periods.has(state.period)) cached.periods.set(state.period, buildActualMap({ snapshot: marketSnapshot, period: state.period }));
+    if (!cached.periods.has(state.period)) cached.periods.set(state.period, buildActualMap({ snapshot: marketSnapshot, companies: MAP_CATALOGUE, period: state.period }));
     mapBuildError = '';
     return cached.periods.get(state.period);
   } catch {
@@ -95,9 +100,33 @@ function actualMapModel() {
   }
 }
 function filterMapCompanies(companies) {
-  let result = filterCompanies(companies, { country: state.country === 'EU' ? 'all' : state.country, sector: state.sector, query: state.query });
-  if (state.country === 'EU') result = result.filter(company => ['NL','DE','FR','GB','IE','CH'].includes(company.country));
+  let result = filterCompanies(companies, { country: 'all', sector: state.sector, query: '' });
+  if (state.country !== 'all') result = result.filter(company => {
+    const countries = company.countryCodes?.length ? company.countryCodes : [company.country];
+    return countries.some(country => state.country === 'EU' ? EUROPE_COUNTRIES.has(country) : country === state.country);
+  });
+  const normalize = value => String(value ?? '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  const terms = state.query.trim().split(/\s+/).filter(Boolean).map(normalize);
+  if (terms.length) result = result.filter(company => {
+    const tickers = [company.ticker, company.primaryTicker, ...(company.candidateTickers || [])];
+    const searchable = normalize([company.id, company.name, company.englishName, company.ticker, company.primaryTicker, company.sector, company.countryName,
+      ...tickers.map(ticker => SEARCH_NAMES.get(ticker)),
+      ...(company.aliases || []), ...(company.candidateTickers || []), ...(company.listings || []).map(listing => listing.ticker)].join(' '));
+    return terms.every(term => searchable.includes(term));
+  });
   return result;
+}
+function renderCountryOptions() {
+  const names = new Map();
+  for (const company of MAP_CATALOGUE) for (const country of company.countryCodes?.length ? company.countryCodes : [company.country]) {
+    if (country) names.set(country, COUNTRY_NAMES[country] || company.countryName || country);
+  }
+  const select = $('#country');
+  select.replaceChildren();
+  for (const [value, label] of [['all', '전체 국가'], ...[...names].sort((a, b) => a[1].localeCompare(b[1], 'ko')), ['EU', '유럽 전체']]) {
+    const option = document.createElement('option'); option.value = value; option.textContent = label; select.append(option);
+  }
+  select.value = state.country;
 }
 function observedLabel(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(value)) return '미확보';
@@ -114,6 +143,8 @@ function provenanceLines(company) {
   if (getReturn(company, state.period) == null) lines.push(`${periodName()} 등락률 미확보 · ${company.returnReasons?.[state.period] || '비교할 확정 종가가 부족합니다.'}`);
   if (company.stale || company.status === 'stale' || company.capStatus === 'stale') lines.push('이전 수집값 · 최신 자료 수집 상태를 확인해 주세요.');
   if (company.error) lines.push(`수집 상태 · ${company.error}`);
+  if (company.capError) lines.push(`시총 수집 상태 · ${company.capError}`);
+  if (company.identityStatus === 'unverified') lines.push('종목 연결 검토 중 · 기업과 시세 종목의 연결을 확인하고 있습니다.');
   if (marketError) lines.push('최신 파일 조회 실패 · 마지막으로 확인한 자료를 표시합니다.');
   return lines;
 }
@@ -182,7 +213,7 @@ function renderSelection(){
 function showTooltip(c,e){if(matchMedia('(max-width:720px)').matches)return;const tooltip=$('#tooltip'),r=getReturn(c,state.period);tooltip.replaceChildren();const title=document.createElement('strong');title.textContent=`${c.ticker} · ${c.name}`;const sub=document.createElement('small');sub.textContent=`${c.sector} / ${COUNTRY_NAMES[c.country]??c.country}`;const vals=document.createElement('div');vals.className='tooltip-values';const cap=document.createElement('span');cap.textContent=`최근 시총 ${capText(c.cap)} USD`;const val=document.createElement('b');val.className=pctClass(r);val.textContent=`${periodName()} ${sign(r)}`;vals.append(cap,val);tooltip.append(title,sub,vals);appendProvenance(tooltip,c,'tooltip-provenance');tooltip.hidden=false;const bounds=$('#chart-stage').getBoundingClientRect();const x=Math.max(8,Math.min(e.clientX-bounds.left+15,bounds.width-tooltip.offsetWidth-8)),y=Math.max(8,Math.min(e.clientY-bounds.top+15,bounds.height-tooltip.offsetHeight-8));tooltip.style.left=`${x}px`;tooltip.style.top=`${y}px`;}
 function hideTooltip(){$('#tooltip').hidden=true;}
 function wireCompany(el,c){el.dataset.id=c.id;el.dataset.ticker=c.ticker;el.dataset.closeDate=c.closeDate||'';el.dataset.capUsd=String(c.capUSD);el.dataset.return=getReturn(c,state.period)??'';el.setAttribute('aria-label',`${c.name} ${c.ticker}, ${c.sector}, ${periodName()} ${getReturn(c,state.period)==null?'등락률 미확보':sign(getReturn(c,state.period))}, 최근 관측 시가총액 ${capText(c.cap)} USD, 종가 기준 ${c.closeDate||'미확보'}`);el.setAttribute('aria-pressed',String(state.selected===c.id));el.classList.toggle('selected',state.selected===c.id);el.addEventListener('click',()=>selectCompany(c));el.addEventListener('pointermove',e=>showTooltip(c,e));el.addEventListener('pointerleave',hideTooltip);el.addEventListener('blur',hideTooltip);}
-function drawHeatmap(){const host=$('#heatmap'),{width,height}=$('#chart-stage').getBoundingClientRect();host.replaceChildren();if(!width||!height)return;const groups=SECTORS.map(s=>({...s,companies:currentItems.filter(c=>c.sector===s.name)})).filter(s=>s.companies.length);const layouts=treemap(groups,0,0,width,height,s=>s.companies.reduce((sum,c)=>sum+c.cap,0));for(const g of layouts){const group=document.createElement('div');group.className='sector-group';Object.assign(group.style,{left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px'});const innerWidth=Math.max(0,g.w-4),innerHeight=Math.max(0,g.h-4),boxes=treemap(g.data.companies,0,0,innerWidth,innerHeight,c=>c.cap);for(const box of boxes){const c=box.data,r=getReturn(c,state.period),tile=document.createElement('button');tile.type='button';tile.className='tile';Object.assign(tile.style,{left:box.x+'px',top:box.y+'px',width:box.w+'px',height:box.h+'px'});tile.style.setProperty('--tile-color',returnColor(r));wireCompany(tile,c);const available=box.h-(box.y<23?23:0);if(box.w>29&&available>23){const font=Math.max(9,Math.min(29,(box.w-8)/textUnits(labelFor(c)),available/3.7));if(box.w>130&&available>95){const name=document.createElement('span');name.className='company-name';name.textContent=c.name;tile.append(name);}const ticker=document.createElement('span');ticker.className='ticker';ticker.style.fontSize=font+'px';ticker.textContent=labelFor(c);const val=document.createElement('span');val.className='return';val.style.fontSize=Math.max(8,Math.min(18,font*.67))+'px';val.textContent=sign(r);tile.append(ticker,val);if(box.y<23)tile.style.paddingTop='21px';}group.append(tile);}const heading=document.createElement('button');heading.className='sector-heading';heading.title=g.data.name;heading.setAttribute('aria-label',`${g.data.name} 분야 확대`);heading.textContent=g.data.name;const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent=state.sector==='all'?'↗':'↙';heading.append(arrow);heading.addEventListener('click',()=>setSector(state.sector==='all'?g.data.name:'all'));group.append(heading);host.append(group);}host.classList.remove('fade-in');requestAnimationFrame(()=>host.classList.add('fade-in'));}
+function drawHeatmap(){const host=$('#heatmap'),bounds=$('#chart-stage').getBoundingClientRect(),width=bounds.width*state.zoom,height=bounds.height*state.zoom;host.replaceChildren();host.classList.toggle('is-zoomed',state.zoom>1);if(!width||!height)return;const groups=SECTORS.map(s=>({...s,companies:currentItems.filter(c=>c.sector===s.name)})).filter(s=>s.companies.length);const layouts=treemap(groups,0,0,width,height,s=>s.companies.reduce((sum,c)=>sum+c.cap,0));for(const g of layouts){const group=document.createElement('div');group.className='sector-group';Object.assign(group.style,{left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px'});const innerWidth=Math.max(0,g.w-4),innerHeight=Math.max(0,g.h-4),boxes=treemap(g.data.companies,0,0,innerWidth,innerHeight,c=>c.cap);for(const box of boxes){const c=box.data,r=getReturn(c,state.period),tile=document.createElement('button');tile.type='button';tile.className='tile';Object.assign(tile.style,{left:box.x+'px',top:box.y+'px',width:box.w+'px',height:box.h+'px'});tile.style.setProperty('--tile-color',returnColor(r));wireCompany(tile,c);const available=box.h-(box.y<23?23:0);if(box.w>29&&available>23){const font=Math.max(9,Math.min(29,(box.w-8)/textUnits(labelFor(c)),available/3.7));if(box.w>130&&available>95){const name=document.createElement('span');name.className='company-name';name.textContent=c.name;tile.append(name);}const ticker=document.createElement('span');ticker.className='ticker';ticker.style.fontSize=font+'px';ticker.textContent=labelFor(c);const val=document.createElement('span');val.className='return';val.style.fontSize=Math.max(8,Math.min(18,font*.67))+'px';val.textContent=sign(r);tile.append(ticker,val);if(box.y<23)tile.style.paddingTop='21px';}group.append(tile);}const heading=document.createElement('button');heading.className='sector-heading';heading.title=g.data.name;heading.setAttribute('aria-label',`${g.data.name} 분야 확대`);heading.textContent=g.data.name;const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent=state.sector==='all'?'↗':'↙';heading.append(arrow);heading.addEventListener('click',()=>setSector(state.sector==='all'?g.data.name:'all'));group.append(heading);host.append(group);}host.classList.remove('fade-in');requestAnimationFrame(()=>host.classList.add('fade-in'));}
 function drawBubbles(){const stage=$('#chart-stage');if(!stage.clientWidth||!stage.clientHeight)return;const svg=$('#bubble-svg'),axis=$('#fixed-axis'),height=stage.clientHeight,width=Math.max(stage.clientWidth,state.sector==='all'?1040:stage.clientWidth);const layout=bubbleLayout(currentItems,width,height,{period:state.period,sector:state.sector});const p=layout.plotBounds,[min,max]=layout.yDomain;svg.replaceChildren();axis.replaceChildren();svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);axis.setAttribute('viewBox',`0 0 48 ${height}`);const yFor=v=>p.top+(max-v)/(max-min)*p.height;const rawStep=(max-min)/5,magnitude=10**Math.floor(Math.log10(rawStep)),step=([1,2,2.5,5,10].find(v=>v>=rawStep/magnitude)??10)*magnitude;const ticks=[];for(let value=Math.ceil(min/step)*step;value<=max+.0001;value+=step)ticks.push(value);for(const value of ticks){const y=yFor(value),isZero=Math.abs(value)<.001;svg.append(node('line',{x1:p.left,y1:y,x2:p.right,y2:y,stroke:isZero?'#607a91':'#233445','stroke-width':isZero?1:.6}));axis.append(node('text',{x:39,y:y+3,'text-anchor':'end',class:'axis-label'},`${value>0?'+':''}${value.toFixed(Math.abs(value)%1>.01?1:0)}%`));}if(min<0&&max>0&&!ticks.some(v=>Math.abs(v)<.001)){const y=yFor(0);svg.append(node('line',{x1:p.left,y1:y,x2:p.right,y2:y,stroke:'#607a91','stroke-width':1}));}
 for(const center of layout.sectorCenters){svg.append(node('line',{x1:center.x,y1:p.top,x2:center.x,y2:p.bottom,stroke:'#1b2b3b','stroke-width':.6}));const label=node('text',{x:center.x,y:p.bottom+23,fill:center.color,class:'sector-axis-label',tabindex:0,role:'button','aria-label':`${center.sector} 분야 확대`});const parts=center.sector==='클라우드·GPU 컴퓨팅'?['클라우드·','GPU 컴퓨팅']:center.sector==='파운드리·패키징'?['파운드리·','패키징']:center.sector==='반도체 소부장'?['반도체','소부장']:[center.sector];for(let i=0;i<parts.length;i++)label.append(node('tspan',{x:center.x,dy:i?13:0},parts[i]));label.addEventListener('click',()=>setSector(state.sector==='all'?center.sector:'all'));label.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSector(state.sector==='all'?center.sector:'all');}});svg.append(label);}
 for(const b of [...layout.nodes].sort((a,b)=>b.r-a.r)){const color=returnColor(getReturn(b.data,state.period)),g=node('g',{class:'bubble-node',tabindex:0,role:'button'});g.append(node('circle',{cx:b.x,cy:b.y,r:b.r,fill:color,'fill-opacity':.7,stroke:color,'stroke-width':1.2}));if(b.r>=14&&textUnits(labelFor(b.data))*7<=b.r*1.8){const label=node('text',{x:b.x,y:b.y-1,class:'bubble-label','font-size':Math.min(12,Math.max(8,b.r/2.5))},labelFor(b.data));label.style.fontSize=Math.min(12,b.r*1.8/textUnits(labelFor(b.data)))+'px';g.append(label);if(b.r>=21)g.append(node('text',{x:b.x,y:b.y+12,class:'bubble-label bubble-return'},sign(getReturn(b.data,state.period))));}wireCompany(g,b.data);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectCompany(b.data);}});svg.append(g);}svg.classList.remove('fade-in');requestAnimationFrame(()=>svg.classList.add('fade-in'));}
@@ -405,12 +436,14 @@ async function loadRipple() {
 
 function renderMapStatus(model, matchingCatalog, sizedItems) {
   const coverage = model?.coverage;
-  const count = coverage?.catalogCount ?? COMPANIES.length;
+  const count = coverage?.catalogCount ?? MAP_CATALOGUE.length;
+  const listed = coverage?.listedCompanyCount ?? MAP_LISTED_COUNT;
+  const unlisted = coverage?.unlistedCompanyCount ?? MAP_PRIVATE_COUNT;
+  const universe = `전체 ${count} · 상장 ${listed} · 비상장 ${unlisted}`;
   const reflected = coverage?.renderableCount ?? model?.companies?.length ?? 0;
-  const missingSize = (coverage?.missingCap || 0) + (coverage?.missingFx || 0);
   $('[data-map-coverage]').textContent = model
-    ? `지도 대상 ${count} · 반영 ${reflected} · 시총/환율 미확보 ${missingSize}${coverage?.missingPrice ? ` · 종가 미확보 ${coverage.missingPrice}` : ''}`
-    : `지도 대상 ${count} · ${marketError || mapBuildError ? '자료 조회 실패' : '수집 확인 중'}`;
+    ? `${universe} · 실제 반영 ${reflected} · 시총 미확보 ${coverage?.missingCap || 0} · 환율 미확보 ${coverage?.missingFx || 0} · 종가 미확보 ${coverage?.missingPrice || 0} · 코드 미연결 ${coverage?.unmappedCompanyCount || 0}`
+    : `${universe} · ${marketError || mapBuildError ? '자료 조회 실패' : '수집 확인 중'}`;
   const status = $('#map-data-status');
   status.classList.toggle('is-stale', !!marketError || !!mapBuildError || !!coverage?.staleCount);
   const missingReturns = sizedItems.filter(company => getReturn(company, state.period) == null).length;
@@ -418,22 +451,32 @@ function renderMapStatus(model, matchingCatalog, sizedItems) {
   else {
     const dates = model.dates || [];
     const dateText = dates.length ? `종가 ${dates[0]}${dates.length > 1 ? ` ~ ${dates.at(-1)}` : ''} · 시장별 현지 기준` : '확정 종가 미확보';
-    const notes = [dateText, `현재 조건 ${sizedItems.length}개 중 ${periodName()} 등락률 미확보 ${missingReturns}개${missingReturns ? state.view === 'bubble' ? ' · 버블 제외' : ' · 회색 — 표시' : ''}`];
+    const notes = [dateText, `현재 조건 ${matchingCatalog.length}개 · 시총 반영 ${sizedItems.length}개 · ${periodName()} 등락률 미확보 ${missingReturns}개${missingReturns ? state.view === 'bubble' ? ' · 버블 제외' : ' · 회색 — 표시' : ''}`];
     if (coverage?.staleCount) notes.push(`이전 수집값 ${coverage.staleCount}개`);
     if (marketError) notes.push('최신 파일 조회 실패 · 마지막 확인 자료 표시');
     status.textContent = notes.join(' / ');
   }
-  const matchingTickers = new Set(matchingCatalog.map(company => company.ticker));
+  const matchingIds = new Set(matchingCatalog.map(company => company.id));
+  const matchingTickers = new Set(matchingCatalog.flatMap(company => [company.ticker, company.primaryTicker, ...(company.candidateTickers || [])]).filter(Boolean));
+  const matches = entry => entry.id || entry.companyId ? matchingIds.has(entry.id || entry.companyId) : matchingTickers.has(entry.ticker);
+  const catalogueExclusions = model ? coverage?.exclusions || [] : matchingCatalog.filter(company => !company.listed || company.unmappedReason).map(company => ({
+    id:company.id, ticker:company.ticker, name:company.name, kind:company.listed ? 'unmapped' : 'unlisted', reason:company.listed ? company.unmappedReason : '비상장 기업 · 공개 주가와 시가총액 없음',
+  }));
   const issues = [
-    ...(coverage?.exclusions || []).filter(entry => matchingTickers.has(entry.ticker)).map(entry => ({...entry, type:'지도 제외'})),
-    ...(coverage?.returnExclusions || []).filter(entry => matchingTickers.has(entry.ticker)).map(entry => ({...entry, type:`${periodName()} 등락률 미확보`})),
-    ...sizedItems.filter(company => company.stale || company.status === 'stale' || company.capStatus === 'stale' || company.error).map(company => ({ticker:company.ticker,name:company.name,type:'이전 수집값',reason:company.error || '최신 자료 수집 상태를 확인해 주세요.'})),
+    ...catalogueExclusions.filter(matches).map(entry => ({...entry, type:entry.kind === 'unlisted' ? '비상장' : entry.kind === 'unmapped' ? '코드 미연결' : '지도 제외'})),
+    ...(coverage?.returnExclusions || []).filter(matches).map(entry => ({...entry, type:`${periodName()} 등락률 미확보`})),
+    ...sizedItems.filter(company => company.stale || company.status === 'stale' || company.capStatus === 'stale' || company.error || company.capError).map(company => ({id:company.id,ticker:company.ticker,name:company.name,type:'이전 수집값',reason:company.error || company.capError || '최신 자료 수집 상태를 확인해 주세요.'})),
   ];
   const details = $('#map-data-details'), list = $('#map-exclusions');
   details.hidden = !issues.length;
   details.querySelector('summary').textContent = `미반영·수집 상태 ${issues.length}건 보기`;
   list.replaceChildren();
-  for (const issue of issues) list.append(htmlElement('li', '', `${issue.name} (${issue.ticker}) · ${issue.type} · ${issue.reason}`));
+  for (const issue of issues) {
+    const item = htmlElement('li', '', `${issue.name}${issue.ticker ? ` (${issue.ticker})` : ''} · ${issue.type} · ${issue.reason}`);
+    if (issue.id || issue.companyId) item.dataset.companyId = issue.id || issue.companyId;
+    list.append(item);
+  }
+  if (!currentItems.length && state.query.trim() && matchingCatalog.length <= 5) details.open = true;
 }
 function renderEmptyState(model, matchingCatalog, sizedItems) {
   const empty = $('#empty-state');
@@ -443,6 +486,12 @@ function renderEmptyState(model, matchingCatalog, sizedItems) {
   if (!matchingCatalog.length) {
     title = '조건에 맞는 기업이 없어요';
     message = '검색어를 바꾸거나 조회 조건을 초기화해 보세요.';
+  } else if (matchingCatalog.every(company => !company.listed)) {
+    title = '비상장 기업은 주가 지도에서 제외해요';
+    message = `${matchingCatalog.length}개 비상장 기업의 이름과 제외 사유를 위의 수집 상태에서 확인할 수 있습니다.`;
+  } else if (matchingCatalog.every(company => !company.listed || company.unmappedReason)) {
+    title = '시세 종목코드가 연결되지 않았어요';
+    message = '기업 이름과 코드 미연결 사유를 위의 수집 상태에서 확인할 수 있습니다.';
   } else if (!model) {
     title = marketError || mapBuildError ? '지도 자료를 읽지 못했어요' : '시총과 종가를 확인하고 있어요';
     message = marketError || mapBuildError ? '자료가 확인되면 실제 시총과 종가로 표시합니다.' : '확인된 자료가 준비되면 지도에 표시합니다.';
@@ -461,7 +510,7 @@ function render() {
   renderSectorSummary();
   renderRipple();
   const model = actualMapModel();
-  const matchingCatalog = filterMapCompanies(COMPANIES);
+  const matchingCatalog = filterMapCompanies(MAP_CATALOGUE);
   const sizedItems = filterMapCompanies(model?.companies || []).filter(company => Number.isFinite(company.capUSD) && company.capUSD > 0 && Number.isFinite(company.cap) && company.cap > 0);
   currentItems = state.view === 'bubble' ? sizedItems.filter(company => Number.isFinite(getReturn(company, state.period))) : sizedItems;
   if (!currentItems.some(company => company.id === state.selected)) state.selected = null;
@@ -485,6 +534,9 @@ function render() {
   $('#bubble-chart').hidden = state.view !== 'bubble' || !currentItems.length;
   $('#return-legend').hidden = state.view !== 'heatmap';
   $('#bubble-legend').hidden = state.view !== 'bubble';
+  $('#map-zoom').hidden = state.view !== 'heatmap';
+  $('#map-zoom').setAttribute('aria-pressed', String(state.zoom > 1));
+  $('#map-zoom').textContent = state.zoom > 1 ? '지도 맞춤' : '지도 확대';
   $('#chart-explainer').innerHTML = '크기: <b>최근 관측 시총 USD</b><span>·</span>색상: <b>확정 종가 등락률</b>';
   $('#chart-stage').setAttribute('aria-label', state.view === 'heatmap' ? '확정 종가 히트맵 차트' : '확정 종가 버블 차트');
   renderMapStatus(model, matchingCatalog, sizedItems);
@@ -494,8 +546,8 @@ function render() {
   else { $('#heatmap').replaceChildren(); $('#bubble-svg').replaceChildren(); $('#fixed-axis').replaceChildren(); }
   renderSelection();
 }
-function reset(){Object.assign(state,{country:'all',sector:'all',period:'1d',query:'',selected:null});$('#search').value='';$('#country').value='all';render();}
-$$('[data-view]').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render();}));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{state.period=b.dataset.period;render();}));$('#search').addEventListener('input',e=>{state.query=e.target.value;render();});$('#country').addEventListener('change',e=>{state.country=e.target.value;render();});$('#reset').addEventListener('click',reset);$('#empty-reset').addEventListener('click',reset);$('#overview').addEventListener('click',()=>setSector('all'));root.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','SELECT','TEXTAREA'].includes((root.activeElement?.tagName??''))){e.preventDefault();$('#search').focus();}if(e.key==='Escape'){state.selected=null;renderSelection();$$('.tile,.bubble-node').forEach(el=>{el.classList.remove('selected');el.setAttribute('aria-pressed','false');});hideTooltip();}});new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(currentItems.length){if(state.view==='heatmap')drawHeatmap();else drawBubbles();}drawRippleLines();});}).observe($('#chart-stage'));render();
+function reset(){Object.assign(state,{country:'all',sector:'all',period:'1d',query:'',selected:null,zoom:1});$('#search').value='';$('#country').value='all';render();}
+$$('[data-view]').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render();}));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{state.period=b.dataset.period;render();}));$('#search').addEventListener('input',e=>{state.query=e.target.value;render();});$('#country').addEventListener('change',e=>{state.country=e.target.value;render();});$('#map-zoom').addEventListener('click',()=>{state.zoom=state.zoom>1?1:2;render();});$('#reset').addEventListener('click',reset);$('#empty-reset').addEventListener('click',reset);$('#overview').addEventListener('click',()=>setSector('all'));root.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','SELECT','TEXTAREA'].includes((root.activeElement?.tagName??''))){e.preventDefault();$('#search').focus();}if(e.key==='Escape'){state.selected=null;renderSelection();$$('.tile,.bubble-node').forEach(el=>{el.classList.remove('selected');el.setAttribute('aria-pressed','false');});hideTooltip();}});new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(currentItems.length){if(state.view==='heatmap')drawHeatmap();else drawBubbles();}drawRippleLines();});}).observe($('#chart-stage'));renderCountryOptions();render();
 
 // Routes hide rather than unmount the map, keeping its filters and selected company.
 window.renderHomeMap = () => requestAnimationFrame(render);

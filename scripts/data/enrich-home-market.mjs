@@ -4,9 +4,13 @@ import { dailyClose } from '../../server/market-close.mjs'
 
 // Each symbol is explicitly quoted as local-currency units per one USD.
 // Do not substitute inverse pairs such as EURUSD=X without a conversion rule.
-const currencies = Object.freeze({
+export const HOME_FX_PAIRS = Object.freeze({
   KRW: 'KRW=X', JPY: 'JPY=X', TWD: 'TWD=X', EUR: 'EUR=X',
   CHF: 'USDCHF=X', HKD: 'HKD=X', SGD: 'SGD=X', CNY: 'CNY=X',
+  AED: 'AED=X', AUD: 'AUD=X', BRL: 'BRL=X', CAD: 'CAD=X',
+  IDR: 'IDR=X', INR: 'INR=X', MYR: 'MYR=X', NZD: 'NZD=X',
+  QAR: 'QAR=X', SAR: 'SAR=X', SEK: 'SEK=X', THB: 'THB=X',
+  TRY: 'TRY=X', DKK: 'DKK=X', GBP: 'GBP=X',
 })
 const positive = value => Number.isFinite(value) && value > 0
 const reason = error => String(error?.message || '홈 기준일 자료 수집 실패').slice(0, 400)
@@ -52,7 +56,7 @@ export async function enrichHomeMarket(snapshot, {
     }
   }))
   const fxHistory = {}
-  await Promise.all(Object.entries(currencies).map(async ([currency, symbol]) => {
+  await Promise.all(Object.entries(HOME_FX_PAIRS).map(async ([currency, symbol]) => {
     try {
       let quote = quotes.find(quote => quote.symbol === symbol && quote.priceBasis === 'previous-completed-session' && quote.status === 'ok')
       if (!quote) quote = await fxService(symbol)
@@ -72,7 +76,8 @@ export async function enrichHomeMarket(snapshot, {
     } catch (error) {
       const candidate = previous.fxHistory?.[currency]
       const prior = candidate && (!candidate.currency || candidate.currency === currency)
-        && (!candidate.symbol || candidate.symbol === symbol) && (!candidate.baseCurrency || candidate.baseCurrency === 'USD') ? candidate : null
+        && (!candidate.symbol || candidate.symbol === symbol) && (!candidate.baseCurrency || candidate.baseCurrency === 'USD')
+        && (!candidate.quoteConvention || candidate.quoteConvention === 'currency-per-USD') ? candidate : null
       fxHistory[currency] = { ...(prior || { symbol, observations: [], fetchedAt: null }),
         symbol, currency, baseCurrency: 'USD', quoteConvention: 'currency-per-USD',
         status: prior?.observations?.length ? 'stale' : 'unavailable', error: reason(error) }

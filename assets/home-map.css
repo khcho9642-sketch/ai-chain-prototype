@@ -383,3 +383,15 @@
   .selection-source-links a{min-height:36px}
   .page-footer p{overflow-wrap:anywhere}
 }
+
+/* Full issuer universe: dense proportional tiles, with an optional scroll zoom. */
+.map-breadth [data-map-coverage]{min-width:0;line-height:1.9;overflow-wrap:anywhere}
+.map-zoom{flex-shrink:0;border:1px solid #35536e;border-radius:5px;background:#142b3f;color:#b9d4eb;padding:6px 10px;min-height:30px;font:inherit;font-size:10px;white-space:nowrap}
+.map-zoom:hover,.map-zoom[aria-pressed=true]{background:#24445f;border-color:#6b9ec7;color:#e0f0ff}
+.heatmap.is-zoomed{overflow:auto;scrollbar-width:thin;scrollbar-color:#3d607e #0b141d}
+.tile:focus-visible{z-index:4;box-shadow:inset 0 0 0 2px #e8f7ff}
+@media(max-width:720px){
+  .map-breadth [data-map-coverage]{flex-basis:100%;font-size:9px}
+  .map-zoom{min-height:44px;padding:8px 12px;font-size:10px}
+  .chart-footer #chart-hint{flex-basis:100%;line-height:1.7}
+}

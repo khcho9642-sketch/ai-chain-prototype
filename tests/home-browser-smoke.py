@@ -25,6 +25,7 @@ fixture_script = r"""
 import {focusCompanies} from './assets/home-focus.js';
 import {SECTORS,COMPANIES} from './assets/home-map-core.js';
 import {buildActualMap} from './assets/home-map-data.js';
+import {MAP_COMPANIES} from './assets/home-map-universe.js';
 import {buildRippleSnapshot} from './assets/ripple-core.js';
 import {buildSectorReturns} from './assets/home-performance.js';
 const DAY=86400000, now=Date.now(), stamp=new Date(now).toISOString();
@@ -33,14 +34,18 @@ const weekday=date=>![0,6].includes(new Date(date+'T12:00:00Z').getUTCDay());
 function shiftBusiness(date,count){let ms=Date.parse(date+'T12:00:00Z'),left=Math.abs(count);while(left){ms+=Math.sign(count)*DAY;if(weekday(iso(ms)))left--;}return iso(ms);}
 let today=iso(now);while(!weekday(today))today=iso(Date.parse(today+'T12:00:00Z')-DAY);
 const usEnd=shiftBusiness(today,-3),krEnd=shiftBusiness(usEnd,1);
-function datesTo(end){const rows=[];let date=end;while(rows.length<160){if(weekday(date))rows.unshift(date);date=iso(Date.parse(date+'T12:00:00Z')-DAY);}return rows;}
+function datesTo(end){const rows=[];let date=end;while(rows.length<100){if(weekday(date))rows.unshift(date);date=iso(Date.parse(date+'T12:00:00Z')-DAY);}let annual=iso(Date.parse(end+'T12:00:00Z')-365*DAY);while(!weekday(annual))annual=shiftBusiness(annual,-1);rows.unshift(annual);return rows;}
 const usDates=datesTo(usEnd),krDates=datesTo(krEnd);
-const fxRates={USD:1,KRW:1400,JPY:150,TWD:32,EUR:.9,CHF:.85,HKD:7.8,SGD:1.3,CNY:7.1};
-const quotes=COMPANIES.map((company,index)=>{
- const within=COMPANIES.filter(row=>row.sector===company.sector).findIndex(row=>row.ticker===company.ticker);
- const currency=/\.(KS|KQ)$/.test(company.ticker)?'KRW':/\.T$/.test(company.ticker)?'JPY':/\.(TW|TWO)$/.test(company.ticker)?'TWD':/\.(PA|AS)$/.test(company.ticker)?'EUR':/\.SW$/.test(company.ticker)?'CHF':/\.HK$/.test(company.ticker)?'HKD':/\.SI$/.test(company.ticker)?'SGD':/\.(SS|SZ)$/.test(company.ticker)?'CNY':'USD';
+const fxRates={USD:1,KRW:1400,JPY:150,TWD:32,EUR:.9,CHF:.85,HKD:7.8,SGD:1.3,CNY:7.1,GBP:.8,DKK:6.8,SEK:10,INR:85,MYR:4.4,THB:34,AUD:1.5,NZD:1.6,IDR:16000,CAD:1.4,BRL:5.7,ZAR:18,ILS:3.7,SAR:3.75,QAR:3.64,TRY:35,AED:3.67};
+const targets=new Map();
+for(const company of MAP_COMPANIES)for(const listing of company.listings)targets.set(listing.ticker,{...company,ticker:listing.ticker,currency:listing.currency});
+for(const company of COMPANIES)if(!targets.has(company.ticker))targets.set(company.ticker,{...company,currency:/\.(KS|KQ)$/.test(company.ticker)?'KRW':/\.T$/.test(company.ticker)?'JPY':/\.(TW|TWO)$/.test(company.ticker)?'TWD':'USD'});
+const quotes=[...targets.values()].map((company,index)=>{
+ const focus=focusCompanies.find(row=>row.ticker===company.ticker);
+ const within=focus?focusCompanies.filter(row=>row.sectorId===focus.sectorId).findIndex(row=>row.ticker===company.ticker):index%5;
+ const currency=company.currency;
  const market=currency==='KRW'?'KR':currency==='USD'?'US':'OTHER';
- const timezone=({KRW:'Asia/Seoul',JPY:'Asia/Tokyo',TWD:'Asia/Taipei',EUR:'Europe/Paris',CHF:'Europe/Zurich',HKD:'Asia/Hong_Kong',SGD:'Asia/Singapore',CNY:'Asia/Shanghai',USD:'America/New_York'})[currency];
+ const timezone=({KRW:'Asia/Seoul',JPY:'Asia/Tokyo',TWD:'Asia/Taipei',EUR:'Europe/Paris',CHF:'Europe/Zurich',HKD:'Asia/Hong_Kong',SGD:'Asia/Singapore',CNY:'Asia/Shanghai',USD:'America/New_York',GBP:'Europe/London',DKK:'Europe/Copenhagen',SEK:'Europe/Stockholm',INR:'Asia/Kolkata',MYR:'Asia/Kuala_Lumpur',THB:'Asia/Bangkok',AUD:'Australia/Sydney',NZD:'Pacific/Auckland',IDR:'Asia/Jakarta',CAD:'America/Toronto',BRL:'America/Sao_Paulo',ZAR:'Africa/Johannesburg',ILS:'Asia/Jerusalem',SAR:'Asia/Riyadh',QAR:'Asia/Qatar',TRY:'Europe/Istanbul',AED:'Asia/Dubai'})[currency];
  const dates=market==='KR'?krDates:usDates;
  let price=100+index*3;
  const bars=dates.map((date,j)=>{
@@ -48,16 +53,16 @@ const quotes=COMPANIES.map((company,index)=>{
   if(company.ticker==='ASML')change=j%5===0?-3.2:-.1;
   if(j===dates.length-1){change=({NVDA:8,MU:7,DELL:6,ASML:5.5})[company.ticker]??(market==='KR'?2.1:1.2+within*.1);}
   price*=1+change/100;
-  const time=Date.parse(date+(market==='US'?'T14:30:00Z':'T00:00:00Z'))/1000;
+  const time=Date.parse(date+(market==='US'||['CAD','BRL'].includes(currency)?'T14:30:00Z':'T00:00:00Z'))/1000;
   return {time,open:price/(1+change/100),high:price*1.01,low:price*.99,close:price,volume:1000000+j};
  });
- const latest=bars.at(-1),prior=bars.at(-2),capUSD=within===4?8e12:(within+1)*1e10;
+ const latest=bars.at(-1),prior=bars.at(-2),capUSD=focus?(within===4?8e12:(within+1)*1e10):(within+1)*1e9;
  return {symbol:company.ticker,name:company.name,currency,timezone,exchange:market==='US'?'NASDAQ':market==='KR'?'KRX':'fixture-exchange',
   price:latest.close,previousClose:prior.close,change:latest.close-prior.close,changePercent:(latest.close/prior.close-1)*100,
   closeDate:dates.at(-1),previousCloseDate:dates.at(-2),priceBasis:'previous-completed-session',range:'1y',interval:'1d',marketTime:latest.time,
   fetchedAt:stamp,source:'Yahoo Finance',sourceUrl:'https://finance.yahoo.com/quote/'+encodeURIComponent(company.ticker)+'/',status:'ok',error:null,
   delayed:true,bars,histories:{},marketCap:capUSD*fxRates[currency],marketCapStatus:'ok',marketCapCurrency:currency,marketCapObservedAt:stamp,marketCapFetchedAt:stamp,marketCapBasis:'provider-current',
-  marketCapHistory:dates.map(date=>({date,value:capUSD*fxRates[currency],currency,basis:'provider-dated',source:'browser-fixture'})),
+  marketCapHistory:focus?dates.map(date=>({date,value:capUSD*fxRates[currency],currency,basis:'provider-dated',source:'browser-fixture'})):[],
   fixture:true};
 });
 const unionDates=[...new Set([...usDates,...krDates])].sort();
@@ -73,8 +78,13 @@ calm.generatedAt=new Date(now+1000).toISOString();
 for(const quote of calm.quotes){quote.bars.at(-1).close=quote.bars.at(-2).close*1.001;quote.price=quote.bars.at(-1).close;quote.changePercent=.1;}
 const calmRipple=buildRippleSnapshot({marketSnapshot:calm,now:now+1000});
 const actualMap=buildActualMap({snapshot:market,now});
-if(actualMap.coverage.renderableCount!==64||actualMap.coverage.returnableCount!==64)throw new Error('Browser map fixture must cover all64 companies');
-console.log(JSON.stringify({market,ripple,model,actualMap,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
+if(actualMap.coverage.catalogCount!==586||actualMap.coverage.renderableCount<500||actualMap.coverage.returnableCount<500)throw new Error('Browser map fixture must cover full586-issuer master');
+const incomplete=structuredClone(market);
+incomplete.quotes.find(q=>q.symbol==='AMD').marketCap=null;
+delete incomplete.fxHistory.EUR;
+const nvda=incomplete.quotes.find(q=>q.symbol==='NVDA');nvda.bars=nvda.bars.slice(-1);
+const incompleteMap=buildActualMap({snapshot:incomplete,now});
+console.log(JSON.stringify({market,ripple,model,actualMap,incomplete,incompleteMap,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
 """
 prepared = subprocess.run(['node', '--input-type=module'], cwd=root, input=fixture_script,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
@@ -96,10 +106,20 @@ def wait_home(page):
 
 
 def attach_routes(context):
+    encoded = {}
+    def payload(name):
+        # One encoding per feed object: full-universe fixtures are shared by all
+        # page requests, including the normal60-second refresh.
+        current=feeds[name]
+        cached=encoded.get(name)
+        if cached is None or cached[0] is not current:
+            cached=(current,json.dumps(current,separators=(',',':')))
+            encoded[name]=cached
+        return cached[1]
     def market_response(route):
-        route.fulfill(status=feeds['market_status'], content_type='application/json', body=json.dumps(feeds['market']))
+        route.fulfill(status=feeds['market_status'], content_type='application/json', body=payload('market'))
     def ripple_response(route):
-        route.fulfill(status=feeds['ripple_status'], content_type='application/json', body=json.dumps(feeds['ripple']))
+        route.fulfill(status=feeds['ripple_status'], content_type='application/json', body=payload('ripple'))
     context.route('**/api/snapshot?*', market_response)
     context.route('**/data/market.json?*', market_response)
     context.route('**/api/ripple?*', ripple_response)
@@ -196,10 +216,23 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert '확정 종가' in home.locator('#selection').inner_text()
                 assert fixture_data['usEnd'] in home.locator('#selection').inner_text()
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
-                assert home.locator('.tile').count()==64
+                assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
+                assert home.locator('.tile').count()>500
+                ids=home.locator('.tile').evaluate_all('els=>els.map(el=>el.dataset.id)')
+                assert len(ids)==len(set(ids))
+                expected_nvda=next(row for row in fixture_data['actualMap']['companies'] if row['ticker']=='NVDA')
+                for period in ['1w','1m','1y','1d']:
+                    home.locator('[data-period="'+period+'"]').click()
+                    nvda=home.locator('.tile[data-ticker=NVDA]')
+                    assert abs(float(nvda.get_attribute('data-return'))-expected_nvda['returns'][period])<1e-8
+                    assert float(nvda.get_attribute('data-cap-usd'))==expected_nvda['capUSD']
+                    assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
+                home.locator('#country').select_option('IN')
+                assert 0<home.locator('.tile').count()<100
+                home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 home.get_by_role('button',name='버블',exact=True).click()
                 home.locator('.bubble-node').first.wait_for()
-                assert home.locator('.bubble-node').count()==64
+                assert home.locator('.bubble-node').count()==fixture_data['actualMap']['coverage']['returnableCount']
                 home.get_by_role('button',name='히트맵',exact=True).click()
                 home.locator('.sector-return-card[data-sector=memory]').click()
                 assert home.locator('.sector-heading').count()==1
@@ -207,29 +240,29 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert home.locator('.sector-heading').count()==9
                 home.locator('.ripple-trigger-card').click()
                 page.wait_for_function("location.hash.startsWith('#company-info/company/')")
-                checks.append('64 actual-cap heatmap/bubbles, exact NVDA completed return, provenance, search, sector and detail interactions')
+                checks.append('full586-issuer heatmap/bubbles, one listing per issuer, exact NVDA completed return, provenance, search, sector and detail interactions')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
-                incomplete=json.loads(json.dumps(fixture_data['market']))
-                by_symbol={quote['symbol']:quote for quote in incomplete['quotes']}
-                by_symbol['AMD']['marketCap']=None
-                incomplete['fxHistory'].pop('EUR')
-                by_symbol['NVDA']['bars']=by_symbol['NVDA']['bars'][-1:]
+                incomplete=fixture_data['incomplete']
+                feeds['market']=incomplete
+                partial=fixture_data['incompleteMap']['coverage']
                 page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",incomplete)
-                assert home.locator('.tile').count()==61
-                assert '시총/환율 미확보 3' in home.locator('[data-map-coverage]').inner_text()
+                assert home.locator('.tile').count()==partial['renderableCount']
+                assert partial['missingCap']>=1 and partial['missingFx']>0
                 assert 'AMD' in home.locator('#map-exclusions').text_content()
                 assert '시총 관측일 기준 환율 미확보' in home.locator('#map-exclusions').text_content()
                 home.get_by_role('searchbox',name='기업명 또는 티커 검색').fill('NVDA')
-                assert '—' in home.locator('.tile').inner_text()
+                assert home.locator('.tile').get_attribute('data-return')=='',home.locator('.tile').evaluate('el=>({ticker:el.dataset.ticker,value:el.dataset.return,text:el.innerText})')
+                assert '—' in home.locator('.tile').text_content()
                 assert home.locator('.tile').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgb(78, 89, 103)'
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 home.get_by_role('button',name='버블',exact=True).click()
-                assert home.locator('.bubble-node').count()==60
+                assert home.locator('.bubble-node').count()==partial['returnableCount']
                 assert '등락률 미확보 1개 · 버블 제외' in home.locator('#map-data-status').inner_text()
                 home.get_by_role('button',name='히트맵',exact=True).click()
+                feeds['market']=fixture_data['market']
                 page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",fixture_data['market'])
-                assert home.locator('.tile').count()==64
+                assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
                 checks.append('missing cap/FX excluded, missing comparison close neutral in heatmap and excluded from bubbles, snapshot rerenders full map')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
