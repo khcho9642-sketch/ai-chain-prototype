@@ -247,8 +247,8 @@ function buildDriverPaths(driverId, normalizedShock, durationMonths, mediatedBy 
   const paths = []
   const walk = ({ segmentId, primitive, coefficient, segments, lagMonths, channels, visited, applyCurrent, propagate }) => {
     if (applyCurrent) {
-      const monthlySeries = Array.from({ length: months }, (_, i) =>
-        coefficient * driverLevelAtMonth(driverId, normalizedShock, i + 1, lagMonths, durationMonths))
+      const monthlyShock = Array.from({ length: months }, (_, i) =>
+        driverLevelAtMonth(driverId, normalizedShock, i + 1, lagMonths, durationMonths))
       paths.push({
         pathId: `${driverId}:${primitive}:${segments.join('>')}`,
         ...(mediatedBy && { mediatedBy }),
@@ -259,7 +259,7 @@ function buildDriverPaths(driverId, normalizedShock, durationMonths, mediatedBy 
         lagMonths,
         channels,
         coefficient,
-        monthlySeries,
+        monthlyShock,
       })
     }
     if (!propagate || segments.length - 1 >= maxHops) return
@@ -303,7 +303,7 @@ function weightedAssumptions(segmentWeights, override = {}) {
   return result
 }
 
-function buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver) {
+function buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver, hbmPriceMix) {
   const byDriver = {}
   const entityPaths = {}
   for (const [driverId, paths] of Object.entries(pathsByDriver)) {
@@ -313,10 +313,14 @@ function buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers
     for (const path of paths) {
       const segmentWeight = segmentWeights[path.segmentId] ?? 0
       if (!segmentWeight) continue
-      const entityWeight = segmentWeight * exposureScale * multiplier
-      const monthlySeries = path.monthlySeries.map(value => value * entityWeight)
+      // A consolidated HBM sales share already includes product and company exposure.
+      // Replace the generic memory seed only on the producer's own selling-price path.
+      const ownHbmPrice = hbmPriceMix && path.pathId === 'hbmPrice:asp:SEG3'
+      const coefficient = ownHbmPrice ? 1 : path.coefficient
+      const entityWeight = ownHbmPrice ? hbmPriceMix.adjustedRevenueShare : segmentWeight * exposureScale * multiplier
+      const monthlySeries = path.monthlyShock.map(value => coefficient * value * entityWeight)
       monthlySeries.forEach((value, index) => { byDriver[driverId][path.primitive][index] += value })
-      entityPaths[driverId].push({ ...path, monthlySeries, entityWeight })
+      entityPaths[driverId].push({ ...path, coefficient, monthlySeries, entityWeight })
     }
   }
   return { byDriver, entityPaths }
@@ -499,11 +503,17 @@ function buildEquityBridge(projection, netDebtToEvPct, listingStatus) {
 function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exposureScale, exposureMultipliers,
   assumptionOverrides, request, selectedDriverIds, pathsByDriver, includeStandalone = false }) {
   const assumptions = weightedAssumptions(segmentWeights, assumptionOverrides)
-  const financialBasis = financialProfile(SCENARIO_FINANCIAL_BASELINES[id], assumptions, assumptionOverrides, companyById.get(id)?.primarySegmentId ?? id)
+  const company = companyById.get(id)
+  const financialBasis = financialProfile(SCENARIO_FINANCIAL_BASELINES[id], assumptions, assumptionOverrides, company?.primarySegmentId ?? id)
   assumptions.financialBasis = financialBasis
   const actual = financialBasis.status === 'actual'
   const marginBasis = { historical: 'fcf-proxy', sector: 'sector-margin', user: 'user-margin' }[financialBasis.fieldSources.fcffMarginPct]
-  const primitiveBundle = buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver)
+  const mix = company?.hbmPriceMix
+  const hbmPriceMix = mix && selectedDriverIds.includes('hbmPrice') ? {
+    ...mix,
+    adjustedRevenueShare: mix.revenueShare * (exposureScale / company.scenarioExposureScale) * (exposureMultipliers.hbmPrice ?? 1),
+  } : null
+  const primitiveBundle = buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver, hbmPriceMix)
   const projection = projectDcf(assumptions, primitiveBundle, request, selectedDriverIds)
   const comparable = projection.scenarioValueIndex !== null
   const { effectAttribution, paths, contributions } = attributeEffects(assumptions, primitiveBundle, request, selectedDriverIds, projection.scenarioValueIndex)
@@ -534,6 +544,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
       terminalGrowthPct: round(assumptions.terminalGrowthPct),
       volumePassThrough: round(assumptions.volumePassThrough),
       aspPassThrough: round(assumptions.aspPassThrough),
+      ...(hbmPriceMix && { hbmPriceMix }),
       unitCostPassThrough: round(assumptions.unitCostPassThrough),
       capexPassThrough: round(assumptions.capexPassThrough),
       rateDiscountPassThrough: round(assumptions.rateDiscountPassThrough),

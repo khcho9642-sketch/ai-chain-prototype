@@ -527,6 +527,17 @@ function pathCoefficients(path) {
   }).join('')}</ul>`
 }
 
+function hbmPriceMixDetails(company) {
+  const mix = company.assumptions?.hbmPriceMix
+  if (!mix) return ''
+  const passThrough = company.assumptions.aspPassThrough
+  const priceEffect = 10 * mix.adjustedRevenueShare * passThrough
+  return `<p class="scenario-note"><b>HBM 가격 노출</b> · FY${mix.fiscalYear} 연결매출 중 HBM 비중 추정 ${(100 * mix.revenueShare).toFixed(1)}% (${mix.grade}).
+    현재 노출 가중치 ${(100 * mix.adjustedRevenueShare).toFixed(1)}%, 시장가격의 실현단가 반영률 ${(100 * passThrough).toFixed(1)}%를 적용합니다.
+    수량이 같을 때 HBM 시장가격 +10%에 따른 연결매출 변화는 ${signed(priceEffect, 2)}입니다.
+    <a href="${esc(mix.sourceUrl)}">SK하이닉스 SEC 제출 자료 · 시장 규모와 점유율</a></p>`
+}
+
 const compactNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
 const shockAmount = (value, unit) => finite(value)
   ? `${value < 0 ? '−' : value > 0 ? '+' : ''}${compactNumber.format(Math.abs(value))}${unit}` : '—'
@@ -672,6 +683,7 @@ function companyDetail() {
     ${company.capexRole === 'no-covered-customer-path' ? '<p class="scenario-note">4개사의 외부 클라우드 발주 노출 자료 없음 · 해당 경로 미산정</p>' : ''}
     ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} · 밸류체인 ${pct2(parts.chain)} · 총 ${pct2(parts.total)}. 합계와 순위는 반올림 전 값으로 계산합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
     <div data-financial-basis>${financialDetails(company)}</div>
+    <div data-hbm-price-mix>${hbmPriceMixDetails(company)}</div>
     <div data-rate-band>${rateCapexBandDetails(company)}</div>
     <div class="scenario-detail-grid"><div><h3>경로별 추가 효과</h3>${paths.length ? `<ol class="scenario-path-list">${paths.slice().sort((a, b) => a.calculationOrder - b.calculationOrder).map(path => `<li><div><strong>${esc(pathSummary(path, company))}</strong><small>${esc(driverLabel(path.driverId))} · 섹터 간 전파 ${path.hops || 0}회</small></div><b class="${impactClass(path.impactPoints)}">${pct2(path.impactPoints)}</b>${pathCoefficients(path)}<p>경로 계수 출처 · ${esc(sourceLabel(path.source || dataModule.MODEL_ASSUMPTIONS.assumptionSource))} · 등급 C</p></li>`).join('')}</ol>` : '<p class="scenario-note">이 시나리오에 표시할 경로가 없습니다.</p>'}</div>
       <div><h3>기업별 충격 민감도</h3>${coefficients ? `<ul class="scenario-coefficient-list">${coefficients}</ul>` : '<p class="scenario-note">표시 가능한 기업 계수가 없습니다.</p>'}<p class="scenario-note">신뢰등급 A · 공시 직접 / B · 공시 기반 추정 / C · 가정. 기업별 충격 민감도와 전파 계수는 C등급 가정입니다.</p></div></div>
@@ -718,6 +730,8 @@ function renderDynamic({ skipDetail = false } = {}) {
     if (company) {
       const basis = detail.querySelector('[data-financial-basis]')
       if (basis) basis.innerHTML = financialDetails(company)
+      const mix = detail.querySelector('[data-hbm-price-mix]')
+      if (mix) mix.innerHTML = hbmPriceMixDetails(company)
       const band = detail.querySelector('[data-rate-band]')
       if (band) {
         const wasOpen = band.querySelector('details')?.open

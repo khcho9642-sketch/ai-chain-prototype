@@ -252,6 +252,14 @@ test('scenario chapter renders compact controls and view-model tables without in
       click('[data-scenario-id]', { scenarioId })
       assert.doesNotMatch(root.innerHTML, /data-scenario-control="rateCapexSensitivity"/)
       assert.deepEqual([...root.innerHTML.matchAll(/data-live-company="([^"]+)"/g)].map(match => match[1]), expected)
+      if (scenarioId === 'hbm_market') {
+        selectCompany('000660.KS')
+        assert.match(details(), /HBM 비중 추정 30\.5% \(C\)/)
+        assert.match(details(), /실현단가 반영률 55\.0%/)
+        assert.match(details(), /연결매출 변화는 \+1\.68%/)
+        selectCompany('NVDA')
+        assert.doesNotMatch(details(), /HBM 비중 추정/)
+      }
     }
   }
   let savedState = null

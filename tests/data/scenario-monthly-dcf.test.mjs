@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { evaluateCompanyPreview } from '../../assets/scenario-core.js'
+import { evaluateCompanyPreview, evaluateScenario } from '../../assets/scenario-core.js'
 
 const preview = (request, id) => evaluateCompanyPreview(request, [id]).companies[0]
 const sum = numbers => numbers.reduce((total, value) => total + value, 0)
@@ -85,6 +85,58 @@ test('price-volume interaction is calculated for the same month on HBM sales', (
     const interaction = monthly.scenarioFcff[i] - price.scenarioFcff[i] - supply.scenarioFcff[i] + monthly.baselineFcff[i]
     const priceRetention = both.financialBasis.forecast[year].priceContributionMarginPct / 100
     close(interaction, baselineRevenue[year] / 12 * price.aspPct[i] / 100 * supply.revenueVolumePct[i] / 100 * priceRetention)
+  }
+})
+
+const hynixHbmSalesShareFY25 = (33e9 * 0.632 * 1421.4) / (97_146_675 * 1e6)
+const hbmRequest = (price, supply = 0, skOverride = {}) => ({
+  scenarioId: 'hbm_market', durationMonths: 12,
+  inputs: { hbmPriceChangePct: price, hbmSupplyChangePct: supply },
+  companyOverrides: { '000660.KS': skOverride },
+})
+
+test('only SK Hynix selling-price exposure uses its FY2025 consolidated HBM revenue mix', () => {
+  const ids = ['000660.KS', 'NVDA', 'MU']
+  for (const price of [-10, 0, 10]) {
+    const request = hbmRequest(price)
+    const live = evaluateCompanyPreview(request, ids).companies
+    const report = evaluateScenario(request)
+    const [sk, nvidia, micron] = live
+    assert.deepEqual(live, ids.map(id => report.companies.find(company => company.id === id)))
+
+    const aspPct = price * hynixHbmSalesShareFY25 * 0.55
+    close(sk.valuation.monthly.aspPct[0], aspPct)
+    close(sk.valuation.monthly.aspPct[11], aspPct)
+    close(sk.valuation.monthly.aspPct[17], aspPct / 2)
+    assert.equal(sk.valuation.monthly.aspPct[23], 0)
+    // The prior release used 90% × 95% exposure; price-only incremental cash flow scales with the mix.
+    const oldDirectAtTenPct = 1.38229616080001
+    close(sk.effectAttribution.directPct, oldDirectAtTenPct * (price / 10) * hynixHbmSalesShareFY25 / (0.90 * 0.95))
+    assert.equal(sk.effectAttribution.chainPct, 0)
+    close(sk.valueChangePct, sk.effectAttribution.directPct)
+    assert.equal(nvidia.effectAttribution.directPct, 0)
+    close(nvidia.effectAttribution.chainPct, -0.021165390454825683 * price / 10)
+    close(micron.valuation.monthly.aspPct[0], price * 0.4455)
+  }
+  const [sk, nvidia] = evaluateCompanyPreview(hbmRequest(0, 10), ids).companies
+  close(sk.valuation.monthly.revenueVolumePct[0], 4.845)
+  close(sk.effectAttribution.directPct, 0.6535051321139917)
+  close(nvidia.effectAttribution.chainPct, 0.3678435653229144)
+})
+
+test('SK Hynix HBM price overrides scale the calibrated mix once, including zero exposure', () => {
+  for (const [override, expectedWeight] of [
+    [{ exposures: { hbmPrice: 0 } }, 0],
+    [{ exposures: { hbmPrice: 1 } }, 0.55],
+    [{ exposures: { hbmPrice: 2 } }, 2 * 0.55],
+    [{ scenarioExposureScale: 0 }, 0],
+    [{ scenarioExposureScale: 0.475 }, 0.5 * 0.55],
+    [{ assumptions: { aspPassThrough: 1 } }, 1],
+    [{ assumptions: { aspPassThrough: 0 } }, 0],
+  ]) {
+    const row = preview(hbmRequest(10, 0, override), '000660.KS')
+    close(row.valuation.monthly.aspPct[0], 10 * hynixHbmSalesShareFY25 * expectedWeight)
+    if (expectedWeight === 0) assert.equal(row.valueChangePct, 0)
   }
 })
 

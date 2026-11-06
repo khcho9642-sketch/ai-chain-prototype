@@ -1,5 +1,5 @@
 // The scenario chapter deliberately uses normalized, illustrative operating profiles.
-// None of the values below are reported company financials, consensus estimates or prices.
+// Company-specific revenue mix estimates identify their source separately.
 
 export const DRIVER_LABELS = Object.freeze({
   interestRate: '금리',
@@ -295,8 +295,17 @@ export const PROPAGATION_EDGES = Object.freeze([
 export const BIG7_COMPANY_IDS = Object.freeze(['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA'])
 export const HYPERSCALER_CAPEX_OWNER_IDS = Object.freeze(['MSFT', 'AMZN', 'GOOGL', 'META'])
 
+// FY2025 market size (Gartner, USD) × vendor revenue share (IDC) × average KRW/USD,
+// divided by audited consolidated revenue (KRW millions). The numerator is an estimate.
+const skHynixHbmMix = Object.freeze({
+  fiscalYear: 2025,
+  revenueShare: (33e9 * 0.632 * 1421.4) / (97_146_675 * 1e6),
+  grade: 'C',
+  sourceUrl: 'https://www.sec.gov/Archives/edgar/data/2120882/000119312526299963/d32785d424b4.htm',
+})
+
 const company = ({ companyId, symbol = companyId, name, listingStatus = 'listed', primarySegmentId,
-  segmentWeights = { [primarySegmentId]: 1 }, scenarioExposureScale = 1, driverExposureMultipliers = {} }) => {
+  segmentWeights = { [primarySegmentId]: 1 }, scenarioExposureScale = 1, driverExposureMultipliers = {}, hbmPriceMix }) => {
   const weights = Object.freeze({ ...segmentWeights })
   return Object.freeze({
     companyId,
@@ -310,6 +319,7 @@ const company = ({ companyId, symbol = companyId, name, listingStatus = 'listed'
     scenarioExposureScale,
     nonScenarioSharePct: (1 - scenarioExposureScale) * 100,
     driverExposureMultipliers: Object.freeze({ ...driverExposureMultipliers }),
+    ...(hbmPriceMix && { hbmPriceMix }),
     exposureSource: MODEL_ASSUMPTIONS.assumptionSource,
   })
 }
@@ -327,7 +337,7 @@ export const COMPANIES = Object.freeze([
   company({ companyId: 'ASX', name: 'ASE 테크놀로지 ADR', primarySegmentId: 'SEG2', scenarioExposureScale: 0.75 }),
   company({ companyId: 'AMKR', name: '앰코테크놀로지', primarySegmentId: 'SEG2', scenarioExposureScale: 0.75 }),
 
-  company({ companyId: '000660.KS', name: 'SK하이닉스', primarySegmentId: 'SEG3', scenarioExposureScale: 0.95 }),
+  company({ companyId: '000660.KS', name: 'SK하이닉스', primarySegmentId: 'SEG3', scenarioExposureScale: 0.95, hbmPriceMix: skHynixHbmMix }),
   company({ companyId: 'MU', name: '마이크론', primarySegmentId: 'SEG3', scenarioExposureScale: 0.90 }),
   company({ companyId: '285A.T', name: '키옥시아 홀딩스', primarySegmentId: 'SEG3', scenarioExposureScale: 0.55, driverExposureMultipliers: { hbmPrice: 0, hbmSupply: 0 } }),
 
