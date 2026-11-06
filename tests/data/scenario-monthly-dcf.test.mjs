@@ -23,7 +23,7 @@ function close(actual, expected) {
 }
 
 test('96 month-end cash payments and the terminal amount reproduce the rate-shocked EV', () => {
-  const row = preview({ scenarioId: 'interest_rate', durationMonths: 6,
+  const row = preview({ scenarioId: 'interest_rate',
     inputs: { rateChangePctPoints: 1, rateCapexSensitivity: 5 } }, 'NVDA')
   const { monthly, terminalValueAtMonth96, scenarioFcff, scenarioEnterpriseValueUnits } = row.valuation
   for (const series of Object.values(monthly)) {
@@ -95,7 +95,7 @@ test('price-volume interaction is calculated for the same month on HBM sales', (
 
 const hynixHbmSalesShareFY25 = (33e9 * 0.632 * 1421.4) / (97_146_675 * 1e6)
 const hbmRequest = (price, supply = 0, skOverride = {}) => ({
-  scenarioId: 'hbm_market', durationMonths: 12,
+  scenarioId: 'hbm_market',
   inputs: { hbmPriceChangePct: price, hbmSupplyChangePct: supply },
   companyOverrides: { '000660.KS': skOverride },
 })
@@ -160,7 +160,7 @@ test('SK Hynix HBM price overrides scale the calibrated mix once, including zero
 
 test('annual model growth compounds monthly before company exposure through the explicit period', () => {
   for (const [base, target] of [[50, 80], [-50, 150], [150, -50]]) {
-    const row = preview({ scenarioId: 'model_growth', durationMonths: 36,
+    const row = preview({ scenarioId: 'model_growth',
       inputs: { modelBaselineGrowthPct: base, modelTargetGrowthPct: target } }, 'OPENAI')
     const annualRatio = (1 + target / 100) / (1 + base / 100)
     const volume = row.valuation.monthly.revenueVolumePct
@@ -204,18 +204,16 @@ test('permanent model-growth terminal equals independently discounted monthly ca
   }
 })
 
-test('legacy duration does not change any projection or propagation lag across the five scenarios', () => {
+test('all five shocks persist through the end of the projection and into terminal value', () => {
   for (const [scenarioId, inputs] of [
     ['interest_rate', { rateChangePctPoints: 1 }], ['hyperscaler_capex', { capexChangePct: 10 }],
     ['hbm_market', { hbmPriceChangePct: 10 }], ['gpu_dc_rent', { gpuRentChangePct: 10 }],
     ['model_growth', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 55 }],
   ]) {
-    const run = durationMonths => evaluateCompanyPreview({ scenarioId, inputs, durationMonths }, ['000660.KS', 'NVDA'])
-    const baseline = run(undefined)
-    assert.deepEqual(run(6), baseline)
-    assert.deepEqual(run(36), baseline)
-    assert.equal(baseline.scenario.persistence, 'permanent')
-    for (const row of baseline.companies) {
+    const result = evaluateCompanyPreview({ scenarioId, inputs }, ['000660.KS', 'NVDA'])
+    assert.equal(result.scenario.persistence, 'permanent')
+    for (const row of result.companies) {
+      assert.notEqual(row.valuation.monthly.scenarioFcff.at(-1), row.valuation.monthly.baselineFcff.at(-1))
       assert.notEqual(row.valuation.terminalValueAtMonth96, row.valuation.baselineTerminalValueAtMonth96)
     }
   }

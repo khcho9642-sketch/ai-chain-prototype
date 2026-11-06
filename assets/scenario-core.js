@@ -73,15 +73,9 @@ export function validateScenarioRequest(request) {
   if (!request || typeof request !== 'object' || Array.isArray(request)) fail('시나리오 요청은 객체여야 합니다.')
   const definition = scenarioById.get(request.scenarioId)
   if (!definition) fail(`알 수 없는 시나리오입니다: ${request.scenarioId}`)
-  const allowedTopLevel = new Set(['scenarioId', 'durationMonths', 'inputs', 'companyOverrides'])
+  const allowedTopLevel = new Set(['scenarioId', 'inputs', 'companyOverrides'])
   if (definition.id === 'interest_rate') allowedTopLevel.add('rateCapexMode')
   for (const key of Object.keys(request)) if (!allowedTopLevel.has(key)) fail(`지원하지 않는 요청 필드입니다: ${key}`)
-
-  // Older saved requests contained this field. Their shocks now persist as well.
-  const duration = request.durationMonths
-  if (duration != null && (!Number.isInteger(duration) || duration < 6 || duration > 36 || duration % 6 !== 0)) {
-    fail('durationMonths는 기존 요청의 6~36개월(6개월 단위) 값만 지원합니다.')
-  }
 
   const suppliedInputs = request.inputs ?? {}
   if (!suppliedInputs || typeof suppliedInputs !== 'object' || Array.isArray(suppliedInputs)) fail('inputs는 객체여야 합니다.')

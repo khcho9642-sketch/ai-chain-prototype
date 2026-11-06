@@ -169,28 +169,39 @@ test('scenario chapter renders compact controls and view-model tables without in
 
   const previous = {
     scenarioId: 'hyperscaler_capex', showObservedQuotes: true, sortRepresentativesByAbs: true,
+    touchedControls: { 'hyperscaler_capex:durationMonths': true },
     requests: {
       interest_rate: { scenarioId: 'interest_rate', durationMonths: 36, inputs: { rateChangePctPoints: -2 },
         companyOverrides: { EQIX: { assumptions: { netDebtToEvPct: 12 } } } },
       hyperscaler_capex: { scenarioId: 'hyperscaler_capex', durationMonths: 6, inputs: { capexChangePct: 0 } },
     },
   }
-  for (const version of [1, 2, 3]) {
+  for (const version of [1, 2, 3, 4]) {
     let stored
     if (version === 3) previous.requests.interest_rate.inputs.rateCapexSensitivity = 7
+    if (version === 4) {
+      Object.assign(previous.requests, {
+        hbm_market: { scenarioId: 'hbm_market', durationMonths: 12, inputs: { hbmPriceChangePct: 10 } },
+        gpu_dc_rent: { scenarioId: 'gpu_dc_rent', durationMonths: 24, inputs: { gpuRentChangePct: -10 } },
+        model_growth: { scenarioId: 'model_growth', durationMonths: 6, inputs: { modelTargetGrowthPct: 54 } },
+      })
+    }
     root.innerHTML = ''
     root.querySelector = () => null
     globalThis.localStorage = { getItem: () => JSON.stringify({ ...previous, version }), setItem: (_, value) => { stored = JSON.parse(value) } }
     await import(`../../assets/scenario.js?stored-launch=${version}-${Date.now()}`)
     await waitFor(() => root.innerHTML.includes('scenario-shell'))
     assert.equal(stored.scenarioId, 'interest_rate')
-    assert.ok(!Object.hasOwn(stored.requests.interest_rate, 'durationMonths'))
+    assert.doesNotMatch(JSON.stringify(stored), /durationMonths/)
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1)
-    assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, version === 3 ? 7 : 5)
+    assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, version >= 3 ? 7 : 5)
     assert.equal(stored.requests.interest_rate.companyOverrides.EQIX.assumptions.netDebtToEvPct, 12)
-    assert.ok(!Object.hasOwn(stored.requests.hyperscaler_capex, 'durationMonths'))
     assert.equal(stored.requests.hyperscaler_capex.inputs.capexChangePct, 0, 'restore an explicitly saved neutral shock')
-    assert.equal(stored.requests.gpu_dc_rent.inputs.gpuRentChangePct, 20, 'unvisited scenario starts with a visible example')
+    assert.equal(stored.requests.gpu_dc_rent.inputs.gpuRentChangePct, version === 4 ? -10 : 20)
+    if (version === 4) {
+      assert.equal(stored.requests.hbm_market.inputs.hbmPriceChangePct, 10)
+      assert.equal(stored.requests.model_growth.inputs.modelTargetGrowthPct, 54)
+    }
     assert.match(root.innerHTML, /data-control-preset-value="1" aria-pressed="true"/)
     assert.doesNotMatch(root.innerHTML, /data-duration|종료 후 12개월|전파 기간은 따로/)
     assert.match(root.innerHTML, /data-sort-representatives aria-pressed="true"/)
@@ -255,6 +266,7 @@ test('scenario chapter renders compact controls and view-model tables without in
       ['gpu_dc_rent', ['EQIX', 'MSFT']], ['model_growth', ['META', 'MSFT']],
     ]) {
       click('[data-scenario-id]', { scenarioId })
+      assert.doesNotMatch(root.innerHTML, /data-duration|충격 지속기간|전파 지속기간/)
       assert.doesNotMatch(root.innerHTML, /data-scenario-control="rateCapexSensitivity"/)
       assert.deepEqual([...root.innerHTML.matchAll(/data-live-company="([^"]+)"/g)].map(match => match[1]), expected)
       if (scenarioId === 'hbm_market') {

@@ -164,7 +164,7 @@ function loadState() {
   const first = 'interest_rate'
   const fallback = {
     version: STORAGE_VERSION, scenarioId: first, requests, selectedCompanyId: null,
-    segmentFilter: 'all', companySearch: '', sortRepresentativesByAbs: false, showObservedQuotes: false, touchedControls: {},
+    segmentFilter: 'all', companySearch: '', sortRepresentativesByAbs: false, showObservedQuotes: false,
   }
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
@@ -190,7 +190,6 @@ function loadState() {
       companySearch: typeof parsed.companySearch === 'string' ? parsed.companySearch.slice(0, 80) : '',
       sortRepresentativesByAbs: Boolean(parsed.sortRepresentativesByAbs),
       showObservedQuotes: false,
-      touchedControls: parsed.version === STORAGE_VERSION && parsed.touchedControls && typeof parsed.touchedControls === 'object' ? parsed.touchedControls : {},
     }
   } catch {
     storageMessage = '브라우저 저장값을 읽지 못해 기본 입력으로 시작했습니다.'
@@ -844,7 +843,6 @@ function updateControl(id, rawValue, { skipDetail = false, element = null, persi
   clearInputError(element)
   request.inputs[id] = numeric
   if (id === 'rateCapexSensitivity') request.rateCapexMode = 'manual'
-  uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
   refreshControls(element, { persist, skipDetail, preview })
   return true
 }
@@ -942,9 +940,7 @@ if (root) {
     if (preset) {
       const presetDefinition = scenarioById(uiState.scenarioId).presets?.[preset.dataset.scenarioPreset]
       if (presetDefinition) {
-        const values = clone(presetDefinition.inputs || presetDefinition)
-        Object.assign(currentRequest().inputs, values)
-        for (const id of Object.keys(values)) uiState.touchedControls[`${uiState.scenarioId}:${id}`] = true
+        Object.assign(currentRequest().inputs, presetDefinition.inputs)
       }
       refreshControls(); return
     }

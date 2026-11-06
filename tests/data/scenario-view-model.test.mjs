@@ -81,7 +81,7 @@ test('path descriptions use the reviewed nine-segment catalog', () => {
 
 test('real scenario view keeps 41 unique companies, nine reps and nonduplicated section counts', () => {
   const result = evaluateScenario({
-    scenarioId: 'hbm_market', durationMonths: 12,
+    scenarioId: 'hbm_market',
     inputs: { hbmPriceChangePct: 15, hbmSupplyChangePct: -10 },
   })
   const view = buildScenarioView(result)
@@ -102,7 +102,7 @@ test('real scenario view keeps 41 unique companies, nine reps and nonduplicated 
 
 test('rate sensitivity zero reproduces direct-only EV; a nonzero coefficient adds incremental supplier EV', () => {
   const scenario = rateCapexSensitivity => buildScenarioView(evaluateScenario({
-    scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1, rateCapexSensitivity },
+    scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1, rateCapexSensitivity },
   }))
   const rateOnly = scenario(0)
   const combined = scenario(5)
@@ -145,7 +145,7 @@ test('rate-level DCF components take precedence even if the path allocation is u
 
 test('CAPEX transmission reports catalog weights and individual lags only for an exact path match', () => {
   const view = buildScenarioView(evaluateScenario({
-    scenarioId: 'hyperscaler_capex', durationMonths: 12, inputs: { capexChangePct: 20 },
+    scenarioId: 'hyperscaler_capex', inputs: { capexChangePct: 20 },
   }))
   const nvidia = view.companies.find(company => company.companyId === 'NVDA')
   const path = nvidia.paths.find(path => path.pathId === 'hyperscalerCapex:revenueVolume:SEG8>SEG5>SEG4')
@@ -158,19 +158,6 @@ test('CAPEX transmission reports catalog weights and individual lags only for an
   assert.equal(path.coefficient, null)
   const mismatchedPath = { ...path, channels: ['직접 입력', 'unmapped', 'unmapped'] }
   assert.deepEqual(decomposeCompany({ ...nvidia, paths: [mismatchedPath] }).paths[0].coefficientSteps, [])
-})
-
-test('legacy durations produce the same permanent direct and chain EV changes', () => {
-  const view = duration => buildScenarioView(evaluateScenario({
-    scenarioId: 'interest_rate', durationMonths: duration,
-    inputs: { rateChangePctPoints: 1 },
-  }))
-  const twelve = view(12)
-  const six = view(6)
-  const eqix12 = twelve.companies.find(company => company.companyId === 'EQIX')
-  const eqix6 = six.companies.find(company => company.companyId === 'EQIX')
-  assert.equal(eqix6.chainPct, eqix12.chainPct)
-  closeTo(eqix6.directPct, eqix12.directPct, 1e-12)
 })
 
 test('only the four budget setters change their own outlay and earn returns from that spending', () => {
@@ -193,7 +180,7 @@ test('only the four budget setters change their own outlay and earn returns from
 })
 
 test('Alphabet direct CAPEX equals discounted budget and own capacity cash flows alone', () => {
-  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hyperscaler_capex', durationMonths: 12, inputs: { capexChangePct: 20 } }))
+  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hyperscaler_capex', inputs: { capexChangePct: 20 } }))
   const row = view.companies.find(item => item.companyId === 'GOOGL')
   const exposure = row.segmentWeights.SEG8 * row.assumptions.scenarioExposureScale
   const effectiveBudgetShock = 0.20 * exposure
@@ -224,7 +211,7 @@ test('Alphabet direct CAPEX equals discounted budget and own capacity cash flows
 })
 
 test('historical rate mode applies each individual owner shock to its own budget', () => {
-  const result = evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 }, durationMonths: 12 })
+  const result = evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 } })
   const { ownerChangesPct } = result.scenario.rateCapexTransmission
   for (const owner of result.companies.filter(row => row.capexRole === 'budget-owner')) {
     const expectedOutlay = owner.valuation.baselineRevenue[0] * owner.financialBasis.forecast[0].capexToRevenuePct / 100 *
@@ -260,7 +247,7 @@ test('sector explorer marks only actual direct origins and distinguishes the rat
   const origins = html => [...html.matchAll(/<button[^>]+data-explore-sector="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g)]
     .filter(match => match[2].includes('충격 시작')).map(match => match[1])
   for (const [gpuRentChangePct, dcRentChangePct, expected] of [[10, 0, ['SEG8']], [0, 10, ['SEG7']], [10, -10, ['SEG7', 'SEG8']], [0, 0, []]]) {
-    const view = buildScenarioView(evaluateScenario({ scenarioId: 'gpu_dc_rent', durationMonths: 12, inputs: { gpuRentChangePct, dcRentChangePct } }))
+    const view = buildScenarioView(evaluateScenario({ scenarioId: 'gpu_dc_rent', inputs: { gpuRentChangePct, dcRentChangePct } }))
     const html = renderExplorer(view, display)
     assert.deepEqual(origins(html), expected)
     if (!expected.length) {
@@ -268,13 +255,13 @@ test('sector explorer marks only actual direct origins and distinguishes the rat
       assert.match(sectorConclusion(view), /9개 섹터 지수가 모두 기준 100/)
     }
   }
-  const rate = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }))
+  const rate = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 } }))
   const html = renderExplorer(rate, display)
   assert.deepEqual(origins(html), [])
   assert.match(html, /금리 · 9개 섹터에 직접 적용 · 빅테크 AI CAPEX 경유 전파/)
-  const off = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1, rateCapexSensitivity: 0 } }))
+  const off = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1, rateCapexSensitivity: 0 } }))
   assert.match(renderExplorer(off, display), /CAPEX 민감도 0.0 · 전파효과 0.0%/)
-  const neutral = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 0 } }))
+  const neutral = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 0 } }))
   assert.match(renderExplorer(neutral, display), /금리 변화 0.0%p · CAPEX 경유 전파 0.0%/)
   assert.match(html, /9개 섹터 가치 변화/)
   assert.match(html, /공개 재무 없음 · 섹터 가정/)
@@ -284,7 +271,7 @@ test('sector explorer marks only actual direct origins and distinguishes the rat
 
 test('explorer reuses the same company valuation in every membership and ranks available companies by absolute change', async () => {
   const { renderExplorer } = await import('../../assets/scenario-explorer.js')
-  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hbm_market', durationMonths: 12, inputs: { hbmPriceChangePct: 10, hbmSupplyChangePct: 0 } }))
+  const view = buildScenarioView(evaluateScenario({ scenarioId: 'hbm_market', inputs: { hbmPriceChangePct: 10, hbmSupplyChangePct: 0 } }))
   const both = []
   // One row cannot be compared. It is still a member but should not enter the ranking.
   const unavailable = view.companies.find(company => company.companyId === 'MU')

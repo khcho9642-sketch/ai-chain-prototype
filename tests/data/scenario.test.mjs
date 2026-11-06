@@ -87,7 +87,7 @@ test('default inputs are a computed zero-shock identity for all five scenarios',
 
 test('CAPEX means change from baseline budget: cash outflow for cloud and supplier volume for the chain', () => {
   const result = evaluateScenario({
-    scenarioId: 'hyperscaler_capex', durationMonths: 12,
+    scenarioId: 'hyperscaler_capex',
     inputs: { capexChangePct: 20 },
   })
   assert.ok(segment(result, 'SEG8').scenarioValueIndex < 100)
@@ -103,7 +103,7 @@ test('CAPEX means change from baseline budget: cash outflow for cloud and suppli
 
 test('HBM price and supply use separate ASP, unit-cost and volume primitives', () => {
   const price = evaluateScenario({
-    scenarioId: 'hbm_market', durationMonths: 12,
+    scenarioId: 'hbm_market',
     inputs: { hbmPriceChangePct: 20, hbmSupplyChangePct: 0 },
   })
   assert.ok(segment(price, 'SEG3').scenarioValueIndex > 100)
@@ -116,7 +116,7 @@ test('HBM price and supply use separate ASP, unit-cost and volume primitives', (
   assert.ok(price.segments.every(item => item.coverage.status === 'modeled'))
 
   const supply = evaluateScenario({
-    scenarioId: 'hbm_market', durationMonths: 12,
+    scenarioId: 'hbm_market',
     inputs: { hbmPriceChangePct: 0, hbmSupplyChangePct: 20 },
   })
   assert.ok(segment(supply, 'SEG3').scenarioValueIndex > 100)
@@ -128,7 +128,7 @@ test('HBM price and supply use separate ASP, unit-cost and volume primitives', (
 
 test('GPU and data-center rents separate provider ASP from customer unit cost and reach all segments', () => {
   const result = evaluateScenario({
-    scenarioId: 'gpu_dc_rent', durationMonths: 12,
+    scenarioId: 'gpu_dc_rent',
     inputs: { gpuRentChangePct: 20, dcRentChangePct: 15 },
   })
   assert.ok(bridgeYear(result, 'SEG8').aspPct > 0)
@@ -140,7 +140,7 @@ test('GPU and data-center rents separate provider ASP from customer unit cost an
 
 test('model growth input compares baseline to target as a relative revenue change', () => {
   const result = evaluateScenario({
-    scenarioId: 'model_growth', durationMonths: 12,
+    scenarioId: 'model_growth',
     inputs: { modelBaselineGrowthPct: 100, modelTargetGrowthPct: 50 },
   })
   closeTo(result.scenario.drivers[0].normalizedShock, -0.25)
@@ -151,7 +151,7 @@ test('model growth input compares baseline to target as a relative revenue chang
 
 test('rate input is percentage points and changes WACC throughout the valuation', () => {
   const result = evaluateScenario({
-    scenarioId: 'interest_rate', durationMonths: 12,
+    scenarioId: 'interest_rate',
     inputs: { rateChangePctPoints: 1 },
   })
   assert.ok(result.segments.every(item => item.scenarioValueIndex < 100))
@@ -163,7 +163,7 @@ test('rate input is percentage points and changes WACC throughout the valuation'
 
 test('eight-year horizon contains each onset and leaves a divergent terminal unvalued', () => {
   const result = evaluateScenario({
-    scenarioId: 'model_growth', durationMonths: 36,
+    scenarioId: 'model_growth',
     inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 100 },
   })
   assert.equal(result.model.forecastYears, 8)
@@ -177,7 +177,7 @@ test('eight-year horizon contains each onset and leaves a divergent terminal unv
 
 test('multi-segment roles do not duplicate companies and Big7 remains equal weighted', () => {
   const result = evaluateScenario({
-    scenarioId: 'hbm_market', durationMonths: 12,
+    scenarioId: 'hbm_market',
     inputs: { hbmPriceChangePct: 10, hbmSupplyChangePct: -10 },
   })
   assert.equal(result.companies.filter(item => item.companyId === '005930.KS').length, 1)
@@ -191,7 +191,7 @@ test('multi-segment roles do not duplicate companies and Big7 remains equal weig
 
 test('company overrides are explicit, and observed-price ratio needs same-date net debt', () => {
   const baseRequest = {
-    scenarioId: 'hyperscaler_capex', durationMonths: 12,
+    scenarioId: 'hyperscaler_capex',
     inputs: { capexChangePct: 20 },
   }
   const missing = evaluateScenario(baseRequest)
@@ -223,7 +223,7 @@ test('company overrides are explicit, and observed-price ratio needs same-date n
 
 test('each repriced HBM path reconciles to its direct or transmitted effect', () => {
   const result = evaluateScenario({
-    scenarioId: 'hbm_market', durationMonths: 18,
+    scenarioId: 'hbm_market',
     inputs: { hbmPriceChangePct: 15, hbmSupplyChangePct: -10 },
   })
   for (const item of [...result.segments, ...result.companies]) {
@@ -236,8 +236,7 @@ test('each repriced HBM path reconciles to its direct or transmitted effect', ()
 
 test('invalid ranges, unknown fields and invalid terminal or equity assumptions fail', () => {
   assert.throws(() => validateScenarioRequest({ scenarioId: 'unknown' }), /알 수 없는 시나리오/)
-  assert.throws(() => evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: Infinity } }), /유한한 숫자/)
-  assert.throws(() => evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 7, inputs: { rateChangePctPoints: 0 } }), /6개월 단위/)
+  assert.throws(() => evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: Infinity } }), /유한한 숫자/)
   assert.throws(() => evaluateScenario({ scenarioId: 'model_growth', inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 50 }, companyOverrides: { FAKE: {} } }), /알 수 없는 회사/)
   assert.throws(() => evaluateScenario({
     scenarioId: 'model_growth', inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 50 },
@@ -353,7 +352,7 @@ test('cash ratios use the same accounting basis while growth and starting revenu
 })
 
 test('cash-flow proxy deducts only incremental capex and respects forecast overrides', () => {
-  const request = { scenarioId: 'hyperscaler_capex', durationMonths: 12, inputs: { capexChangePct: 20 } }
+  const request = { scenarioId: 'hyperscaler_capex', inputs: { capexChangePct: 20 } }
   const actual = company(evaluateScenario(request), 'MSFT')
   const customRatio = 35
   const adjusted = company(evaluateScenario({
@@ -374,7 +373,7 @@ test('cash-flow proxy deducts only incremental capex and respects forecast overr
 })
 
 test('negative observed cash margins remain in the forecast and a nonpositive baseline cannot produce ratios', () => {
-  const request = { scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }
+  const request = { scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 } }
   const base = company(evaluateScenario(request), 'CRWV')
   assert.ok(base.financialBasis.historicalCashMarginPct < 0)
   assert.equal(base.financialBasis.firstYearCashMarginPct, base.financialBasis.historicalCashMarginPct)
@@ -404,7 +403,7 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
 
 test('standalone CAPEX matches repricing without discount and direct demand across owners and suppliers', () => {
   const ids = ['NVDA', '000660.KS', 'MSFT', 'AMZN']
-  const request = { scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }
+  const request = { scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 } }
   const full = evaluateScenario(request)
   const companyOverrides = Object.fromEntries(ids.map(id => [id, {
     exposures: { interestRate: 0 }, assumptions: { rateDiscountPassThrough: 0 },
@@ -418,17 +417,17 @@ test('standalone CAPEX matches repricing without discount and direct demand acro
 })
 
 test('model revenue contraction and recovery preserve growth-rate arithmetic', () => {
-  const contraction = evaluateScenario({ scenarioId: 'model_growth', durationMonths: 12, inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: -20 } })
+  const contraction = evaluateScenario({ scenarioId: 'model_growth', inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: -20 } })
   closeTo(contraction.scenario.drivers[0].normalizedShock, 0.8 / 1.5 - 1)
   assert.ok(segment(contraction, 'SEG9').scenarioValueIndex < 100)
-  const recovery = evaluateScenario({ scenarioId: 'model_growth', durationMonths: 12, inputs: { modelBaselineGrowthPct: -20, modelTargetGrowthPct: 0 } })
+  const recovery = evaluateScenario({ scenarioId: 'model_growth', inputs: { modelBaselineGrowthPct: -20, modelTargetGrowthPct: 0 } })
   closeTo(recovery.scenario.drivers[0].normalizedShock, 0.25)
   assert.ok(segment(recovery, 'SEG9').valuation.monthly.revenueVolumePct.at(-1) > 0)
   assert.equal(segment(recovery, 'SEG9').valuation.comparisonStatus, 'nonconvergent-terminal')
 })
 
-const rateScenario = (rateChangePctPoints, rateCapexSensitivity, durationMonths = 12, companyOverrides = {}) =>
-  evaluateScenario({ scenarioId: 'interest_rate', durationMonths, inputs: { rateChangePctPoints, rateCapexSensitivity }, companyOverrides })
+const rateScenario = (rateChangePctPoints, rateCapexSensitivity, companyOverrides = {}) =>
+  evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints, rateCapexSensitivity }, companyOverrides })
 
 test('significant-only rates use the full investment denominator and remove unsupported own-budget paths', () => {
   const request = { scenarioId: 'interest_rate', rateCapexMode: 'historical-significant', inputs: { rateChangePctPoints: 1 } }
@@ -468,7 +467,7 @@ test('significant-only rates use the full investment denominator and remove unsu
 
 test('fitted CAPEX limits reprice each company at simultaneous owner-specific budgets for rate hikes and cuts', () => {
   for (const rate of [1, -0.75]) {
-    const request = { scenarioId: 'interest_rate', rateCapexMode: 'historical', durationMonths: 6, inputs: { rateChangePctPoints: rate },
+    const request = { scenarioId: 'interest_rate', rateCapexMode: 'historical', inputs: { rateChangePctPoints: rate },
       companyOverrides: { NVDA: { scenarioExposureScale: 0.52 }, CRWV: { assumptions: { discountRatePct: 25, terminalGrowthPct: -1 } } } }
     const full = evaluateScenario(request)
     const significant = evaluateScenario({ ...request, rateCapexMode: 'historical-significant' })
@@ -559,9 +558,8 @@ test('rate-sensitive CAPEX uses the existing budget shock exactly once with exis
   }
 })
 
-test('rate direction, zero shock and sensitivity change conditional CAPEX, legacy duration is ignored', () => {
-  const halfYear = rateScenario(1, 5, 6)
-  const fullYear = rateScenario(1, 5)
+test('rate direction, zero shock and sensitivity change conditional CAPEX', () => {
+  const base = rateScenario(1, 5)
   const cut = rateScenario(-1, 5)
   const stronger = rateScenario(1, 10)
   const none = rateScenario(0, 10)
@@ -572,9 +570,7 @@ test('rate direction, zero shock and sensitivity change conditional CAPEX, legac
   assert.equal(rateScenario(3, 10).scenario.rateCapexTransmission.derivedCapexChangePct, -30)
   assert.equal(rateScenario(-2, 10).scenario.rateCapexTransmission.derivedCapexChangePct, 20)
   for (const id of ['NVDA', '000660.KS']) {
-    const normal = company(fullYear, id).rateAttribution
-    assert.equal(company(halfYear, id).rateAttribution.directPct, normal.directPct)
-    assert.equal(company(halfYear, id).rateAttribution.chainPct, normal.chainPct)
+    const normal = company(base, id).rateAttribution
     assert.ok(company(cut, id).rateAttribution.chainPct > 0)
     assert.equal(company(stronger, id).rateAttribution.directPct, normal.directPct)
     assert.ok(company(stronger, id).rateAttribution.chainPct < normal.chainPct)
@@ -587,8 +583,8 @@ test('sensitivity is an explicit assumption while company CAPEX exposure still s
   assert.equal(input.defaultValue, 5)
   for (const bad of [-0.1, 10.1, Infinity]) assert.throws(() => rateScenario(1, bad), /0~10/)
   assert.throws(() => evaluateScenario({ scenarioId: 'interest_rate', inputs: { capexChangePct: -5 } }), /지원하지 않는 입력/)
-  assert.throws(() => rateScenario(1, 5, 12, { NVDA: { exposures: { rateCapexSensitivity: 1 } } }), /알 수 없는 노출도/)
-  const custom = rateScenario(1, 5, 12, { NVDA: { exposures: { hyperscalerCapex: 0 } } })
+  assert.throws(() => rateScenario(1, 5, { NVDA: { exposures: { rateCapexSensitivity: 1 } } }), /알 수 없는 노출도/)
+  const custom = rateScenario(1, 5, { NVDA: { exposures: { hyperscalerCapex: 0 } } })
   assert.deepEqual(company(custom, 'NVDA').rateAttribution, company(rateScenario(1, 0), 'NVDA').rateAttribution)
   assert.ok(company(custom, '000660.KS').rateAttribution.chainPct < 0)
 })

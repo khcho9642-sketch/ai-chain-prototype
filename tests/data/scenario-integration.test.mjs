@@ -100,9 +100,7 @@ test('scenario contract keeps five cases, nine named segments and the complete B
   for (const scenarioId of scenarioIds) {
     const request = buildDefaultScenarioRequest(scenarioId)
     assert.equal(Object.hasOwn(request, 'durationMonths'), false)
-    for (const durationMonths of [6, 12, 24, 36]) {
-      assert.deepEqual(validateScenarioRequest({ ...request, durationMonths }), request)
-    }
+    assert.throws(() => validateScenarioRequest({ ...request, durationMonths: 12 }), /지원하지 않는 요청 필드.*durationMonths/u)
     assert.deepEqual(validateScenarioRequest(structuredClone(request)), request)
     const output = evaluateScenario(request)
     assert.equal(output.segments.length, 9)
