@@ -13,11 +13,25 @@ import { verifyTodayDiscussionHashes } from './community/today-discussion.mjs'
 import { validateTodayPersonas, TODAY_PERSONAS_MAX_BYTES } from '../assets/today-persona-core.js'
 import { verifyTodayPersonaHashes } from './community/today-persona.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
+import { buildRippleSnapshot, validateRippleSnapshot } from '../assets/ripple-core.js'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json']
+export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json','ripple.json']
+
+// A derived feed is only meaningful for the exact market snapshot in this build.
+// Older collectors and isolated fixtures may have no ripple file; derive it from
+// their local source without fetching prices or modifying the source directory.
+export async function resolveBuildRippleSnapshot(root, marketSnapshot, { now = Date.now() } = {}) {
+  const expectedSource = marketSnapshot?.generatedAt ?? null
+  try {
+    const value = validateRippleSnapshot(JSON.parse(await readFile(join(root, 'data', 'ripple.json'), 'utf8')))
+    if (value.sourceSnapshotGeneratedAt === expectedSource) return value
+  } catch {}
+  return validateRippleSnapshot(buildRippleSnapshot({ marketSnapshot, now }))
+}
+
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
@@ -29,6 +43,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   catch (error) { if (error.code !== 'ENOENT') throw error }
   const data = JSON.parse(await readFile(join(source, 'data', 'market.json'), 'utf8'))
   if (!Array.isArray(data.quotes)) throw new Error('시세 스냅샷 형식이 올바르지 않습니다.')
+  const ripple = await resolveBuildRippleSnapshot(source, data)
   validateEpochSnapshot(JSON.parse(await readFile(join(source, 'data', 'epoch-ai.json'), 'utf8')))
   validateIndustry(JSON.parse(await readFile(join(source, 'data', 'industry.json'), 'utf8')))
   validateAiStatistics(JSON.parse(await readFile(join(source, 'data', 'ai-statistics.json'), 'utf8')))
@@ -61,7 +76,8 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   }
   await writeFile(join(output, 'index.html'), html)
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
-  await Promise.all(publicSnapshotFiles.map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  await Promise.all(publicSnapshotFiles.filter(name => name !== 'ripple.json').map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  await writeFile(join(output, 'data', 'ripple.json'), JSON.stringify(ripple) + '\n')
   if (assets.some(entry => entry.name === 'community.js')) await writeFile(join(output, 'assets', 'community-runtime.js'), `export const communityApiOrigin = ${JSON.stringify(communityOrigin)}\n`)
   return output
 }

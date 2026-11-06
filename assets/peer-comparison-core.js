@@ -58,7 +58,7 @@ function readPeer(instrument, quote, nowMs, maxSnapshotAgeHours, periodDays) {
   if (dates.length < 2) { peer.reason = '유효 종가가 2거래일 미만'; return { peer, points } }
   peer.included = true
   const fetchedMs = dateMs(quote.fetchedAt)
-  if (Number.isFinite(fetchedMs) && nowMs - fetchedMs > maxSnapshotAgeHours * 3600000) {
+  if (Number.isFinite(fetchedMs) && nowMs - fetchedMs > Math.max(maxSnapshotAgeHours, quote.priceBasis === 'previous-completed-session' ? 96 : 0) * 3600000) {
     peer.stale = true; peer.warnings.push('수집 후 시간이 지난 스냅샷')
   }
   if (!Number.isFinite(fetchedMs)) peer.warnings.push('수집 시각 미제공')

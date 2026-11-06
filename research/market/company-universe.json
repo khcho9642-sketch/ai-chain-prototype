@@ -1,0 +1,7154 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-11-03",
+  "sourceStatus": "review-draft",
+  "source": "Company master, AI_밸류체인_SEG_회사리스트_기능정의.xlsx",
+  "sourceUrl": "https://drive.google.com/file/d/1A9Az4RgoxQMcKdkD1nVrgBECtL7HxVQP",
+  "companies": [
+    {
+      "id": "C0214",
+      "name": "HPSP",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "403870",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0247",
+      "name": "ISC",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "095340",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0530",
+      "name": "대덕전자",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "353200",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0532",
+      "name": "동진쎄미켐",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "005290",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0535",
+      "name": "리노공업",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "058470",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0542",
+      "name": "삼성전기",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "009150",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0546",
+      "name": "솔브레인",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "357780",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0552",
+      "name": "에스앤에스텍",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "101490",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0555",
+      "name": "에프에스티",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "036810",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0560",
+      "name": "원익IPS",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "240810",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0561",
+      "name": "원익QnC",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "074600",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0562",
+      "name": "원익머트리얼즈",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "104830",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0566",
+      "name": "주성엔지니어링",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "036930",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0575",
+      "name": "티씨케이",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "064760",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0578",
+      "name": "피에스케이",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "319660",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0580",
+      "name": "하나머티리얼즈",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "166090",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0582",
+      "name": "한미반도체",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "042700",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0583",
+      "name": "한솔케미칼",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "014680",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0099",
+      "name": "Chroma ATE",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2360",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0155",
+      "name": "E&R Engineering",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "8027",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0191",
+      "name": "GlobalWafers",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "6488",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0203",
+      "name": "Gudeng Precision",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3680",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0266",
+      "name": "Kinik",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "1560",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0323",
+      "name": "MPI Corporation",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "6223",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0326",
+      "name": "Nan Ya PCB",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "8046",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0401",
+      "name": "Scientech",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3583",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0488",
+      "name": "Unimicron Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3037",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0501",
+      "name": "Wafer Works",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "6182",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0509",
+      "name": "WinWay Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6515",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0043",
+      "name": "Applied Materials",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AMAT",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0151",
+      "name": "Entegris",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "ENTG",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0169",
+      "name": "FormFactor",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "FORM",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0270",
+      "name": "KLA",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "KLAC",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0277",
+      "name": "Lam Research",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "LRCX",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0317",
+      "name": "MKS Instruments",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MKSI",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0370",
+      "name": "Qnity Electronics",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "Q",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0029",
+      "name": "AMEC",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688012",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0328",
+      "name": "NAURA Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002371",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0014",
+      "name": "Advantest",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6857",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0017",
+      "name": "Ajinomoto",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "2802",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0177",
+      "name": "Fujimi Incorporated",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "5384",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0224",
+      "name": "Ibiden",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4062",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0383",
+      "name": "Resonac Holdings",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4004",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0414",
+      "name": "Shin-Etsu Chemical",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4063",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0444",
+      "name": "SUMCO",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "3436",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0473",
+      "name": "Tokyo Electron",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "8035",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0474",
+      "name": "Tokyo Ohka Kogyo",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4186",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0050",
+      "name": "ASM International",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "Euronext Amsterdam",
+      "ticker": "ASM",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0051",
+      "name": "ASML",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "Euronext Amsterdam / NASDAQ",
+      "ticker": "ASML",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0065",
+      "name": "BE Semiconductor Industries",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "Euronext Amsterdam",
+      "ticker": "BESI",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0304",
+      "name": "Merck KGaA",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "MRK",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0421",
+      "name": "Siltronic",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "WAF",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0492",
+      "name": "VAT Group",
+      "country": "스위스",
+      "listed": true,
+      "exchange": "SIX",
+      "ticker": "VACN",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0016",
+      "name": "Air Liquide",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "AI",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0432",
+      "name": "Soitec",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "SOI",
+      "sector": "SEG1",
+      "sectors": [
+        "SEG1"
+      ]
+    },
+    {
+      "id": "C0123",
+      "name": "DB하이텍",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "000990",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0279",
+      "name": "LB세미콘",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "061970",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0406",
+      "name": "SFA반도체",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "036540",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0526",
+      "name": "네패스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "033640",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0527",
+      "name": "네패스아크",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "330860",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0548",
+      "name": "시그네틱스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "033170",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0579",
+      "name": "하나마이크론",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "067310",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0048",
+      "name": "ASE Technology Holding",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE / NYSE",
+      "ticker": "3711 / ASX",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0097",
+      "name": "Chipbond Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "6147",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0098",
+      "name": "ChipMOS Technologies",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE / NASDAQ",
+      "ticker": "8150 / IMOS",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0199",
+      "name": "Greatek Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2441",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0265",
+      "name": "King Yuan Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2449",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0355",
+      "name": "Orient Semiconductor Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2329",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0363",
+      "name": "Powertech Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6239",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0367",
+      "name": "PSMC",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6770",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0419",
+      "name": "Sigurd Microelectronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6257",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0483",
+      "name": "TSMC",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE / NYSE",
+      "ticker": "2330 / TSM",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0487",
+      "name": "UMC",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE / NYSE",
+      "ticker": "2303 / UMC",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0491",
+      "name": "Vanguard International Semiconductor",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "5347",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0508",
+      "name": "WIN Semiconductors",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3105",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0031",
+      "name": "Amkor Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AMKR",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0189",
+      "name": "GlobalFoundries",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "GFS",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0216",
+      "name": "Hua Hong Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX / SSE STAR",
+      "ticker": "1347 / 688347",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0217",
+      "name": "Huatian Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002185",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0249",
+      "name": "JCET Group",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "600584",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0336",
+      "name": "Nexchip Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688249",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0427",
+      "name": "SMIC",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX / SSE STAR",
+      "ticker": "0981 / 688981",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0476",
+      "name": "Tongfu Microelectronics",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002156",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0038",
+      "name": "AOI Electronics",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6832",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0467",
+      "name": "Tera Probe",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6627",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0193",
+      "name": "Globetronics Technology",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "7022",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0227",
+      "name": "Inari Amertron",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "0166",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0263",
+      "name": "KESM Industries",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "9334",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0298",
+      "name": "Malaysian Pacific Industries",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "3867",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0489",
+      "name": "Unisem",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "5005",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0513",
+      "name": "X-FAB Silicon Foundries",
+      "country": "벨기에",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "XFAB",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0478",
+      "name": "Tower Semiconductor",
+      "country": "이스라엘",
+      "listed": true,
+      "exchange": "NASDAQ / TASE",
+      "ticker": "TSEM",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0257",
+      "name": "Kaynes Technology India",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "KAYNES",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0205",
+      "name": "Hana Microelectronics",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "HANA",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0439",
+      "name": "Stars Microelectronics",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "SMT",
+      "sector": "SEG2",
+      "sectors": [
+        "SEG2"
+      ]
+    },
+    {
+      "id": "C0426",
+      "name": "SK하이닉스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "000660",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0543",
+      "name": "삼성전자",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "005930",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG2",
+        "SEG3",
+        "SEG4",
+        "SEG6",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0565",
+      "name": "제주반도체",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "080220",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0577",
+      "name": "피델릭스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "032580",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0011",
+      "name": "ADATA Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3260",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0039",
+      "name": "Apacer Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "8271",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0040",
+      "name": "AP Memory Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6531",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0145",
+      "name": "Elite Semiconductor Memory Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3006",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0157",
+      "name": "Etron Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "5351",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0235",
+      "name": "Innodisk",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "5289",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0297",
+      "name": "Macronix International",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2337",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0327",
+      "name": "Nanya Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2408",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0457",
+      "name": "Team Group",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "4967",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0480",
+      "name": "Transcend Information",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2451",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0507",
+      "name": "Winbond Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2344",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0159",
+      "name": "Everspin Technologies",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MRAM",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0200",
+      "name": "GSI Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "GSIT",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0308",
+      "name": "Micron Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MU",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0395",
+      "name": "Sandisk",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SNDK",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0069",
+      "name": "Biwin Storage Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688525",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0119",
+      "name": "CXMT",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688825",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0138",
+      "name": "Dosilicon",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688110",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0185",
+      "name": "Giantec Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688123",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0187",
+      "name": "GigaDevice Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE / HKEX",
+      "ticker": "603986 / 3986",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0234",
+      "name": "Ingenic Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300223",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0332",
+      "name": "Netac Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300042",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0368",
+      "name": "Puya Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688766",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0409",
+      "name": "Shanghai Fudan Microelectronics",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX / SSE STAR",
+      "ticker": "1385 / 688385",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0413",
+      "name": "Shenzhen Longsys Electronics",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "301308",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0268",
+      "name": "Kioxia Holdings",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "285A",
+      "sector": "SEG3",
+      "sectors": [
+        "SEG3"
+      ]
+    },
+    {
+      "id": "C0524",
+      "name": "가온칩스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "399720",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0528",
+      "name": "넥스트칩",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "396270",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0545",
+      "name": "세미파이브",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "490470",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0554",
+      "name": "에이디테크놀로지",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "200710",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0558",
+      "name": "오픈엣지테크놀로지",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "394280",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0568",
+      "name": "칩스앤미디어",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "094360",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0573",
+      "name": "텔레칩스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "054450",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0019",
+      "name": "Alchip Technologies",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3661",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0035",
+      "name": "Andes Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6533",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0161",
+      "name": "Faraday Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3035",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0190",
+      "name": "Global Unichip",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3443",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0300",
+      "name": "MediaTek",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2454",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0345",
+      "name": "Nuvoton Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "4919",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0378",
+      "name": "Realtek Semiconductor",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2379",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0027",
+      "name": "Ambarella",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AMBA",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0028",
+      "name": "AMD",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AMD",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0041",
+      "name": "Apple",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AAPL",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0072",
+      "name": "Blaize",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "BZAI",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0078",
+      "name": "Broadcom",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AVGO",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4",
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0089",
+      "name": "Cerebras Systems",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CBRS",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0090",
+      "name": "CEVA",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CEVA",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0237",
+      "name": "Intel",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "INTC",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG2",
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0278",
+      "name": "Lattice Semiconductor",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "LSCC",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0299",
+      "name": "Marvell Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MRVL",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4",
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0307",
+      "name": "Microchip Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MCHP",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG3",
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0347",
+      "name": "NVIDIA",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "NVDA",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4",
+        "SEG5",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0371",
+      "name": "Qualcomm",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "QCOM",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0452",
+      "name": "Synaptics",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SYNA",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0023",
+      "name": "Allwinner Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300458",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0032",
+      "name": "Amlogic",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688099",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0067",
+      "name": "Biren Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "06082",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0071",
+      "name": "Black Sesame International",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "02533",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0076",
+      "name": "Brite Semiconductor",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688691",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0081",
+      "name": "Cambricon",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688256",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0149",
+      "name": "Enflame Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688801",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0213",
+      "name": "Horizon Robotics",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "09660",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0222",
+      "name": "Hygon Information Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688041",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0306",
+      "name": "MetaX",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688802",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0322",
+      "name": "Moore Threads",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688795",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0386",
+      "name": "Rockchip Electronics",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "603893",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0493",
+      "name": "VeriSilicon",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688521",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0382",
+      "name": "Renesas Electronics",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6723",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0430",
+      "name": "Socionext",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6526",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0434",
+      "name": "Sony Group",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE / NYSE",
+      "ticker": "6758 / SONY",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0348",
+      "name": "NXP Semiconductors",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "NXPI",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0442",
+      "name": "STMicroelectronics",
+      "country": "스위스",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "STM",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG3",
+        "SEG4",
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0047",
+      "name": "Arm",
+      "country": "영국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "ARM",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0075",
+      "name": "BrainChip Holdings",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "BRN",
+      "sector": "SEG4",
+      "sectors": [
+        "SEG4"
+      ]
+    },
+    {
+      "id": "C0539",
+      "name": "빛과전자",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "069540",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0544",
+      "name": "서진시스템",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "178320",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0557",
+      "name": "오이솔루션",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "138080",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0559",
+      "name": "옵티코어",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "380540",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0563",
+      "name": "이수페타시스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX",
+      "ticker": "007660",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0576",
+      "name": "파두",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KOSDAQ",
+      "ticker": "440110",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0009",
+      "name": "Accton Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2345",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0025",
+      "name": "Alpha Networks",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3380",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0052",
+      "name": "ASRock",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3515",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0053",
+      "name": "ASRock Rack",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "7711",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0056",
+      "name": "ASUSTeK Computer",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2357",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0167",
+      "name": "FOCI Fiber Optic Communications",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3363",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0186",
+      "name": "Gigabyte Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2376",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0212",
+      "name": "Hon Hai Precision Industry",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2317",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0241",
+      "name": "Inventec",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2356",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0294",
+      "name": "LuxNet",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "4979",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0313",
+      "name": "MiTAC Holdings",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3706",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0358",
+      "name": "Pegatron",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "4938",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0360",
+      "name": "Phison Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "8299",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0372",
+      "name": "Quanta Computer",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2382",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0420",
+      "name": "Silicon Motion Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SIMO",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0482",
+      "name": "TrueLight",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3234",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0510",
+      "name": "Wistron",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3231",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0511",
+      "name": "Wiwynn",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6669",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0033",
+      "name": "Amphenol",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "APH",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0044",
+      "name": "Applied Optoelectronics",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AAOI",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0046",
+      "name": "Arista Networks",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "ANET",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0055",
+      "name": "Astera Labs",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "ALAB",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0102",
+      "name": "Ciena",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CIEN",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0104",
+      "name": "Cisco Systems",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CSCO",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0110",
+      "name": "Coherent",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "COHR",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0116",
+      "name": "Corning",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "GLW",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0117",
+      "name": "Credo Technology Group",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CRDO",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0129",
+      "name": "Dell Technologies",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "DELL",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0158",
+      "name": "Everpure",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "P",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0166",
+      "name": "Flex",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "FLEX",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0209",
+      "name": "Hewlett Packard Enterprise",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "HPE",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0248",
+      "name": "Jabil",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "JBL",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0293",
+      "name": "Lumentum Holdings",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "LITE",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0333",
+      "name": "NetApp",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "NTAP",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0359",
+      "name": "Penguin Solutions",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "PENG",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG3",
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0396",
+      "name": "Sanmina",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SANM",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0402",
+      "name": "Seagate Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "STX",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0450",
+      "name": "Super Micro Computer",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SMCI",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0504",
+      "name": "Western Digital",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "WDC",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0008",
+      "name": "Accelink Technologies",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002281",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0122",
+      "name": "Dawning Information Industry",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "603019",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0153",
+      "name": "Eoptolink Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300502",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0165",
+      "name": "FiberHome Telecommunication Technologies",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "600498",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0170",
+      "name": "Foxconn Industrial Internet",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "601138",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0208",
+      "name": "Hengtong Optic-Electric",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "600487",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0215",
+      "name": "Huagong Tech",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "000988",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0236",
+      "name": "Inspur Electronic Information Industry",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "000977",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0252",
+      "name": "Jiangsu Zhongtian Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "600522",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0281",
+      "name": "Lenovo Group",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "00992",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0389",
+      "name": "Ruijie Networks",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "301165",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0470",
+      "name": "TFC Communication",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300394",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0490",
+      "name": "Unisplendour",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "000938",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0516",
+      "name": "Yangtze Optical Fibre and Cable",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE / HKEX",
+      "ticker": "601869 / 06869",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0520",
+      "name": "Zhongji Innolight",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300308",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0521",
+      "name": "ZTE",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE / HKEX",
+      "ticker": "000063 / 00763",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0176",
+      "name": "Fujikura",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "5803",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0178",
+      "name": "Fujitsu",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6702",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5",
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0179",
+      "name": "Furukawa Electric",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "5801",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0210",
+      "name": "Hitachi",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6501",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5",
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0331",
+      "name": "NEC",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "6701",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5",
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0446",
+      "name": "Sumitomo Electric Industries",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "5802",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0271",
+      "name": "Kontron",
+      "country": "오스트리아",
+      "listed": true,
+      "exchange": "XETRA",
+      "ticker": "KTN",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0334",
+      "name": "Netweb Technologies India",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE / BSE",
+      "ticker": "NETWEB / 543945",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0088",
+      "name": "Celestica",
+      "country": "캐나다",
+      "listed": true,
+      "exchange": "NYSE / TSX",
+      "ticker": "CLS",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0160",
+      "name": "Fabrinet",
+      "country": "태국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "FN",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0342",
+      "name": "Nokia",
+      "country": "핀란드",
+      "listed": true,
+      "exchange": "Nasdaq Helsinki / NYSE",
+      "ticker": "NOKIA / NOK",
+      "sector": "SEG5",
+      "sectors": [
+        "SEG5"
+      ]
+    },
+    {
+      "id": "C0201",
+      "name": "GST",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "083450",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0207",
+      "name": "HD현대일렉트릭",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "267260",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0285",
+      "name": "LG전자",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "066570",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0289",
+      "name": "LS",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "006260",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0290",
+      "name": "LS일렉트릭",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "010120",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0424",
+      "name": "SK이노베이션",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "096770",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0523",
+      "name": "가온전선",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "000500",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0531",
+      "name": "대한전선",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "001440",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0533",
+      "name": "두산에너빌리티",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "034020",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0540",
+      "name": "산일전기",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "062040",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0549",
+      "name": "신성이엔지",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "011930",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0553",
+      "name": "에쓰오일",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "010950",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0564",
+      "name": "일진전기",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "103590",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0567",
+      "name": "지엔씨에너지",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "119850",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0571",
+      "name": "케이엔솔",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "053080",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0581",
+      "name": "한국전력",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "015760",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0586",
+      "name": "효성중공업",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "298040",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0007",
+      "name": "AcBel Polytech",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6282",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0049",
+      "name": "Asia Vital Components",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3017",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0058",
+      "name": "Auras Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3324",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0092",
+      "name": "Chicony Power",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6412",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0130",
+      "name": "Delta Electronics",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2308",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0168",
+      "name": "Forcecon Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "3483",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0173",
+      "name": "FSP Technology",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3015",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0251",
+      "name": "Jentech Precision Industrial",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3653",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0256",
+      "name": "Kaori Heat Treatment",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "8996",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0288",
+      "name": "LITEON",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2301",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0449",
+      "name": "Sunonwealth Electric Machine Industry",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "2421",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0500",
+      "name": "Voltronic Power",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "6409",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0073",
+      "name": "Bloom Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "BE",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0086",
+      "name": "Carrier Global",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CARR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0087",
+      "name": "Caterpillar",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CAT",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0111",
+      "name": "Comfort Systems USA",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "FIX",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0112",
+      "name": "Constellation Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CEG",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0118",
+      "name": "Cummins",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CMI",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0146",
+      "name": "EMCOR Group",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "EME",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0174",
+      "name": "FuelCell Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "FCEL",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0183",
+      "name": "Generac",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "GNRC",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0184",
+      "name": "GE Vernova",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "GEV",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0319",
+      "name": "Modine Manufacturing",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "MOD",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0320",
+      "name": "Monolithic Power Systems",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MPWR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0329",
+      "name": "Navitas Semiconductor",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "NVTS",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0338",
+      "name": "NextEra Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "NEE",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0343",
+      "name": "NRG Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "NRG",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0349",
+      "name": "onsemi",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "ON",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0357",
+      "name": "Parker Hannifin",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "PH",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0362",
+      "name": "Power Integrations",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "POWI",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0373",
+      "name": "Quanta Services",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "PWR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0437",
+      "name": "SPX Technologies",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "SPXC",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0454",
+      "name": "Talen Energy",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "TLN",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0469",
+      "name": "Texas Instruments",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "TXN",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0494",
+      "name": "Vertiv",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "VRT",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0495",
+      "name": "Vicor",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "VICR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0496",
+      "name": "Vistra",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "VST",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0152",
+      "name": "Envicool",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "002837",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0196",
+      "name": "Goaland Energy Conservation",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "300499",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0242",
+      "name": "INVT",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "002334",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0260",
+      "name": "Kehua Data",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "002335",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6",
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0273",
+      "name": "KSTAR",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "002518",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0412",
+      "name": "Shenling Environment",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "301018",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0417",
+      "name": "Sieyuan Electric",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "002028",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0456",
+      "name": "TBEA",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shanghai Stock Exchange",
+      "ticker": "600089",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0475",
+      "name": "Tongfei Refrigeration",
+      "country": "중국",
+      "listed": true,
+      "exchange": "Shenzhen Stock Exchange",
+      "ticker": "300990",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0121",
+      "name": "Daikin Industries",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6367",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0143",
+      "name": "Ebara",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6361",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0175",
+      "name": "Fuji Electric",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6504",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0301",
+      "name": "Meidensha",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6508",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0315",
+      "name": "Mitsubishi Electric",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6503",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0316",
+      "name": "Mitsubishi Heavy Industries",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "7011",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0340",
+      "name": "Nidec",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6594",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0387",
+      "name": "ROHM",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6963",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0397",
+      "name": "Sanyo Denki",
+      "country": "일본",
+      "listed": true,
+      "exchange": "Tokyo Stock Exchange",
+      "ticker": "6516",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0004",
+      "name": "Aalberts",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "Euronext Amsterdam",
+      "ticker": "AALB",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0341",
+      "name": "NKT",
+      "country": "덴마크",
+      "listed": true,
+      "exchange": "Nasdaq Copenhagen",
+      "ticker": "NKT",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0231",
+      "name": "Infineon",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "IFX",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG3",
+        "SEG4",
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0415",
+      "name": "Siemens",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "SIE",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0416",
+      "name": "Siemens Energy",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "ENR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0503",
+      "name": "WEG",
+      "country": "브라질",
+      "listed": true,
+      "exchange": "B3",
+      "ticker": "WEGE3",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0021",
+      "name": "Alfa Laval",
+      "country": "스웨덴",
+      "listed": true,
+      "exchange": "Nasdaq Stockholm",
+      "ticker": "ALFA",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0325",
+      "name": "Munters",
+      "country": "스웨덴",
+      "listed": true,
+      "exchange": "Nasdaq Stockholm",
+      "ticker": "MTRS",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0005",
+      "name": "ABB",
+      "country": "스위스",
+      "listed": true,
+      "exchange": "SIX Swiss Exchange",
+      "ticker": "ABBN",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0223",
+      "name": "Iberdrola",
+      "country": "스페인",
+      "listed": true,
+      "exchange": "BME",
+      "ticker": "IBE",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0142",
+      "name": "Eaton",
+      "country": "아일랜드",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "ETN",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0254",
+      "name": "Johnson Controls",
+      "country": "아일랜드",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "JCI",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0479",
+      "name": "Trane Technologies",
+      "country": "아일랜드",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "TT",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0346",
+      "name": "nVent Electric",
+      "country": "영국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "NVT",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0366",
+      "name": "Prysmian",
+      "country": "이탈리아",
+      "listed": true,
+      "exchange": "Euronext Milan",
+      "ticker": "PRY",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0091",
+      "name": "CG Power and Industrial Solutions",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "CGPOWER",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG2",
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0269",
+      "name": "Kirloskar Oil Engines",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "KIRLOSENG",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0131",
+      "name": "Delta Electronics Thailand",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "DELTA",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0150",
+      "name": "ENGIE",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "ENGI",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0280",
+      "name": "Legrand",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "LR",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0335",
+      "name": "Nexans",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "NEX",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0400",
+      "name": "Schneider Electric",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "SU",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0477",
+      "name": "TotalEnergies",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "TTE",
+      "sector": "SEG6",
+      "sectors": [
+        "SEG6"
+      ]
+    },
+    {
+      "id": "C0267",
+      "name": "KINX",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "093320",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0283",
+      "name": "LG CNS",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "064400",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0284",
+      "name": "LG유플러스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX",
+      "ticker": "032640",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0339",
+      "name": "NHN",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "181710",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0522",
+      "name": "가비아",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "079940",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0529",
+      "name": "다우기술",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "023590",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0534",
+      "name": "롯데이노베이트",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "286940",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0537",
+      "name": "맥쿼리인프라",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX",
+      "ticker": "088980",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0541",
+      "name": "삼성SDS",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "018260",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0550",
+      "name": "신세계아이앤씨",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX",
+      "ticker": "035510",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0585",
+      "name": "현대오토에버",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX",
+      "ticker": "307950",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0093",
+      "name": "Chief Telecom",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TPEx",
+      "ticker": "6561",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0101",
+      "name": "Chunghwa Telecom",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE / NYSE",
+      "ticker": "2412 / CHT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0162",
+      "name": "Far EasTone",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "4904",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0453",
+      "name": "Taiwan Mobile",
+      "country": "대만",
+      "listed": true,
+      "exchange": "TWSE",
+      "ticker": "3045",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0030",
+      "name": "American Tower",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "AMT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0042",
+      "name": "Applied Digital",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "APLD",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0103",
+      "name": "Cipher Digital",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CIFR",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0108",
+      "name": "Cogent Communications",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CCOI",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0113",
+      "name": "COPT Defense Properties",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CDP",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0114",
+      "name": "Core Scientific",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CORZ",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0137",
+      "name": "Digital Realty",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "DLR",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0154",
+      "name": "Equinix",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "EQIX",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0164",
+      "name": "Fermi",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ / LSE",
+      "ticker": "FRMI",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0180",
+      "name": "Galaxy Digital",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ / TSX",
+      "ticker": "GLXY",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0221",
+      "name": "Hut 8",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ / TSX",
+      "ticker": "HUT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0246",
+      "name": "Iron Mountain",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "IRM",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0259",
+      "name": "Keel Infrastructure",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ / TSX",
+      "ticker": "KEEL",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0292",
+      "name": "Lumen Technologies",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "LUMN",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0365",
+      "name": "Prologis",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "PLD",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0433",
+      "name": "Soluna Holdings",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SLNH",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0468",
+      "name": "TeraWulf",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "WULF",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0505",
+      "name": "WhiteFiber",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "WYFI",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0094",
+      "name": "China Mobile",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX / SSE",
+      "ticker": "0941 / 600941",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0095",
+      "name": "China Telecom",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX / SSE",
+      "ticker": "0728 / 601728",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0096",
+      "name": "China Unicom HK",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "0762",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0182",
+      "name": "GDS Holdings",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NASDAQ / HKEX",
+      "ticker": "GDS / 9698",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0202",
+      "name": "Guangdong Aofei Data Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300738",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0377",
+      "name": "Range Intelligent Computing Technology Group",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300442",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0390",
+      "name": "Runjian",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002929",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0407",
+      "name": "Shanghai AtHub",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "603881",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0408",
+      "name": "Shanghai Baosight Software",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "600845",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0423",
+      "name": "Sinnet",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE ChiNext",
+      "ticker": "300383",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0499",
+      "name": "VNET Group",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "VNET",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0077",
+      "name": "BroadBand Tower",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Standard",
+      "ticker": "3776",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0239",
+      "name": "Internet Initiative Japan",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Prime",
+      "ticker": "3774",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0255",
+      "name": "Kansai Electric Power",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "9503",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0258",
+      "name": "KDDI",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "9433",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0314",
+      "name": "Mitsubishi Corporation",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "8058",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0344",
+      "name": "NTT",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "9432",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0393",
+      "name": "SAKURA internet",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Prime",
+      "ticker": "3778",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0403",
+      "name": "SECOM",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "9735",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0431",
+      "name": "SoftBank Corp",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "9434",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0445",
+      "name": "Sumitomo Corporation",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "8053",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0472",
+      "name": "TOKAI Holdings",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Prime",
+      "ticker": "3167",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0464",
+      "name": "Telkom SA",
+      "country": "남아프리카공화국",
+      "listed": true,
+      "exchange": "JSE",
+      "ticker": "TKG",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0233",
+      "name": "Infratil",
+      "country": "뉴질랜드",
+      "listed": true,
+      "exchange": "NZX / ASX",
+      "ticker": "IFT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0132",
+      "name": "Deutsche Telekom",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "DTE",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0462",
+      "name": "Telekom Malaysia",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "4863",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0471",
+      "name": "TIME dotCom",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "5031",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0518",
+      "name": "YTL Power International",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "6742",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0060",
+      "name": "Bahrain Telecommunications Company",
+      "country": "바레인",
+      "listed": true,
+      "exchange": "Bahrain Bourse",
+      "ticker": "BEYON",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0107",
+      "name": "CMC Corporation",
+      "country": "베트남",
+      "listed": true,
+      "exchange": "HOSE",
+      "ticker": "CMG",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0156",
+      "name": "Etihad Etisalat (Mobily)",
+      "country": "사우디아라비아",
+      "listed": true,
+      "exchange": "Saudi Exchange",
+      "ticker": "7020",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0440",
+      "name": "stc",
+      "country": "사우디아라비아",
+      "listed": true,
+      "exchange": "Saudi Exchange",
+      "ticker": "7010",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0451",
+      "name": "Swisscom",
+      "country": "스위스",
+      "listed": true,
+      "exchange": "SIX",
+      "ticker": "SCMN",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0068",
+      "name": "Bitdeer",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "BTDR",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0082",
+      "name": "CapitaLand Ascendas REIT",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "A17U",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0083",
+      "name": "CapitaLand India Trust",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "CY6U",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0084",
+      "name": "CapitaLand Investment",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "9CI",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0135",
+      "name": "Digital Core REIT",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "DCRU",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0261",
+      "name": "Keppel",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "BN4",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0262",
+      "name": "Keppel DC REIT",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "AJBU",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0422",
+      "name": "Singtel",
+      "country": "싱가포르",
+      "listed": true,
+      "exchange": "SGX",
+      "ticker": "Z74",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0059",
+      "name": "Azrieli Group",
+      "country": "이스라엘",
+      "listed": true,
+      "exchange": "TASE",
+      "ticker": "AZRG",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0460",
+      "name": "Telecom Italia",
+      "country": "이탈리아",
+      "listed": true,
+      "exchange": "Euronext Milan",
+      "ticker": "TIT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0010",
+      "name": "Adani Enterprises",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "ADANIENT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0034",
+      "name": "Anant Raj",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE / BSE",
+      "ticker": "ANANTRAJ / 515055",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0066",
+      "name": "Bharti Airtel",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE / BSE",
+      "ticker": "BHARTIARTL / 532454",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0375",
+      "name": "RailTel Corporation of India",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "RAILTEL",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0418",
+      "name": "Sify Technologies",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SIFY",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0459",
+      "name": "Techno Electric & Engineering",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "TECHNOE",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0124",
+      "name": "DCI Indonesia",
+      "country": "인도네시아",
+      "listed": true,
+      "exchange": "IDX",
+      "ticker": "DCII",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0140",
+      "name": "Dunia Virtual Online",
+      "country": "인도네시아",
+      "listed": true,
+      "exchange": "IDX",
+      "ticker": "AREA",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0229",
+      "name": "Indosat Ooredoo Hutchison",
+      "country": "인도네시아",
+      "listed": true,
+      "exchange": "IDX",
+      "ticker": "ISAT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0463",
+      "name": "Telkom Indonesia",
+      "country": "인도네시아",
+      "listed": true,
+      "exchange": "IDX / NYSE",
+      "ticker": "TLKM / TLK",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0350",
+      "name": "Ooredoo",
+      "country": "카타르",
+      "listed": true,
+      "exchange": "QSE",
+      "ticker": "ORDS",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0063",
+      "name": "BCE",
+      "country": "캐나다",
+      "listed": true,
+      "exchange": "TSX / NYSE",
+      "ticker": "BCE",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0079",
+      "name": "Brookfield Infrastructure Partners",
+      "country": "캐나다",
+      "listed": true,
+      "exchange": "NYSE / TSX",
+      "ticker": "BIP / BIP.UN",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0465",
+      "name": "TELUS",
+      "country": "캐나다",
+      "listed": true,
+      "exchange": "TSX / NYSE",
+      "ticker": "T / TU",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0013",
+      "name": "Advanced Info Service",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "ADVANC",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0204",
+      "name": "Gulf Development",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "GULF",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0230",
+      "name": "INET Leasehold REIT",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "INETREIT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0238",
+      "name": "Interlink Telecom",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "ITEL",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0240",
+      "name": "Internet Thailand",
+      "country": "태국",
+      "listed": true,
+      "exchange": "SET",
+      "ticker": "INET",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0481",
+      "name": "Türk Telekom",
+      "country": "튀르키예",
+      "listed": true,
+      "exchange": "Borsa Istanbul",
+      "ticker": "TTKOM",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0485",
+      "name": "Turkcell",
+      "country": "튀르키예",
+      "listed": true,
+      "exchange": "Borsa Istanbul",
+      "ticker": "TCELL",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0354",
+      "name": "Orange",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "ORA",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0192",
+      "name": "Globe Telecom",
+      "country": "필리핀",
+      "listed": true,
+      "exchange": "PSE",
+      "ticker": "GLO",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0361",
+      "name": "PLDT",
+      "country": "필리핀",
+      "listed": true,
+      "exchange": "PSE / NYSE",
+      "ticker": "TEL / PHI",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0134",
+      "name": "DigiCo Infrastructure REIT",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "DGT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0197",
+      "name": "Goodman Group",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "GMG",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0245",
+      "name": "IREN",
+      "country": "호주",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "IREN",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7",
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0337",
+      "name": "NEXTDC",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "NXT",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0105",
+      "name": "CITIC Telecom International",
+      "country": "홍콩",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "1883",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0447",
+      "name": "SUNeVision Holdings",
+      "country": "홍콩",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "1686",
+      "sector": "SEG7",
+      "sectors": [
+        "SEG7"
+      ]
+    },
+    {
+      "id": "C0274",
+      "name": "KT",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "030200",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0425",
+      "name": "SK텔레콤",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "017670",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG7",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0525",
+      "name": "네이버",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "035420",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0570",
+      "name": "카페24",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "042000",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0584",
+      "name": "한화시스템",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "272210",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0018",
+      "name": "Akamai",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AKAM",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0024",
+      "name": "Alphabet",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "GOOGL / GOOG",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0026",
+      "name": "Amazon",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "AMZN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0074",
+      "name": "Boost Run",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "BRUN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0100",
+      "name": "ChronoScale",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CHRN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0106",
+      "name": "Cloudflare",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "NET",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0115",
+      "name": "CoreWeave",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "CRWV",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0136",
+      "name": "DigitalOcean",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "DOCN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0163",
+      "name": "Fastly",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "FSLY",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0225",
+      "name": "IBM",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "IBM",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG5",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0309",
+      "name": "Microsoft",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "MSFT",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0353",
+      "name": "Oracle",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "ORCL",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0374",
+      "name": "Rackspace Technology",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "RXT",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0022",
+      "name": "Alibaba Group",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NYSE / HKEX",
+      "ticker": "BABA / 9988",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0062",
+      "name": "Baidu",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NASDAQ / HKEX",
+      "ticker": "BIDU / 9888",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0085",
+      "name": "Capitalonline",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE ChiNext",
+      "ticker": "300846",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0264",
+      "name": "Kingsoft Cloud",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NASDAQ / HKEX",
+      "ticker": "KC / 3896",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0369",
+      "name": "QingCloud",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688316",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0404",
+      "name": "SenseTime",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "0020",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0466",
+      "name": "Tencent",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "0700",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG4",
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0486",
+      "name": "UCloud",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE STAR",
+      "ticker": "688158",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0502",
+      "name": "Wangsu Science & Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE ChiNext",
+      "ticker": "300017",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0181",
+      "name": "GDEP Advance",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Standard",
+      "ticker": "5885",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0194",
+      "name": "GMO GlobalSign Holdings",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Prime",
+      "ticker": "3788",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0195",
+      "name": "GMO Internet",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE Prime",
+      "ticker": "4784",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0330",
+      "name": "Nebius Group",
+      "country": "네덜란드",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "NBIS",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0436",
+      "name": "Spark New Zealand",
+      "country": "뉴질랜드",
+      "listed": true,
+      "exchange": "NZX / ASX",
+      "ticker": "SPK",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0244",
+      "name": "IONOS Group",
+      "country": "독일",
+      "listed": true,
+      "exchange": "Xetra",
+      "ticker": "IOS",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0324",
+      "name": "MTS",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "MTSS",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0388",
+      "name": "Rostelecom",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "RTKM",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0498",
+      "name": "VK",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "VKCO",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0515",
+      "name": "Yandex",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "YDEX",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0429",
+      "name": "SNS Network Technology",
+      "country": "말레이시아",
+      "listed": true,
+      "exchange": "Bursa Malaysia",
+      "ticker": "0259",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0171",
+      "name": "FPT Corporation",
+      "country": "베트남",
+      "listed": true,
+      "exchange": "HOSE",
+      "ticker": "FPT",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0295",
+      "name": "LWSA",
+      "country": "브라질",
+      "listed": true,
+      "exchange": "B3",
+      "ticker": "LWSA3",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0188",
+      "name": "Gigas Hosting",
+      "country": "스페인",
+      "listed": true,
+      "exchange": "BME Growth",
+      "ticker": "GIGA",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0461",
+      "name": "Telefónica",
+      "country": "스페인",
+      "listed": true,
+      "exchange": "BME",
+      "ticker": "TEF",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0147",
+      "name": "Emirates Integrated Telecommunications (du)",
+      "country": "아랍에미리트",
+      "listed": true,
+      "exchange": "DFM",
+      "ticker": "DU",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0148",
+      "name": "Emirates Telecommunications Group (e&)",
+      "country": "아랍에미리트",
+      "listed": true,
+      "exchange": "ADX",
+      "ticker": "ETISALAT",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0064",
+      "name": "Beeks Financial Cloud Group",
+      "country": "영국",
+      "listed": true,
+      "exchange": "LSE AIM",
+      "ticker": "BKS",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0243",
+      "name": "iomart Group",
+      "country": "영국",
+      "listed": true,
+      "exchange": "LSE AIM",
+      "ticker": "IOM",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0380",
+      "name": "Redcentric",
+      "country": "영국",
+      "listed": true,
+      "exchange": "LSE AIM",
+      "ticker": "RCN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0133",
+      "name": "DHH",
+      "country": "이탈리아",
+      "listed": true,
+      "exchange": "Euronext Growth Milan",
+      "ticker": "DHH",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0506",
+      "name": "WIIT",
+      "country": "이탈리아",
+      "listed": true,
+      "exchange": "Euronext Milan",
+      "ticker": "WIIT",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0141",
+      "name": "E2E Networks",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "E2E",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0253",
+      "name": "Jio Platforms",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "JPL",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0455",
+      "name": "Tata Communications",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE / BSE",
+      "ticker": "TATACOMM / 500483",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0211",
+      "name": "HIVE Digital Technologies",
+      "country": "캐나다",
+      "listed": true,
+      "exchange": "NASDAQ / TSXV",
+      "ticker": "HIVE",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0356",
+      "name": "OVHcloud",
+      "country": "프랑스",
+      "listed": true,
+      "exchange": "Euronext Paris",
+      "ticker": "OVH",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0003",
+      "name": "5G Networks",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "5GN",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0057",
+      "name": "AUCyber",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "CYB",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0139",
+      "name": "DUG Technology",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "DUG",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0296",
+      "name": "Macquarie Technology Group",
+      "country": "호주",
+      "listed": true,
+      "exchange": "ASX",
+      "ticker": "MAQ",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0410",
+      "name": "Sharon AI",
+      "country": "호주",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SHAZ",
+      "sector": "SEG8",
+      "sectors": [
+        "SEG8"
+      ]
+    },
+    {
+      "id": "C0282",
+      "name": "LG",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "003550",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0536",
+      "name": "마음AI",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "377480",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0538",
+      "name": "모티프테크놀로지스",
+      "country": "한국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0547",
+      "name": "솔트룩스",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "304100",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0551",
+      "name": "업스테이지",
+      "country": "한국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0556",
+      "name": "엔씨소프트",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "036570",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0569",
+      "name": "카카오",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSPI",
+      "ticker": "035720",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG8",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0572",
+      "name": "코난테크놀로지",
+      "country": "한국",
+      "listed": true,
+      "exchange": "KRX KOSDAQ",
+      "ticker": "402030",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0574",
+      "name": "트릴리온랩스",
+      "country": "한국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0012",
+      "name": "Adobe",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "ADBE",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0037",
+      "name": "Anthropic",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0045",
+      "name": "Arcee AI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0054",
+      "name": "AssemblyAI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0126",
+      "name": "Deepgram",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0219",
+      "name": "Hugging Face",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0232",
+      "name": "Inflection AI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0287",
+      "name": "Liquid AI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0291",
+      "name": "Luma AI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0305",
+      "name": "Meta Platforms",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "META",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG4",
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0310",
+      "name": "Midjourney",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0351",
+      "name": "OpenAI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0381",
+      "name": "Reka AI",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0391",
+      "name": "Runway",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0394",
+      "name": "Salesforce",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "CRM",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0405",
+      "name": "ServiceNow",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "NOW",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0428",
+      "name": "Snowflake",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "SNOW",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0435",
+      "name": "SpaceX",
+      "country": "미국",
+      "listed": true,
+      "exchange": "NASDAQ",
+      "ticker": "SPCX",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0448",
+      "name": "Suno",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0512",
+      "name": "WRITER",
+      "country": "미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0001",
+      "name": "01.AI",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0002",
+      "name": "360 Security Technology",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SSE",
+      "ticker": "601360",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0036",
+      "name": "Ant Group",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0061",
+      "name": "Baichuan AI",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0080",
+      "name": "ByteDance",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0128",
+      "name": "DeepSeek",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0218",
+      "name": "Huawei",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0226",
+      "name": "iFLYTEK",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "002230",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0250",
+      "name": "JD.com",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NASDAQ / HKEX",
+      "ticker": "JD / 9618",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0275",
+      "name": "Kuaishou",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "1024",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0276",
+      "name": "Kunlun Tech",
+      "country": "중국",
+      "listed": true,
+      "exchange": "SZSE",
+      "ticker": "300418",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0302",
+      "name": "Meitu",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "1357",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0303",
+      "name": "Meituan",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "3690",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0311",
+      "name": "MiniMax",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "0100",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0318",
+      "name": "ModelBest",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0321",
+      "name": "Moonshot AI",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0352",
+      "name": "OPPO",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0411",
+      "name": "ShengShu",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0441",
+      "name": "StepFun",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0497",
+      "name": "vivo",
+      "country": "중국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0514",
+      "name": "Xiaomi",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "1810",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0517",
+      "name": "Youdao",
+      "country": "중국",
+      "listed": true,
+      "exchange": "NYSE",
+      "ticker": "DAO",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0519",
+      "name": "Z.ai",
+      "country": "중국",
+      "listed": true,
+      "exchange": "HKEX",
+      "ticker": "2513",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0006",
+      "name": "ABEJA",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "5574",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0120",
+      "name": "CyberAgent",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4751",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0364",
+      "name": "Preferred Networks",
+      "country": "일본",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0376",
+      "name": "Rakuten Group",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "4755",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0384",
+      "name": "Ricoh",
+      "country": "일본",
+      "listed": true,
+      "exchange": "TSE",
+      "ticker": "7752",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0385",
+      "name": "rinna",
+      "country": "일본",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0392",
+      "name": "Sakana AI",
+      "country": "일본",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0443",
+      "name": "Stockmark",
+      "country": "일본",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0020",
+      "name": "Aleph Alpha",
+      "country": "독일",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0127",
+      "name": "DeepL",
+      "country": "독일",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0070",
+      "name": "Black Forest Labs",
+      "country": "독일·미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0399",
+      "name": "Sberbank",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "SBER",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0484",
+      "name": "T-Technologies",
+      "country": "러시아",
+      "listed": true,
+      "exchange": "MOEX",
+      "ticker": "T",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0220",
+      "name": "HUMAIN",
+      "country": "사우디아라비아",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0228",
+      "name": "Inception42",
+      "country": "아랍에미리트",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0144",
+      "name": "ElevenLabs",
+      "country": "영국·미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0379",
+      "name": "Recraft",
+      "country": "영국·미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0438",
+      "name": "Stability AI",
+      "country": "영국·미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0015",
+      "name": "AI21 Labs",
+      "country": "이스라엘",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0286",
+      "name": "Lightricks",
+      "country": "이스라엘",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0125",
+      "name": "Decart",
+      "country": "이스라엘·미국",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0172",
+      "name": "Fractal Analytics",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "FRACTAL",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0272",
+      "name": "Krutrim",
+      "country": "인도",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0398",
+      "name": "Sarvam AI",
+      "country": "인도",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0458",
+      "name": "Tech Mahindra",
+      "country": "인도",
+      "listed": true,
+      "exchange": "NSE",
+      "ticker": "TECHM",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0198",
+      "name": "GoTo Gojek Tokopedia",
+      "country": "인도네시아",
+      "listed": true,
+      "exchange": "IDX",
+      "ticker": "GOTO",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0109",
+      "name": "Cohere",
+      "country": "캐나다",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0206",
+      "name": "H Company",
+      "country": "프랑스",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    },
+    {
+      "id": "C0312",
+      "name": "Mistral AI",
+      "country": "프랑스",
+      "listed": false,
+      "exchange": "",
+      "ticker": "",
+      "sector": "SEG9",
+      "sectors": [
+        "SEG9"
+      ]
+    }
+  ]
+}

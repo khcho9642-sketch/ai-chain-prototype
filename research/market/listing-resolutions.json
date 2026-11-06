@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-06",
+  "providerSymbolChecks": [
+    {
+      "companyId": "C0147",
+      "exchange": "DFM",
+      "symbol": "DU.AE",
+      "sourceUrl": "https://finance.yahoo.com/quote/DU.AE/",
+      "result": "2026-11-06 chart response: Emirates Integrated Telecommunications Company PJSC, Dubai, AED; daily close 2026-11-04"
+    },
+    {
+      "companyId": "C0148",
+      "exchange": "ADX",
+      "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/e-announces-usd-5-95-101000544.html",
+      "result": "Current issuer ticker EAND in primary issuer press release; chart endpoints EAND.AB, EAND.AD, EAND.AE, ETISALAT.AD, ETISALAT.AB, ETISALAT.AE all HTTP404 on2026-11-06. Preserve original ETISALAT and leave primary mapping unresolved."
+    },
+    {
+      "exchange": "PSE",
+      "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/pldt-files-2025-annual-report-130000776.html",
+      "result": "Primary issuer release distinguishes PSE TEL and NYSE PHI. Yahoo article tags TEL.XPHS/GLO.XPHS do not expose daily charts; TEL.PS,GLO.PS,TEL.XPHS,GLO.XPHS all HTTP404 on2026-11-06. Primary PSE mapping remains unresolved."
+    }
+  ],
+  "alternates": [
+    {
+      "companyId": "C0361",
+      "sourceExchange": "PSE / NYSE",
+      "sourceTicker": "TEL / PHI",
+      "exchange": "NYSE",
+      "ticker": "PHI",
+      "sourceUrl": "https://finance.yahoo.com/quote/PHI/",
+      "evidence": "PLDT Inc. NYSE ADR, USD; daily chart succeeded on2026-11-06. Alternate listing, never substituted for PSE TEL."
+    }
+  ],
+  "entries": [
+    {
+      "companyId": "C0284",
+      "sourceExchange": "KRX",
+      "sourceTicker": "032640",
+      "exchange": "KRX KOSPI",
+      "sourceUrl": "https://kind.krx.co.kr/external/2026/01/07/000706/20260107002036/00634.htm",
+      "evidence": "발행회사 LG유플러스, 회사코드032640, 법인구분 유가증권상장법인"
+    },
+    {
+      "companyId": "C0537",
+      "sourceExchange": "KRX",
+      "sourceTicker": "088980",
+      "exchange": "KRX KOSPI",
+      "sourceUrl": "https://kind.krx.co.kr/external/2023/06/05/000257/20230605000546/10002.htm",
+      "evidence": "맥쿼리한국인프라투융자회사, 유가증권시장 상장, 종목코드088980"
+    },
+    {
+      "companyId": "C0550",
+      "sourceExchange": "KRX",
+      "sourceTicker": "035510",
+      "exchange": "KRX KOSPI",
+      "sourceUrl": "https://kind.krx.co.kr/external/2024/07/02/000287/20240702000741/00637.htm",
+      "evidence": "회사명 신세계아이앤씨, 회사코드035510, 법인구분 유가증권상장법인"
+    },
+    {
+      "companyId": "C0585",
+      "sourceExchange": "KRX",
+      "sourceTicker": "307950",
+      "exchange": "KRX KOSPI",
+      "sourceUrl": "https://kind.krx.co.kr/external/2026/01/19/000031/20260119000046/00634.htm",
+      "evidence": "회사명 현대오토에버, 회사코드307950, 법인구분 유가증권상장법인"
+    }
+  ]
+}

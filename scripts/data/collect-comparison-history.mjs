@@ -2,12 +2,26 @@ import { mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { instruments } from '../../assets/instruments.js'
-import { chart } from '../../server/market.mjs'
+import { dailyClose } from '../../server/market-close.mjs'
 import { comparisonHistoryCatalog, MAX_COMPARISON_HISTORY_BYTES, validateComparisonHistorySnapshot } from '../../assets/comparison-history-core.js'
 
 const source = 'Yahoo Finance'
 const sourceUrl = symbol => 'https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/'
 const errorReason = error => String(error?.message || '실제 일봉 수집 실패').slice(0, 500)
+
+// Legacy compact files do not carry session-completion metadata. On a failed
+// refresh, today's tail cannot be proved to be a closing price, even when it
+// came from an earlier successful request. Retain only earlier local dates.
+function confirmedFallbackBars(quote, now) {
+  if (!quote?.bars?.length) return []
+  const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: quote.timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
+  const date = time => {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(time)).map(part => [part.type, part.value]))
+    return `${parts.year}-${parts.month}-${parts.day}`
+  }
+  const today = date(now)
+  return quote.bars.filter(bar => date(bar.time * 1000) < today)
+}
 
 export function compactComparisonQuote(item, quote, now = Date.now()) {
   if (quote?.symbol !== item.symbol || quote.range !== '3y' || quote.interval !== '1d' || !Array.isArray(quote.bars)) throw new Error('요청한 종목의 3년 일봉이 아닙니다.')
@@ -25,7 +39,7 @@ export function compactComparisonQuote(item, quote, now = Date.now()) {
 }
 
 export async function collectComparisonHistory(output = 'data/comparison-history.json', {
-  chartService = chart, now = Date.now, catalog = instruments, concurrency = 3,
+  chartService = dailyClose, now = Date.now, catalog = instruments, concurrency = 3,
   maxBytes = MAX_COMPARISON_HISTORY_BYTES, logger = console,
 } = {}) {
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 10) throw new RangeError('수집 동시 실행 수 오류')
@@ -47,8 +61,10 @@ export async function collectComparisonHistory(output = 'data/comparison-history
         quotes.push(quote)
       } catch (error) {
         const old = oldQuotes.get(item.symbol)
-        const reason = errorReason(error)
-        quotes.push(old?.bars?.length ? { ...old, status: 'stale', error: reason } : {
+        const bars = confirmedFallbackBars(old, Number(now()))
+        const removed = (old?.bars?.length || 0) - bars.length
+        const reason = errorReason({message: `${errorReason(error)}${removed ? ` · 종가 확정을 확인할 수 없는 당일 일봉 ${removed}개 제외` : ''}`})
+        quotes.push(bars.length >= 2 ? { ...old, bars, status: 'stale', error: reason } : {
           symbol: item.symbol, name: item.name, currency: null, timezone: null,
           range: '3y', interval: '1d', source, sourceUrl: sourceUrl(item.symbol),
           fetchedAt: null, status: 'error', bars: [], error: reason,

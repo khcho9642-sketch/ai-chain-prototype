@@ -1,0 +1,192 @@
+{
+  "validatedAt": "2026-11-06T08:55:46.684Z",
+  "sourceSnapshotGeneratedAt": "2026-11-06T08:15:38.495Z",
+  "focusCount": 45,
+  "historicalCapCompanies": 45,
+  "fxCurrencies": [
+    "KRW",
+    "JPY",
+    "TWD"
+  ],
+  "oneDayCoverage": {
+    "companyCount": 45,
+    "eqCount": 45,
+    "capCount": 31,
+    "availableSectors": 9,
+    "capAvailableSectors": 9
+  },
+  "oneDayPeriod": {
+    "start": "2026-11-04",
+    "end": "2026-11-05"
+  },
+  "ripple": {
+    "usable": 45,
+    "triggers": [
+      {
+        "ticker": "SNDK",
+        "date": "2026-11-05",
+        "market": "US",
+        "changePct": -22.264317
+      },
+      {
+        "ticker": "MU",
+        "date": "2026-11-05",
+        "market": "US",
+        "changePct": -17.459096
+      },
+      {
+        "ticker": "WDC",
+        "date": "2026-11-05",
+        "market": "US",
+        "changePct": -17.35478
+      }
+    ],
+    "alignments": [
+      {
+        "comparisonLabel": "미국 11.05 종가 → 한국 11.06 종가",
+        "upstream": [
+          {
+            "ticker": "MU",
+            "date": "2026-11-05",
+            "syncRate": 97.1429,
+            "samples": 35
+          },
+          {
+            "ticker": "WDC",
+            "date": "2026-11-05",
+            "syncRate": 94.2857,
+            "samples": 35
+          },
+          {
+            "ticker": "UMC",
+            "date": "2026-11-05",
+            "syncRate": 82.8571,
+            "samples": 35
+          }
+        ],
+        "downstream": [
+          {
+            "ticker": "AMD",
+            "date": "2026-11-05",
+            "syncRate": 82.8571,
+            "samples": 35
+          },
+          {
+            "ticker": "MRVL",
+            "date": "2026-11-05",
+            "syncRate": 82.8571,
+            "samples": 35
+          },
+          {
+            "ticker": "NBIS",
+            "date": "2026-11-05",
+            "syncRate": 77.1429,
+            "samples": 35
+          }
+        ]
+      },
+      {
+        "comparisonLabel": "미국 11.05 종가 → 한국 11.06 종가",
+        "upstream": [
+          {
+            "ticker": "SNDK",
+            "date": "2026-11-05",
+            "syncRate": 92.5,
+            "samples": 40
+          },
+          {
+            "ticker": "WDC",
+            "date": "2026-11-05",
+            "syncRate": 87.5,
+            "samples": 40
+          },
+          {
+            "ticker": "UMC",
+            "date": "2026-11-05",
+            "syncRate": 82.5,
+            "samples": 40
+          }
+        ],
+        "downstream": [
+          {
+            "ticker": "AMD",
+            "date": "2026-11-05",
+            "syncRate": 85,
+            "samples": 40
+          },
+          {
+            "ticker": "MRVL",
+            "date": "2026-11-05",
+            "syncRate": 85,
+            "samples": 40
+          },
+          {
+            "ticker": "NBIS",
+            "date": "2026-11-05",
+            "syncRate": 75,
+            "samples": 40
+          }
+        ]
+      },
+      {
+        "comparisonLabel": "미국 11.05 종가 → 한국 11.06 종가",
+        "upstream": [
+          {
+            "ticker": "SNDK",
+            "date": "2026-11-05",
+            "syncRate": 89.7436,
+            "samples": 39
+          },
+          {
+            "ticker": "MU",
+            "date": "2026-11-05",
+            "syncRate": 82.0513,
+            "samples": 39
+          },
+          {
+            "ticker": "UMC",
+            "date": "2026-11-05",
+            "syncRate": 74.359,
+            "samples": 39
+          }
+        ],
+        "downstream": [
+          {
+            "ticker": "AMD",
+            "date": "2026-11-05",
+            "syncRate": 71.7949,
+            "samples": 39
+          },
+          {
+            "ticker": "MRVL",
+            "date": "2026-11-05",
+            "syncRate": 79.4872,
+            "samples": 39
+          },
+          {
+            "ticker": "NBIS",
+            "date": "2026-11-05",
+            "syncRate": 76.9231,
+            "samples": 39
+          }
+        ]
+      }
+    ]
+  },
+  "notes": [
+    "Core45isahomeobservationbasket(5perexistingsector),not45publishedresearchreports.",
+    "Exactstartcap/FXmissingnamesareexcludedandmarked;currentcapneverreplaceshistoricalcap."
+  ],
+  "automatedTests": {
+    "passed": 592,
+    "failed": 0,
+    "existingBrowser": "passed",
+    "homepageBrowser": "passed",
+    "homepageWidths": [
+      1440,
+      820,
+      390
+    ],
+    "browserPageErrors": 0
+  }
+}

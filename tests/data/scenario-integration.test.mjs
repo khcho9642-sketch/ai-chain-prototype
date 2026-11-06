@@ -141,7 +141,7 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), [...scenarioAssets].sort())
   assert.deepEqual((await readdir(join(output, 'data'))).sort(), [
     'ai-disclosures.json', 'ai-statistics.json', 'ai-tokens.json', 'company-disclosures.json',
-    'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market.json', 'today-discussion.json', 'today-personas.json', 'today-picks.json',
+    'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market.json', 'ripple.json', 'today-discussion.json', 'today-personas.json', 'today-picks.json',
   ])
 
   const server = createSiteServer({ root: output })

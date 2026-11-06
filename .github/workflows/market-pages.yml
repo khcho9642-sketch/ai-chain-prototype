@@ -4,7 +4,8 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '17,47 * * * *'
+    # UTC: Asian markets, Singapore, Europe, then Americas; includes Sunday markets.
+    - cron: '20 8,10,18,23 * * *'
 permissions:
   contents: read
 concurrency:
@@ -28,10 +29,12 @@ jobs:
       - name: Restore previous deployed snapshot for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json -o data/previous.json && mv data/previous.json data/market.json || true
-      - name: Collect actual quotes
+      - name: Collect completed daily closes and batch capitalizations
         id: collect
         continue-on-error: true
         run: node scripts/data/collect-market.mjs
+      - name: Build same-session ripple observations from collected closes
+        run: node scripts/data/build-ripple.mjs --allow-unavailable
       - name: Restore previous industry statistics for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json -o data/industry-previous.json && mv data/industry-previous.json data/industry.json || true

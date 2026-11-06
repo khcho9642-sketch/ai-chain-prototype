@@ -7,6 +7,7 @@ import { instruments } from '../../assets/instruments.js'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../../assets/comparison-history-core.js'
 import { collectComparisonHistory, compactComparisonQuote } from '../../scripts/data/collect-comparison-history.mjs'
 import { aiSnapshotHandler } from '../../server/ai-snapshots.mjs'
+import { createDailyCloseService } from '../../server/market-close.mjs'
 const now=Date.parse('2024-01-10T12:00:00Z'), iso=new Date(now).toISOString()
 const catalog=[{symbol:'A',name:'Company A',chains:[1]},{symbol:'B',name:'Company B',chains:[2]},{symbol:'OTHER',name:'Outside AI',chains:[]}]
 const quote=(item=catalog[0],overrides={})=>({
@@ -79,6 +80,24 @@ test('collector requests only AI members and stores compact daily closes with bo
   assert.ok(data.quotes.every(item=>item.status==='ok'&&Object.keys(item.bars[0]).join(',')==='time,close'))
   assert.deepEqual(JSON.parse(await readFile(output,'utf8')),data)
 })
+test('three-year collection excludes a started but unfinished daily session before publication',async t=>{
+  const {output}=await outputFile(t),collectionTime=Date.parse('2026-11-06T18:00:00Z'),urls=[]
+  const daily=createDailyCloseService({now:()=>collectionTime,fetchImpl:async url=>{
+    urls.push(url)
+    return {ok:true,json:async()=>({chart:{result:[{
+      meta:{symbol:'A',currency:'USD',exchangeTimezoneName:'America/New_York',dataGranularity:'1d',
+        currentTradingPeriod:{regular:{start:Date.parse('2026-11-06T14:30:00Z')/1000,end:Date.parse('2026-11-06T21:00:00Z')/1000}}},
+      timestamp:['2026-11-04T14:30:00Z','2026-11-05T14:30:00Z','2026-11-06T14:30:00Z'].map(date=>Date.parse(date)/1000),
+      indicators:{quote:[{close:[100,110,999]}]},
+    }],error:null}})}
+  }})
+  const data=await collectComparisonHistory(output,{catalog:[catalog[0]],now:()=>collectionTime,logger:quiet,chartService:daily})
+  assert.deepEqual(data.quotes[0].bars.map(bar=>bar.close),[100,110])
+  assert.equal(urls.length,1)
+  assert.equal(urls[0].searchParams.get('interval'),'1d')
+  assert.ok(urls[0].searchParams.has('period1'))
+  assert.deepEqual(JSON.parse(await readFile(output,'utf8')).quotes[0].bars,data.quotes[0].bars)
+})
 test('partial failures retain actual old quote times, not the new snapshot time',async t=>{
   const {output}=await outputFile(t),old=quote(catalog[1],{fetchedAt:'2024-01-02T12:00:00Z'})
   await writeFile(output,JSON.stringify(snapshot([old])))
@@ -90,6 +109,42 @@ test('partial failures retain actual old quote times, not the new snapshot time'
   assert.equal(data.generatedAt,iso);assert.equal(fallback.fetchedAt,old.fetchedAt)
   assert.equal(fallback.status,'stale');assert.deepEqual(fallback.bars,old.bars)
   assert.match(fallback.error,/Provider unavailable/)
+})
+test('failed refresh trims an unconfirmed legacy current-day tail while preserving actual earlier closes and fetch time',async t=>{
+  const {output}=await outputFile(t),collectionTime=Date.parse('2026-11-06T18:00:00Z')
+  const old=quote(catalog[1],{fetchedAt:'2026-11-06T16:00:00.000Z',bars:[
+    {time:Date.parse('2026-11-04T14:30:00Z')/1000,close:100},
+    {time:Date.parse('2026-11-05T14:30:00Z')/1000,close:110},
+    {time:Date.parse('2026-11-06T14:30:00Z')/1000,close:999},
+  ]})
+  await writeFile(output,JSON.stringify(snapshot([old],{generatedAt:old.fetchedAt})))
+  const data=await collectComparisonHistory(output,{catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
+    if(symbol==='B')throw new Error('Provider unavailable')
+    return quote(catalog[0],{fetchedAt:new Date(collectionTime).toISOString()})
+  }})
+  const fallback=data.quotes.find(item=>item.symbol==='B')
+  assert.equal(fallback.status,'stale')
+  assert.equal(fallback.fetchedAt,old.fetchedAt)
+  assert.equal(fallback.currency,old.currency)
+  assert.deepEqual(fallback.bars,old.bars.slice(0,2))
+  assert.match(fallback.error,/당일 일봉 1개 제외/)
+})
+test('a legacy fallback with fewer than two confirmed closes remains unavailable',async t=>{
+  const {output}=await outputFile(t),collectionTime=Date.parse('2026-11-06T18:00:00Z')
+  const old=quote(catalog[1],{fetchedAt:'2026-11-06T16:00:00.000Z',bars:[
+    {time:Date.parse('2026-11-05T14:30:00Z')/1000,close:110},
+    {time:Date.parse('2026-11-06T14:30:00Z')/1000,close:999},
+  ]})
+  await writeFile(output,JSON.stringify(snapshot([old],{generatedAt:old.fetchedAt})))
+  const data=await collectComparisonHistory(output,{catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
+    if(symbol==='B')throw new Error('Provider unavailable')
+    return quote(catalog[0],{fetchedAt:new Date(collectionTime).toISOString()})
+  }})
+  const fallback=data.quotes.find(item=>item.symbol==='B')
+  assert.equal(fallback.status,'error')
+  assert.deepEqual(fallback.bars,[])
+  assert.equal(fallback.fetchedAt,null)
+  assert.match(fallback.error,/당일 일봉 1개 제외/)
 })
 test('missing prior observations stay unavailable and one-year responses never become three years',async t=>{
   const {output}=await outputFile(t)
