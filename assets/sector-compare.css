@@ -1,4 +1,5 @@
 @import url('./sector-compare-chart.css');
+@import url('./sector-event-pins.css');
 
 .scv {
   --scv-panel: #111a26;
