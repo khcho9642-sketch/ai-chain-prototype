@@ -1,0 +1,302 @@
+{
+  "validatedAt": "2026-11-06T08:16:17.261Z",
+  "priceSampleRun": "2026-11-06T08:10:00.087Z",
+  "finalRun": "2026-11-06T08:15:38.495Z",
+  "mode": "scheduled-close",
+  "coverage": {
+    "source": "Company master, AI_밸류체인_SEG_회사리스트_기능정의.xlsx",
+    "sourceUrl": "https://drive.google.com/file/d/1A9Az4RgoxQMcKdkD1nVrgBECtL7HxVQP",
+    "sourceAsOf": "2026-11-03",
+    "sourceStatus": "review-draft",
+    "companyCount": 586,
+    "listedCompanyCount": 537,
+    "unlistedCompanyCount": 49,
+    "mappedListedCompanyCount": 525,
+    "alternateOnlyCompanyCount": 1,
+    "targetCount": 555,
+    "legacyTargetCount": 93,
+    "addedSymbolCount": 462,
+    "mappingStatus": "candidate",
+    "unmapped": [
+      {
+        "companyId": "C0060",
+        "name": "Bahrain Telecommunications Company",
+        "exchange": "Bahrain Bourse",
+        "ticker": "BEYON",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0107",
+        "name": "CMC Corporation",
+        "exchange": "HOSE",
+        "ticker": "CMG",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0192",
+        "name": "Globe Telecom",
+        "exchange": "PSE",
+        "ticker": "GLO",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0361",
+        "name": "PLDT",
+        "exchange": "PSE / NYSE",
+        "ticker": "TEL / PHI",
+        "reason": "현재 공급처의 거래소 연결 미확인",
+        "alternateSymbols": [
+          "PHI"
+        ]
+      },
+      {
+        "companyId": "C0324",
+        "name": "MTS",
+        "exchange": "MOEX",
+        "ticker": "MTSS",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0388",
+        "name": "Rostelecom",
+        "exchange": "MOEX",
+        "ticker": "RTKM",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0498",
+        "name": "VK",
+        "exchange": "MOEX",
+        "ticker": "VKCO",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0515",
+        "name": "Yandex",
+        "exchange": "MOEX",
+        "ticker": "YDEX",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0171",
+        "name": "FPT Corporation",
+        "exchange": "HOSE",
+        "ticker": "FPT",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0148",
+        "name": "Emirates Telecommunications Group (e&)",
+        "exchange": "ADX",
+        "ticker": "ETISALAT",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0399",
+        "name": "Sberbank",
+        "exchange": "MOEX",
+        "ticker": "SBER",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      },
+      {
+        "companyId": "C0484",
+        "name": "T-Technologies",
+        "exchange": "MOEX",
+        "ticker": "T",
+        "reason": "현재 공급처의 거래소 연결 미확인"
+      }
+    ],
+    "targetSymbols": 555,
+    "successfulCloses": 555,
+    "failedCloses": 0,
+    "marketCaps": 542
+  },
+  "bytes": 20869518,
+  "providerIdentityVerified": false,
+  "closeSource": "Yahoo Finance daily chart",
+  "capitalizationSource": "yahoo-finance2 4.0.5 batch quote",
+  "usedPreservedDailyPrices": true,
+  "notes": [
+    "Initial full 557-symbol actual price run succeeded for553; unsupported aliases were resolved or retained as unmapped.",
+    "Final current universe uses those actual daily results with original fetchedAt; newly resolved symbols and legacy detail histories are queried again.",
+    "A responding symbol does not by itself verify issuer identity; the draft master requires review."
+  ],
+  "failures": [],
+  "historyRangeErrors": 0,
+  "samples": [
+    {
+      "symbol": "005930.KS",
+      "providerName": "Samsung Electronics Co., Ltd.",
+      "price": 188700,
+      "currency": "KRW",
+      "closeDate": "2026-11-06",
+      "fetchedAt": "2026-11-06T08:10:31.717Z",
+      "marketCap": 1228800746586112,
+      "marketCapCurrency": "KRW",
+      "marketCapObservedAt": "2026-11-06T08:15:57.046Z",
+      "marketCapBasis": "provider-current",
+      "marketCapStatus": "ok",
+      "status": "ok"
+    },
+    {
+      "symbol": "NVDA",
+      "providerName": "NVIDIA Corporation",
+      "price": 181.60000610351562,
+      "currency": "USD",
+      "closeDate": "2026-11-05",
+      "fetchedAt": "2026-11-06T08:10:32.125Z",
+      "marketCap": 4385095286784,
+      "marketCapCurrency": "USD",
+      "marketCapObservedAt": "2026-11-06T08:15:57.046Z",
+      "marketCapBasis": "provider-current",
+      "marketCapStatus": "ok",
+      "status": "ok"
+    },
+    {
+      "symbol": "2330.TW",
+      "providerName": "Taiwan Semiconductor Manufacturing Company Limited",
+      "price": 2135,
+      "currency": "TWD",
+      "closeDate": "2026-11-06",
+      "fetchedAt": "2026-11-06T08:10:35.180Z",
+      "marketCap": 55365609717760,
+      "marketCapCurrency": "TWD",
+      "marketCapObservedAt": "2026-11-06T08:15:57.513Z",
+      "marketCapBasis": "provider-current",
+      "marketCapStatus": "ok",
+      "status": "ok"
+    },
+    {
+      "symbol": "DU.AE",
+      "providerName": "Emirates Integrated Telecommunications Company PJSC",
+      "price": 12.979999542236328,
+      "currency": "AED",
+      "closeDate": "2026-11-04",
+      "fetchedAt": "2026-11-06T08:16:11.269Z",
+      "marketCap": 57205272576,
+      "marketCapCurrency": "AED",
+      "marketCapObservedAt": "2026-11-06T08:15:58.627Z",
+      "marketCapBasis": "provider-current",
+      "marketCapStatus": "ok",
+      "status": "ok"
+    },
+    {
+      "symbol": "PHI",
+      "providerName": "PLDT Inc.",
+      "price": 18.15999984741211,
+      "currency": "USD",
+      "closeDate": "2026-11-05",
+      "fetchedAt": "2026-11-06T08:16:11.330Z",
+      "marketCap": null,
+      "marketCapCurrency": null,
+      "marketCapObservedAt": null,
+      "marketCapBasis": null,
+      "marketCapStatus": "unavailable",
+      "status": "ok"
+    }
+  ],
+  "missingCapitalizations": [
+    {
+      "symbol": "^KS11",
+      "name": "코스피",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "^KQ11",
+      "name": "코스닥",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "^GSPC",
+      "name": "S&P 500",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "^IXIC",
+      "name": "나스닥",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "KRW=X",
+      "name": "달러/원",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "GC=F",
+      "name": "금 선물",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "CL=F",
+      "name": "WTI 선물",
+      "companyId": null,
+      "group": "시장",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "688801.SS",
+      "name": "Enflame Technology",
+      "companyId": "C0149",
+      "group": "해외",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "015760.KS",
+      "name": "한국전력",
+      "companyId": "C0581",
+      "group": "국내",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "NKT.CO",
+      "name": "NKT",
+      "companyId": "C0341",
+      "group": "해외",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "032640.KS",
+      "name": "LG유플러스",
+      "companyId": "C0284",
+      "group": "국내",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "088980.KS",
+      "name": "맥쿼리인프라",
+      "companyId": "C0537",
+      "group": "국내",
+      "marketCapError": "제공처 시가총액 미제공"
+    },
+    {
+      "symbol": "PHI",
+      "name": "PLDT",
+      "companyId": "C0361",
+      "group": "해외",
+      "marketCapError": "제공처 시가총액 미제공"
+    }
+  ],
+  "snapshotCorsCheck": {
+    "status": 200,
+    "accessControlAllowOrigin": "*",
+    "method": "HEAD",
+    "url": "https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json"
+  },
+  "automatedTests": {
+    "passed": 549,
+    "failed": 0,
+    "build": "passed"
+  }
+}

@@ -22,21 +22,30 @@ let snapshotQuotes=new Map()
 let companyQuote=null
 function quotes(){
   const catalog=[...instruments]
+  for(const q of snapshotQuotes.values())if(!catalog.some(item=>item.symbol===q.symbol))catalog.push({symbol:q.symbol,name:q.name,chains:q.chains||[],group:q.group||'해외'})
   for(const symbol of [...extra,...watch])if(!catalog.some(q=>q.symbol===symbol))catalog.push({symbol,name:symbol,chains:[],group:'직접추가'})
-  return catalog.map(item=>({...item,...newestQuote(snapshotQuotes.get(item.symbol),customQuotes.get(item.symbol))}))
+  return catalog.map(item=>{
+    const saved=snapshotQuotes.get(item.symbol)
+    return {...item,...(saved?.priceBasis==='previous-completed-session'?saved:newestQuote(saved,customQuotes.get(item.symbol)))}
+  })
 }
 function current(){
   const listing=companyQuote?.company.listings.find(item=>item.ticker===selected)
-  if(!listing)return quotes().find(q=>q.symbol===selected)
+  if(!listing){
+    const base=quotes().find(q=>q.symbol===selected)
+    const value=newestQuote(snapshotQuotes.get(selected),customQuotes.get(selected))
+    return base?{...base,...value,priceBasis:value.priceBasis||'live',closeDate:value.closeDate||null}:undefined
+  }
   return {name:companyQuote.company.name,symbol:selected,currency:listing.currency,exchange:listing.exchange,
     ...newestQuote(snapshotQuotes.get(selected),customQuotes.get(selected))}
 }
 function notifyCommunity(){window.aiChainSelectedSymbol=selected;window.dispatchEvent(new CustomEvent('community-detail-change',{detail:{symbol:selected}}))}
 const barsFor=q=>chooseBars(snapshotQuotes.get(selected),range,live.get(`${selected}:${range}`))
-const note=()=>apiAvailable?'선택한 종목은 서버에서 60초마다 조회합니다. 목록은 자동 수집된 스냅샷과 조회한 시세를 함께 표시합니다.':'약 30분마다 자동 수집·배포한 시세를 표시합니다. 브라우저는 60초마다 최신 배포값을 확인합니다.'
+const closeLabel=q=>q?.priceBasis==='previous-completed-session'&&q.closeDate?`${text(q.closeDate)} 종가 · ${text(q.timezone||'현지 거래소')}`:`${date(q?.marketTime)} KST`
+const note=()=>snapshot?.mode==='scheduled-close'?'목록은 거래소별 마지막 거래일 종가입니다. 선택한 종목의 별도 API 차트는 장중 시세일 수 있습니다. 브라우저는 60초마다 새 수집 파일을 확인합니다.':apiAvailable?'선택한 종목은 서버에서 60초마다 조회합니다. 목록은 자동 수집된 스냅샷과 조회한 시세를 함께 표시합니다.':'자동 수집·배포한 시세를 표시합니다. 브라우저는 60초마다 최신 배포값을 확인합니다.'
 function status(){
   const failed=snapshot?.quotes?.filter(q=>q.status!=='ok').length||0
-  const old=snapshot&&Date.now()-Date.parse(snapshot.generatedAt)>90*60000
+  const old=snapshot&&Date.now()-Date.parse(snapshot.generatedAt)>(snapshot.mode==='scheduled-close'?96*3600000:90*60000)
   return `${snapshotBusy?'시세 파일 조회 중… · ':''}${snapshot?`수집 시각: ${text(new Date(snapshot.generatedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}))} KST · ${snapshot.quotes.length-failed}/${snapshot.quotes.length}개 성공`:'시세를 불러오는 중입니다.'}${old?' · <span class="market-error">수집 지연</span>':''}${snapshotError?`<br><span class="market-error">${text(snapshotError)}</span>`:''}`
 }
 const star=q=>`<button class="market-star${watch.includes(q.symbol)?' on':''}" data-market-watch="${text(q.symbol)}" aria-label="${text(q.name)} 관심종목" aria-pressed="${watch.includes(q.symbol)}">★</button>`
@@ -50,7 +59,7 @@ function chainQuotes(){
   const el=document.getElementById('detail');if(!el)return
   const list=quotes().filter(q=>q.chains?.includes(window.sel))
   const div=document.createElement('div');div.className='chain-market'
-  div.innerHTML=`<b>대표 종목 실제 시세</b><div class="market-strip" style="margin-top:10px">${list.map(mini).join('')}</div><p class="market-note">${list.map(q=>`${text(q.name)}: ${date(q.marketTime)} KST · ${source(q)}`).join('<br>')}</p>`
+  div.innerHTML=`<b>대표 종목 실제 시세</b><div class="market-strip" style="margin-top:10px">${list.map(mini).join('')}</div><p class="market-note">${list.map(q=>`${text(q.name)}: ${closeLabel(q)} · ${source(q)}`).join('<br>')}</p>`
   el.querySelector('.chips')?.after(div)
 }
 function syncWatch(){
@@ -69,11 +78,11 @@ function chart(q,bars){
 function detail(){
   const q=current();if(!q)return ''
   const bars=barsFor(q)
-  return `<section class="market-detail" aria-label="선택 종목 상세"><div class="market-top"><h3>${text(q.name)} · ${text(q.symbol)}</h3><b class="mono ${color(q)}">${fmt(q.price)} ${text(q.currency)} (${pct(q)})</b>${star(q)}</div><div class="market-ranges">${Object.entries(ranges).map(([r,label])=>`<button class="f${range===r?' on':''}" data-market-range="${r}" aria-pressed="${range===r}">${label}</button>`).join('')}<button class="f" data-market-csv ${bars.length?'':'disabled'}>CSV 저장</button></div>${detailBusy?'<p class="market-status" role="status">실제 시세 조회 중…</p>':''}${detailError?`<p class="market-error" role="alert">${text(detailError)}</p>`:''}${!live.has(`${selected}:${range}`)&&snapshotQuotes.get(selected)?.historyErrors?.[range]?`<p class="market-error" role="alert">이 기간 수집 실패: ${text(snapshotQuotes.get(selected).historyErrors[range])}. 남아 있는 이전 차트는 최신 수집값이 아닐 수 있습니다.</p>`:''}${chart(q,bars)}<dl class="market-facts">${[['전일 종가',q.previousClose],['당일 고가',q.high],['당일 저가',q.low],['거래량',q.volume],['52주 고가',q.yearHigh],['52주 저가',q.yearLow]].map(([key,value])=>`<div><dt>${key}</dt><dd>${fmt(value)}</dd></div>`).join('')}</dl><p class="market-note">시세 기준: ${date(q.marketTime)} KST · 개별 조회: ${text(q.fetchedAt?new Date(q.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'—')} KST<br>${source(q)} · ${text(q.exchange)} · 빈 값은 미제공입니다.${q.status&&q.status!=='ok'?' · 조회 실패로 이전 값을 표시합니다.':''}</p><h4>최근 OHLCV</h4><div class="market-scroll"><table class="tbl market-table"><thead><tr>${['일시(KST)','시가','고가','저가','종가','거래량'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${bars.slice(-10).reverse().map(b=>`<tr><td>${date(b.time)}</td>${['open','high','low','close','volume'].map(k=>`<td class="mono">${fmt(b[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`
+  return `<section class="market-detail" aria-label="선택 종목 상세"><div class="market-top"><h3>${text(q.name)} · ${text(q.symbol)}</h3><b class="mono ${color(q)}">${fmt(q.price)} ${text(q.currency)} (${pct(q)})</b>${star(q)}</div><div class="market-ranges">${Object.entries(ranges).map(([r,label])=>`<button class="f${range===r?' on':''}" data-market-range="${r}" aria-pressed="${range===r}">${label}</button>`).join('')}<button class="f" data-market-csv ${bars.length?'':'disabled'}>CSV 저장</button></div>${detailBusy?'<p class="market-status" role="status">실제 시세 조회 중…</p>':''}${detailError?`<p class="market-error" role="alert">${text(detailError)}</p>`:''}${!live.has(`${selected}:${range}`)&&snapshotQuotes.get(selected)?.historyErrors?.[range]?`<p class="market-error" role="alert">이 기간 수집 실패: ${text(snapshotQuotes.get(selected).historyErrors[range])}. 남아 있는 이전 차트는 최신 수집값이 아닐 수 있습니다.</p>`:''}${chart(q,bars)}<dl class="market-facts">${[['전일 종가',q.previousClose],['당일 고가',q.high],['당일 저가',q.low],['거래량',q.volume],['52주 고가',q.yearHigh],['52주 저가',q.yearLow]].map(([key,value])=>`<div><dt>${key}</dt><dd>${fmt(value)}</dd></div>`).join('')}</dl><p class="market-note">시세 기준: ${closeLabel(q)} · 개별 조회: ${text(q.fetchedAt?new Date(q.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'—')} KST<br>${source(q)} · ${text(q.exchange)} · 빈 값은 미제공입니다.${q.status&&q.status!=='ok'?' · 조회 실패로 이전 값을 표시합니다.':''}</p><h4>최근 OHLCV</h4><div class="market-scroll"><table class="tbl market-table"><thead><tr>${['일시(KST)','시가','고가','저가','종가','거래량'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${bars.slice(-10).reverse().map(b=>`<tr><td>${date(b.time)}</td>${['open','high','low','close','volume'].map(k=>`<td class="mono">${fmt(b[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`
 }
 function result(){
   const rows=filterQuotes(quotes(),{group,chain:filter,search,watch})
-  return `<p class="market-status" role="status">${status()}</p><p class="market-note">관심종목은 이 브라우저에 저장됩니다. ★를 눌러 추가·해제하세요.</p><div class="market-scroll"><table class="tbl market-table"><thead><tr><th>관심</th><th>종목</th><th>가격</th><th>전일 대비</th><th>시세 기준·출처</th></tr></thead><tbody>${rows.map(q=>`<tr><td>${star(q)}</td><td><button class="market-pick" data-market-symbol="${text(q.symbol)}"><b>${text(q.name)}</b><small>${text(q.symbol)} · ${text(q.group)}</small></button></td><td class="mono">${fmt(q.price)} ${text(q.currency)}</td><td class="mono ${color(q)}">${pct(q)}</td><td class="market-time">${date(q.marketTime)} KST<br>${source(q)}${q.status&&q.status!=='ok'?`<br><span class="market-error">${text(q.error||'조회 실패')} · 이전값</span>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="market-empty">검색 결과가 없습니다. 관심종목이 없다면 ★로 추가하세요.</td></tr>'}</tbody></table></div><div id="market-selected">${detail()}</div>`
+  return `<p class="market-status" role="status">${status()}</p><p class="market-note">관심종목은 이 브라우저에 저장됩니다. ★를 눌러 추가·해제하세요.</p><div class="market-scroll"><table class="tbl market-table"><thead><tr><th>관심</th><th>종목</th><th>가격</th><th>전일 대비</th><th>시세 기준·출처</th></tr></thead><tbody>${rows.map(q=>`<tr><td>${star(q)}</td><td><button class="market-pick" data-market-symbol="${text(q.symbol)}"><b>${text(q.name)}</b><small>${text(q.symbol)} · ${text(q.group)}</small></button></td><td class="mono">${fmt(q.price)} ${text(q.currency)}</td><td class="mono ${color(q)}">${pct(q)}</td><td class="market-time">${closeLabel(q)}<br>${source(q)}${q.status&&q.status!=='ok'?`<br><span class="market-error">${text(q.error||'조회 실패')} · 이전값</span>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="market-empty">검색 결과가 없습니다. 관심종목이 없다면 ★로 추가하세요.</td></tr>'}</tbody></table></div><div id="market-selected">${detail()}</div>`
 }
 function renderCompanyQuote(){
   const target=companyQuote?.target
