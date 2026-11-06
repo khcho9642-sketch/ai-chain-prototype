@@ -9,12 +9,12 @@
 .scv .scv-events-toggle:hover { color: var(--scv-accent); background: #203043; }
 .scv-pin-track {
   position: relative; height: 40px;
-  background: linear-gradient(var(--scv-rule), var(--scv-rule)) var(--pin-left, 0px) center /
+  background: linear-gradient(var(--scv-rule), var(--scv-rule)) var(--pin-left, 0px) 18px /
     var(--pin-span, 100%) 1px no-repeat;
 }
 .scv .scv-event-pin {
   position: absolute; top: 0; transform: translateX(-50%);
-  display: grid; place-items: center; width: 36px; height: 40px; padding: 0;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
 }
 .scv-pin-dot {
   display: grid; place-items: center; min-width: 12px; height: 12px;
@@ -32,6 +32,9 @@
 }
 .scv-event-card { margin: 3px 0 6px; padding: 15px 16px; border: 1px solid #344858; border-radius: 8px; background: #15222e; }
 .scv-event-meta { color: var(--scv-muted); font-size: 12px; }
+.scv-event-anchor { font-size: 15px; font-weight: 700; }
+.scv-events .scv-event-window { margin: 5px 0 8px; color: var(--scv-muted); font-size: 12px; }
+.scv-announcement + .scv-announcement { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--scv-rule); }
 .scv-event-meta time { font-variant-numeric: tabular-nums; }
 .scv-events h4 { margin-top: 4px; color: var(--scv-ink); font-size: 17px; line-height: 1.45; }
 .scv-events .scv-event-summary { margin: 5px 0 6px; color: #d1dee8; font-size: 13px; }
