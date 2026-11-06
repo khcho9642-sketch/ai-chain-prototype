@@ -189,7 +189,7 @@ function normalizedDriverInputs(definition, inputs, rateCapexTransmission) {
     return [
       {
         driverId: 'interestRate', label: DRIVER_DEFINITIONS.interestRate.label,
-        normalizedShock: -rateChangePctPoints / 100 || 0,
+        normalizedShock: -rateChangePctPoints * MODEL_ASSUMPTIONS.rateDirectDemandPerPctPoint / 100 || 0,
         controlValues: { rateChangePctPoints },
         calculation: 'negative demand overlay; discount-rate effect is modeled separately',
       },
@@ -420,10 +420,11 @@ function isChainPath(path) {
 // first, so the group split is independent of the order within each group.
 function attributeEffects(assumptions, bundle, request, driverIds, fullIndex) {
   const paths = []
-  const effectAttribution = { directPct: null, chainPct: null }
+  const isRate = request.scenarioId === 'interest_rate'
+  const effectAttribution = { directPct: null, chainPct: null,
+    ...(isRate && { rateDiscountPct: null, rateDirectDemandPct: null }) }
   if (fullIndex === null) return { effectAttribution, paths, contributions: [] }
 
-  const isRate = request.scenarioId === 'interest_rate'
   const contributions = driverIds.map(driverId => {
     const mediated = isRate && driverId === 'hyperscalerCapex'
     return {
@@ -463,6 +464,10 @@ function attributeEffects(assumptions, bundle, request, driverIds, fullIndex) {
   }
   effectAttribution.directPct = directIndex - 100
   effectAttribution.chainPct = fullIndex - directIndex
+  if (isRate) {
+    effectAttribution.rateDiscountPct = paths.find(path => path.pathId === 'interestRate:discountRate')?.impactPoints ?? 0
+    effectAttribution.rateDirectDemandPct = effectAttribution.directPct - effectAttribution.rateDiscountPct
+  }
   return { effectAttribution, paths, contributions }
 }
 

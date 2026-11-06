@@ -427,6 +427,12 @@ function displayParts(row) {
   return { direct: Number(row.directPct), chain: Number(row.chainPct), total }
 }
 
+function rateDirectBreakdown(company) {
+  const parts = company.effectAttribution
+  if (!finite(parts?.rateDiscountPct) || !finite(parts?.rateDirectDemandPct)) return ''
+  return `<small class="scenario-direct-split">할인율 ${pct2(parts.rateDiscountPct)} · 직접 수요 ${pct2(parts.rateDirectDemandPct)}</small>`
+}
+
 function sharedBarScale() {
   let max = 0
   for (const row of scenarioView?.companies || []) {
@@ -568,6 +574,7 @@ function featuredImpactRow(company, transmission, scale) {
     <div class="scenario-live-row-head"><button type="button" class="scenario-live-name" data-explore-company data-company-id="${id}">${esc(company.name)}</button><div class="scenario-live-total"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong></div></div>
     ${divergingBar(company, scale)}
     <div class="scenario-live-parts"><span>${directLabel} <b class="${impactClass(parts.direct)}">${pct2(parts.direct)}</b></span><span>${chainLabel} <b class="${impactClass(parts.chain)}">${pct2(parts.chain)}</b></span>${clipped ? '<small>막대 눈금 초과</small>' : ''}</div>
+    ${rateDirectBreakdown(company)}
     <small class="scenario-live-path">${esc(featuredPath(company, transmission))}</small>
   </article>`
 }
@@ -630,7 +637,7 @@ function companyDetail() {
 
   return `<section class="scenario-panel scenario-company-detail" aria-labelledby="scenario-company-detail-heading">
     <div class="scenario-detail-hero"><div><h2 id="scenario-company-detail-heading" tabindex="-1">${esc(company.name || source.name)} <small>${esc(company.symbol || source.symbol || '비상장')}</small></h2><p>${esc(pathSummary(company.topPath, company))}</p><button type="button" class="scenario-quote-button" data-toggle-quotes aria-pressed="${uiState.showObservedQuotes}">${uiState.showObservedQuotes ? '관측·환산주가 숨기기' : '관측·환산주가 보기'}</button></div><div class="scenario-detail-index"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong><small>가치지수 ${indexValue(company.scenarioValueIndex)}</small></div></div>
-    <div class="scenario-detail-breakdown"><div><span>직접</span><b>${pct2(parts.direct)}</b></div><div><span>밸류체인</span><b>${pct2(parts.chain)}</b></div><div><span>원시 잔차</span><b>${finite(company.residualPct) ? `${Number(company.residualPct).toFixed(4)}%p` : '—'}</b></div><div><span>전파 가정 신뢰등급</span><b>C</b></div></div>
+    <div class="scenario-detail-breakdown"><div><span>직접</span><b>${pct2(parts.direct)}</b>${rateDirectBreakdown(company)}</div><div><span>밸류체인</span><b>${pct2(parts.chain)}</b></div><div><span>원시 잔차</span><b>${finite(company.residualPct) ? `${Number(company.residualPct).toFixed(4)}%p` : '—'}</b></div><div><span>전파 가정 신뢰등급</span><b>C</b></div></div>
     ${company.capexRole === 'no-covered-customer-path' ? '<p class="scenario-note">4개사의 외부 클라우드 발주 노출 자료 없음 · 해당 경로 미산정</p>' : ''}
     ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} · 밸류체인 ${pct2(parts.chain)} · 총 ${pct2(parts.total)}. 합계와 순위는 반올림 전 값으로 계산합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
     <div data-financial-basis>${financialDetails(company)}</div>

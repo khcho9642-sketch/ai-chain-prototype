@@ -728,6 +728,7 @@
 #v-scenario .scenario-live-row .scenario-bar-segment { top: 5px; height: 9px; }
 .scenario-live-parts { display: flex; flex-wrap: wrap; gap: 2px 15px; margin: 5px 0 0; color: var(--desk-muted); font-size: 12px; line-height: 1.45; }
 .scenario-live-parts b { font-family: var(--desk-numerals); font-variant-numeric: tabular-nums; }
+.scenario-direct-split { display: block; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .scenario-live-path { display: block; margin: 3px 0 0; }
 .scenario-live-axis { margin: 4px 0 0; }
 @media (max-width: 560px) {

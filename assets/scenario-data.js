@@ -35,6 +35,7 @@ export const MODEL_ASSUMPTIONS = Object.freeze({
   forecastYears: 8,
   horizonMonths: 96,
   shockFadeMonths: 12,
+  rateDirectDemandPerPctPoint: 1,
   maxPropagationHops: 8,
   durationMonths: Object.freeze({ min: 6, max: 36, step: 6, defaultValue: 12 }),
   driverLabels: DRIVER_LABELS,

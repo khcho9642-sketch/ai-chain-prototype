@@ -372,7 +372,9 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
   assert.ok(unavailable.valuation.baselineEnterpriseValueUnits <= 0)
   assert.equal(unavailable.valuation.comparisonStatus, 'nonpositive-baseline')
   assert.equal(unavailable.valueChangePct, null)
-  assert.deepEqual(unavailable.rateAttribution, { directPct: null, chainPct: null })
+  for (const field of ['directPct', 'chainPct', 'rateDiscountPct', 'rateDirectDemandPct']) {
+    assert.equal(unavailable.rateAttribution[field], null)
+  }
   assert.equal(unavailable.scenarioValueIndex, null)
   assert.equal(unavailable.valuation.enterpriseValueRatio, null)
   assert.equal(unavailable.valuation.equityValueRatio, null)

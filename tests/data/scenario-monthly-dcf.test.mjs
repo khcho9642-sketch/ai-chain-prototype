@@ -4,6 +4,19 @@ import { evaluateCompanyPreview } from '../../assets/scenario-core.js'
 
 const preview = (request, id) => evaluateCompanyPreview(request, [id]).companies[0]
 const sum = numbers => numbers.reduce((total, value) => total + value, 0)
+test('direct rate effects reconcile to the discount path and the marginal direct demand effect', () => {
+  for (const rate of [-2, 0, 1, 3]) {
+    for (const id of ['NVDA', '000660.KS']) {
+      const row = preview({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: rate } }, id)
+      const { directPct, rateDiscountPct, rateDirectDemandPct } = row.effectAttribution
+      assert.equal(rateDiscountPct, row.paths.find(p => p.pathId === 'interestRate:discountRate')?.impactPoints ?? 0)
+      assert.ok(Math.abs(rateDiscountPct + rateDirectDemandPct - directPct) <= 1e-9)
+      if (rate === 0) assert.deepEqual([rateDiscountPct, rateDirectDemandPct], [0, 0])
+    }
+  }
+  assert.equal('rateDiscountPct' in preview({ scenarioId: 'model_growth', inputs: {
+    modelBaselineGrowthPct: 50, modelTargetGrowthPct: 80 } }, 'NVDA').effectAttribution, false)
+})
 function close(actual, expected) {
   assert.ok(Math.abs(actual - expected) < Math.max(0.0001, Math.abs(expected) * 1e-10),
     `${actual} differs from ${expected}`)
