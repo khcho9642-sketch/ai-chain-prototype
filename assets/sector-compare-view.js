@@ -1,4 +1,5 @@
 import { renderFlowChart } from './sector-compare-chart.js';
+import { companyHrefForTicker } from './company-links.js';
 
 const periods = new Map([
   [30, '1개월'], [90, '3개월'], [180, '6개월'], [365, '1년'], [730, '2년'], [1095, '3년'],
@@ -70,7 +71,10 @@ function renderDetailTable(rows, sectorMode) {
     const width = Math.abs(row.rate) / maxChange * 100;
     const bar = row.rate == null ? '' : '<span class="scv-track"><i class="' + tone(row.rate) +
       '" style="width:' + width + '%"></i></span>';
-    return '<tr><th scope="row">' + escape(row.name) + '<small>' + escape(row.symbol) +
+    const href = companyHrefForTicker(row.symbol);
+    const name = href ? '<a class="scv-company-link" href="' + escape(href) + '" aria-label="' +
+      escape(row.name) + ' 신기업정보">' + escape(row.name) + '</a>' : escape(row.name);
+    return '<tr><th scope="row">' + name + '<small>' + escape(row.symbol) +
       '</small></th><td>' + escape(row.rate == null ? status : sectorMode ? '포함' : row.sectorName) +
       '</td><td class="scv-width-cell">' + bar + '</td><td class="' + tone(row.rate) + '">' + pct(row.rate) + '</td></tr>';
   }).join('');

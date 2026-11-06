@@ -19,6 +19,7 @@ const staticHost=location.hostname.endsWith('.github.io')||location.protocol==='
 const expandedFilings=new Set()
 let disclosures=null,disclosureError='',disclosureBusy=false,disclosureReadAt=0
 let disclosureMap=new Map()
+const filingViews=new Set()
 
 function filingTime(value){
   return value?new Date(value).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' KST':'성공 확인 전'
@@ -38,12 +39,13 @@ function disclosureCard(item){
   const pending=!company?.lastSuccessAt
   const stale=company?.lastSuccessAt&&Date.now()-Date.parse(company.lastSuccessAt)>90*60000
   const badge=pending?'확인 전':`${items.length}건 보존`
-  const state=company?.status==='error'?'조회 실패 · 이전 성공 자료':stale?'수집 지연 · 이전 성공 자료':pending?'아직 성공한 수집 자료가 없습니다.':`최근 성공 확인 ${filingTime(company.lastSuccessAt)}`
+  const lastSuccess=pending?'아직 성공한 수집 자료가 없습니다.':`최근 성공 확인 ${filingTime(company.lastSuccessAt)}`
+  const state=[company?.status==='error'?'공시 수집 실패':stale?'공시 수집 지연':'',lastSuccess].filter(Boolean).join(' · ')
   return `<details class="company-filings" data-company-filings="${esc(item.symbol)}"${expandedFilings.has(item.symbol)?' open':''}><summary>공식 공시 <span>${esc(badge)}</span></summary><p class="company-filing-status">${esc(state)}</p>${items.length?`<ul>${items.slice(0,5).map(filing=>`<li><a href="${esc(filing.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(filing.title)}<span class="sr">: ${esc(item.name)}, DART 원문, 새 창</span></a><time datetime="${esc(filing.publishedAt)}">${esc(filingTime(filing.publishedAt))}</time></li>`).join('')}</ul>${items.length>5?`<p class="company-filing-status">보존한 ${items.length}건 중 최근 5건 표시</p>`:''}`:pending?'':`<p class="company-filing-status">현재 RSS 수집 범위에서 보존한 공시가 없습니다. 전체 공시 이력은 아닙니다.</p>`}<p class="company-filing-status">최근 5영업일 RSS를 수집하며, 수집을 시작한 뒤 확보한 공시만 최대 90일 보존합니다. <a href="${esc(definition.rssUrl)}" target="_blank" rel="noopener noreferrer">DART 공식 RSS ↗</a></p></details>`
 }
 async function loadDisclosures(){
   if(disclosureBusy)return
-  disclosureBusy=true;disclosureError='';renderResults()
+  disclosureBusy=true;disclosureError='';renderResults();filingViews.forEach(renderView=>renderView())
   try{
     let value,fallback=false
     const request=async path=>{
@@ -56,10 +58,35 @@ async function loadDisclosures(){
       try{value=await request('./api/company-disclosures')}
       catch{value=await request('./data/company-disclosures.json');fallback=true}
     }
-    disclosures=value;disclosureMap=new Map(value.companies.map(company=>[company.symbol,company]))
+    // A bundled fallback can predate the most recent successful API read.
+    if(!disclosures||String(value.collection.lastAttemptAt??'')>=String(disclosures.collection.lastAttemptAt??'')){
+      disclosures=value;disclosureMap=new Map(value.companies.map(company=>[company.symbol,company]))
+    }
     if(fallback)disclosureError='API를 확인하지 못해 함께 배포된 공시 자료를 표시합니다.'
   }catch{disclosureError='공시 자료를 읽지 못했습니다. 이전에 확인한 자료가 있으면 유지합니다.'}
-  finally{disclosureBusy=false;disclosureReadAt=Date.now();renderResults()}
+  finally{disclosureBusy=false;disclosureReadAt=Date.now();renderResults();filingViews.forEach(renderView=>renderView())}
+}
+
+export function mountCompanyFilings(container,symbol){
+  const definition=dartBySymbol.get(symbol)
+  if(!definition){container.replaceChildren();return ()=>{}}
+  function paint(){
+    container.innerHTML=disclosureCard({symbol})
+    const details=container.querySelector('details')
+    details.removeAttribute('data-company-filings')
+    details.open=true
+    if(disclosureBusy||disclosureError){
+      const state=document.createElement('p')
+      state.className='company-filing-status'
+      state.setAttribute('role','status')
+      state.textContent=disclosureBusy?'최근 DART 공시를 확인하고 있습니다.':disclosureError
+      details.append(state)
+    }
+  }
+  filingViews.add(paint)
+  paint()
+  if(!disclosureBusy&&(!disclosures||Date.now()-disclosureReadAt>15*60000))void loadDisclosures()
+  return ()=>filingViews.delete(paint)
 }
 
 function safeSource(value){

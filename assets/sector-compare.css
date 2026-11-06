@@ -93,6 +93,8 @@
 .scv-table :is(th, td) { padding: 8px; border: 0; border-bottom: 1px solid #253447; background: transparent; text-align: left; }
 .scv-table thead th { border-top: 1px solid var(--scv-rule); font-size: 11px; font-weight: 500; color: var(--scv-muted); }
 .scv-table tbody th { font-weight: 620; }
+.scv-company-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--scv-muted); }
+.scv-company-link:hover, .scv-company-link:focus-visible { color: var(--accent); }
 .scv-table :is(th, td):first-child { padding-left: 0; }
 .scv-table :is(th, td):last-child { padding-right: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .scv-table tr:last-child :is(td, th) { border-bottom: 0; }

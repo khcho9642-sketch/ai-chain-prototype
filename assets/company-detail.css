@@ -1,0 +1,117 @@
+.cid-detail {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.cid-detail h1, .cid-detail h2, .cid-detail h3, .cid-detail p, .cid-detail dl, .cid-detail dd {
+  margin: 0;
+}
+.cid-detail a { text-underline-offset: 3px; }
+.cid-detail a:focus-visible, .cid-metrics:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.cid-back, .cid-action, .cid-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  text-decoration: none;
+}
+.cid-back { width: fit-content; color: var(--muted); font-size: 13px; }
+.cid-header {
+  display: grid;
+  gap: 14px;
+  padding: 0 0 10px;
+}
+.cid-name { display: flex; gap: 8px 14px; align-items: baseline; flex-wrap: wrap; }
+.cid-detail h1 { font-size: clamp(26px, 3vw, 40px); line-height: 1.3; letter-spacing: -.035em; }
+.cid-name > span { color: var(--muted); font-size: 16px; }
+.cid-core { align-self: center; padding: 4px 9px; border-radius: 5px; background: var(--card-on); color: var(--accent); font-size: 12px; }
+.cid-product { font-size: clamp(16px, 2vw, 20px); line-height: 1.6; }
+.cid-detail .cid-facts { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 4px; }
+.cid-facts div { display: flex; align-items: baseline; gap: 6px; font-size: 13px; }
+.cid-facts dt, .cid-publication, .cid-related small, .cid-thesis span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.cid-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.cid-tabs a {
+  margin-bottom: -1px;
+  padding: 3px 1px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+}
+.cid-tabs a[aria-current] { border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.cid-tabs .cid-discussion { margin-left: auto; }
+.cid-tabs a:hover, .cid-back:hover, .cid-action:hover { color: var(--accent); }
+.cid-card {
+  min-width: 0;
+  padding: clamp(18px, 2.6vw, 32px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.cid-card h2 { font-size: 20px; line-height: 1.45; }
+.cid-card h3 { margin-top: 24px; font-size: 14px; }
+.cid-card p { line-height: 1.8; }
+.cid-overview { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); align-items: start; gap: 16px; }
+.cid-overview h2 + p { margin-top: 12px; }
+.cid-description, .cid-related p, .cid-analysis section > p { white-space: pre-line; }
+.cid-related h2 { font-size: 17px; }
+.cid-related small { display: block; }
+.cid-related .cid-state { margin-top: 16px; color: var(--muted); font-size: 13px; }
+.cid-action { margin-top: 10px; font-size: 14px; font-weight: 700; }
+.cid-evidence-list {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cid-evidence {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 44px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+  font-size: 14px;
+}
+.cid-evidence:hover > span:first-child { text-decoration: underline; }
+.cid-evidence small { color: var(--muted); font-size: 12px; }
+.cid-source-sections, .cid-analysis { display: grid; gap: 24px; }
+.cid-analysis > section { min-width: 0; }
+.cid-analysis section > p { max-width: 78ch; margin-top: 9px; }
+.cid-thesis {
+  padding: 4px 0 4px 16px;
+  border-left: 3px solid var(--accent);
+}
+.cid-thesis > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; color: var(--accent); font-size: 13px; }
+.cid-analysis .cid-thesis p { max-width: 60ch; margin-top: 8px; font-weight: 700; font-size: clamp(19px, 2vw, 25px); line-height: 1.55; }
+.cid-publication { border-top: 1px solid var(--line); padding-top: 12px; }
+.cid-metrics { margin-top: 16px; overflow-x: auto; }
+.cid-metrics table { min-width: min(680px, 100%); border-collapse: collapse; font-size: 13px; text-align: left; }
+.cid-metrics caption { margin-bottom: 8px; text-align: left; font-size: 14px; font-weight: 700; }
+.cid-metrics td, .cid-metrics th { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.cid-metrics thead { background: var(--card); color: var(--muted); }
+.cid-metrics .cid-number { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) {
+  .cid-overview { grid-template-columns: 1fr; }
+  .cid-tabs { gap: 0 14px; }
+  .cid-tabs .cid-discussion { margin-left: 0; }
+  .cid-name > span { font-size: 14px; }
+  .cid-detail .cid-facts { gap: 6px 16px; }
+  .cid-metrics table { min-width: 540px; }
+}

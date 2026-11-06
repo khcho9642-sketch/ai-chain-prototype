@@ -134,6 +134,8 @@ aside h2{margin:0;font-size:16px}
 <link rel="stylesheet" href="./assets/peer-comparison.css">
 <link rel="stylesheet" href="./assets/sector-compare.css">
 <link rel="stylesheet" href="./assets/company-directory.css">
+<link rel="stylesheet" href="./assets/company-info.css">
+<link rel="stylesheet" href="./assets/company-detail.css">
 <link rel="stylesheet" href="./assets/industry.css">
 <link rel="stylesheet" href="./assets/sector-metric-view.css">
 <link rel="stylesheet" href="./assets/epoch-ai.css">
@@ -177,6 +179,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#today" data-r="today">오늘의 변화</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
       <a href="#data" data-r="data">기업정보</a>
+      <a href="#company-info" data-r="company-info">신기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
       <a href="#compare" data-r="compare">고리 비교</a>
       <a href="#industry" data-r="industry">산업·AI 통계</a>
@@ -190,6 +193,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#today" data-r="today">오늘의 변화</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
       <a href="#data" data-r="data">기업정보</a>
+      <a href="#company-info" data-r="company-info">신기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
       <a href="#compare" data-r="compare">고리 비교</a>
       <a href="#industry" data-r="industry">산업·AI 통계</a>
@@ -256,6 +260,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
 
 </div>
 <div id="v-data" class="view" hidden></div>
+<div id="v-company-info" class="view" aria-label="신기업정보" hidden></div>
 <div id="v-compare" class="view" hidden></div>
 <div id="v-industry" class="view" hidden></div>
 <div id="v-scenario" class="view" hidden></div>
@@ -271,6 +276,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
   <a href="#today" data-r="today"><span aria-hidden="true">◈</span>오늘의 변화</a>
   <a href="#sector-compare" data-r="sector-compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 17l5-5 5 2 8-10M3 17l5-1 5 2 8-5"/></svg>섹터 비교</a>
   <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>기업정보</a>
+  <a href="#company-info" data-r="company-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>신기업정보</a>
   <a href="#map" data-r="map"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
   <a href="#compare" data-r="compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 18L9 11L14 14L21 5M3 10L9 15L14 7L21 11"/></svg>고리 비교</a>
   <a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업·AI 통계</a>
@@ -357,23 +363,25 @@ function renderAI(){
 function ask(q){document.getElementById('aq').value=q;document.getElementById('ansBox').innerHTML='<b>Q. '+esc(q)+'</b>'+answer(q);}
 function route(){
   var h=location.hash.replace('#','').split('/');
+  if(h[0].split('?')[0]==='company-info')h[0]='company-info';
   if(h[0]==='ai-stats'){
     h=['industry','ai'].concat(h.slice(1));
     if(h.length===2)h.push('business');
     history.replaceState(null,'','#'+h.join('/'));
   }
-  var r=['home','today','sector-compare','map','data','compare','industry','talk','ai','scenario'].indexOf(h[0])>-1?h[0]:'home';
-  ['home','today','sector-compare','map','data','compare','industry','talk','ai','scenario'].forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
+  var pages=['home','today','sector-compare','map','data','company-info','compare','industry','talk','ai','scenario'];
+  var r=pages.indexOf(h[0])>-1?h[0]:'home';
+  pages.forEach(function(k){document.getElementById('v-'+k).hidden=(k!==r);});
   document.querySelectorAll('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===r);});
   document.body.dataset.page=r;
   if(r==='home')window.renderHomeMap?.();
   if(r==='sector-compare')window.renderSectorCompare?.(h[1]);
   if(r==='scenario')window.renderScenario?.();if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
-  var titles={home:'AI 시장 지도',today:'오늘의 추천','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업정보',compare:'고리 비교',industry:'산업·AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
+  var titles={home:'AI 시장 지도',today:'오늘의 추천','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업정보','company-info':'신기업정보',compare:'고리 비교',industry:'산업·AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
   var industryTitle=h[1]==='ai'?'AI 통계':h[1]==='epoch'?'Epoch AI':titles.industry;
   document.title=(r==='industry'?industryTitle:titles[r])+' | AI Value Chain';
-  document.getElementById('site-ai-note').hidden=(r==='scenario'||r==='home'||r==='sector-compare');
-  document.getElementById('site-model-note').hidden=(r==='sector-compare');
+  document.getElementById('site-ai-note').hidden=(r==='scenario'||r==='home'||r==='sector-compare'||r==='company-info');
+  document.getElementById('site-model-note').hidden=(r==='sector-compare'||r==='company-info');
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
@@ -393,6 +401,7 @@ window.addEventListener('hashchange',function(){mobileMenu.open=false;});
 <script type="module" src="./assets/dashboard.js"></script>
 <script type="module" src="./assets/peer-comparison.js"></script>
 <script type="module" src="./assets/company-directory.js"></script>
+<script type="module" src="./assets/company-info.js"></script>
 <script type="module" src="./assets/industry.js"></script>
 <script type="module" src="./assets/today.js"></script>
 <script type="module" src="./assets/scenario.js"></script>

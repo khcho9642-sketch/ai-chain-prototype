@@ -1,5 +1,6 @@
 import {SECTORS,COMPANIES,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map-core.js';
 import { instruments } from './instruments.js';
+import { companyHrefForTicker } from './company-links.js';
 import { mountHomeSectorSummary } from './home-sector-summary.js';
 const host = document.getElementById('v-home');
 const root = host.attachShadow({mode:'open'});
@@ -71,9 +72,22 @@ function renderSelection(){
   const change=document.createElement('span');change.className=pctClass(r);change.textContent=`${periodName()} ${sign(r)}`;
   data.append(cap,change);
   const actions=document.createElement('div');actions.className='selection-actions';
-  const chart=document.createElement('button');chart.type='button';chart.textContent='시세·차트 보기';
-  chart.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('market-symbol-open',{detail:{symbol:c.ticker}})));
-  actions.append(chart);
+  const companyHref = companyHrefForTicker(c.ticker);
+  if (companyHref) {
+    const info = document.createElement('a');
+    info.href = companyHref;
+    info.textContent = '신기업정보';
+    const chart = document.createElement('a');
+    chart.href = companyHrefForTicker(c.ticker, 'quote');
+    chart.textContent = '시세·차트 보기';
+    actions.append(info, chart);
+  } else {
+    const chart = document.createElement('button');
+    chart.type = 'button';
+    chart.textContent = '시세·차트 보기';
+    chart.addEventListener('click', () => window.dispatchEvent(new CustomEvent('market-symbol-open', { detail: { symbol: c.ticker } })));
+    actions.append(chart);
+  }
   if(instruments.some(item=>item.symbol===c.ticker&&item.chains.some(chain=>chain>0))){
     const talk=document.createElement('a');talk.href='#talk/'+encodeURIComponent(c.ticker);talk.textContent='종목 토론';actions.append(talk);
   }

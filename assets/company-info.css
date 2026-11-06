@@ -1,0 +1,101 @@
+#v-company-info { min-width:0 }
+.ci-fin-table { overflow-x:auto; margin-top:12px; max-width:100% }
+.ci-fin-table table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums }
+.ci-fin-table td,.ci-fin-table th { padding:11px 9px; border-bottom:1px solid var(--line); text-align:right }
+.ci-fin-table th:first-child { text-align:left }
+.ci-fin-table thead th,.ci-fin-note,.ci-fin-table small { font-size:12px; color:var(--muted); font-weight:400 }
+.ci-fin-table small { display:block; font-size:10px; margin-top:4px }
+.ci-fin-table a { text-decoration:none; white-space:nowrap }
+.ci-fin-table a:hover { text-decoration:underline }
+.ci-fin-note { margin-top:8px!important }
+.ci-shell { display:grid; gap:18px; color:var(--ink); padding:8px 0 24px }
+.ci-shell button, .ci-shell select, .ci-shell input { font:inherit }
+.ci-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:12px 0 6px }
+.ci-heading h1 { margin:0; font-size:clamp(28px,4vw,42px); letter-spacing:-.055em; line-height:1.24 }
+.ci-heading p { margin:9px 0 0; font-size:14px; color:var(--muted) }
+.ci-tools { display:flex; gap:16px; font-size:13px }
+.ci-tools a, .ci-entry a { color:var(--accent); text-decoration:none }
+.ci-tabs { display:flex; gap:24px; border-bottom:1px solid var(--line) }
+.ci-tabs button { border:0; border-bottom:2px solid transparent; color:var(--muted); padding:12px 1px; background:transparent; font-weight:700 }
+.ci-tabs button[aria-pressed=true] { color:var(--ink); border-color:var(--accent) }
+.ci-tabs b { color:var(--muted); font-size:.85em; font-variant-numeric:tabular-nums; margin-left:4px }
+.ci-tabs [aria-pressed=true] b { color:var(--accent) }
+.ci-search-row { display:flex; gap:8px; align-items:stretch }
+.ci-searchbox { display:flex; flex:1; min-width:0; align-items:center; gap:12px; padding:0 16px; background:var(--card); color:var(--muted); border:1px solid var(--dash); border-radius:9px }
+.ci-searchbox:focus-within { outline:2px solid var(--accent); outline-offset:1px }
+.ci-searchbox input { width:100%; min-width:0; border:0; outline:0; height:46px; background:transparent; color:var(--ink); font-size:14px }
+.ci-shell .ci-searchbox input:focus { outline:none }
+.ci-searchbox svg { flex-shrink:0 }
+.ci-filter-toggle { display:none }
+.ci-conditions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; overflow-wrap:anywhere }
+.ci-conditions:has(.ci-criteria:empty) { display:none }
+.ci-conditions button { background:none; border:0; padding:4px; color:var(--accent) }
+.ci-layout { display:grid; grid-template-columns:minmax(180px,215px) minmax(0,1fr); gap:clamp(18px,3vw,42px); align-items:start }
+.ci-filters { display:grid; gap:12px; padding:18px 12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); min-width:0 }
+.ci-filters h2 { margin:0 8px; font-size:14px }
+.ci-sector-list { display:grid; gap:2px; padding-bottom:12px; border-bottom:1px solid var(--line) }
+.ci-sector-list button { display:flex; align-items:center; gap:8px; border:1px solid transparent; padding:9px 8px; border-radius:6px; font-size:13px; background:transparent; text-align:left; color:#bdc7d3 }
+.ci-sector-list button:hover,.ci-sector-list button[aria-pressed=true] { background:var(--card-on); color:var(--ink) }
+.ci-sector-list button[aria-pressed=true] { border-color:var(--dash); font-weight:700 }
+.ci-sector-list i,.ci-group h3 i,.ci-sector-tag:before { width:7px; height:7px; border-radius:2px; background:var(--sector); flex:none }
+.ci-sector-list small { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums }
+.ci-filters label { display:grid; gap:6px; font-size:12px; color:var(--muted); padding:0 6px }
+.ci-filters select { color:var(--ink); background:var(--card); border:1px solid var(--dash); border-radius:6px; padding:8px; width:100% }
+.ci-results { min-width:0 }
+.ci-results-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:6px 14px; margin:0 0 16px }
+.ci-results-head h2 { font-size:20px; margin:0; letter-spacing:-.035em }
+.ci-count,.ci-sort,.ci-group h3 small { font-size:12px; font-weight:500; color:var(--muted) }
+.ci-count { margin-inline-start:5px }
+.ci-group { border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:18px }
+.ci-group h3 { display:flex; align-items:center; gap:10px; font-size:15px; margin:0; padding:13px 18px; background:var(--card-on) }
+.ci-group h3 i { height:14px; width:4px }
+.ci-core-row { display:grid; grid-template-columns:minmax(110px,1fr) minmax(140px,1.7fr) auto; gap:18px; align-items:center; padding:15px 18px; background:var(--panel); border-top:1px solid var(--line); overflow-wrap:anywhere }
+.ci-identity small,.ci-sector-cell small { display:block; margin-top:3px; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums }
+.ci-company-link { color:var(--ink); font-weight:700; text-decoration:none }
+.ci-company-link:hover,.ci-entry a:hover,.ci-tools a:hover { text-decoration:underline; color:var(--accent) }
+.ci-business strong { font-size:14px; font-weight:500 }
+.ci-business p { margin:5px 0 0; font-size:12px; line-height:1.6; color:var(--muted) }
+.ci-entry { display:grid; gap:5px; text-align:right; font-size:12px }
+.ci-entry small { font-size:11px; color:var(--muted) }
+.ci-table { width:100%; border-collapse:collapse; font-size:13px; overflow-wrap:anywhere }
+.ci-table th,.ci-table td { padding:14px 10px; text-align:left; vertical-align:middle; border-bottom:1px solid var(--line) }
+.ci-table th { color:var(--muted); font-size:12px; font-weight:500; background:var(--panel); white-space:nowrap }
+.ci-table .ci-identity { width:25% }
+.ci-sector-tag { display:inline-flex; align-items:center; gap:6px }
+.ci-sector-tag:before { content:'' }
+.ci-core-label { color:#93cee9; font-size:10px; border:1px solid #314a58; display:inline-block; border-radius:4px; padding:1px 5px; margin-top:3px }
+.ci-table .ci-country,.ci-table .ci-listed { color:#bdc7d3; white-space:nowrap }
+.ci-more,.ci-small-action,.ci-filter-toggle { background:var(--card); color:var(--ink); border:1px solid var(--dash); border-radius:7px; padding:10px 14px }
+.ci-more { display:block; width:100%; margin-top:14px }
+.ci-more small { margin-left:6px; color:var(--muted) }
+.ci-empty { padding:32px 18px; background:var(--panel); border:1px solid var(--line); border-radius:10px; text-align:center }
+.ci-empty h3 { font-size:17px; margin:0 0 8px }.ci-empty p { color:var(--muted); overflow-wrap:anywhere }
+.ci-small-action { margin:4px; font-size:13px!important }
+@media(max-width:760px) {
+  body[data-page="company-info"] > main.wrap { padding-bottom:calc(104px + env(safe-area-inset-bottom)) }
+  #v-company-info :is(a,button,select,input) { scroll-margin-block:86px }
+  .ci-shell { gap:14px; padding-top:0 }
+  .ci-heading { align-items:start; gap:8px; flex-wrap:wrap; padding-top:0 }
+  .ci-tools { gap:12px; font-size:12px; margin-top:5px }
+  .ci-heading p { font-size:12px }
+  .ci-searchbox { padding:0 10px; gap:8px }
+  .ci-searchbox input { font-size:13px }
+  .ci-filter-toggle { display:block; font-size:13px!important }
+  .ci-layout { display:block }
+  .ci-filters { display:none; margin-bottom:16px }
+  .ci-filters[data-open=true] { display:grid }
+  .ci-sector-list { grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .ci-sector-list button { min-height:42px }
+  .ci-core-row { grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:14px }
+  .ci-business { grid-column:1/-1; grid-row:2 }
+  .ci-entry { grid-column:2; grid-row:1 }
+  .ci-group h3 { padding:11px 14px }
+  .ci-table,.ci-table tbody { display:block }
+  .ci-table thead { position:absolute; clip-path:inset(50%); width:1px; height:1px; overflow:hidden }
+  .ci-table tr { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:7px 10px; padding:13px 2px; border-top:1px solid var(--line) }
+  .ci-table td { border:0; padding:0 }
+  .ci-table .ci-identity { width:auto; grid-column:1; grid-row:1 }
+  .ci-table .ci-country,.ci-table .ci-listed { display:none }
+  .ci-table .ci-sector-cell { grid-column:2; grid-row:1; font-size:12px }
+  .ci-table .ci-product { grid-column:1/-1; color:#bac5d1 }
+}

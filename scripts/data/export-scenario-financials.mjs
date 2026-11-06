@@ -28,7 +28,7 @@ const officialHosts = {
 }
 
 // Only the browser-facing finance page or a known public filing is exported, never collector credentials.
-function publicSource(row, ticker) {
+export function publicSource(row, ticker) {
   const provider = row.selected_provider_id
   if (provider === 'YAHOO') {
     const incomeStatement = row.metric_id === 'operating_income' || marginHistoryMetrics.has(row.metric_id)

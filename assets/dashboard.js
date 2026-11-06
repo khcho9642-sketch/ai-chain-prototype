@@ -1,5 +1,6 @@
 import { instruments } from './instruments.js'
 import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, chooseBars, newestQuote } from './market-core.js'
+import { companyHrefForTicker, companyHrefForQuery } from './company-links.js'
 
 const ranges={'1d':'1일','5d':'5일','1mo':'1개월','3mo':'3개월','1y':'1년','5y':'5년'}
 const staticHost=location.hostname.endsWith('.github.io') || location.protocol==='file:'
@@ -18,12 +19,18 @@ let snapshot=null,snapshotError='',snapshotBusy=false,detailError='',detailBusy=
 let range='3mo',group='전체',filter=0,search='',apiAvailable=!staticHost,controller=null
 const live=new Map(),customQuotes=new Map()
 let snapshotQuotes=new Map()
+let companyQuote=null
 function quotes(){
   const catalog=[...instruments]
   for(const symbol of [...extra,...watch])if(!catalog.some(q=>q.symbol===symbol))catalog.push({symbol,name:symbol,chains:[],group:'직접추가'})
   return catalog.map(item=>({...item,...newestQuote(snapshotQuotes.get(item.symbol),customQuotes.get(item.symbol))}))
 }
-const current=()=>quotes().find(q=>q.symbol===selected)
+function current(){
+  const listing=companyQuote?.company.listings.find(item=>item.ticker===selected)
+  if(!listing)return quotes().find(q=>q.symbol===selected)
+  return {name:companyQuote.company.name,symbol:selected,currency:listing.currency,exchange:listing.exchange,
+    ...newestQuote(snapshotQuotes.get(selected),customQuotes.get(selected))}
+}
 function notifyCommunity(){window.aiChainSelectedSymbol=selected;window.dispatchEvent(new CustomEvent('community-detail-change',{detail:{symbol:selected}}))}
 const barsFor=q=>chooseBars(snapshotQuotes.get(selected),range,live.get(`${selected}:${range}`))
 const note=()=>apiAvailable?'선택한 종목은 서버에서 60초마다 조회합니다. 목록은 자동 수집된 스냅샷과 조회한 시세를 함께 표시합니다.':'약 30분마다 자동 수집·배포한 시세를 표시합니다. 브라우저는 60초마다 최신 배포값을 확인합니다.'
@@ -68,7 +75,17 @@ function result(){
   const rows=filterQuotes(quotes(),{group,chain:filter,search,watch})
   return `<p class="market-status" role="status">${status()}</p><p class="market-note">관심종목은 이 브라우저에 저장됩니다. ★를 눌러 추가·해제하세요.</p><div class="market-scroll"><table class="tbl market-table"><thead><tr><th>관심</th><th>종목</th><th>가격</th><th>전일 대비</th><th>시세 기준·출처</th></tr></thead><tbody>${rows.map(q=>`<tr><td>${star(q)}</td><td><button class="market-pick" data-market-symbol="${text(q.symbol)}"><b>${text(q.name)}</b><small>${text(q.symbol)} · ${text(q.group)}</small></button></td><td class="mono">${fmt(q.price)} ${text(q.currency)}</td><td class="mono ${color(q)}">${pct(q)}</td><td class="market-time">${date(q.marketTime)} KST<br>${source(q)}${q.status&&q.status!=='ok'?`<br><span class="market-error">${text(q.error||'조회 실패')} · 이전값</span>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="market-empty">검색 결과가 없습니다. 관심종목이 없다면 ★로 추가하세요.</td></tr>'}</tbody></table></div><div id="market-selected">${detail()}</div>`
 }
-function renderSelected(){const el=document.getElementById('market-selected');if(el)el.innerHTML=detail();notifyCommunity()}
+function renderCompanyQuote(){
+  const target=companyQuote?.target
+  if(!target?.isConnected)return
+  target.innerHTML=detail()
+  if(snapshotError){
+    const message=document.createElement('p')
+    message.className='market-error';message.setAttribute('role','status');message.textContent=snapshotError
+    target.append(message)
+  }
+}
+function renderSelected(){const el=document.getElementById('market-selected');if(el)el.innerHTML=detail();renderCompanyQuote();notifyCommunity()}
 function mount(){
   const parent=document.getElementById('v-data');if(!parent||parent.hidden)return
   document.getElementById('market-data')?.remove()
@@ -77,15 +94,27 @@ function mount(){
   parent.prepend(el)
   notifyCommunity()
 }
-function update(){preview();chainQuotes();const el=document.getElementById('market-results');if(el)el.innerHTML=result();notifyCommunity()}
+function update(){preview();chainQuotes();const el=document.getElementById('market-results');if(el)el.innerHTML=result();renderCompanyQuote();notifyCommunity()}
 async function loadSnapshot(){
   if(snapshotBusy)return
   snapshotBusy=true;update()
   try{
-    const r=await fetch(`${apiAvailable?'./api/snapshot':'./data/market.json'}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(20000)})
-    if(!r.ok)throw new Error(`시세 파일 HTTP ${r.status}`)
-    const body=await r.json();if(body.schemaVersion!==1||!Array.isArray(body.quotes))throw new Error('시세 파일 형식 오류')
-    snapshot=body;snapshotQuotes=new Map(body.quotes.map(q=>[q.symbol,q]));snapshotError='';window.aiChainSnapshot=body;window.dispatchEvent(new CustomEvent('market-snapshot',{detail:body}))
+    const readSnapshot=async path=>{
+      const r=await fetch(`${path}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(20000)})
+      if(!r.ok)throw new Error(`시세 파일 HTTP ${r.status}`)
+      const body=await r.json()
+      if(body.schemaVersion!==1||!Array.isArray(body.quotes))throw new Error('시세 파일 형식 오류')
+      return body
+    }
+    let body,fallback=false
+    if(apiAvailable){
+      try{body=await readSnapshot('./api/snapshot')}
+      catch{body=await readSnapshot('./data/market.json');fallback=true}
+    }else body=await readSnapshot('./data/market.json')
+    snapshotError=fallback?'시세 서버를 확인할 수 없어 저장된 스냅샷을 표시합니다.':''
+    if(!snapshot||Date.parse(body.generatedAt)>=Date.parse(snapshot.generatedAt)){
+      snapshot=body;snapshotQuotes=new Map(body.quotes.map(q=>[q.symbol,q]));window.aiChainSnapshot=body;window.dispatchEvent(new CustomEvent('market-snapshot',{detail:body}))
+    }
   }catch(error){snapshotError=`시세 파일 조회 실패: ${error.message}. 기존 값이 있으면 유지합니다.`;window.dispatchEvent(new CustomEvent('market-snapshot-error',{detail:snapshotError}))}
   finally{snapshotBusy=false;syncWatch();update()}
 }
@@ -110,7 +139,10 @@ async function loadDetail(force=false){
 function choose(symbol){selected=symbol;write('ai-chain.selected.v1',symbol);if(location.hash!=='#data')location.hash='data';else update();loadDetail()}
 async function add(event){
   event.preventDefault()
-  return openSymbol(document.getElementById('market-add').value)
+  const input=document.getElementById('market-add').value
+  const href=location.hash==='#data/quotes'&&companyHrefForQuery(input)
+  if(href&&href.includes('/quote')){location.hash=href;return}
+  return openSymbol(input)
 }
 async function openSymbol(rawSymbol){
   const symbol=normalizeSymbol(rawSymbol)
@@ -133,16 +165,48 @@ const oldData=window.renderData;window.renderData=function(){oldData();mount()}
 document.addEventListener('click',event=>{
   const target=event.target,w=target.closest('[data-market-watch]')
   if(w){const symbol=w.dataset.marketWatch;watch=watch.includes(symbol)?watch.filter(s=>s!==symbol):[...watch,symbol];write('ai-chain.watch.v1',watch);syncWatch();update();return}
-  const s=target.closest('[data-market-symbol]');if(s){choose(s.dataset.marketSymbol);return}
+  const s=target.closest('[data-market-symbol]')
+  if(s){
+    const symbol=s.dataset.marketSymbol
+    const href=group==='관심'&&location.hash==='#data/watchlist'&&companyHrefForTicker(symbol,'quote')
+    if(href)location.hash=href
+    else choose(symbol)
+    return
+  }
   const r=target.closest('[data-market-range]');if(r){range=r.dataset.marketRange;renderSelected();loadDetail();return}
   if(target.closest('[data-market-refresh]')){loadSnapshot();loadDetail(true)}
   if(target.closest('[data-market-csv]'))csv()
-  if(target.closest('.mine-btn')){group='관심';filter=0;search='';if(location.hash!=='#data')location.hash='data';else mount()}
+  if(target.closest('.mine-btn')){if(location.hash!=='#data/watchlist')location.hash='data/watchlist';else openDataTool()}
 })
 document.addEventListener('submit',event=>{if(event.target.id==='market-add-form')add(event)})
 document.addEventListener('input',event=>{if(event.target.id==='market-search'){search=event.target.value;const el=document.getElementById('market-results');if(el)el.innerHTML=result()}})
 document.addEventListener('change',event=>{if(event.target.id==='market-group'){group=event.target.value;update()}if(event.target.id==='market-filter'){filter=Number(event.target.value);update()}})
-document.getElementById('q')?.addEventListener('keydown',event=>{if(event.key==='Enter'){search=event.target.value;group='전체';filter=0;if(location.hash!=='#data')location.hash='data';else mount()}})
+function openDataTool(){
+  const route=location.hash
+  if(route!=='#data/quotes'&&route!=='#data/watchlist')return
+  group=route==='#data/watchlist'?'관심':'전체'
+  filter=0;search='';mount()
+  requestAnimationFrame(()=>{
+    if(location.hash!==route)return
+    const element=document.getElementById(group==='관심'?'market-group':'market-add')
+    element?.focus({preventScroll:true})
+    element?.scrollIntoView({block:'center'})
+  })
+}
+window.addEventListener('hashchange',openDataTool)
+document.getElementById('q')?.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'||event.isComposing)return
+  const query=event.target.value.trim()
+  if(!query)return
+  const symbol=normalizeSymbol(query)
+  const href=companyHrefForQuery(query)
+  if(href){location.hash=href;return}
+  if(validSymbol(symbol)&&(quotes().some(q=>q.symbol===symbol)||!filterQuotes(quotes(),{search:query}).length)){
+    window.dispatchEvent(new CustomEvent('market-symbol-open',{detail:{symbol}}));return
+  }
+  search=query;group='전체';filter=0
+  if(location.hash!=='#data')location.hash='data';else mount()
+})
 // The home map shares this existing lookup, chart, watchlist and CSV flow.
 window.addEventListener('market-symbol-open',event=>{
   const raw=event.detail?.symbol
@@ -156,5 +220,45 @@ window.addEventListener('market-symbol-open',event=>{
   })
 })
 window.addEventListener('market-refresh-request',()=>loadSnapshot());
-mount();syncWatch();loadSnapshot().then(()=>loadDetail())
+mount();openDataTool();syncWatch();loadSnapshot().then(()=>loadDetail())
 setInterval(()=>{if(!document.hidden){loadSnapshot();loadDetail(true)}},60000)
+
+// Both chapters share the chart cache, period/CSV controls and browser watchlist.
+export function mountCompanyQuote(container,company){
+  const listings=company.listings.filter(item=>validSymbol(item.ticker))
+  if(!listings.length){container.textContent='연결된 시세 종목이 없습니다.';return ()=>{}}
+  const previousSymbol=selected
+  const previousRange=range
+  const requested=new URLSearchParams(location.hash.split('?')[1]).get('listing')
+  const listing=listings.find(item=>item.ticker===requested)??listings[0]
+  selected=listing.ticker
+  container.innerHTML='<div class="market-controls"><label>거래 종목 <select aria-label="거래 종목"></select></label></div><div data-company-price></div>'
+  const select=container.querySelector('select')
+  for(const row of listings){
+    const option=document.createElement('option')
+    option.value=row.ticker
+    option.textContent=[row.ticker,row.exchange,row.currency].filter(Boolean).join(' · ')
+    option.selected=row.ticker===selected
+    select.append(option)
+  }
+  const mount={company,target:container.querySelector('[data-company-price]')}
+  companyQuote=mount
+  const refresh=()=>{
+    selected=select.value
+    if(listings.length>1)history.replaceState(history.state,'',companyHrefForTicker(selected,'quote'))
+    renderCompanyQuote()
+    void loadDetail()
+  }
+  select.addEventListener('change',refresh)
+  refresh()
+  return ()=>{
+    select.removeEventListener('change',refresh)
+    if(companyQuote!==mount)return
+    companyQuote=null
+    // A legacy action may already have selected another symbol during navigation.
+    if(listings.some(item=>item.ticker===selected)){
+      controller?.abort();detailBusy=false;detailError='';selected=previousSymbol;range=previousRange
+      if(!document.getElementById('v-data')?.hidden){renderSelected();void loadDetail()}
+    }
+  }
+}
