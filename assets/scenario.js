@@ -433,6 +433,12 @@ function rateDirectBreakdown(company) {
   return `<small class="scenario-direct-split">할인율 ${pct2(parts.rateDiscountPct)} · 직접 수요 ${pct2(parts.rateDirectDemandPct)}</small>`
 }
 
+function rateChainExplanation(rate) {
+  if (rate > 0) return '전파효과는 금리 상승으로 높아진 할인율을 적용한 상태에서 계산합니다.'
+  if (rate < 0) return '전파효과는 금리 하락으로 낮아진 할인율을 적용한 상태에서 계산합니다.'
+  return '금리 변화가 0이므로 전파효과에는 기준 할인율을 적용합니다.'
+}
+
 function sharedBarScale() {
   let max = 0
   for (const row of scenarioView?.companies || []) {
@@ -458,7 +464,8 @@ function divergingBar(row, scale) {
       let left
       if (value > 0) { left = 50 + positiveOffset / scale * 50; positiveOffset += value }
       else { negativeOffset += Math.abs(value); left = 50 - negativeOffset / scale * 50 }
-      pieces.push(`<i class="scenario-bar-segment ${kind} ${value > 0 ? 'positive' : 'negative'}" style="left:${left.toFixed(4)}%;width:${width.toFixed(4)}%" title="${kind === 'direct' ? '직접' : '밸류체인'} ${pct2(parts[kind])}"></i>`)
+      const rateNote = kind === 'chain' && row.rateAttribution ? ' · ' + rateChainExplanation(currentRequest().inputs.rateChangePctPoints) : ''
+      pieces.push(`<i class="scenario-bar-segment ${kind} ${value > 0 ? 'positive' : 'negative'}" style="left:${left.toFixed(4)}%;width:${width.toFixed(4)}%" title="${kind === 'direct' ? '직접' : '밸류체인'} ${pct2(parts[kind])}${rateNote}"></i>`)
     }
   }
   const total = Number(row.totalPct)
@@ -657,6 +664,7 @@ function companyDetail() {
     }).join('')}${Object.entries(company.assumptions?.driverExposureMultipliers || {}).map(([driver, value]) => `<label><span>${esc(driverLabel(driver))} 노출 배수</span><span class="scenario-signed-input"><input type="number" min="0" max="2" step="0.05" value="${value}" data-company-exposure="${esc(driver)}" data-company-id="${esc(id)}"><small>×</small></span></label>`).join('')}</div></details>
     <details class="scenario-detail-fold"><summary>${esc(result?.model?.horizonMonths || 96)}개월 현금흐름 전망</summary>${operatingBridge(company)}</details>
     <p class="scenario-note" data-terminal-share>충격은 일시적이며 8년 이후 현금흐름은 기준 전망으로 돌아간다고 가정합니다. ${esc(terminalNote)}</p>
+    ${company.rateAttribution ? `<p class="scenario-note" data-chain-standalone>${rateChainExplanation(currentRequest().inputs.rateChangePctPoints)} 기준 할인율에서 CAPEX 경로만 적용한 EV 변화는 ${signed(company.rateAttribution.chainStandalonePct, 4)}입니다.</p>` : ''}
     <p class="scenario-note">관측시가 환산은 동일 기준일 순차입금/EV 입력과 유효 시세가 있을 때만 표시합니다.</p>
     ${uiState.showObservedQuotes ? `<div data-company-quote>${quoteContent(company)}</div>` : ''}
   </section>`

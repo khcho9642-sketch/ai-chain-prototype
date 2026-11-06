@@ -33,7 +33,15 @@ test('visible companies during a drag exactly match the committed result across 
     request.companyOverrides.NVDA = { scenarioExposureScale: 0.68 }
     const preview = evaluateCompanyPreview(request, ids)
     const full = evaluateScenario(request)
-    assert.deepEqual(preview.companies, ids.map(id => company(full, id)))
+    for (const [i, id] of ids.entries()) {
+      const fullRow = structuredClone(company(full, id))
+      if (definition.id === 'interest_rate') {
+        assert.equal('chainStandalonePct' in preview.companies[i].effectAttribution, false)
+        assert.ok(Number.isFinite(fullRow.rateAttribution.chainStandalonePct))
+        delete fullRow.effectAttribution.chainStandalonePct
+      }
+      assert.deepEqual(preview.companies[i], fullRow)
+    }
     assert.deepEqual(preview.scenario.rateCapexTransmission, full.scenario.rateCapexTransmission)
   }
 })
@@ -373,7 +381,7 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
   assert.equal(unavailable.valuation.baselineTerminalValuePvSharePct, null)
   assert.equal(unavailable.valuation.comparisonStatus, 'nonpositive-baseline')
   assert.equal(unavailable.valueChangePct, null)
-  for (const field of ['directPct', 'chainPct', 'rateDiscountPct', 'rateDirectDemandPct']) {
+  for (const field of ['directPct', 'chainPct', 'rateDiscountPct', 'rateDirectDemandPct', 'chainStandalonePct']) {
     assert.equal(unavailable.rateAttribution[field], null)
   }
   assert.equal(unavailable.scenarioValueIndex, null)
@@ -385,6 +393,21 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
   assert.equal(result.universe.valuedCompanyCount, result.universe.companyCount - 1)
   assert.equal(result.universe.scenarioValueIndex, null)
   assert.ok(Number.isFinite(result.big7.scenarioValueIndex))
+})
+
+test('standalone CAPEX matches repricing without discount and direct demand across owners and suppliers', () => {
+  const ids = ['NVDA', '000660.KS', 'MSFT', 'AMZN']
+  const request = { scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1 } }
+  const full = evaluateScenario(request)
+  const companyOverrides = Object.fromEntries(ids.map(id => [id, {
+    exposures: { interestRate: 0 }, assumptions: { rateDiscountPassThrough: 0 },
+  }]))
+  const independent = evaluateCompanyPreview({ ...request, companyOverrides }, ids)
+  for (const row of independent.companies) {
+    const { chainPct, chainStandalonePct } = company(full, row.id).effectAttribution
+    closeTo(chainStandalonePct, row.valueChangePct, 1e-9)
+    assert.ok(Math.abs(chainPct - chainStandalonePct) > 1e-9)
+  }
 })
 
 test('model revenue contraction and recovery preserve growth-rate arithmetic', () => {

@@ -486,7 +486,7 @@ function buildEquityBridge(projection, netDebtToEvPct, listingStatus) {
 }
 
 function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exposureScale, exposureMultipliers,
-  assumptionOverrides, request, selectedDriverIds, pathsByDriver }) {
+  assumptionOverrides, request, selectedDriverIds, pathsByDriver, includeStandalone = false }) {
   const assumptions = weightedAssumptions(segmentWeights, assumptionOverrides)
   const financialBasis = financialProfile(SCENARIO_FINANCIAL_BASELINES[id], assumptions, assumptionOverrides, companyById.get(id)?.primarySegmentId ?? id)
   assumptions.financialBasis = financialBasis
@@ -496,6 +496,12 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
   const projection = projectDcf(assumptions, primitiveBundle, request, selectedDriverIds)
   const comparable = projection.scenarioValueIndex !== null
   const { effectAttribution, paths, contributions } = attributeEffects(assumptions, primitiveBundle, request, selectedDriverIds, projection.scenarioValueIndex)
+  if (includeStandalone && request.scenarioId === 'interest_rate') {
+    // Reprice the same owner's or supplier's CAPEX paths at the baseline discount rate.
+    // Omitting interestRate disables both discount transmission and the direct demand overlay.
+    effectAttribution.chainStandalonePct = comparable
+      ? projectDcf(assumptions, primitiveBundle, request, ['hyperscalerCapex']).scenarioValueIndex - 100 : null
+  }
   const difference = comparable ? projection.scenarioValueIndex - 100 : null
   const equityBridge = buildEquityBridge(projection, assumptionOverrides.netDebtToEvPct, listingStatus)
   return {
@@ -594,14 +600,14 @@ function prepareScenario(unvalidatedRequest) {
   return { request, definition, rateCapexTransmission, drivers, selectedDriverIds, pathsByDriver, budgetPaths }
 }
 
-function valueCompany(company, { request, selectedDriverIds, pathsByDriver, budgetPaths }) {
+function valueCompany(company, { request, selectedDriverIds, pathsByDriver, budgetPaths }, includeStandalone = false) {
   const override = request.companyOverrides[company.companyId] ?? {}
   const exposureMultipliers = { ...company.driverExposureMultipliers, ...(override.exposures ?? {}) }
   const entity = buildEntityResult({
     id: company.companyId, name: company.name, listingStatus: company.listingStatus,
     segmentWeights: company.segmentWeights,
     exposureScale: override.scenarioExposureScale ?? company.scenarioExposureScale,
-    exposureMultipliers, assumptionOverrides: override.assumptions ?? {},
+    exposureMultipliers, assumptionOverrides: override.assumptions ?? {}, includeStandalone,
     request, selectedDriverIds, pathsByDriver: budgetPaths ? {
       ...pathsByDriver, hyperscalerCapex: budgetPaths.byOwner[company.companyId] ?? budgetPaths.supplierPaths,
     } : pathsByDriver,
@@ -641,6 +647,7 @@ export function evaluateScenario(unvalidatedRequest) {
       exposureScale: 1,
       exposureMultipliers: {},
       assumptionOverrides: {},
+      includeStandalone: true,
       request,
       selectedDriverIds,
       pathsByDriver,
@@ -655,7 +662,7 @@ export function evaluateScenario(unvalidatedRequest) {
     }
   })
 
-  const companies = COMPANIES.map(company => valueCompany(company, context))
+  const companies = COMPANIES.map(company => valueCompany(company, context, true))
 
   const big7Members = BIG7_COMPANY_IDS.map(companyId => companies.find(company => company.companyId === companyId))
   const equalWeightIndex = members => members.every(item => Number.isFinite(item.scenarioValueIndex))
