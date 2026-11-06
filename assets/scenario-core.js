@@ -339,7 +339,7 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
     const annualBaseCash = annualRevenue * profile.fcffMarginPct / 100
     const monthlyRevenue = annualRevenue / 12
     const monthlyCash = annualBaseCash / 12
-    const priceRetention = profile.priceContributionMarginPct / 100
+    const afterTaxRetention = profile.priceContributionMarginPct / 100
     const annualOpeningFactor = scenarioDiscountFactor
     baseline.push({ year: year + 1, revenue: annualRevenue, fcff: annualBaseCash, discountRate: baseRate })
     const totals = { year: year + 1, revenue: 0, fcff: annualBaseCash, revenueVolumeDelta: 0, aspDelta: 0,
@@ -362,13 +362,13 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
       const salesAtBasePrice = monthlyRevenue + volumeRevenue
       const priceRevenue = salesAtBasePrice * priceDelta
       // An increase in selling price at fixed quantity does not replicate past capacity spending.
-      // Apply price to the new quantity once, unit costs to that same quantity, and charge
-      // the separate investment shock against its own baseline spending.
+      // Apply price and unit costs to the same quantity and retain their after-tax cash effects.
+      // Charge the separate investment shock against its own baseline spending.
       const costDelta = salesAtBasePrice * profile.costOfRevenueSharePct / 100 *
-        costSignal * assumptions.unitCostPassThrough * priceRetention
+        costSignal * assumptions.unitCostPassThrough * afterTaxRetention
       const capexDelta = monthlyRevenue * profile.capexToRevenuePct / 100 * capexSignal * assumptions.capexPassThrough
       const cashDelta = volumeRevenue * profile.volumeContributionMarginPct / 100 +
-        priceRevenue * priceRetention - costDelta - capexDelta
+        priceRevenue * afterTaxRetention - costDelta - capexDelta
       const scenarioCash = monthlyCash + cashDelta
       const rate = rates[index]
       if (rate <= -1) fail('월 할인계수를 계산하려면 연환산 할인율이 −100%를 초과해야 합니다.')
