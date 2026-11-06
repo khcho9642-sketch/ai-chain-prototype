@@ -1,5 +1,6 @@
 const numberFormat = new Intl.NumberFormat('ko-KR', { maximumSignificantDigits: 12 })
 const tickFormat = new Intl.NumberFormat('ko-KR', { maximumSignificantDigits: 3 })
+const compactTickFormat = new Intl.NumberFormat('ko-KR', { notation: 'compact', maximumSignificantDigits: 3 })
 const operators = { eq: '', approx: '≈ ', gt: '> ', lt: '< ' }
 const ranges = [12, 24, 36]
 const tableStatus = {
@@ -63,7 +64,7 @@ function timeChart(metric, points) {
   const grid = [0, .25, .5, .75, 1].map(fraction => {
     const value = ymin + (ymax - ymin) * fraction
     return `<line class="sector-chart-grid" x1="0%" x2="100%" y1="${y(value)}" y2="${y(value)}" stroke="var(--line)" />
-      <text class="sector-chart-tick" x="0%" dx="-9" y="${y(value)}" dy="4" text-anchor="end" fill="var(--muted)" font-size="12">${escapeText(tickFormat.format(value))}</text>`
+      <text class="sector-chart-tick" x="0%" dx="-9" y="${y(value)}" dy="4" text-anchor="end" fill="var(--muted)" font-size="12">${escapeText((Math.abs(value) >= 10000 ? compactTickFormat : tickFormat).format(value))}</text>`
   }).join('')
   const markers = points.map((point, index) => {
     const previous = points[index - 1]
