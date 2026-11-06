@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "publishedAt": "2026-11-06T10:25:29.171Z",
+  "latestDate": "2026-11-05",
+  "days": [
+    {
+      "id": "debate-2026-11-05-SNDK",
+      "date": "2026-11-05",
+      "topic": {
+        "ticker": "SNDK",
+        "name": "샌디스크",
+        "sectorId": "memory",
+        "changePct": -22.264317,
+        "title": "샌디스크 -22.3%, 이 흐름 멈출까?"
+      },
+      "issue": "Q2 전망 실현과 후속 근거로 높은 수익성의 지속 여부를 확인할 수 있을까?"
+    }
+  ]
+}

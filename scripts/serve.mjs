@@ -11,9 +11,13 @@ import { createEvidenceSource } from '../server/community/evidence.mjs'
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json', '/api/epoch-ai':'epoch-ai.json',
   '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json', '/api/comparison-history':'comparison-history.json', '/api/ripple':'ripple.json'}
 
-export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null } = {}) {
+export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null, debateVotes = null } = {}) {
   return createServer(async (req, res) => {
     const pathname = URL.canParse(req.url, 'http://localhost') ? new URL(req.url, 'http://localhost').pathname : ''
+    if (pathname === '/api/debate-votes') {
+      const handler = debateVotes || (await import('../api/debate-votes.js')).default
+      return handler(req, res)
+    }
     if (pathname === '/api/recommendation-comments') {
       const handler = recommendationComments || (await import('../api/recommendation-comments.js')).default
       return handler(req, res)
@@ -50,7 +54,8 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname)
         const relative = path === '/' ? 'index.html' : path.slice(1)
         // Explicit public-file allowlist keeps source, design notes and Git files private.
-        if (relative !== 'index.html' && !publicSnapshotFiles.map(name => 'data/' + name).includes(relative) && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
+        const debateFile = /^data\/debate\/(?:index|\d{4}-\d{2}-\d{2})\.json$/.test(relative)
+        if (relative !== 'index.html' && !publicSnapshotFiles.map(name => 'data/' + name).includes(relative) && !debateFile && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
           res.statusCode = 404; return res.end('페이지를 찾을 수 없습니다.')
         }
         const content = await readFile(join(root, relative))

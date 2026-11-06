@@ -4,6 +4,10 @@
   "buildCommand": "node scripts/deployment/prepare-deployment.mjs",
   "outputDirectory": "dist",
   "functions": {
+    "api/debate-votes.js": {
+      "maxDuration": 30,
+      "includeFiles": "data/debate/*.json"
+    },
     "api/chart.js": {
       "maxDuration": 30
     },
