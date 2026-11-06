@@ -215,22 +215,30 @@ test('scenario chapter renders compact controls and view-model tables without in
     root.querySelectorAll = selector => selector === '[data-control-preset-id]' ? buttons : []
     const live = { innerHTML: '' }
     root.querySelector = selector => selector === '[data-scenario-live]' ? live : null
-    const range = { dataset: { scenarioRange: 'rateChangePctPoints' }, min: '-2', max: '3', value: '0', removeAttribute() {} }
+    const range = {
+      dataset: { scenarioRange: 'rateChangePctPoints' }, min: '-60', max: '60', value: '0',
+      getAttribute: name => ({ 'aria-valuemin': '-2', 'aria-valuemax': '3' })[name] ?? null,
+      removeAttribute() {},
+    }
     const rangeEvent = { target: { closest: selector => selector === '[data-scenario-range]' ? range : null } }
-    const dragRate = value => {
-      range.value = String(value)
+    const dragTo = position => {
+      range.value = String(position)
       listeners.get('input')(rangeEvent)
       queuedFrame()
     }
-    dragRate(0)
-    assert.match(live.innerHTML, /0\.0%/)
+    dragTo(0)
+    assert.match(live.innerHTML, /금리 0\.0%p/)
+    for (const id of ['NVDA', '000660.KS']) {
+      const card = live.innerHTML.split(`data-live-company="${id}"`)[1].split('</article>')[0]
+      assert.match(card, /aria-label="직접 0\.0%, 밸류체인 0\.0%, 총 0\.0%"/)
+    }
     const barScale = html => html.match(/class="scenario-live-axis">([^<]+)/)[1]
     const zeroScale = barScale(live.innerHTML)
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1, 'preview precedes commit')
     listeners.get('change')(rangeEvent)
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 0)
     assert.deepEqual(buttons.map(button => button.pressed), ['false', 'false', 'false'])
-    dragRate(2)
+    dragTo(40) // +2.0%p on the positive half
     assert.equal(barScale(live.innerHTML), zeroScale, 'moving the handle preserves the panel scale')
     const previewed = live.innerHTML
     assert.match(previewed, /data-live-company="NVDA"[\s\S]*?scenario-live-total[^>]*><span>총 EV 변화<\/span><strong class="negative">−/)
@@ -252,12 +260,12 @@ test('scenario chapter renders compact controls and view-model tables without in
     typeSensitivity('8')
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
     assert.match(root.innerHTML, /금리 \+2\.0%p → 빅테크 AI CAPEX −16\.0%/)
-    dragRate(0)
+    dragTo(0)
     listeners.get('change')(rangeEvent)
     window.renderScenario()
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
     assert.deepEqual(values('000660.KS'), ['0.0%', '0.0%', '0.0%'])
-    dragRate(-1)
+    dragTo(-30) // −1.0%p on the negative half
     listeners.get('change')(rangeEvent)
     window.renderScenario()
     assert.match(root.innerHTML, /금리 −1\.0%p → 빅테크 AI CAPEX \+8\.0%/)
@@ -272,7 +280,7 @@ test('scenario chapter renders compact controls and view-model tables without in
       if (scenarioId === 'hbm_market') {
         for (const [id, value] of [['hbmSupplyChangePct', 0], ['hbmPriceChangePct', 10]]) {
           range.dataset.scenarioRange = id
-          dragRate(value)
+          dragTo(value)
           const beforeCommit = live.innerHTML
           listeners.get('change')(rangeEvent)
           assert.equal(live.innerHTML, beforeCommit, 'price checks update while dragging and agree with committed results')

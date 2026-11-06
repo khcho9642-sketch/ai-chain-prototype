@@ -14,7 +14,22 @@ function escapeHtml(value) {
   })[c])
 }
 
-const position = (value, control) => 100 * (value - control.min) / (control.max - control.min)
+const rateControlId = 'rateChangePctPoints'
+// Sixty ticks on each side fit both twenty downward and thirty upward 0.1%p moves.
+const rateTrackLimit = 60
+function rateTrackValue(value, min, max) {
+  return Math.round(rateTrackLimit * value / (value < 0 ? -min : max))
+}
+function rateFromTrack(range) {
+  const tick = Number(range.value)
+  const limit = Math.abs(Number(range.getAttribute(tick < 0 ? 'aria-valuemin' : 'aria-valuemax')))
+  const tenths = Math.round(Math.abs(tick) * limit * 10 / rateTrackLimit)
+  return tenths === 0 ? 0 : Math.sign(tick) * tenths / 10
+}
+function position(value, control) {
+  if (control.id === rateControlId) return 50 + 50 * rateTrackValue(value, control.min, control.max) / rateTrackLimit
+  return 100 * (value - control.min) / (control.max - control.min)
+}
 
 export function renderScenarioChoices(definitions, selectedId) {
   return `<div class="scenario-picker scenario-questions" role="group" aria-label="시나리오 선택">${definitions.map(definition => {
@@ -27,10 +42,14 @@ function sliderField(control, value, panelTitle) {
   const id = escapeHtml(control.id), label = escapeHtml(control.label), unit = escapeHtml(control.unit)
   const text = signedValue(value, unit)
   const rangeId = 'scenario-range-' + id
+  const isRate = control.id === rateControlId
+  const bounds = isRate
+    ? `min="-${rateTrackLimit}" max="${rateTrackLimit}" step="1" value="${rateTrackValue(value, control.min, control.max)}" aria-valuemin="${control.min}" aria-valuemax="${control.max}" aria-valuenow="${value}"`
+    : `min="${control.min}" max="${control.max}" step="any" value="${value}"`
   return `<div class="scenario-slider-field" data-drag-field="${id}" style="--value-pct:${position(value, control)}%">
     ${control.label === panelTitle ? '' : `<div class="scenario-slider-heading"><label for="${rangeId}">${label}</label></div>`}
-    <div class="scenario-range-wrap"><strong class="scenario-slider-value" data-drag-value aria-hidden="true">${text}</strong><input class="scenario-range" id="${rangeId}" type="range" ${control.label === panelTitle ? 'aria-labelledby="scenario-input-heading"' : ''} min="${control.min}" max="${control.max}" step="any" value="${value}" data-scenario-range="${id}" data-key-step="${control.step}" aria-valuetext="${text}"></div>
-    <div class="scenario-range-ticks" aria-hidden="true"><span data-tick="min" style="--tick-pct:0%">${signedValue(control.min, unit)}</span><span data-tick="max" style="--tick-pct:100%">${signedValue(control.max, unit)}</span></div>
+    <div class="scenario-range-wrap"><strong class="scenario-slider-value" data-drag-value aria-hidden="true">${text}</strong><input class="scenario-range" id="${rangeId}" type="range" ${control.label === panelTitle ? 'aria-labelledby="scenario-input-heading"' : ''} ${bounds} data-scenario-range="${id}" data-key-step="${control.step}" aria-valuetext="${text}"></div>
+    <div class="scenario-range-ticks" aria-hidden="true"><span data-tick="min" style="--tick-pct:0%">${signedValue(control.min, unit)}</span>${isRate ? `<span data-tick="zero" style="--tick-pct:50%">${signedValue(0, unit)}</span>` : ''}<span data-tick="max" style="--tick-pct:100%">${signedValue(control.max, unit)}</span></div>
   </div>`
 }
 
@@ -66,7 +85,10 @@ export function syncDragControls(root, definition, request, activeElement) {
     if (control.role !== 'assumption') {
       const range = field.querySelector('[data-scenario-range]')
       const text = signedValue(value, control.unit)
-      if (range !== activeElement && Number(range.value) !== value) range.value = String(value)
+      const isRate = control.id === rateControlId
+      const thumb = isRate ? rateTrackValue(value, control.min, control.max) : value
+      if ((isRate || range !== activeElement) && Number(range.value) !== thumb) range.value = String(thumb)
+      if (isRate) range.setAttribute('aria-valuenow', String(value))
       range.setAttribute('aria-valuetext', text)
       field.querySelector('[data-drag-value]').textContent = text
       field.style.setProperty('--value-pct', position(value, control) + '%')
@@ -123,17 +145,26 @@ export function createDragInteraction({
   }
 
   function queueRange(range) {
-    pending.set(range, Number(range.value))
+    let value = Number(range.value)
+    if (range.dataset.scenarioRange === rateControlId) {
+      value = rateFromTrack(range)
+      const tick = rateTrackValue(value, Number(range.getAttribute('aria-valuemin')), Number(range.getAttribute('aria-valuemax')))
+      if (Number(range.value) !== tick) range.value = String(tick)
+    }
+    pending.set(range, value)
     if (renderFrame === null) renderFrame = requestFrame(flush)
   }
 
   function finishRange(range) {
-    pending.set(range, Number(range.value))
+    queueRange(range)
     stop()
   }
 
   function adjustWithKey(range, event) {
-    const value = Number(range.value), min = Number(range.min), max = Number(range.max)
+    const isRate = range.dataset.scenarioRange === rateControlId
+    const value = isRate ? rateFromTrack(range) : Number(range.value)
+    const min = isRate ? Number(range.getAttribute('aria-valuemin')) : Number(range.min)
+    const max = isRate ? Number(range.getAttribute('aria-valuemax')) : Number(range.max)
     const step = Number(range.dataset.keyStep)
     const movements = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step, PageDown: -5 * step, PageUp: 5 * step }
     let next
@@ -142,7 +173,8 @@ export function createDragInteraction({
     else if (Object.hasOwn(movements, event.key)) next = value + movements[event.key]
     else return false
     event.preventDefault()
-    range.value = String(Math.min(max, Math.max(min, Number(next.toFixed(8)))))
+    const bounded = Math.min(max, Math.max(min, Number(next.toFixed(8))))
+    range.value = String(isRate ? rateTrackValue(bounded, min, max) : bounded)
     queueRange(range)
     return true
   }
