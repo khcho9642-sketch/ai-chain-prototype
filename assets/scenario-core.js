@@ -64,7 +64,7 @@ export function buildDefaultScenarioRequest(scenarioId) {
   if (!definition) fail(`알 수 없는 시나리오입니다: ${scenarioId}`)
   return {
     scenarioId,
-    ...(scenarioId === 'interest_rate' && { rateCapexMode: 'historical' }),
+    ...(definition.defaultRateCapexMode && { rateCapexMode: definition.defaultRateCapexMode }),
     durationMonths: MODEL_ASSUMPTIONS.durationMonths.defaultValue,
     inputs: Object.fromEntries(definition.controls.map(control => [control.id, control.defaultValue])),
     companyOverrides: {},
@@ -134,8 +134,8 @@ export function validateScenarioRequest(request) {
   const validated = { scenarioId: definition.id, durationMonths: duration, inputs, companyOverrides }
   if (definition.id === 'interest_rate') {
     // A pre-v3 caller supplying a numeric common sensitivity still selects its own assumption.
-    const mode = request.rateCapexMode ?? (suppliedInputs.rateCapexSensitivity != null ? 'manual' : 'historical')
-    if (!['historical', 'manual'].includes(mode)) fail('rateCapexMode는 historical 또는 manual이어야 합니다.')
+    const mode = request.rateCapexMode ?? (suppliedInputs.rateCapexSensitivity != null ? 'manual' : definition.defaultRateCapexMode)
+    if (typeof mode !== 'string' || !Object.hasOwn(definition.rateCapexModes, mode)) fail('지원하지 않는 rateCapexMode입니다.')
     validated.rateCapexMode = mode
   }
   return validated
@@ -160,16 +160,27 @@ function driverLevelAtMonth(driverId, shock, month, lagMonths, durationMonths) {
   return Math.expm1(Math.log1p(shock) * activeMonths / 12) * weight
 }
 
-function rateCapexTransmissionFor(request) {
+function fittedCapexChangePct(fit, rate, mode, endpoint) {
+  if (endpoint) {
+    // The stored limits are ordinary percent changes at +1pp. Rate cuts reverse the budget ordering.
+    const useLowBeta = (endpoint === 'lower') === (rate >= 0)
+    const changeAtOnePoint = useLowBeta ? fit.low95Pct : fit.high95Pct
+    return 100 * Math.expm1(Math.log1p(changeAtOnePoint / 100) * rate) || 0
+  }
+  if (mode === 'historical-significant' && fit.low95Pct <= 0 && fit.high95Pct >= 0) return 0
+  return 100 * Math.expm1(fit.logBeta * rate / 100)
+}
+
+function rateCapexTransmissionFor(request, fits, endpoint) {
   if (request.scenarioId !== 'interest_rate') return null
   const { rateChangePctPoints, rateCapexSensitivity } = request.inputs
-  const historical = request.rateCapexMode === 'historical'
-  const ownerChangesPct = Object.fromEntries(RATE_CAPEX_FITS.map(fit => [fit.companyId, historical
-    ? 100 * Math.expm1(fit.logBeta * rateChangePctPoints / 100)
+  const historical = request.rateCapexMode !== 'manual'
+  const ownerChangesPct = Object.fromEntries(fits.map(fit => [fit.companyId, historical
+    ? fittedCapexChangePct(fit, rateChangePctPoints, request.rateCapexMode, endpoint)
     : -rateChangePctPoints * rateCapexSensitivity || 0]))
-  const totalCapex = sum(RATE_CAPEX_FITS.map(fit => fit.cashCapexUsd))
+  const totalCapex = sum(fits.map(fit => fit.cashCapexUsd))
   const derivedCapexChangePct = historical
-    ? sum(RATE_CAPEX_FITS.map(fit => ownerChangesPct[fit.companyId] * fit.cashCapexUsd / totalCapex))
+    ? sum(fits.map(fit => ownerChangesPct[fit.companyId] * fit.cashCapexUsd / totalCapex))
     : -rateChangePctPoints * rateCapexSensitivity || 0
   return {
     version: 2,
@@ -197,7 +208,7 @@ function normalizedDriverInputs(definition, inputs, rateCapexTransmission) {
         driverId: 'hyperscalerCapex', label: RATE_CAPEX_DRIVER_LABEL,
         normalizedShock: derivedCapexChangePct / 100, mediatedBy: 'interestRate',
         controlValues: { capexChangePct: derivedCapexChangePct },
-        calculation: rateCapexTransmission.mode === 'historical'
+        calculation: rateCapexTransmission.mode !== 'manual'
           ? 'cash CAPEX weighted company regressions on year-over-year EFFR; whole-company association used as AI budget proxy'
           : '-(rate change in percentage points) × assumed CAPEX sensitivity / 100',
       },
@@ -575,10 +586,10 @@ function coverageForSegment(segmentId, selectedDriverIds, request) {
   }
 }
 
-function prepareScenario(unvalidatedRequest) {
+function prepareScenario(unvalidatedRequest, rateCapexFits = RATE_CAPEX_FITS, endpoint) {
   const request = validateScenarioRequest(unvalidatedRequest)
   const definition = scenarioById.get(request.scenarioId)
-  const rateCapexTransmission = rateCapexTransmissionFor(request)
+  const rateCapexTransmission = rateCapexTransmissionFor(request, rateCapexFits, endpoint)
   const drivers = normalizedDriverInputs(definition, request.inputs, rateCapexTransmission)
   const selectedDriverIds = drivers.map(item => item.driverId)
   const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, request.durationMonths, item.mediatedBy)]))
@@ -635,8 +646,33 @@ export function evaluateCompanyPreview(request, companyIds) {
   }
 }
 
-export function evaluateScenario(unvalidatedRequest) {
-  const context = prepareScenario(unvalidatedRequest)
+function rateBandResult(company, transmission) {
+  return {
+    ...company.effectAttribution,
+    totalPct: company.valueChangePct,
+    derivedCapexChangePct: transmission.derivedCapexChangePct,
+  }
+}
+
+function attachRateCapexBands(companies, context, fits) {
+  const { request, rateCapexTransmission } = context
+  if (!rateCapexTransmission || rateCapexTransmission.mode === 'manual') return
+  const neutral = request.inputs.rateChangePctPoints === 0
+  const lower = neutral ? context : prepareScenario(request, fits, 'lower')
+  const upper = neutral ? context : prepareScenario(request, fits, 'upper')
+  for (const company of companies) {
+    const source = companyById.get(company.companyId)
+    const point = rateBandResult(company, rateCapexTransmission)
+    company.rateCapexSensitivityBand = {
+      lower: neutral ? { ...point } : rateBandResult(valueCompany(source, lower, true), lower.rateCapexTransmission),
+      point,
+      upper: neutral ? { ...point } : rateBandResult(valueCompany(source, upper, true), upper.rateCapexTransmission),
+    }
+  }
+}
+
+export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPEX_FITS } = {}) {
+  const context = prepareScenario(unvalidatedRequest, rateCapexFits)
   const { request, definition, rateCapexTransmission, drivers, selectedDriverIds, pathsByDriver } = context
 
   const segments = SEGMENTS.map(segment => {
@@ -663,6 +699,7 @@ export function evaluateScenario(unvalidatedRequest) {
   })
 
   const companies = COMPANIES.map(company => valueCompany(company, context, true))
+  attachRateCapexBands(companies, context, rateCapexFits)
 
   const big7Members = BIG7_COMPANY_IDS.map(companyId => companies.find(company => company.companyId === companyId))
   const equalWeightIndex = members => members.every(item => Number.isFinite(item.scenarioValueIndex))

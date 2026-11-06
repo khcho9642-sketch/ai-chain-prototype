@@ -121,6 +121,12 @@ const preset = (label, inputs) => Object.freeze({ label, inputs: Object.freeze(i
 export const SCENARIO_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'interest_rate',
+    defaultRateCapexMode: 'historical',
+    rateCapexModes: Object.freeze({
+      historical: '4개사 과거 재무·금리',
+      'historical-significant': '과거 관계(유의한 회사만)',
+      manual: '공통 감소율 직접 설정',
+    }),
     name: '금리 변화',
     description: '금리 변화의 직접효과와 빅테크 AI 설비투자를 거쳐 기업에 전달되는 효과를 함께 봅니다.',
     controls: Object.freeze([

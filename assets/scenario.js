@@ -151,7 +151,9 @@ function sanitizeRequest(id, raw) {
     if (finite(value)) base.inputs[control.id] = clamp(value, control.min, control.max)
   }
   if (finite(raw.durationMonths)) base.durationMonths = clamp(raw.durationMonths, DURATION.min, DURATION.max)
-  if (id === 'interest_rate' && raw.rateCapexMode === 'manual') base.rateCapexMode = 'manual'
+  if (definition.rateCapexModes && typeof raw.rateCapexMode === 'string' && Object.hasOwn(definition.rateCapexModes, raw.rateCapexMode)) {
+    base.rateCapexMode = raw.rateCapexMode
+  }
   base.companyOverrides = cleanOverrides(raw.companyOverrides)
   const validated = coreModule.validateScenarioRequest(clone(base))
   if (validated === false) throw new Error('저장된 입력 검증 실패')
@@ -530,7 +532,11 @@ const shockAmount = (value, unit) => finite(value)
   ? `${value < 0 ? '−' : value > 0 ? '+' : ''}${compactNumber.format(Math.abs(value))}${unit}` : '—'
 
 function rateCapexHeadline(transmission) {
-  const label = transmission.mode === 'historical' ? '4사 전사 CAPEX 추정' : '빅테크 AI CAPEX'
+  const label = {
+    historical: '4사 전사 CAPEX 추정',
+    'historical-significant': '유의 계수 적용 · 4사 전사 CAPEX 추정',
+    manual: '빅테크 AI CAPEX',
+  }[transmission.mode]
   return `금리 ${shockAmount(transmission.rateChangePctPoints, '%p')} → ${label} ${shockAmount(transmission.derivedCapexChangePct, '%')}`
 }
 
@@ -629,6 +635,20 @@ function quoteContent(company) {
   return observedQuote(company) || '<p class="scenario-note">표시할 정상 관측시가가 없습니다.</p>'
 }
 
+function rateCapexBandDetails(company) {
+  const band = company.rateCapexSensitivityBand
+  if (!band) return ''
+  const cases = [
+    ['하단 CAPEX 시나리오 결과', band.lower],
+    ['선택한 점추정 결과', band.point],
+    ['상단 CAPEX 시나리오 결과', band.upper],
+  ]
+  // A budget owner can save on outlays when its service sales decline. Sort by EV, retaining budget labels.
+  cases.sort(([, left], [, right]) => (left.totalPct ?? Infinity) - (right.totalPct ?? Infinity))
+  const rows = cases.map(([label, item]) => `<tr><th scope="row">${label}</th><td>${pct2(item.derivedCapexChangePct)}</td><td>${totalChange(item.directPct)}</td><td>${totalChange(item.chainPct)}</td><td>${totalChange(item.totalPct)}</td></tr>`).join('')
+  return `<details class="scenario-detail-fold"><summary>금리·CAPEX 계수 민감도 밴드</summary><p class="scenario-note">네 회사의 예산이 각각 작아지는 쪽과 커지는 쪽의 계수로 다시 계산했습니다. 개별 구간 동시 적용 시나리오이며 신뢰구간이 아님. 총 EV 변화가 작은 순서입니다.</p><div class="scenario-table-scroll"><table class="scenario-forecast-inputs"><thead><tr><th scope="col">계수 적용</th><th scope="col">4사 CAPEX 변화</th><th scope="col">직접효과</th><th scope="col">전파효과</th><th scope="col">총 EV 변화</th></tr></thead><tbody>${rows}</tbody></table></div></details>`
+}
+
 function companyDetail() {
   if (!scenarioView) return ''
   const company = scenarioView.companies.find(item => companyId(item) === uiState.selectedCompanyId) || scenarioView.representativeRows[0]
@@ -652,6 +672,7 @@ function companyDetail() {
     ${company.capexRole === 'no-covered-customer-path' ? '<p class="scenario-note">4개사의 외부 클라우드 발주 노출 자료 없음 · 해당 경로 미산정</p>' : ''}
     ${company.breakdownAvailable ? `<p class="scenario-note">직접 ${pct2(parts.direct)} · 밸류체인 ${pct2(parts.chain)} · 총 ${pct2(parts.total)}. 합계와 순위는 반올림 전 값으로 계산합니다.</p>` : !finite(parts.total) ? '<p class="scenario-input-alert" role="status">기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.</p>' : `<div class="scenario-input-alert" role="status"><strong>직접·전파 분해 불가</strong><span>경로 누락 또는 허용 잔차 초과로 총 변화만 표시합니다.</span></div>`}
     <div data-financial-basis>${financialDetails(company)}</div>
+    <div data-rate-band>${rateCapexBandDetails(company)}</div>
     <div class="scenario-detail-grid"><div><h3>경로별 추가 효과</h3>${paths.length ? `<ol class="scenario-path-list">${paths.slice().sort((a, b) => a.calculationOrder - b.calculationOrder).map(path => `<li><div><strong>${esc(pathSummary(path, company))}</strong><small>${esc(driverLabel(path.driverId))} · 섹터 간 전파 ${path.hops || 0}회</small></div><b class="${impactClass(path.impactPoints)}">${pct2(path.impactPoints)}</b>${pathCoefficients(path)}<p>경로 계수 출처 · ${esc(sourceLabel(path.source || dataModule.MODEL_ASSUMPTIONS.assumptionSource))} · 등급 C</p></li>`).join('')}</ol>` : '<p class="scenario-note">이 시나리오에 표시할 경로가 없습니다.</p>'}</div>
       <div><h3>기업별 충격 민감도</h3>${coefficients ? `<ul class="scenario-coefficient-list">${coefficients}</ul>` : '<p class="scenario-note">표시 가능한 기업 계수가 없습니다.</p>'}<p class="scenario-note">신뢰등급 A · 공시 직접 / B · 공시 기반 추정 / C · 가정. 기업별 충격 민감도와 전파 계수는 C등급 가정입니다.</p></div></div>
     <details class="scenario-detail-fold"><summary>기업별 가정 편집</summary><p class="scenario-note">값을 지우면 기본 가정이 복원됩니다. 순차입금/EV는 관측시가 환산 브리지를 위해 선택 입력합니다.</p><div class="scenario-assumption-grid">${assumptionFields().map(field => {
@@ -697,6 +718,12 @@ function renderDynamic({ skipDetail = false } = {}) {
     if (company) {
       const basis = detail.querySelector('[data-financial-basis]')
       if (basis) basis.innerHTML = financialDetails(company)
+      const band = detail.querySelector('[data-rate-band]')
+      if (band) {
+        const wasOpen = band.querySelector('details')?.open
+        band.innerHTML = rateCapexBandDetails(company)
+        if (wasOpen && band.firstElementChild) band.firstElementChild.open = true
+      }
       const quote = uiState.showObservedQuotes && detail.querySelector('[data-company-quote]')
       if (quote) quote.innerHTML = quoteContent(company)
     }
@@ -910,7 +937,7 @@ if (root) {
   })
   root.addEventListener('change', event => {
     const mode = event.target.closest('[data-rate-capex-mode]')
-    if (mode && ['historical', 'manual'].includes(mode.value)) {
+    if (mode && Object.hasOwn(scenarioById(uiState.scenarioId).rateCapexModes || {}, mode.value)) {
       currentRequest().rateCapexMode = mode.value
       refreshControls()
       return

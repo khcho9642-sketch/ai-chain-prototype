@@ -128,6 +128,12 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.doesNotMatch(missingRow, /scenario-total-marker|scenario-impact-bar/)
   assert.match(root.innerHTML, /산정 가능 40\/41개사/)
   selectCompany('NVDA')
+  const budgetCases = () => [...details().matchAll(/<th scope="row">((?:하단 CAPEX 시나리오|선택한 점추정|상단 CAPEX 시나리오) 결과)<\/th>/g)].map(match => match[1])
+  assert.match(details(), /개별 구간 동시 적용 시나리오이며 신뢰구간이 아님/)
+  assert.deepEqual(budgetCases(), ['하단 CAPEX 시나리오 결과', '선택한 점추정 결과', '상단 CAPEX 시나리오 결과'])
+  selectCompany('AMZN')
+  assert.deepEqual(budgetCases(), ['상단 CAPEX 시나리오 결과', '선택한 점추정 결과', '하단 CAPEX 시나리오 결과'])
+  selectCompany('NVDA')
   enterAssumption('fcffMarginPct', '20', 'NVDA')
   assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+20.00%<\/td><td>사용자 가정 C/)
   enterAssumption('fcffMarginPct', '', 'NVDA')
@@ -248,4 +254,27 @@ test('scenario chapter renders compact controls and view-model tables without in
       assert.deepEqual([...root.innerHTML.matchAll(/data-live-company="([^"]+)"/g)].map(match => match[1]), expected)
     }
   }
+  let savedState = null
+  globalThis.localStorage = { getItem: () => savedState, setItem: (_, value) => { savedState = value } }
+  const reload = async key => {
+    root.innerHTML = ''
+    root.querySelector = () => null
+    root.querySelectorAll = () => []
+    await import(`../../assets/scenario.js?selective-launch=${key}-${Date.now()}`)
+    await waitFor(() => root.innerHTML.includes('scenario-shell'))
+  }
+  await reload('initial')
+  const selectMode = value => {
+    listeners.get('change')({ target: { closest: selector => selector === '[data-rate-capex-mode]' ? { value } : null } })
+    window.renderScenario()
+  }
+  selectMode('historical-significant')
+  assert.equal(JSON.parse(savedState).requests.interest_rate.rateCapexMode, 'historical-significant')
+  await reload('restored')
+  assert.match(root.innerHTML, /value="historical-significant" selected>과거 관계\(유의한 회사만\)/)
+  assert.match(root.innerHTML, /type="number" disabled [^>]*data-scenario-control="rateCapexSensitivity"/)
+  assert.match(root.innerHTML, /유의 계수 적용 · 4사 전사 CAPEX 추정 −5.16%/)
+  selectMode('manual')
+  assert.doesNotMatch(root.innerHTML, /금리·CAPEX 계수 민감도 밴드/)
+  assert.doesNotMatch(root.innerHTML, /type="number" disabled [^>]*data-scenario-control="rateCapexSensitivity"/)
 })

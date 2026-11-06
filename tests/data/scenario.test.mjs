@@ -17,6 +17,7 @@ import {
 } from '../../assets/scenario-core.js'
 
 import { financialProfile } from '../../assets/scenario-actuals.js'
+import { RATE_CAPEX_FITS } from '../../assets/scenario-rate-fits.js'
 import { SCENARIO_FINANCIAL_BASELINES, SCENARIO_FINANCIAL_AS_OF } from '../../assets/scenario-financial-baselines.js'
 
 const segment = (result, id) => result.segments.find(item => item.segmentId === id)
@@ -39,6 +40,9 @@ test('visible companies during a drag exactly match the committed result across 
         assert.equal('chainStandalonePct' in preview.companies[i].effectAttribution, false)
         assert.ok(Number.isFinite(fullRow.rateAttribution.chainStandalonePct))
         delete fullRow.effectAttribution.chainStandalonePct
+        assert.ok(!Object.hasOwn(preview.companies[i], 'rateCapexSensitivityBand'))
+        assert.ok(fullRow.rateCapexSensitivityBand)
+        delete fullRow.rateCapexSensitivityBand
       }
       assert.deepEqual(preview.companies[i], fullRow)
     }
@@ -421,6 +425,82 @@ test('model revenue contraction and recovery preserve growth-rate arithmetic', (
 
 const rateScenario = (rateChangePctPoints, rateCapexSensitivity, durationMonths = 12, companyOverrides = {}) =>
   evaluateScenario({ scenarioId: 'interest_rate', durationMonths, inputs: { rateChangePctPoints, rateCapexSensitivity }, companyOverrides })
+
+test('significant-only rates use the full investment denominator and remove unsupported own-budget paths', () => {
+  const request = { scenarioId: 'interest_rate', rateCapexMode: 'historical-significant', inputs: { rateChangePctPoints: 1 } }
+  const full = evaluateScenario(request)
+  const transmission = full.scenario.rateCapexTransmission
+  assert.equal(transmission.mode, request.rateCapexMode)
+  const significant = RATE_CAPEX_FITS.filter(fit => fit.low95Pct > 0 || fit.high95Pct < 0)
+  assert.deepEqual(significant.map(fit => fit.companyId), ['AMZN'])
+  const amazon = significant[0]
+  const allCash = RATE_CAPEX_FITS.reduce((cash, fit) => cash + fit.cashCapexUsd, 0)
+  const amazonChange = 100 * Math.expm1(amazon.logBeta / 100)
+  closeTo(transmission.derivedCapexChangePct, amazonChange * amazon.cashCapexUsd / allCash, 1e-9)
+  assert.deepEqual(transmission.ownerChangesPct, { MSFT: 0, AMZN: amazonChange, GOOGL: 0, META: 0 })
+  for (const id of ['MSFT', 'GOOGL', 'META']) {
+    assert.ok(!company(full, id).paths.some(path => path.mediatedBy === 'interestRate' && path.segments.length === 1))
+  }
+  const requestWith = rateCapexMode => ({ ...request, rateCapexMode })
+  for (const mode of ['invalid', 'toString', ['historical-significant']]) assert.throws(() => validateScenarioRequest(requestWith(mode)), /rateCapexMode/)
+  assert.equal(validateScenarioRequest(requestWith(null)).rateCapexMode, 'historical')
+  assert.equal(validateScenarioRequest({ ...requestWith(null), inputs: { rateCapexSensitivity: 5 } }).rateCapexMode, 'manual')
+  assert.throws(() => validateScenarioRequest({ ...request, scenarioId: 'hyperscaler_capex' }), /지원하지 않는 요청 필드/)
+  assert.throws(() => validateScenarioRequest({ ...request, rateCapexFits: [] }), /지원하지 않는 요청 필드/)
+
+  // Inject a different fitted snapshot without changing shared data or opening a user-input field.
+  const rateCapexFits = RATE_CAPEX_FITS.map((fit, i) => ({
+    ...fit, low95Pct: i === 0 ? 0 : -25, high95Pct: i === 1 ? 0 : 25,
+  }))
+  const allCross = evaluateScenario(request, { rateCapexFits })
+  assert.equal(allCross.scenario.rateCapexTransmission.derivedCapexChangePct, 0)
+  assert.ok(Object.values(allCross.scenario.rateCapexTransmission.ownerChangesPct).every(change => change === 0))
+  for (const id of ['NVDA', '000660.KS']) {
+    assert.equal(company(allCross, id).effectAttribution.chainPct, 0)
+    assert.ok(company(allCross, id).effectAttribution.directPct < 0)
+    assert.ok(!company(allCross, id).paths.some(path => path.mediatedBy === 'interestRate'))
+  }
+})
+
+test('fitted CAPEX limits reprice each company at simultaneous owner-specific budgets for rate hikes and cuts', () => {
+  for (const rate of [1, -0.75]) {
+    const request = { scenarioId: 'interest_rate', rateCapexMode: 'historical', durationMonths: 6, inputs: { rateChangePctPoints: rate },
+      companyOverrides: { NVDA: { scenarioExposureScale: 0.52 }, CRWV: { assumptions: { discountRatePct: 25, terminalGrowthPct: -1 } } } }
+    const full = evaluateScenario(request)
+    const significant = evaluateScenario({ ...request, rateCapexMode: 'historical-significant' })
+    const byBudget = {}
+    for (const side of ['lower', 'upper']) {
+      const useLow = rate > 0 ? side === 'lower' : side === 'upper'
+      const rateCapexFits = RATE_CAPEX_FITS.map(fit => ({
+        ...fit, logBeta: 100 * Math.log1p((useLow ? fit.low95Pct : fit.high95Pct) / 100),
+      }))
+      byBudget[side] = evaluateScenario(request, { rateCapexFits })
+    }
+    const lowerBudget = byBudget.lower.scenario.rateCapexTransmission.derivedCapexChangePct
+    const upperBudget = byBudget.upper.scenario.rateCapexTransmission.derivedCapexChangePct
+    assert.ok(lowerBudget < full.scenario.rateCapexTransmission.derivedCapexChangePct && upperBudget > full.scenario.rateCapexTransmission.derivedCapexChangePct)
+    for (const item of full.companies) {
+      const band = item.rateCapexSensitivityBand
+      assert.equal(band.point.totalPct, item.valueChangePct)
+      assert.equal(band.point.chainPct, item.effectAttribution.chainPct)
+      for (const side of ['lower', 'upper']) {
+        const reference = company(byBudget[side], item.companyId)
+        const endpoint = band[side]
+        closeTo(endpoint.derivedCapexChangePct, byBudget[side].scenario.rateCapexTransmission.derivedCapexChangePct, 1e-12)
+        for (const [actual, expected] of [
+          [endpoint.directPct, reference.effectAttribution.directPct], [endpoint.chainPct, reference.effectAttribution.chainPct],
+          [endpoint.totalPct, reference.valueChangePct], [endpoint.chainStandalonePct, reference.effectAttribution.chainStandalonePct],
+        ]) {
+          if (expected === null) assert.equal(actual, null)
+          else closeTo(actual, expected, 1e-10)
+        }
+        assert.deepEqual(company(significant, item.companyId).rateCapexSensitivityBand[side], endpoint)
+      }
+    }
+  }
+  for (const item of rateScenario(0).companies) assert.deepEqual(item.rateCapexSensitivityBand.lower, item.rateCapexSensitivityBand.upper)
+  assert.ok(rateScenario(1, 5).companies.every(item => !Object.hasOwn(item, 'rateCapexSensitivityBand')))
+})
 
 test('a rate-only request uses fitted company budgets; an explicit common sensitivity preserves manual behavior', () => {
   const estimated = rateScenario(1).scenario.rateCapexTransmission
