@@ -75,10 +75,14 @@ jobs:
         run: python3 -m pip install playwright==1.57.0
       - name: Run isolated HTTPS browser smoke
         run: python3 tests/browser-smoke.py
+      - name: Run homepage weight and co-movement acceptance
+        run: python3 tests/home-browser-smoke.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: community-browser-smoke
-          path: .local/browser-smoke/
+          path: |
+            .local/browser-smoke/
+            .local/home-browser-smoke/
           retention-days: 3
           if-no-files-found: warn

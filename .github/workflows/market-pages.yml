@@ -33,6 +33,8 @@ jobs:
         id: collect
         continue-on-error: true
         run: node scripts/data/collect-market.mjs
+      - name: Build same-session ripple observations from collected closes
+        run: node scripts/data/build-ripple.mjs --allow-unavailable
       - name: Restore previous industry statistics for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json -o data/industry-previous.json && mv data/industry-previous.json data/industry.json || true

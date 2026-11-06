@@ -34,6 +34,9 @@
     "api/recommendation-comments.js": {
       "maxDuration": 30,
       "includeFiles": "data/today-picks.json"
+    },
+    "api/ripple.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -111,6 +114,15 @@
     },
     {
       "source": "/data/epoch-ai.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/data/ripple.json",
       "headers": [
         {
           "key": "Cache-Control",

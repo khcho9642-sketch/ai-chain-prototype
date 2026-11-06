@@ -2,6 +2,8 @@
 
 AI 체인의 시세·차트·관심종목과 고리별 비교는 같은 카탈로그와 시세 서비스를 사용한다. 현재 개발본은 이 저장소의 `index.html`, `assets/`, `server/market.mjs`다.
 
+홈의 업종 가중방식·파급 계산은 [홈 파급과 가중 카드](home-ripple.md)를 따른다.
+
 ## 종가 수집 보강 (2026-11-06)
 
 정기 스냅샷은 `mode: scheduled-close`, `priceBasis: previous-completed-session`으로 수집한다. `/api/chart`의 개별 장중 조회는 별도로 유지한다. 목록·비교 계산은 수집한 종가를 사용하고, 개별 차트를 조회했다고 목록의 종가가 장중 값으로 바뀌지 않는다.

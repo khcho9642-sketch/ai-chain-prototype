@@ -6,6 +6,7 @@ import { chart } from '../../server/market.mjs'
 import { dailyClose } from '../../server/market-close.mjs'
 import { batchQuotes } from '../../server/market-quotes.mjs'
 import { loadMarketUniverse } from './market-universe.mjs'
+import { enrichHomeMarket } from './enrich-home-market.mjs'
 export { instruments }
 
 const positive = value => Number.isFinite(value) && value > 0
@@ -35,6 +36,7 @@ export function capitalization(quote, previous, error = null) {
 export async function collect(output = 'data/market.json', {
   universe, closeService = dailyClose, batchService = batchQuotes, chartService = chart,
   now = Date.now, logger = console, concurrency = 4, includeHistories = true,
+  includeHomeData = !universe, homeEnricher = enrichHomeMarket,
   maxBytes = 25_000_000,
 } = {}) {
   const startedAt = new Date(now()).toISOString()
@@ -111,7 +113,7 @@ export async function collect(output = 'data/market.json', {
   if (!ok) throw new Error('전체 종가 수집 실패. 이전 시세 파일을 보존합니다.')
   const order = new Map(targets.map((item, index) => [item.symbol, index]))
   quotes.sort((a, b) => order.get(a.symbol) - order.get(b.symbol))
-  const data = {
+  let data = {
     schemaVersion: 1, generatedAt: startedAt, source: 'Yahoo Finance',
     mode: 'scheduled-close', priceBasis: 'previous-completed-session', refreshMinutes: null,
     staleAfterHours: 96,
@@ -120,6 +122,7 @@ export async function collect(output = 'data/market.json', {
       marketCaps: quotes.filter(quote => quote.marketCapStatus === 'ok').length },
     collection: { status: ok === quotes.length ? 'ok' : 'partial', lastAttemptAt: startedAt }, quotes,
   }
+  if (includeHomeData) data = await homeEnricher(data, { previous, now })
   const body = JSON.stringify(data) + '\n'
   if (Buffer.byteLength(body) > maxBytes) throw new Error('시세 파일 크기 제한 초과. 이전 파일을 보존합니다.')
   await mkdir(dirname(resolve(output)), { recursive: true })
