@@ -160,7 +160,7 @@ test('CAPEX transmission reports catalog weights and individual lags only for an
   assert.deepEqual(decomposeCompany({ ...nvidia, paths: [mismatchedPath] }).paths[0].coefficientSteps, [])
 })
 
-test('shortening the budget period keeps direct rate EV fixed and reduces the CAPEX-mediated effect', () => {
+test('legacy durations produce the same permanent direct and chain EV changes', () => {
   const view = duration => buildScenarioView(evaluateScenario({
     scenarioId: 'interest_rate', durationMonths: duration,
     inputs: { rateChangePctPoints: 1 },
@@ -169,7 +169,7 @@ test('shortening the budget period keeps direct rate EV fixed and reduces the CA
   const six = view(6)
   const eqix12 = twelve.companies.find(company => company.companyId === 'EQIX')
   const eqix6 = six.companies.find(company => company.companyId === 'EQIX')
-  assert.ok(Math.abs(eqix6.chainPct) < Math.abs(eqix12.chainPct))
+  assert.equal(eqix6.chainPct, eqix12.chainPct)
   closeTo(eqix6.directPct, eqix12.directPct, 1e-12)
 })
 
@@ -199,7 +199,7 @@ test('Alphabet direct CAPEX equals discounted budget and own capacity cash flows
   const effectiveBudgetShock = 0.20 * exposure
   const { volumePassThrough, capexPassThrough, discountRatePct } = row.assumptions
   const { baselineRevenue, baselineEnterpriseValueUnits } = row.valuation
-  const weight = m => m <= 0 ? 0 : Math.min(1, Math.max(0, (24 - m) / 12))
+  const weight = month => Number(month > 0)
   let directPV = 0
   for (let month = 1; month <= 96; month++) {
     const year = Math.floor((month - 1) / 12)
@@ -207,6 +207,16 @@ test('Alphabet direct CAPEX equals discounted budget and own capacity cash flows
     const spending = effectiveBudgetShock * weight(month) * capexPassThrough * profile.capexToRevenuePct / 100
     const capacity = effectiveBudgetShock * 0.35 * weight(month - 12) * volumePassThrough * profile.volumeContributionMarginPct / 100
     directPV += baselineRevenue[year] / 12 * (capacity - spending) / (1 + discountRatePct / 100) ** (month / 12)
+  }
+  // Continue the permanent year-eight unit economics for 500 years. At this discount
+  // spread the omitted tail rounds to zero at the precision of the assertion.
+  const terminalGrowth = row.assumptions.terminalGrowthPct / 100
+  const profile = row.financialBasis.forecast.at(-1)
+  const annualDelta = baselineRevenue.at(-1) * effectiveBudgetShock *
+    (0.35 * volumePassThrough * profile.volumeContributionMarginPct - capexPassThrough * profile.capexToRevenuePct) / 100
+  for (let month = 97; month <= 12 * 508; month++) {
+    const terminalYear = Math.ceil((month - 96) / 12)
+    directPV += annualDelta * (1 + terminalGrowth) ** terminalYear / 12 / (1 + discountRatePct / 100) ** (month / 12)
   }
   closeTo(row.directPct, 100 * directPV / baselineEnterpriseValueUnits, 1e-9)
   assert.ok(row.chainPct > 0)
@@ -222,6 +232,13 @@ test('historical rate mode applies each individual owner shock to its own budget
     closeTo(owner.valuation.operatingBridge[0].incrementalCapexCashoutUnits, expectedOutlay, 0.001)
   }
   assert.ok(ownerChangesPct.MSFT > 0 && ownerChangesPct.AMZN < 0)
+})
+
+test('a permanent growth rate that cannot be discounted keeps the company visible and explains why', () => {
+  const row = decomposeCompany({ valueChangePct: null, valuation: { comparisonStatus: 'nonconvergent-terminal' } })
+  assert.equal(row.reconciliationStatus, 'nonconvergent-terminal')
+  assert.equal(row.totalPct, null)
+  assert.match(row.breakdownNote, /잔존 현금흐름/)
 })
 
 test('a nonpositive baseline keeps the company visible and the nine-company average unavailable', () => {
@@ -256,9 +273,9 @@ test('sector explorer marks only actual direct origins and distinguishes the rat
   assert.deepEqual(origins(html), [])
   assert.match(html, /금리 · 9개 섹터에 직접 적용 · 빅테크 AI CAPEX 경유 전파/)
   const off = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 1, rateCapexSensitivity: 0 } }))
-  assert.match(renderExplorer(off, display), /CAPEX 민감도 0 · 전파효과 0%/)
+  assert.match(renderExplorer(off, display), /CAPEX 민감도 0.0 · 전파효과 0.0%/)
   const neutral = buildScenarioView(evaluateScenario({ scenarioId: 'interest_rate', durationMonths: 12, inputs: { rateChangePctPoints: 0 } }))
-  assert.match(renderExplorer(neutral, display), /금리 변화 0%p · CAPEX 경유 전파 0%/)
+  assert.match(renderExplorer(neutral, display), /금리 변화 0.0%p · CAPEX 경유 전파 0.0%/)
   assert.match(html, /9개 섹터 가치 변화/)
   assert.match(html, /공개 재무 없음 · 섹터 가정/)
   for (const companyId of ['OPENAI', 'ANTHROPIC', 'DEEPSEEK']) assert.ok(html.includes(`data-company-id="${companyId}"`))

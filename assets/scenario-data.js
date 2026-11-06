@@ -26,18 +26,16 @@ export const ASSUMPTION_LIMITS = Object.freeze({
 })
 
 export const MODEL_ASSUMPTIONS = Object.freeze({
-  modelId: 'financial-actuals-value-chain-v3',
-  modelVersion: 3,
+  modelId: 'financial-actuals-value-chain-v4',
+  modelVersion: 4,
   valuationBasis: 'monthly-dcf-with-incremental-operating-cashflows',
-  asOfDate: '2026-11-05',
+  asOfDate: '2026-11-06',
   calibrationStatus: '연결 재무비율·전사 CAPEX 회귀 반영, AI 거래 노출도·시차 C등급',
   normalizedStartingRevenue: 100,
   forecastYears: 8,
   horizonMonths: 96,
-  shockFadeMonths: 12,
   rateDirectDemandPerPctPoint: 1,
   maxPropagationHops: 8,
-  durationMonths: Object.freeze({ min: 6, max: 36, step: 6, defaultValue: 12 }),
   driverLabels: DRIVER_LABELS,
   assumptionLimits: ASSUMPTION_LIMITS,
   assumptionSource: 'illustrative-role-assumption',
@@ -48,7 +46,7 @@ export const MODEL_ASSUMPTIONS = Object.freeze({
   }),
   pathAttributionMethod: 'Sequential DCF repricing: direct paths first, then supply-chain paths in catalog order; interactions assigned to the path added',
   unmodeledMitigants: Object.freeze([
-    '재고 버퍼, 장기계약 가격전가, 대체 공급처와 회사별 병목 용량은 실증 입력이 없어 별도 계수화하지 않았습니다.',
+    '재고, 대체 공급처, 회사별 공급 병목과 개별 계약 조건은 별도 추정하지 않았습니다. SK하이닉스 HBM 판가에는 연간 재계약 시차를 가정합니다.',
     '전파계수와 시차는 설명용 비례 가정이며 실제 고객·공급자 계약 또는 거래관계를 뜻하지 않습니다.',
   ]),
   limitation: '재무자료가 있는 기업은 연간 실적을 출발점으로 계산합니다. 미래 성장, 할인율과 전파 민감도에는 가정이 포함됩니다.',
@@ -191,7 +189,7 @@ export const SCENARIO_DEFINITIONS = Object.freeze([
     presets: Object.freeze({
       downside: preset('성장 둔화', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 20 }),
       neutral: preset('기준 유지', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 50 }),
-      upside: preset('성장 확대', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 80 }),
+      upside: preset('성장 확대', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 55 }),
     }),
   }),
 ])
@@ -300,6 +298,9 @@ export const HYPERSCALER_CAPEX_OWNER_IDS = Object.freeze(['MSFT', 'AMZN', 'GOOGL
 const skHynixHbmMix = Object.freeze({
   fiscalYear: 2025,
   revenueShare: (33e9 * 0.632 * 1421.4) / (97_146_675 * 1e6),
+  // Scenario assumptions for the producer's own selling price after annual repricing.
+  contractLagMonths: 12,
+  longRunPricePassThrough: 1,
   grade: 'C',
   sourceUrl: 'https://www.sec.gov/Archives/edgar/data/2120882/000119312526299963/d32785d424b4.htm',
 })

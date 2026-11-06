@@ -1,3 +1,5 @@
+import { signedValue } from './scenario-format.js'
+
 const questions = {
   interest_rate: '금리가 바뀌면?',
   hyperscaler_capex: '빅테크가 투자를 늘리거나 줄이면?',
@@ -12,12 +14,6 @@ function escapeHtml(value) {
   })[c])
 }
 
-const formatNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
-function signedValue(value, unit) {
-  const shown = formatNumber.format(Math.abs(value))
-  const sign = shown === '0' ? '' : value > 0 ? '+' : '−'
-  return sign + shown + unit
-}
 const position = (value, control) => 100 * (value - control.min) / (control.max - control.min)
 
 export function renderScenarioChoices(definitions, selectedId) {
@@ -40,7 +36,7 @@ function sliderField(control, value, panelTitle) {
 
 function presetButtons(definition, request, presetText) {
   if (definition.id === 'interest_rate') {
-    return [0.5, 1, 2].map(value => `<button type="button" data-control-preset-id="rateChangePctPoints" data-control-preset-value="${value}" aria-pressed="${request.inputs.rateChangePctPoints === value}">+${value}%p</button>`).join('')
+    return [0.5, 1, 2].map(value => `<button type="button" data-control-preset-id="rateChangePctPoints" data-control-preset-value="${value}" aria-pressed="${request.inputs.rateChangePctPoints === value}">${signedValue(value, '%p')}</button>`).join('')
   }
   return Object.entries(definition.presets).map(([id, preset]) => {
     const pressed = Object.entries(preset.inputs).every(([key, val]) => request.inputs[key] === val)
@@ -56,8 +52,8 @@ export function renderDragControls(definition, request, { presetText, modelGrowt
     <div class="scenario-drive-header"><h2 id="scenario-input-heading">${escapeHtml(definition.name)}</h2></div>
     <div class="scenario-drag-fields">${inputs.map(control => sliderField(control, request.inputs[control.id], definition.name)).join('')}</div>
     <div class="scenario-drive-options"><div class="scenario-presets" role="group" aria-label="수치 프리셋">${presetButtons(definition, request, presetText)}</div>
-      <div class="scenario-duration-shortcuts"><span>${definition.id === 'interest_rate' ? 'CAPEX 전파 기간' : '지속기간'}</span><div role="group" aria-label="충격 지속기간">${[6, 12, 24, 36].map(months => `<button type="button" data-duration="${months}" aria-pressed="${request.durationMonths === months}">${months}개월</button>`).join('')}</div></div></div>
-    ${assumptions.length ? `<details class="scenario-advanced-assumptions"><summary>가정 설정</summary><label class="scenario-rate-setting">금리·투자 관계<select data-rate-capex-mode>${Object.entries(definition.rateCapexModes).map(([mode, label]) => `<option value="${mode}" ${mode === request.rateCapexMode ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}</select></label>${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" ${request.rateCapexMode !== 'manual' ? 'disabled' : ''} inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">공통 감소율은 직접 설정 시 적용됩니다. 0%면 CAPEX 전파가 꺼집니다.</small></div>`).join('')}${rateFitHtml}</details>` : ''}
+    </div>
+    ${assumptions.length ? `<details class="scenario-advanced-assumptions"><summary>가정 설정</summary><label class="scenario-rate-setting">금리·투자 관계<select data-rate-capex-mode>${Object.entries(definition.rateCapexModes).map(([mode, label]) => `<option value="${mode}" ${mode === request.rateCapexMode ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}</select></label>${assumptions.map(control => `<div class="scenario-rate-setting" data-drag-field="${escapeHtml(control.id)}"><label for="scenario-${escapeHtml(control.id)}">금리 1.0%p 상승 시 빅테크 AI CAPEX 감소율</label><span class="scenario-signed-input"><input type="number" ${request.rateCapexMode !== 'manual' ? 'disabled' : ''} inputmode="decimal" id="scenario-${escapeHtml(control.id)}" min="${control.min}" max="${control.max}" step="any" value="${Number(request.inputs[control.id] ?? control.defaultValue).toFixed(1)}" data-edit-value="${request.inputs[control.id] ?? control.defaultValue}" data-scenario-control="${escapeHtml(control.id)}" aria-describedby="rate-setting-note"><small>%</small></span><small id="rate-setting-note">공통 감소율은 직접 설정 시 적용됩니다. 0.0%면 CAPEX 전파가 꺼집니다.</small></div>`).join('')}${rateFitHtml}</details>` : ''}
     ${definition.id === 'model_growth' ? `<div class="scenario-derived-input" data-model-growth-helper>${modelGrowthHtml}</div>` : ''}
   </section>`
 }
@@ -79,7 +75,8 @@ export function syncDragControls(root, definition, request, activeElement) {
     const number = field.querySelector('[data-scenario-control]')
     number.disabled = request.rateCapexMode !== 'manual'
     if (activeElement !== number || number.value.trim() && Number(number.value) === value) {
-      if (activeElement !== number && number.value !== String(value)) number.value = String(value)
+      number.dataset.editValue = String(value)
+      if (activeElement !== number) number.value = Number(value).toFixed(1)
       if (number.hasAttribute?.('aria-invalid')) {
         number.removeAttribute('aria-invalid')
         number.setCustomValidity?.('')
@@ -89,9 +86,6 @@ export function syncDragControls(root, definition, request, activeElement) {
   for (const button of root.querySelectorAll('[data-control-preset-id]')) {
     const selected = request.inputs[button.dataset.controlPresetId] === Number(button.dataset.controlPresetValue)
     button.setAttribute('aria-pressed', String(selected))
-  }
-  for (const button of root.querySelectorAll('[data-duration]')) {
-    button.setAttribute('aria-pressed', String(request.durationMonths === Number(button.dataset.duration)))
   }
   for (const button of root.querySelectorAll('[data-scenario-preset]')) {
     const preset = definition.presets[button.dataset.scenarioPreset]

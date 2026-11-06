@@ -1,3 +1,4 @@
+import { signedValue } from './scenario-format.js'
 import { DRIVER_DEFINITIONS } from './scenario-data.js'
 
 const finite = Number.isFinite
@@ -9,10 +10,7 @@ const direction = value => value > 0 ? 'positive' : value < 0 ? 'negative' : 'fl
 
 function percent(value) {
   if (!finite(value)) return '산정 불가'
-  if (value === 0) return '0.00%'
-  const sign = value > 0 ? '+' : '−'
-  const magnitude = Math.abs(value)
-  return `${sign}${magnitude.toFixed(magnitude < 0.005 ? 4 : 2)}%`
+  return signedValue(value)
 }
 
 function originsOf(segments) {
@@ -55,7 +53,7 @@ function sectorCard(segment, selectedId, origin, scale, position) {
   const height = finite(value) ? (50 * Math.abs(value) / scale).toFixed(3) : 0
   const edge = value < 0 ? 'top' : 'bottom'
   const name = escapeHtml(segment.name)
-  const index = finite(segment.scenarioValueIndex) ? segment.scenarioValueIndex.toFixed(2) : '—'
+  const index = finite(segment.scenarioValueIndex) ? segment.scenarioValueIndex.toFixed(1) : '—'
   return `<button type="button" class="scenario-sector-tile" data-explore-sector="${escapeHtml(segment.segmentId)}" aria-pressed="${segment.segmentId === selectedId}" aria-controls="scenario-explorer-members">
     <span class="scenario-sector-meta"><span class="scenario-sector-id" aria-hidden="true">${String(position + 1).padStart(2, '0')}</span>${origin ? '<span class="scenario-sector-origin">충격 시작</span>' : ''}</span>
     <strong class="scenario-sector-title">${name}</strong>
@@ -67,7 +65,7 @@ function sectorCard(segment, selectedId, origin, scale, position) {
 
 function companyButton(company, { selectedCompanyId, renderBar, scale }) {
   const id = escapeHtml(company.companyId)
-  const index = finite(company.scenarioValueIndex) ? `100 → ${company.scenarioValueIndex.toFixed(2)}` : '지수 산정 불가'
+  const index = finite(company.scenarioValueIndex) ? `100 → ${company.scenarioValueIndex.toFixed(1)}` : '지수 산정 불가'
   const isPrivate = company.listingStatus === 'private'
   const basis = isPrivate ? '공개 재무 없음 · 섹터 가정' : company.symbol
   const tag = [basis, company.isBig7 ? 'Big 7' : ''].filter(Boolean).join(' · ')
@@ -95,16 +93,16 @@ export function renderExplorer(view, options) {
   let originText = isBroadShock ? `충격 · ${view.segments.length}개 섹터에 직접 적용` : ''
   const transmission = view.scenario.rateCapexTransmission
   if (transmission) {
-    if (transmission.rateChangePctPoints === 0) originText = '금리 변화 0%p · CAPEX 경유 전파 0%'
+    if (transmission.rateChangePctPoints === 0) originText = '금리 변화 0.0%p · CAPEX 경유 전파 0.0%'
     else {
       const hasBudgetChange = Object.values(transmission.ownerChangesPct ?? {}).some(change => change !== 0) || transmission.derivedCapexChangePct !== 0
-      const capexLabel = hasBudgetChange ? '빅테크 AI CAPEX 경유 전파' : 'CAPEX 민감도 0 · 전파효과 0%'
+      const capexLabel = hasBudgetChange ? '빅테크 AI CAPEX 경유 전파' : 'CAPEX 민감도 0.0 · 전파효과 0.0%'
       originText = `금리 · ${view.segments.length}개 섹터에 직접 적용 · ${capexLabel}`
     }
   }
   const denominator = comparable.length === view.companies.length ? `전체 ${comparable.length}개사` : `산정 가능 ${comparable.length}/${view.companies.length}개사`
   return `<section class="scenario-explorer" aria-labelledby="scenario-explorer-heading">
-    <div class="scenario-explorer-heading"><div><h2 id="scenario-explorer-heading">9개 섹터 가치 변화</h2><p>섹터별 가정으로 계산한 지수 · 기준 100 · 막대 눈금 ±${bound}%</p></div>${originText ? `<span class="scenario-explorer-origins">${originText}</span>` : ''}</div>
+    <div class="scenario-explorer-heading"><div><h2 id="scenario-explorer-heading">9개 섹터 가치 변화</h2><p>섹터별 가정으로 계산한 지수 · 기준 100 · 막대 눈금 ±${bound.toFixed(1)}%</p></div>${originText ? `<span class="scenario-explorer-origins">${originText}</span>` : ''}</div>
     <div class="scenario-sector-grid" role="group" aria-label="기업을 살펴볼 섹터">${view.segments.map((segment, position) => sectorCard(segment, selected.segmentId, !isBroadShock && origins.has(segment.segmentId), bound, position)).join('')}</div>
     <div class="scenario-explorer-panels">
       <section class="scenario-explorer-panel" id="scenario-explorer-members" aria-labelledby="scenario-explorer-members-heading">

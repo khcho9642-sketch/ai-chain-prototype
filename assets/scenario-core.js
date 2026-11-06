@@ -20,7 +20,6 @@ const companyById = new Map(COMPANIES.map(item => [item.companyId, item]))
 const scenarioById = new Map(SCENARIO_DEFINITIONS.map(item => [item.id, item]))
 const years = MODEL_ASSUMPTIONS.forecastYears
 const months = MODEL_ASSUMPTIONS.horizonMonths
-const rateDirectMonths = 12
 const zeroSeries = () => Array(months).fill(0)
 const sum = values => values.reduce((total, value) => total + value, 0)
 const round = (value, digits = 4) => Number(value.toFixed(digits))
@@ -65,7 +64,6 @@ export function buildDefaultScenarioRequest(scenarioId) {
   return {
     scenarioId,
     ...(definition.defaultRateCapexMode && { rateCapexMode: definition.defaultRateCapexMode }),
-    durationMonths: MODEL_ASSUMPTIONS.durationMonths.defaultValue,
     inputs: Object.fromEntries(definition.controls.map(control => [control.id, control.defaultValue])),
     companyOverrides: {},
   }
@@ -79,10 +77,10 @@ export function validateScenarioRequest(request) {
   if (definition.id === 'interest_rate') allowedTopLevel.add('rateCapexMode')
   for (const key of Object.keys(request)) if (!allowedTopLevel.has(key)) fail(`지원하지 않는 요청 필드입니다: ${key}`)
 
-  const duration = request.durationMonths ?? MODEL_ASSUMPTIONS.durationMonths.defaultValue
-  const durationRule = MODEL_ASSUMPTIONS.durationMonths
-  if (!Number.isInteger(duration) || duration < durationRule.min || duration > durationRule.max || (duration - durationRule.min) % durationRule.step !== 0) {
-    fail(`durationMonths는 ${durationRule.min}~${durationRule.max} 범위의 ${durationRule.step}개월 단위여야 합니다.`)
+  // Older saved requests contained this field. Their shocks now persist as well.
+  const duration = request.durationMonths
+  if (duration != null && (!Number.isInteger(duration) || duration < 6 || duration > 36 || duration % 6 !== 0)) {
+    fail('durationMonths는 기존 요청의 6~36개월(6개월 단위) 값만 지원합니다.')
   }
 
   const suppliedInputs = request.inputs ?? {}
@@ -131,7 +129,7 @@ export function validateScenarioRequest(request) {
     companyOverrides[companyId] = normalized
   }
 
-  const validated = { scenarioId: definition.id, durationMonths: duration, inputs, companyOverrides }
+  const validated = { scenarioId: definition.id, inputs, companyOverrides }
   if (definition.id === 'interest_rate') {
     // A pre-v3 caller supplying a numeric common sensitivity still selects its own assumption.
     const mode = request.rateCapexMode ?? (suppliedInputs.rateCapexSensitivity != null ? 'manual' : definition.defaultRateCapexMode)
@@ -141,23 +139,10 @@ export function validateScenarioRequest(request) {
   return validated
 }
 
-function shockWeightAtMonth(month, lagMonths, durationMonths) {
+function driverLevelAtMonth(driverId, shock, month, lagMonths) {
   const elapsed = month - lagMonths
   if (elapsed <= 0) return 0
-  if (elapsed <= durationMonths) return 1
-  if (elapsed > durationMonths + MODEL_ASSUMPTIONS.shockFadeMonths) return 0
-  return 1 - (elapsed - durationMonths) / MODEL_ASSUMPTIONS.shockFadeMonths
-}
-
-function driverLevelAtMonth(driverId, shock, month, lagMonths, durationMonths) {
-  const duration = driverId === 'interestRate' ? rateDirectMonths : durationMonths
-  const weight = shockWeightAtMonth(month, lagMonths, duration)
-  if (weight === 0) return 0
-  if (driverId !== 'modelGrowth') return shock * weight
-  // The input describes annual growth. Accumulate the relative revenue level up
-  // to the end of the shock, then fade that attained level back to the baseline.
-  const activeMonths = Math.min(month - lagMonths, duration)
-  return Math.expm1(Math.log1p(shock) * activeMonths / 12) * weight
+  return driverId === 'modelGrowth' ? Math.expm1(Math.log1p(shock) * elapsed / 12) : shock
 }
 
 function fittedCapexChangePct(fit, rate, mode, endpoint) {
@@ -225,7 +210,7 @@ function normalizedDriverInputs(definition, inputs, rateCapexTransmission) {
         modelBaselineGrowthPct: inputs.modelBaselineGrowthPct,
         modelTargetGrowthPct: inputs.modelTargetGrowthPct,
       },
-      calculation: 'monthly level gap = ((1 + target growth) / (1 + baseline growth)) ^ (active months / 12) - 1; attained gap fades linearly to baseline',
+      calculation: 'monthly level gap = ((1 + target growth) / (1 + baseline growth)) ^ (months since transmission / 12) - 1, continuing in terminal cash flows',
     }]
   }
   return definition.controls.map(control => {
@@ -240,7 +225,7 @@ function normalizedDriverInputs(definition, inputs, rateCapexTransmission) {
   })
 }
 
-function buildDriverPaths(driverId, normalizedShock, durationMonths, mediatedBy = null, maxHops = MODEL_ASSUMPTIONS.maxPropagationHops) {
+function buildDriverPaths(driverId, normalizedShock, mediatedBy = null, maxHops = MODEL_ASSUMPTIONS.maxPropagationHops) {
   const driver = DRIVER_DEFINITIONS[driverId]
   if (!driver || normalizedShock === 0) return []
   const edges = PROPAGATION_EDGES.filter(edge => edge.drivers.includes(driverId))
@@ -248,7 +233,7 @@ function buildDriverPaths(driverId, normalizedShock, durationMonths, mediatedBy 
   const walk = ({ segmentId, primitive, coefficient, segments, lagMonths, channels, visited, applyCurrent, propagate }) => {
     if (applyCurrent) {
       const monthlyShock = Array.from({ length: months }, (_, i) =>
-        driverLevelAtMonth(driverId, normalizedShock, i + 1, lagMonths, durationMonths))
+        driverLevelAtMonth(driverId, normalizedShock, i + 1, lagMonths))
       paths.push({
         pathId: `${driverId}:${primitive}:${segments.join('>')}`,
         ...(mediatedBy && { mediatedBy }),
@@ -318,18 +303,48 @@ function buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers
       const ownHbmPrice = hbmPriceMix && path.pathId === 'hbmPrice:asp:SEG3'
       const coefficient = ownHbmPrice ? 1 : path.coefficient
       const entityWeight = ownHbmPrice ? hbmPriceMix.adjustedRevenueShare : segmentWeight * exposureScale * multiplier
-      const monthlySeries = path.monthlyShock.map(value => coefficient * value * entityWeight)
+      const contractLag = ownHbmPrice ? hbmPriceMix.contractLagMonths : 0
+      const monthlySeries = path.monthlyShock.map((_, i) =>
+        i < contractLag ? 0 : coefficient * path.monthlyShock[i - contractLag] * entityWeight)
       monthlySeries.forEach((value, index) => { byDriver[driverId][path.primitive][index] += value })
-      entityPaths[driverId].push({ ...path, coefficient, monthlySeries, entityWeight })
+      if (driverId === 'modelGrowth') {
+        byDriver[driverId].growthExposure = (byDriver[driverId].growthExposure ?? 0) + coefficient * entityWeight
+      }
+      entityPaths[driverId].push({ ...path, lagMonths: path.lagMonths + contractLag, coefficient, monthlySeries, entityWeight })
     }
   }
   return { byDriver, entityPaths }
 }
 
-function discountRateSeries(assumptions, request, activeDriverIds) {
-  const rateChange = activeDriverIds.includes('interestRate') ? request.inputs.rateChangePctPoints : 0
-  return Array.from({ length: months }, (_, i) => (assumptions.discountRatePct +
-    rateChange * assumptions.rateDiscountPassThrough * shockWeightAtMonth(i + 1, 0, rateDirectMonths)) / 100)
+// Revenue and FCFF grow once per year, with equal end-of-month payments inside
+// each year. The model-growth premium, when present, compounds every month.
+function terminalCashPv(annualCash, growth, rate, relativeGrowth = 1, paymentCount = Infinity) {
+  if (annualCash === 0 || paymentCount === 0) return 0
+  const logMonth = (Math.log(relativeGrowth) - Math.log1p(rate)) / 12
+  const logYear = Math.log1p(growth) + 12 * logMonth
+  const monthSum = n => logMonth === 0 ? n : Math.exp(logMonth) * Math.expm1(n * logMonth) / Math.expm1(logMonth)
+  const firstBlock = annualCash / 12 * (1 + growth)
+  if (paymentCount === Infinity) {
+    if (logYear >= -1e-14) return null
+    return firstBlock * monthSum(12) / -Math.expm1(logYear)
+  }
+  const blocks = Math.floor(paymentCount / 12)
+  const blockSum = logYear === 0 ? blocks : Math.expm1(logYear * blocks) / Math.expm1(logYear)
+  return firstBlock * (monthSum(12) * blockSum + Math.exp(logYear * blocks) * monthSum(paymentCount % 12))
+}
+
+function modelGrowthTerminal({ baseCash, volumeCash, exposure, signalAt96, relativeGrowth, growth, rate }) {
+  // After all lags have elapsed, month 96+k volume is max(-1, A*q^(k/12)-W).
+  const amplitude = signalAt96 + exposure
+  if (relativeGrowth < 1 && exposure > 1) {
+    const monthsAboveFloor = amplitude > exposure - 1
+      ? Math.max(0, Math.ceil(12 * Math.log((exposure - 1) / amplitude) / Math.log(relativeGrowth)) - 1) : 0
+    return terminalCashPv(baseCash - volumeCash, growth, rate) +
+      terminalCashPv(volumeCash * (1 - exposure), growth, rate, 1, monthsAboveFloor) +
+      terminalCashPv(volumeCash * amplitude, growth, rate, relativeGrowth, monthsAboveFloor)
+  }
+  const variablePv = terminalCashPv(volumeCash * amplitude, growth, rate, relativeGrowth)
+  return variablePv === null ? null : terminalCashPv(baseCash - volumeCash * exposure, growth, rate) + variablePv
 }
 
 function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
@@ -337,7 +352,9 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
   const baseRate = assumptions.discountRatePct / 100
   const monthlyBaseFactor = (1 + baseRate) ** (1 / 12)
   const terminalGrowth = assumptions.terminalGrowthPct / 100
-  const rates = discountRateSeries(assumptions, request, activeDriverIds)
+  const rateChange = activeDriverIds.includes('interestRate') ? request.inputs.rateChangePctPoints : 0
+  const rate = (assumptions.discountRatePct + rateChange * assumptions.rateDiscountPassThrough) / 100
+  const monthlyScenarioFactor = (1 + rate) ** (1 / 12)
   const signals = activeDriverIds.map(id => primitiveBundle.byDriver[id])
   const monthly = { baselineFcff: [], scenarioFcff: [], annualizedDiscountRatesPct: [], revenueVolumePct: [], aspPct: [] }
   const baseline = []
@@ -385,10 +402,8 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
       const cashDelta = volumeRevenue * profile.volumeContributionMarginPct / 100 +
         priceRevenue * afterTaxRetention - costDelta - capexDelta
       const scenarioCash = monthlyCash + cashDelta
-      const rate = rates[index]
-      if (rate <= -1) fail('월 할인계수를 계산하려면 연환산 할인율이 −100%를 초과해야 합니다.')
       baseDiscountFactor *= monthlyBaseFactor
-      scenarioDiscountFactor *= (1 + rate) ** (1 / 12)
+      scenarioDiscountFactor *= monthlyScenarioFactor
       basePresentValue += monthlyCash / baseDiscountFactor
       scenarioPresentValue += scenarioCash / scenarioDiscountFactor
 
@@ -408,24 +423,35 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
     scenario.push(totals)
   }
 
-  // Value annual blocks of growing FCFF, with the same 12 equal month-end payments
-  // used in the explicit period. The Gordon denominator uses the long-run WACC only.
-  const withinYearFactor = sum(Array.from({ length: 12 }, (_, i) => monthlyBaseFactor ** i)) / 12
-  const terminalValue = baseline.at(-1).fcff * (1 + terminalGrowth) * withinYearFactor / (baseRate - terminalGrowth)
-  const baselineEnterpriseValue = basePresentValue + terminalValue / baseDiscountFactor
-  const scenarioEnterpriseValue = scenarioPresentValue + terminalValue / scenarioDiscountFactor
+  const baseCash = baseline.at(-1).fcff
+  const baselineTerminalValue = terminalCashPv(baseCash, terminalGrowth, baseRate)
+  let scenarioTerminalValue = rate <= terminalGrowth ? null : terminalCashPv(scenario.at(-1).fcff, terminalGrowth, rate)
+  const growthDriver = activeDriverIds.includes('modelGrowth') && primitiveBundle.byDriver.modelGrowth
+  const exposure = (growthDriver?.growthExposure ?? 0) * assumptions.volumePassThrough
+  if (exposure && request.inputs.modelTargetGrowthPct !== request.inputs.modelBaselineGrowthPct && rate > terminalGrowth) {
+    scenarioTerminalValue = modelGrowthTerminal({
+      baseCash, volumeCash: annualRevenue * forecast.at(-1).volumeContributionMarginPct / 100,
+      exposure, signalAt96: growthDriver.revenueVolume.at(-1) * assumptions.volumePassThrough,
+      relativeGrowth: (100 + request.inputs.modelTargetGrowthPct) / (100 + request.inputs.modelBaselineGrowthPct),
+      growth: terminalGrowth, rate,
+    })
+  }
+  const baselineEnterpriseValue = basePresentValue + baselineTerminalValue / baseDiscountFactor
+  const scenarioEnterpriseValue = scenarioTerminalValue === null ? null : scenarioPresentValue + scenarioTerminalValue / scenarioDiscountFactor
+  const comparisonStatus = baselineEnterpriseValue <= 0 ? 'nonpositive-baseline' :
+    scenarioTerminalValue === null ? 'nonconvergent-terminal' : 'available'
   return {
     baselineEnterpriseValue,
     baselineTerminalValuePvSharePct: baselineEnterpriseValue > 0
-      ? 100 * (terminalValue / baseDiscountFactor) / baselineEnterpriseValue : null,
+      ? 100 * (baselineTerminalValue / baseDiscountFactor) / baselineEnterpriseValue : null,
     scenarioEnterpriseValue,
-    scenarioValueIndex: baselineEnterpriseValue > 0 ? scenarioEnterpriseValue / baselineEnterpriseValue * 100 : null,
+    comparisonStatus,
+    scenarioValueIndex: comparisonStatus === 'available' ? scenarioEnterpriseValue / baselineEnterpriseValue * 100 : null,
     baseline,
     scenario,
     monthly,
-    baselineTerminalValue: terminalValue,
-    scenarioTerminalValue: terminalValue,
-    terminalShockApplied: false,
+    baselineTerminalValue,
+    scenarioTerminalValue,
   }
 }
 
@@ -475,6 +501,9 @@ function attributeEffects(assumptions, bundle, request, driverIds, fullIndex) {
   for (const [index, path] of ordered.entries()) {
     const { driverId, primitive, monthlySeries, pathId, segments, channels, lagMonths, mediatedBy } = path
     const values = byDriver[driverId][primitive]
+    if (driverId === 'modelGrowth') {
+      byDriver[driverId].growthExposure = (byDriver[driverId].growthExposure ?? 0) + path.coefficient * path.entityWeight
+    }
     for (let month = 0; month < values.length; month++) values[month] += monthlySeries[month]
     const next = index === ordered.length - 1 ? fullIndex : projectDcf(assumptions, prefix, request, driverIds).scenarioValueIndex
     append({ driverId, primitive, pathId, segments, channels, lagMonths, ...(mediatedBy && { mediatedBy }) }, next)
@@ -490,7 +519,7 @@ function attributeEffects(assumptions, bundle, request, driverIds, fullIndex) {
 
 function buildEquityBridge(projection, netDebtToEvPct, listingStatus) {
   if (listingStatus === 'private') return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'not-applicable-private' }
-  if (projection.scenarioValueIndex === null) return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'unavailable-nonpositive-baseline' }
+  if (projection.scenarioValueIndex === null) return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: `unavailable-${projection.comparisonStatus}` }
   if (netDebtToEvPct === undefined) return { equityValueRatio: null, scenarioEquityValueIndex: null, quoteLinkStatus: 'missing-same-date-net-debt-to-ev' }
   const enterpriseValueRatio = projection.scenarioEnterpriseValue / projection.baselineEnterpriseValue
   const debtRatio = netDebtToEvPct / 100
@@ -513,6 +542,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
     ...mix,
     adjustedRevenueShare: mix.revenueShare * (exposureScale / company.scenarioExposureScale) * (exposureMultipliers.hbmPrice ?? 1),
   } : null
+  if (hbmPriceMix) assumptions.aspPassThrough = assumptionOverrides.aspPassThrough ?? mix.longRunPricePassThrough
   const primitiveBundle = buildPrimitiveBundle(segmentWeights, exposureScale, exposureMultipliers, pathsByDriver, hbmPriceMix)
   const projection = projectDcf(assumptions, primitiveBundle, request, selectedDriverIds)
   const comparable = projection.scenarioValueIndex !== null
@@ -520,7 +550,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
   if (includeStandalone && request.scenarioId === 'interest_rate') {
     // Reprice the same owner's or supplier's CAPEX paths at the baseline discount rate.
     // Omitting interestRate disables both discount transmission and the direct demand overlay.
-    effectAttribution.chainStandalonePct = comparable
+    effectAttribution.chainStandalonePct = projection.baselineEnterpriseValue > 0
       ? projectDcf(assumptions, primitiveBundle, request, ['hyperscalerCapex']).scenarioValueIndex - 100 : null
   }
   const difference = comparable ? projection.scenarioValueIndex - 100 : null
@@ -531,7 +561,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
     financialBasis,
     effectAttribution,
     ...(request.scenarioId === 'interest_rate' && { rateAttribution: effectAttribution }),
-    baselineValueIndex: comparable ? 100 : null,
+    baselineValueIndex: projection.baselineEnterpriseValue > 0 ? 100 : null,
     scenarioValueIndex: comparable ? round(projection.scenarioValueIndex) : null,
     valueChangePct: difference,
     driverContributions: contributions,
@@ -558,15 +588,15 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
     },
     valuation: {
       basis: actual ? `reported-revenue-${marginBasis}-dcf` : 'illustrative-normalized-8y-fcff-dcf',
-      comparisonStatus: comparable ? 'available' : 'nonpositive-baseline',
+      comparisonStatus: projection.comparisonStatus,
       cashFlowMeasure: financialBasis.fieldSources.fcffMarginPct === 'historical' ? 'fcf-proxy' : 'illustrative-fcff',
       startingRevenue: financialBasis.startingRevenue,
       currency: financialBasis.currency,
       normalizedStartingRevenue: actual ? null : financialBasis.startingRevenue,
       horizonMonths: MODEL_ASSUMPTIONS.horizonMonths,
       baselineEnterpriseValueUnits: round(projection.baselineEnterpriseValue),
-      baselineTerminalValuePvSharePct: comparable ? round(projection.baselineTerminalValuePvSharePct) : null,
-      scenarioEnterpriseValueUnits: round(projection.scenarioEnterpriseValue),
+      baselineTerminalValuePvSharePct: projection.baselineTerminalValuePvSharePct === null ? null : round(projection.baselineTerminalValuePvSharePct),
+      scenarioEnterpriseValueUnits: projection.scenarioEnterpriseValue === null ? null : round(projection.scenarioEnterpriseValue),
       enterpriseValueRatio: comparable ? round(projection.scenarioValueIndex / 100, 6) : null,
       ...equityBridge,
       baselineRevenue: projection.baseline.map(item => round(item.revenue)),
@@ -574,6 +604,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
       scenarioFcff: projection.scenario.map(item => round(item.fcff)),
       scenarioDiscountRatesPct: projection.scenario.map(item => round(item.discountRate * 100)),
       monthly: projection.monthly,
+      baselineTerminalValueAtMonth96: projection.baselineTerminalValue,
       terminalValueAtMonth96: projection.scenarioTerminalValue,
       operatingBridge: projection.scenario.map(item => ({
         year: item.year,
@@ -582,14 +613,14 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
         incrementalUnitCostUnits: round(item.incrementalUnitCost),
         incrementalCapexCashoutUnits: round(item.incrementalCapexCashout),
       })),
-      terminalShockApplied: projection.terminalShockApplied,
-      terminalValueNormalizedToBaseline: projection.scenarioTerminalValue === projection.baselineTerminalValue,
+      terminalShockApplied: true,
+      terminalValueNormalizedToBaseline: false,
     },
   }
 }
 
-function coverageForSegment(segmentId, selectedDriverIds, request) {
-  const covered = selectedDriverIds.filter(driverId => buildDriverPaths(driverId, 1, request.durationMonths).some(path => path.segmentId === segmentId))
+function coverageForSegment(segmentId, selectedDriverIds) {
+  const covered = selectedDriverIds.filter(driverId => buildDriverPaths(driverId, 1).some(path => path.segmentId === segmentId))
   return {
     status: covered.length === selectedDriverIds.length ? 'modeled' : covered.length ? 'partial' : 'not-modeled',
     coveredDriverIds: covered,
@@ -603,7 +634,7 @@ function prepareScenario(unvalidatedRequest, rateCapexFits = RATE_CAPEX_FITS, en
   const rateCapexTransmission = rateCapexTransmissionFor(request, rateCapexFits, endpoint)
   const drivers = normalizedDriverInputs(definition, request.inputs, rateCapexTransmission)
   const selectedDriverIds = drivers.map(item => item.driverId)
-  const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, request.durationMonths, item.mediatedBy)]))
+  const pathsByDriver = Object.fromEntries(drivers.map(item => [item.driverId, buildDriverPaths(item.driverId, item.normalizedShock, item.mediatedBy)]))
   let budgetPaths
   if (pathsByDriver.hyperscalerCapex) {
     // Only the four budget setters incur their own outlay and operate the new capacity.
@@ -613,7 +644,7 @@ function prepareScenario(unvalidatedRequest, rateCapexFits = RATE_CAPEX_FITS, en
     const byOwner = Object.fromEntries(HYPERSCALER_CAPEX_OWNER_IDS.map(id => {
       const change = rateCapexTransmission?.ownerChangesPct?.[id]
       const seeds = isFiniteNumber(change) && change !== rateCapexTransmission?.derivedCapexChangePct
-        ? buildDriverPaths('hyperscalerCapex', change / 100, request.durationMonths, 'interestRate', 0)
+        ? buildDriverPaths('hyperscalerCapex', change / 100, 'interestRate', 0)
         : ownerSeeds
       return [id, [...seeds, ...supplierPaths]]
     }))
@@ -649,8 +680,7 @@ export function evaluateCompanyPreview(request, companyIds) {
   const context = prepareScenario(request)
   return {
     scenario: {
-      id: context.definition.id, durationMonths: context.request.durationMonths,
-      ...(context.rateCapexTransmission && { directDurationMonths: rateDirectMonths }),
+      id: context.definition.id, persistence: 'permanent',
       ...(context.rateCapexTransmission && { rateCapexTransmission: context.rateCapexTransmission }),
     },
     companies: companyIds.map(id => valueCompany(companyById.get(id), context)),
@@ -704,7 +734,7 @@ export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPE
       name: segment.name,
       description: segment.description,
       memberCompanyIds: COMPANIES.filter(company => company.segmentIds.includes(segment.id)).map(company => company.companyId),
-      coverage: coverageForSegment(segment.id, selectedDriverIds, request),
+      coverage: coverageForSegment(segment.id, selectedDriverIds),
       ...entity,
     }
   })
@@ -723,8 +753,6 @@ export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPE
   const baselineFcffPositive = companies.every(company => company.valuation.baselineFcff.every(value => value > 0))
   const membershipCount = sum(COMPANIES.map(company => company.segmentIds.length))
   const longestPathLagMonths = Math.max(0, ...Object.values(pathsByDriver).flat().map(path => path.lagMonths))
-  const latestShockEndMonth = Math.max(longestPathLagMonths + request.durationMonths,
-    rateCapexTransmission ? rateDirectMonths : 0) + MODEL_ASSUMPTIONS.shockFadeMonths
 
   return {
     model: {
@@ -737,8 +765,8 @@ export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPE
       actualFinancialCompanyCount,
       illustrativeFinancialCompanyCount: companies.length - actualFinancialCompanyCount,
       currentPricesUsed: false,
-      terminalShockApplied: false,
-      terminalValueNormalizedToBaseline: true,
+      terminalShockApplied: true,
+      terminalValueNormalizedToBaseline: false,
       assumptionSource: MODEL_ASSUMPTIONS.assumptionSource,
       baselineInterpretation: 'reported consolidated annual revenue when available; financial cash-flow proxy transitions to mature sector assumptions',
       pathAttributionMethod: MODEL_ASSUMPTIONS.pathAttributionMethod,
@@ -749,15 +777,12 @@ export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPE
       id: definition.id,
       name: definition.name,
       description: definition.description,
-      durationMonths: request.durationMonths,
-      ...(rateCapexTransmission && { directDurationMonths: rateDirectMonths }),
-      fadeMonths: MODEL_ASSUMPTIONS.shockFadeMonths,
+      persistence: 'permanent',
       inputValues: request.inputs,
       ...(rateCapexTransmission && { rateCapexTransmission }),
       inputs: drivers,
       drivers,
       longestPathLagMonths,
-      latestShockEndMonth,
     },
     segments,
     companies,
@@ -798,8 +823,9 @@ export function evaluateScenario(unvalidatedRequest, { rateCapexFits = RATE_CAPE
       multipleSegmentMembershipsAreTagsNotCompanyDuplicates: companies.length === new Set(companies.map(company => company.companyId)).size,
       big7MemberCount: big7Members.length,
       allSelectedDriversCoverAllSegments: segments.every(item => item.coverage.status === 'modeled'),
-      latestShockEndWithinForecastHorizon: latestShockEndMonth <= MODEL_ASSUMPTIONS.horizonMonths,
-      terminalShockApplied: false,
+      allPathsBeginWithinForecastHorizon: longestPathLagMonths < MODEL_ASSUMPTIONS.horizonMonths,
+      nonconvergentCompanyCount: companies.filter(item => item.valuation.comparisonStatus === 'nonconvergent-terminal').length,
+      terminalShockApplied: true,
     },
     warnings: [
       MODEL_ASSUMPTIONS.limitation,

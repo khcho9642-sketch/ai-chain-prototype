@@ -69,7 +69,7 @@ test('keyboard moves from the current value and honors both limits', () => {
 
 test('all five scenarios expose free sliders with endpoint ticks; only rate has a folded assumption', () => {
   for (const definition of SCENARIO_DEFINITIONS) {
-    const request = { inputs: Object.fromEntries(definition.controls.map(c => [c.id, c.defaultValue])), durationMonths: 12 }
+    const request = { inputs: Object.fromEntries(definition.controls.map(c => [c.id, c.defaultValue])) }
     const html = renderDragControls(definition, request, { presetText: () => '' })
     const mainControls = definition.controls.filter(c => c.role !== 'assumption')
     for (const c of mainControls) {
@@ -79,7 +79,7 @@ test('all five scenarios expose free sliders with endpoint ticks; only rate has 
     assert.equal((html.match(/step="any" value="[^"]*" data-scenario-range=/g) || []).length, mainControls.length)
     assert.equal((html.match(/data-tick="min"/g) || []).length, mainControls.length)
     assert.equal((html.match(/data-tick="max"/g) || []).length, mainControls.length)
-    assert.doesNotMatch(html, /직접 입력|자동으로 끌어보기|충격 0으로|data-tick="zero"|--zero-pct/)
+    assert.doesNotMatch(html, /직접 입력|자동으로 끌어보기|충격 0으로|data-tick="zero"|--zero-pct|data-duration/)
     if (definition.id === 'interest_rate') {
       assert.match(html, /<details class="scenario-advanced-assumptions"><summary>가정 설정<\/summary>.*?data-scenario-control="rateCapexSensitivity"/s)
     } else assert.doesNotMatch(html, /scenario-advanced-assumptions/)
@@ -88,7 +88,7 @@ test('all five scenarios expose free sliders with endpoint ticks; only rate has 
 
 test('restored fractional value and preset selection sync the thumb without needing a text field', () => {
   const definition = SCENARIO_DEFINITIONS[0]
-  const request = { inputs: { rateChangePctPoints: 1.13426 }, durationMonths: 12 }
+  const request = { inputs: { rateChangePctPoints: 1.13426 } }
   const range = { value: '1', setAttribute() {} }, result = {}
   const field = { style: { setProperty: (k, v) => { result[k] = v } },
     querySelector: key => ({ '[data-scenario-range]': range, '[data-drag-value]': result })[key] }
@@ -97,7 +97,7 @@ test('restored fractional value and preset selection sync the thumb without need
     querySelectorAll: key => key === '[data-control-preset-id]' ? [preset] : [] }
   syncDragControls(root, definition, request)
   assert.equal(range.value, '1.13426')
-  assert.equal(result.textContent, '+1.13%p')
+  assert.equal(result.textContent, '+1.1%p')
   assert.equal(preset['aria-pressed'], 'false')
   request.inputs.rateChangePctPoints = 0.5
   syncDragControls(root, definition, request)

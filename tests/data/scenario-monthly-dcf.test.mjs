@@ -51,13 +51,18 @@ test('a flat perpetual monthly cash flow has its monthly perpetuity value at bot
   close(row.valuation.baselineTerminalValuePvSharePct, 100 / 1.10 ** 8)
 })
 
-test('a temporary rate below terminal growth is valid when the permanent discount spread is positive', () => {
-  const row = preview({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: -2, rateCapexSensitivity: 0 },
-    companyOverrides: { NVDA: { assumptions: { discountRatePct: 4, rateDiscountPassThrough: 1, terminalGrowthPct: 3 } } },
-  }, 'NVDA')
-  assert.equal(row.valuation.monthly.annualizedDiscountRatesPct[0], 2)
-  assert.equal(row.valuation.monthly.annualizedDiscountRatesPct.at(-1), 4)
-  assert.ok(row.valueChangePct > 0)
+test('a permanent WACC at or below terminal growth leaves the scenario EV and its components unvalued', () => {
+  for (const change of [-1, -2]) {
+    const row = preview({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: change, rateCapexSensitivity: 0 },
+      companyOverrides: { NVDA: { assumptions: { discountRatePct: 4, rateDiscountPassThrough: 1, terminalGrowthPct: 3 } } },
+    }, 'NVDA')
+    assert.ok(row.valuation.monthly.annualizedDiscountRatesPct.every(wacc => wacc === 4 + change))
+    assert.ok(row.valuation.baselineEnterpriseValueUnits > 0)
+    assert.equal(row.valuation.comparisonStatus, 'nonconvergent-terminal')
+    assert.equal(row.valuation.quoteLinkStatus, 'unavailable-nonconvergent-terminal')
+    assert.deepEqual([row.valuation.terminalValueAtMonth96, row.valuation.scenarioEnterpriseValueUnits,
+      row.valueChangePct, row.effectAttribution.directPct, row.effectAttribution.chainPct], Array(5).fill(null))
+  }
 })
 
 test('a price-only rent increase adds incremental cash even when the historical cash margin is negative', () => {
@@ -104,43 +109,56 @@ test('only SK Hynix selling-price exposure uses its FY2025 consolidated HBM reve
     const [sk, nvidia, micron] = live
     assert.deepEqual(live, ids.map(id => report.companies.find(company => company.id === id)))
 
-    const aspPct = price * hynixHbmSalesShareFY25 * 0.55
-    close(sk.valuation.monthly.aspPct[0], aspPct)
-    close(sk.valuation.monthly.aspPct[11], aspPct)
-    close(sk.valuation.monthly.aspPct[17], aspPct / 2)
-    assert.equal(sk.valuation.monthly.aspPct[23], 0)
-    // The prior release used 90% × 95% exposure; price-only incremental cash flow scales with the mix.
-    const oldDirectAtTenPct = 1.38229616080001
-    close(sk.effectAttribution.directPct, oldDirectAtTenPct * (price / 10) * hynixHbmSalesShareFY25 / (0.90 * 0.95))
+    const aspPct = price * hynixHbmSalesShareFY25
+    assert.ok(sk.valuation.monthly.aspPct.slice(0, 12).every(v => v === 0))
+    sk.valuation.monthly.aspPct.slice(12).forEach(v => close(v, aspPct))
+    assert.equal(sk.assumptions.aspPassThrough, 1)
+    assert.equal(sk.assumptions.hbmPriceMix.contractLagMonths, 12)
+    if (price) assert.equal(sk.paths.find(p => p.pathId === 'hbmPrice:asp:SEG3').lagMonths, 12)
+    // Permanent same-quantity price changes add after-tax price revenue to operating cash.
+    const finalProfile = sk.financialBasis.forecast.at(-1)
+    const finalIncrement = sk.valuation.baselineRevenue.at(-1) * aspPct / 100 * finalProfile.priceContributionMarginPct / 100
+    close(sk.valuation.terminalValueAtMonth96 / sk.valuation.baselineTerminalValueAtMonth96,
+      1 + finalIncrement / sk.valuation.baselineFcff.at(-1))
     assert.equal(sk.effectAttribution.chainPct, 0)
     close(sk.valueChangePct, sk.effectAttribution.directPct)
     assert.equal(nvidia.effectAttribution.directPct, 0)
-    close(nvidia.effectAttribution.chainPct, -0.021165390454825683 * price / 10)
+    assert.equal(Math.sign(nvidia.effectAttribution.chainPct), price === 0 ? 0 : -Math.sign(price))
+    if (price) {
+      assert.equal(nvidia.paths.find(p => p.primitive === 'unitCost').lagMonths, 6)
+      assert.deepEqual(nvidia.valuation.monthly.scenarioFcff.slice(0, 6), nvidia.valuation.monthly.baselineFcff.slice(0, 6))
+      const costAtYear8 = nvidia.valuation.baselineRevenue.at(-1) * (price / 100) * 0.90 * 0.35 *
+        (nvidia.segmentWeights.SEG4 + 0.45 * nvidia.segmentWeights.SEG5) *
+        nvidia.assumptions.scenarioExposureScale * nvidia.assumptions.unitCostPassThrough *
+        nvidia.financialBasis.forecast.at(-1).costOfRevenueSharePct / 100 *
+        nvidia.financialBasis.forecast.at(-1).priceContributionMarginPct / 100
+      close(nvidia.valuation.operatingBridge.at(-1).incrementalUnitCostUnits, costAtYear8)
+    }
     close(micron.valuation.monthly.aspPct[0], price * 0.4455)
   }
   const [sk, nvidia] = evaluateCompanyPreview(hbmRequest(0, 10), ids).companies
   close(sk.valuation.monthly.revenueVolumePct[0], 4.845)
-  close(sk.effectAttribution.directPct, 0.6535051321139917)
-  close(nvidia.effectAttribution.chainPct, 0.3678435653229144)
+  close(sk.valuation.monthly.revenueVolumePct.at(-1), 4.845)
+  assert.ok(sk.effectAttribution.directPct > 0 && nvidia.effectAttribution.chainPct > 0)
 })
 
 test('SK Hynix HBM price overrides scale the calibrated mix once, including zero exposure', () => {
   for (const [override, expectedWeight] of [
     [{ exposures: { hbmPrice: 0 } }, 0],
-    [{ exposures: { hbmPrice: 1 } }, 0.55],
-    [{ exposures: { hbmPrice: 2 } }, 2 * 0.55],
+    [{ exposures: { hbmPrice: 1 } }, 1],
+    [{ exposures: { hbmPrice: 2 } }, 2],
     [{ scenarioExposureScale: 0 }, 0],
-    [{ scenarioExposureScale: 0.475 }, 0.5 * 0.55],
-    [{ assumptions: { aspPassThrough: 1 } }, 1],
+    [{ scenarioExposureScale: 0.475 }, 0.5],
+    [{ assumptions: { aspPassThrough: 0.55 } }, 0.55],
     [{ assumptions: { aspPassThrough: 0 } }, 0],
   ]) {
     const row = preview(hbmRequest(10, 0, override), '000660.KS')
-    close(row.valuation.monthly.aspPct[0], 10 * hynixHbmSalesShareFY25 * expectedWeight)
+    close(row.valuation.monthly.aspPct[12], 10 * hynixHbmSalesShareFY25 * expectedWeight)
     if (expectedWeight === 0) assert.equal(row.valueChangePct, 0)
   }
 })
 
-test('annual model growth compounds monthly before company exposure, then its level gap fades in 12 months', () => {
+test('annual model growth compounds monthly before company exposure through the explicit period', () => {
   for (const [base, target] of [[50, 80], [-50, 150], [150, -50]]) {
     const row = preview({ scenarioId: 'model_growth', durationMonths: 36,
       inputs: { modelBaselineGrowthPct: base, modelTargetGrowthPct: target } }, 'OPENAI')
@@ -148,9 +166,57 @@ test('annual model growth compounds monthly before company exposure, then its le
     const volume = row.valuation.monthly.revenueVolumePct
     const exposure = volume[11] / (annualRatio - 1)
     assert.ok(exposure > 0)
-    for (const m of [1, 12, 24, 36]) close(volume[m - 1], exposure * (annualRatio ** (m / 12) - 1))
-    close(volume[41], volume[35] * 0.5)
-    assert.equal(volume[47], 0)
-    assert.equal(volume[95], 0)
+    for (const m of [1, 12, 24, 36, 42, 48, 95, 96]) close(volume[m - 1], Math.max(-100, exposure * (annualRatio ** (m / 12) - 1)))
+    if (annualRatio > 1) {
+      assert.equal(row.valuation.terminalValueAtMonth96, null)
+      assert.equal(row.valuation.comparisonStatus, 'nonconvergent-terminal')
+    }
+  }
+})
+
+test('permanent model-growth terminal equals independently discounted monthly cash, including the sales floor', () => {
+  for (const [id, target, passThrough] of [['OPENAI', 55, 0.6], ['ASML', 40, 0.6], ['OPENAI', 45, 2], ['OPENAI', -50, 2]]) {
+    const row = preview({ scenarioId: 'model_growth', inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: target },
+      companyOverrides: { [id]: { assumptions: { volumePassThrough: passThrough } } } }, id)
+    const { valuation, financialBasis, assumptions } = row
+    const q = (100 + target) / 150
+    const qMonth = q ** (1 / 12)
+    // Two uncapped observations after the last lag recover the amplitude and exposure
+    // without reusing the engine's terminal series or its path coefficients.
+    const t = id === 'ASML' ? 48 : 2
+    const series = valuation.monthly.revenueVolumePct
+    const amplitudeAtT = (series[t] - series[t - 1]) / 100 / (qMonth - 1)
+    const exposure = amplitudeAtT - series[t - 1] / 100
+    const finalCash = valuation.monthly.baselineFcff.at(-1) * 12
+    const finalRevenue = finalCash / (financialBasis.forecast.at(-1).fcffMarginPct / 100)
+    let terminalPv = 0
+    let lastVolume
+    for (let k = 1; k <= 13000; k++) {
+      const volume = Math.max(-1, amplitudeAtT * qMonth ** (96 - t + k) - exposure)
+      const year = Math.ceil(k / 12)
+      const cash = finalCash + finalRevenue *
+        financialBasis.forecast.at(-1).volumeContributionMarginPct / 100 * volume
+      terminalPv += cash / 12 * (1 + assumptions.terminalGrowthPct / 100) ** year / (1 + assumptions.discountRatePct / 100) ** (k / 12)
+      lastVolume = volume
+    }
+    close(valuation.terminalValueAtMonth96, terminalPv)
+    if (passThrough === 2) assert.equal(lastVolume, -1)
+  }
+})
+
+test('legacy duration does not change any projection or propagation lag across the five scenarios', () => {
+  for (const [scenarioId, inputs] of [
+    ['interest_rate', { rateChangePctPoints: 1 }], ['hyperscaler_capex', { capexChangePct: 10 }],
+    ['hbm_market', { hbmPriceChangePct: 10 }], ['gpu_dc_rent', { gpuRentChangePct: 10 }],
+    ['model_growth', { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 55 }],
+  ]) {
+    const run = durationMonths => evaluateCompanyPreview({ scenarioId, inputs, durationMonths }, ['000660.KS', 'NVDA'])
+    const baseline = run(undefined)
+    assert.deepEqual(run(6), baseline)
+    assert.deepEqual(run(36), baseline)
+    assert.equal(baseline.scenario.persistence, 'permanent')
+    for (const row of baseline.companies) {
+      assert.notEqual(row.valuation.terminalValueAtMonth96, row.valuation.baselineTerminalValueAtMonth96)
+    }
   }
 })

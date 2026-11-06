@@ -79,8 +79,9 @@ test('default inputs are a computed zero-shock identity for all five scenarios',
     assert.equal(result.checks.zeroShockIdentity, true)
     assert.equal(result.checks.finiteResults, true)
     assert.equal(result.checks.positiveBaselineFcff, false)
-    assert.equal(result.checks.terminalShockApplied, false)
-    assert.equal(result.checks.latestShockEndWithinForecastHorizon, true)
+    assert.equal(result.checks.terminalShockApplied, true)
+    assert.equal(result.scenario.persistence, 'permanent')
+    assert.equal(result.checks.allPathsBeginWithinForecastHorizon, true)
   }
 })
 
@@ -148,7 +149,7 @@ test('model growth input compares baseline to target as a relative revenue chang
   assert.ok(result.segments.every(item => item.coverage.status === 'modeled'))
 })
 
-test('rate input is percentage points and changes annual WACC only while active', () => {
+test('rate input is percentage points and changes WACC throughout the valuation', () => {
   const result = evaluateScenario({
     scenarioId: 'interest_rate', durationMonths: 12,
     inputs: { rateChangePctPoints: 1 },
@@ -156,20 +157,22 @@ test('rate input is percentage points and changes annual WACC only while active'
   assert.ok(result.segments.every(item => item.scenarioValueIndex < 100))
   const dataCenter = segment(result, 'SEG7')
   assert.ok(dataCenter.valuation.scenarioDiscountRatesPct[0] > dataCenter.assumptions.discountRatePct)
-  assert.equal(dataCenter.valuation.scenarioDiscountRatesPct.at(-1), dataCenter.assumptions.discountRatePct)
-  assert.equal(dataCenter.valuation.terminalShockApplied, false)
+  assert.equal(dataCenter.valuation.scenarioDiscountRatesPct.at(-1), dataCenter.valuation.scenarioDiscountRatesPct[0])
+  assert.equal(dataCenter.valuation.terminalShockApplied, true)
 })
 
-test('eight-year horizon contains maximum shock tail and terminal value is baseline-normalized', () => {
+test('eight-year horizon contains each onset and leaves a divergent terminal unvalued', () => {
   const result = evaluateScenario({
     scenarioId: 'model_growth', durationMonths: 36,
     inputs: { modelBaselineGrowthPct: 50, modelTargetGrowthPct: 100 },
   })
   assert.equal(result.model.forecastYears, 8)
   assert.equal(result.model.horizonMonths, 96)
-  assert.ok(result.scenario.latestShockEndMonth <= result.model.horizonMonths)
-  assert.equal(result.checks.latestShockEndWithinForecastHorizon, true)
-  assert.ok(result.companies.every(item => item.valuation.terminalValueNormalizedToBaseline))
+  assert.ok(result.scenario.longestPathLagMonths < result.model.horizonMonths)
+  assert.equal(result.checks.allPathsBeginWithinForecastHorizon, true)
+  assert.ok(result.checks.nonconvergentCompanyCount > 0)
+  assert.equal(result.universe.valueChangePct, null)
+  assert.ok(result.companies.every(item => !item.valuation.terminalValueNormalizedToBaseline))
 })
 
 test('multi-segment roles do not duplicate companies and Big7 remains equal weighted', () => {
@@ -420,7 +423,8 @@ test('model revenue contraction and recovery preserve growth-rate arithmetic', (
   assert.ok(segment(contraction, 'SEG9').scenarioValueIndex < 100)
   const recovery = evaluateScenario({ scenarioId: 'model_growth', durationMonths: 12, inputs: { modelBaselineGrowthPct: -20, modelTargetGrowthPct: 0 } })
   closeTo(recovery.scenario.drivers[0].normalizedShock, 0.25)
-  assert.ok(segment(recovery, 'SEG9').scenarioValueIndex > 100)
+  assert.ok(segment(recovery, 'SEG9').valuation.monthly.revenueVolumePct.at(-1) > 0)
+  assert.equal(segment(recovery, 'SEG9').valuation.comparisonStatus, 'nonconvergent-terminal')
 })
 
 const rateScenario = (rateChangePctPoints, rateCapexSensitivity, durationMonths = 12, companyOverrides = {}) =>
@@ -555,7 +559,7 @@ test('rate-sensitive CAPEX uses the existing budget shock exactly once with exis
   }
 })
 
-test('rate duration, direction, zero shock and sensitivity change the conditional CAPEX effects', () => {
+test('rate direction, zero shock and sensitivity change conditional CAPEX, legacy duration is ignored', () => {
   const halfYear = rateScenario(1, 5, 6)
   const fullYear = rateScenario(1, 5)
   const cut = rateScenario(-1, 5)
@@ -570,7 +574,7 @@ test('rate duration, direction, zero shock and sensitivity change the conditiona
   for (const id of ['NVDA', '000660.KS']) {
     const normal = company(fullYear, id).rateAttribution
     assert.equal(company(halfYear, id).rateAttribution.directPct, normal.directPct)
-    assert.ok(Math.abs(company(halfYear, id).rateAttribution.chainPct) < Math.abs(normal.chainPct))
+    assert.equal(company(halfYear, id).rateAttribution.chainPct, normal.chainPct)
     assert.ok(company(cut, id).rateAttribution.chainPct > 0)
     assert.equal(company(stronger, id).rateAttribution.directPct, normal.directPct)
     assert.ok(company(stronger, id).rateAttribution.chainPct < normal.chainPct)

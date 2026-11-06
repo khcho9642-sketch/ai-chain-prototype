@@ -79,12 +79,15 @@ export function decomposeCompany(company) {
   const rate = company.rateAttribution
   const counterfactual = rate ?? company.effectAttribution
   const method = rate ? RATE_METHOD : counterfactual ? VIEW_MODEL_METHOD : '이전 모형의 경로 기여도 배분'
-  if (company.valueChangePct === null && company.valuation?.comparisonStatus === 'nonpositive-baseline') {
+  const status = company.valuation?.comparisonStatus
+  if (company.valueChangePct === null && ['nonpositive-baseline', 'nonconvergent-terminal'].includes(status)) {
     return {
       ...company, totalPct: null, directPct: null, chainPct: null, residualPct: null,
       rawDirectPct: null, rawChainPct: null, breakdownAvailable: false,
-      reconciliationStatus: 'nonpositive-baseline', grade: VIEW_MODEL_GRADE,
-      method, breakdownNote: '기준가치가 0 이하라 변화율을 산정할 수 없습니다.',
+      reconciliationStatus: status, grade: VIEW_MODEL_GRADE,
+      method, breakdownNote: status === 'nonconvergent-terminal'
+        ? '충격이 유지되면 잔존 현금흐름이 할인율만큼 또는 그보다 빨리 증가해 유한한 기업가치를 산정할 수 없습니다.'
+        : '기준 기업가치가 0 이하라 EV 변화율과 직접·밸류체인 효과를 산정할 수 없습니다.',
       paths: [], topPath: null, oneLinePath: null, maxPropagation: { hops: 0, lagMonths: 0 },
     }
   }

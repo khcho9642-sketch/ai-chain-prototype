@@ -48,8 +48,10 @@ test('financial extract preserves the latest period and exports only comparable 
   t.after(() => db.close())
   for (const y of [2024,2025,2027]) period(db,y)
   fact(db,2024,'revenue','11',{exponent:3})
+  fact(db,2024,'operating_income','5')
   fact(db,2024,'capital_expenditure','-16')
   fact(db,2025,'revenue','10',{exponent:3})
+  fact(db,2025,'operating_income','-2',{exponent:3})
   fact(db,2025,'operating_cash_flow','-3')
   fact(db,2025,'capital_expenditure','0',{currency:'KRW'})
   fact(db,2025,'free_cash_flow','22')
@@ -61,6 +63,9 @@ test('financial extract preserves the latest period and exports only comparable 
   assert.deepEqual(company.years.map(y => y.fiscalYear),[2025,2024])
   const latest = company.years[0].facts
   assert.equal(latest.revenue.value,10000)
+  assert.equal(latest.operatingIncome.value,-2000)
+  assert.equal(latest.operatingIncome.grade,'C')
+  assert.equal(latest.operatingIncome.url,'https://finance.yahoo.com/quote/AAPL/financials/')
   assert.equal(latest.operatingCashFlow.value,-3)
   assert.equal(latest.freeCashFlow,undefined)
   assert.equal(latest.capitalExpenditure,undefined)
@@ -78,10 +83,12 @@ test('missing latest sales keeps its actual year and never substitutes an older 
   fact(db,2024,'revenue','30')
   db.exec("INSERT INTO source_documents VALUES ('future','YAHOO','https://finance.yahoo.com','2027-01-03','2026-11-05','db-AAPL')")
   fact(db,2025,'revenue','4',{doc:'future'})
+  fact(db,2025,'operating_income','2',{currency:'EUR'})
   const company = extractFinancialBaselines(db,'2026-11-05').baselines.AAPL
   assert.equal(company.status,'unavailable')
   assert.equal(company.years[0].fiscalYear,2025)
   assert.equal(company.years[0].facts.revenue,undefined)
+  assert.equal(company.years[0].facts.operatingIncome,undefined)
   assert.equal(company.years[1].facts.revenue.value,30)
 })
 

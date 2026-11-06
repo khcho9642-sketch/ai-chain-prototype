@@ -28,7 +28,7 @@ import {
 } from '../../assets/scenario-view-model.js'
 
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url))
-const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-view-model.js', 'scenario-drag.js', 'scenario-explorer.js', 'scenario.css', 'scenario.js']
+const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-rate-fits.js', 'scenario-view-model.js', 'scenario-drag.js', 'scenario-explorer.js', 'scenario-format.js', 'scenario-profit-check.js', 'scenario.css', 'scenario.js']
 const segmentNames = [
   '반도체 소부장', '파운드리·패키징', '메모리', 'AI 칩', 'AI 장비',
   '전력·냉각', '데이터센터', '클라우드·GPU 컴퓨팅', 'AI 모델',
@@ -99,6 +99,10 @@ test('scenario contract keeps five cases, nine named segments and the complete B
 
   for (const scenarioId of scenarioIds) {
     const request = buildDefaultScenarioRequest(scenarioId)
+    assert.equal(Object.hasOwn(request, 'durationMonths'), false)
+    for (const durationMonths of [6, 12, 24, 36]) {
+      assert.deepEqual(validateScenarioRequest({ ...request, durationMonths }), request)
+    }
     assert.deepEqual(validateScenarioRequest(structuredClone(request)), request)
     const output = evaluateScenario(request)
     assert.equal(output.segments.length, 9)
@@ -127,7 +131,7 @@ test('scenario contract keeps five cases, nine named segments and the complete B
 })
 
 test('scenario engine and browser module do not call external source endpoints', async () => {
-  for (const name of ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-view-model.js', 'scenario-drag.js', 'scenario-explorer.js', 'scenario.js']) {
+  for (const name of scenarioAssets.filter(asset => asset.endsWith('.js'))) {
     const source = await readFile(join(sourceRoot, 'assets', name), 'utf8')
     assert.doesNotMatch(source, /\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource/u, `${name} must remain a local deterministic consumer`)
   }

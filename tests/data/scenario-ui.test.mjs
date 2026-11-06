@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import './scenario-drag.test.mjs'
+import { evaluateScenario } from '../../assets/scenario-core.js'
+import { signedValue } from '../../assets/scenario-format.js'
 
 const waitFor = async (predicate, timeoutMs = 3000) => {
   const started = Date.now()
@@ -41,7 +43,7 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.equal((root.innerHTML.match(/class="scenario-choice/g) || []).length, 5)
   assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
   assert.doesNotMatch(root.innerHTML, /data-scenario-reset|data-drag-play|data-scenario-control="rateChangePctPoints"/)
-  assert.match(root.innerHTML, /data-duration="12" aria-pressed="true"/)
+  assert.doesNotMatch(root.innerHTML, /data-duration|종료 후 12개월|전파 기간은 따로/)
   for (const label of ['가장 크게 빠지는 기업 · 전체 41개', '전파 효과가 가장 큰 기업 · 전체 41개', '9개 섹터 대표기업 단순평균']) assert.match(root.innerHTML, new RegExp(label))
   assert.match(root.innerHTML, /<th>직접효과<\/th><th>밸류체인 효과<\/th><th>총 EV 변화<\/th>/)
   assert.match(root.innerHTML, /scenario-impact-bar/)
@@ -50,13 +52,16 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /공개 재무 없음 · 섹터 가정/)
   assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
   assert.match(root.innerHTML, /공시 직접 \/ B · 공시 기반 추정 \/ C · 가정/)
-  assert.match(root.innerHTML, /금리 \+1%p → 4사 전사 CAPEX 추정 −5.04%/)
+  assert.match(root.innerHTML, /금리 \+1\.0%p → 4사 전사 CAPEX 추정 −5\.0%/)
   const focusRow = id => root.innerHTML.split(`data-live-company="${id}"`)[1].split('</article>')[0]
   assert.match(focusRow('NVDA'), /서버·장비 → AI 칩 · 시차 12개월/)
   assert.match(focusRow('000660.KS'), /메모리\(HBM 포함\) · 시차 18개월/)
   const values = id => focusRow(id).match(/aria-label="직접 ([^,]+), 밸류체인 ([^,]+), 총 ([^"]+)"/).slice(1)
-  assert.deepEqual(values('NVDA'), ['−0.59%', '−0.16%', '−0.74%'])
-  assert.deepEqual(values('000660.KS'), ['−0.54%', '−0.06%', '−0.60%'])
+  const initial = evaluateScenario({ scenarioId: 'interest_rate', inputs: { rateChangePctPoints: 1 } })
+  for (const id of ['NVDA', '000660.KS']) {
+    const company = initial.companies.find(row => row.companyId === id)
+    assert.deepEqual(values(id), [company.rateAttribution.directPct, company.rateAttribution.chainPct, company.valueChangePct].map(value => signedValue(value)))
+  }
   assert.match(root.innerHTML, /96개월 현금흐름 전망/)
   assert.match(root.innerHTML, /관측·환산주가 보기/)
   assert.doesNotMatch(root.innerHTML, /scenario-quote-observation/, 'quotes are hidden until requested')
@@ -88,14 +93,14 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /현금흐름 마진은 37개사/)
   listeners.get('click')({ target: { closest: selector => selector === '[data-explore-company]' ? { dataset: { companyId: 'NVDA' } } : null } })
   window.renderScenario()
-  assert.match(details(), /금리 \+1%p → 4사 전사 CAPEX 추정 −5.04% →/)
+  assert.match(details(), /금리 \+1\.0%p → 4사 전사 CAPEX 추정 −5\.0% →/)
   assert.doesNotMatch(details(), /감소율 \+5% →/)
   assert.match(details(), /FY2026 · 2026-01-25 결산 · 연결 · 금액 단위 USD 백만/)
-  assert.match(details(), /<dt>매출<\/dt><dd>215,938<\/dd>/)
-  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>96,676<\/dd>/)
+  assert.match(details(), /<dt>매출<\/dt><dd>215,938\.0<\/dd>/)
+  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>96,676\.0<\/dd>/)
   assert.match(details(), /네이버페이 증권<\/a> · 2차 출처 C/)
   assert.match(details(), /Yahoo Finance<\/a> · 2차 출처 C/)
-  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+44.77%<\/td><td>실적 기반/)
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44\.8%<\/td><td>\+44\.8%<\/td><td>실적 기반/)
   assert.match(details(), /현금흐름 할인값\(EV\) · 기준 /)
   assert.doesNotMatch(details(), /정규화 단위/)
   selectCompany('DLR')
@@ -114,7 +119,7 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(details(), /정규화 단위/)
   assert.doesNotMatch(details(), /금액 단위 USD|2차 출처|<dt>매출/)
   selectCompany('CRWV')
-  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>-7,251<\/dd>/)
+  assert.match(details(), /<dt>FCF 대용치<\/dt><dd>-7,251\.0<\/dd>/)
   const enterAssumption = (field, value, id) => {
     const input = { dataset: { companyId: id, companyAssumption: field }, value, removeAttribute() {} }
     listeners.get('input')({ target: { closest: selector => selector === '[data-company-assumption]' ? input : null } })
@@ -135,23 +140,24 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.deepEqual(budgetCases(), ['상단 CAPEX 시나리오 결과', '선택한 점추정 결과', '하단 CAPEX 시나리오 결과'])
   selectCompany('NVDA')
   enterAssumption('fcffMarginPct', '20', 'NVDA')
-  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+20.00%<\/td><td>사용자 가정 C/)
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44\.8%<\/td><td>\+20\.0%<\/td><td>사용자 가정 C/)
   enterAssumption('fcffMarginPct', '', 'NVDA')
-  assert.match(details(), /현금흐름 마진<\/th><td>\+44.77%<\/td><td>\+44.77%<\/td><td>실적 기반/)
-  selectCompany(selectedBefore)
+  assert.match(details(), /현금흐름 마진<\/th><td>\+44\.8%<\/td><td>\+44\.8%<\/td><td>실적 기반/)
+  const quoteCompany = 'NVDA'
+  selectCompany(quoteCompany)
 
   // Editing a live field must update the quote without replacing the input or waiting for blur.
   const outlet = { innerHTML: '' }
   const detail = { innerHTML: '', querySelectorAll: () => [], querySelector: selector => selector === '[data-company-quote]' ? outlet : null }
   root.querySelector = selector => selector === '[data-scenario-detail]' ? detail : null
   listeners.get('window:market-snapshot')({ detail: { quotes: [{
-    symbol: selectedBefore, status: 'ok', price: 100, currency: 'USD', marketTime: 1700000000, source: 'test',
+    symbol: quoteCompany, status: 'ok', price: 100, currency: 'USD', marketTime: 1700000000, source: 'test',
   }] } })
   listeners.get('click')({ target: { closest: selector => selector === '[data-toggle-quotes]' ? {} : null } })
   assert.match(detail.innerHTML, /환산주가 미산정/)
   const originalDetail = detail.innerHTML
   const field = {
-    dataset: { companyId: selectedBefore, companyAssumption: 'netDebtToEvPct' },
+    dataset: { companyId: quoteCompany, companyAssumption: 'netDebtToEvPct' },
     value: '33', removeAttribute() {},
   }
   listeners.get('input')({ target: { closest: selector => selector === '[data-company-assumption]' ? field : null } })
@@ -178,15 +184,15 @@ test('scenario chapter renders compact controls and view-model tables without in
     await import(`../../assets/scenario.js?stored-launch=${version}-${Date.now()}`)
     await waitFor(() => root.innerHTML.includes('scenario-shell'))
     assert.equal(stored.scenarioId, 'interest_rate')
-    assert.equal(stored.requests.interest_rate.durationMonths, 12)
+    assert.ok(!Object.hasOwn(stored.requests.interest_rate, 'durationMonths'))
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1)
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, version === 3 ? 7 : 5)
     assert.equal(stored.requests.interest_rate.companyOverrides.EQIX.assumptions.netDebtToEvPct, 12)
-    assert.equal(stored.requests.hyperscaler_capex.durationMonths, 6)
+    assert.ok(!Object.hasOwn(stored.requests.hyperscaler_capex, 'durationMonths'))
     assert.equal(stored.requests.hyperscaler_capex.inputs.capexChangePct, 0, 'restore an explicitly saved neutral shock')
     assert.equal(stored.requests.gpu_dc_rent.inputs.gpuRentChangePct, 20, 'unvisited scenario starts with a visible example')
     assert.match(root.innerHTML, /data-control-preset-value="1" aria-pressed="true"/)
-    assert.match(root.innerHTML, /data-duration="12" aria-pressed="true"/)
+    assert.doesNotMatch(root.innerHTML, /data-duration|종료 후 12개월|전파 기간은 따로/)
     assert.match(root.innerHTML, /data-sort-representatives aria-pressed="true"/)
     assert.match(root.innerHTML, /data-toggle-quotes aria-pressed="false"/)
     assert.match(root.innerHTML, /<th>대표기업<\/th>/)
@@ -206,7 +212,7 @@ test('scenario chapter renders compact controls and view-model tables without in
       queuedFrame()
     }
     dragRate(0)
-    assert.match(live.innerHTML, /0\.00%/)
+    assert.match(live.innerHTML, /0\.0%/)
     const barScale = html => html.match(/class="scenario-live-axis">([^<]+)/)[1]
     const zeroScale = barScale(live.innerHTML)
     assert.equal(stored.requests.interest_rate.inputs.rateChangePctPoints, 1, 'preview precedes commit')
@@ -230,21 +236,20 @@ test('scenario chapter renders compact controls and view-model tables without in
       window.renderScenario()
     }
     typeSensitivity('0')
-    assert.deepEqual(values('NVDA').slice(1), ['0.00%', values('NVDA')[0]])
-    assert.match(root.innerHTML, /CAPEX 감소율 가정 0% · 전파 꺼짐/)
+    assert.deepEqual(values('NVDA').slice(1), ['0.0%', values('NVDA')[0]])
+    assert.match(root.innerHTML, /CAPEX 감소율 가정 0\.0% · 전파 꺼짐/)
     typeSensitivity('8')
-    click('[data-duration]', { duration: '6' })
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
-    assert.match(root.innerHTML, /금리 \+2%p → 빅테크 AI CAPEX −16%/)
+    assert.match(root.innerHTML, /금리 \+2\.0%p → 빅테크 AI CAPEX −16\.0%/)
     dragRate(0)
     listeners.get('change')(rangeEvent)
     window.renderScenario()
     assert.equal(stored.requests.interest_rate.inputs.rateCapexSensitivity, 8)
-    assert.deepEqual(values('000660.KS'), ['0.00%', '0.00%', '0.00%'])
+    assert.deepEqual(values('000660.KS'), ['0.0%', '0.0%', '0.0%'])
     dragRate(-1)
     listeners.get('change')(rangeEvent)
     window.renderScenario()
-    assert.match(root.innerHTML, /금리 −1%p → 빅테크 AI CAPEX \+8%/)
+    assert.match(root.innerHTML, /금리 −1\.0%p → 빅테크 AI CAPEX \+8\.0%/)
     for (const [scenarioId, expected] of [
       ['hyperscaler_capex', ['MSFT', 'NVDA']], ['hbm_market', ['000660.KS', 'NVDA']],
       ['gpu_dc_rent', ['EQIX', 'MSFT']], ['model_growth', ['META', 'MSFT']],
@@ -253,10 +258,27 @@ test('scenario chapter renders compact controls and view-model tables without in
       assert.doesNotMatch(root.innerHTML, /data-scenario-control="rateCapexSensitivity"/)
       assert.deepEqual([...root.innerHTML.matchAll(/data-live-company="([^"]+)"/g)].map(match => match[1]), expected)
       if (scenarioId === 'hbm_market') {
+        for (const [id, value] of [['hbmSupplyChangePct', 0], ['hbmPriceChangePct', 10]]) {
+          range.dataset.scenarioRange = id
+          dragRate(value)
+          const beforeCommit = live.innerHTML
+          listeners.get('change')(rangeEvent)
+          assert.equal(live.innerHTML, beforeCommit, 'price checks update while dragging and agree with committed results')
+        }
+        window.renderScenario()
         selectCompany('000660.KS')
         assert.match(details(), /HBM 비중 추정 30\.5% \(C\)/)
-        assert.match(details(), /실현단가 반영률 55\.0%/)
-        assert.match(details(), /연결매출 변화는 \+1\.68%/)
+        assert.match(details(), /기본 장기 반영률은 100\.0%/)
+        assert.match(details(), /계약 갱신 후 연결매출 변화는 \+3\.[01]%/)
+        assert.match(details(), /계약 시차 12개월/)
+        assert.match(details(), /연간 추가 매출 3\.0조 원 × FY2025 영업이익률 48\.6% = 영업이익 증감 1\.4조 원/)
+        assert.match(details(), /단순 검산 EV<\/dt><dd>\+3\.1%[\s\S]*가격만 적용한 DCF<\/dt><dd>\+15\.0%/)
+        assert.match(details(), /절대 변화폭 4\.9배/)
+        assert.match(details(), /q3-2026-business-results/)
+        assert.match(details(), /연결 영업이익 <a href=/)
+        assert.match(details(), /단순 검산 EV[\s\S]*가격만 적용한 DCF/)
+        assert.match(focusRow('000660.KS'), /가격만 적용한 DCF/)
+        assert.match(focusRow('NVDA'), /가격만 적용한 DCF/)
         selectCompany('NVDA')
         assert.doesNotMatch(details(), /HBM 비중 추정/)
       }
@@ -281,7 +303,7 @@ test('scenario chapter renders compact controls and view-model tables without in
   await reload('restored')
   assert.match(root.innerHTML, /value="historical-significant" selected>과거 관계\(유의한 회사만\)/)
   assert.match(root.innerHTML, /type="number" disabled [^>]*data-scenario-control="rateCapexSensitivity"/)
-  assert.match(root.innerHTML, /유의 계수 적용 · 4사 전사 CAPEX 추정 −5.16%/)
+  assert.match(root.innerHTML, /유의 계수 적용 · 4사 전사 CAPEX 추정 −5\.2%/)
   selectMode('manual')
   assert.doesNotMatch(root.innerHTML, /금리·CAPEX 계수 민감도 밴드/)
   assert.doesNotMatch(root.innerHTML, /type="number" disabled [^>]*data-scenario-control="rateCapexSensitivity"/)
