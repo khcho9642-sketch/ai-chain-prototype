@@ -23,7 +23,7 @@ const cap = symbol => ({ symbol, marketCap: 1000, currency: 'USD', sharesOutstan
   marketCapBasis: 'provider-current', fetchedAt: attemptAt })
 const universe = symbols => ({ targets: symbols.map(item), coverage: { companyCount: symbols.length, listedCompanyCount: symbols.length, unmapped: [] } })
 const defaults = {
-  now, logger, includeHistories: false,
+  now, logger, includeHistories: false, collectionEnabled: true,
   closeService: async symbol => closing(symbol),
   batchService: async symbols => ({ quotes: symbols.map(cap), errors: [] }),
   chartService: async () => { throw new Error('unexpected chart request') },
@@ -209,4 +209,21 @@ test('an older provider close cannot replace a more recent successful trading da
   assert.equal(data.quotes[1].status, 'stale')
   assert.equal(data.quotes[1].fetchedAt, oldFetchedAt)
   assert.match(data.quotes[1].error, /이전 성공값보다/)
+})
+
+
+test('paused collection makes no provider calls and leaves existing snapshot bytes and dates unchanged', async t => {
+  const previous = { schemaVersion: 1, generatedAt: oldFetchedAt, quotes: [closing('NVDA', { fetchedAt: oldFetchedAt })] }
+  const { root, output, raw } = await outputFixture(t, previous)
+  let calls = 0
+  const unexpected = async () => { calls++; throw new Error('provider must not be called while collection is paused') }
+  const result = await collect(output, {
+    universe: universe(['NVDA']), logger,
+    closeService: unexpected, batchService: unexpected, chartService: unexpected, homeEnricher: unexpected,
+  })
+  assert.equal(result.status, 'paused')
+  assert.equal(result.paused, true)
+  assert.equal(calls, 0)
+  assert.equal(await readFile(output, 'utf8'), raw)
+  assert.deepEqual(await readdir(root), ['market.json'])
 })

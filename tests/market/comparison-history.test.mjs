@@ -70,7 +70,7 @@ test('compaction preserves exact closes and removes OHLCV and invalid or future 
 test('collector requests only AI members and stores compact daily closes with bounded concurrency',async t=>{
   const {output}=await outputFile(t),calls=[]
   let active=0,maximum=0
-  const data=await collectComparisonHistory(output,{catalog,now:()=>now,logger:quiet,concurrency:2,chartService:async(symbol,range)=>{
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>now,logger:quiet,concurrency:2,chartService:async(symbol,range)=>{
     calls.push([symbol,range]);active++;maximum=Math.max(maximum,active)
     await new Promise(resolve=>setTimeout(resolve,5));active--
     return quote(catalog.find(item=>item.symbol===symbol))
@@ -91,7 +91,7 @@ test('three-year collection excludes a started but unfinished daily session befo
       indicators:{quote:[{close:[100,110,999]}]},
     }],error:null}})}
   }})
-  const data=await collectComparisonHistory(output,{catalog:[catalog[0]],now:()=>collectionTime,logger:quiet,chartService:daily})
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog:[catalog[0]],now:()=>collectionTime,logger:quiet,chartService:daily})
   assert.deepEqual(data.quotes[0].bars.map(bar=>bar.close),[100,110])
   assert.equal(urls.length,1)
   assert.equal(urls[0].searchParams.get('interval'),'1d')
@@ -101,7 +101,7 @@ test('three-year collection excludes a started but unfinished daily session befo
 test('partial failures retain actual old quote times, not the new snapshot time',async t=>{
   const {output}=await outputFile(t),old=quote(catalog[1],{fetchedAt:'2024-01-02T12:00:00Z'})
   await writeFile(output,JSON.stringify(snapshot([old])))
-  const data=await collectComparisonHistory(output,{catalog,now:()=>now,logger:quiet,chartService:async symbol=>{
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>now,logger:quiet,chartService:async symbol=>{
     if(symbol==='B')throw new Error('Provider unavailable')
     return quote()
   }})
@@ -118,7 +118,7 @@ test('failed refresh trims an unconfirmed legacy current-day tail while preservi
     {time:Date.parse('2026-11-06T14:30:00Z')/1000,close:999},
   ]})
   await writeFile(output,JSON.stringify(snapshot([old],{generatedAt:old.fetchedAt})))
-  const data=await collectComparisonHistory(output,{catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
     if(symbol==='B')throw new Error('Provider unavailable')
     return quote(catalog[0],{fetchedAt:new Date(collectionTime).toISOString()})
   }})
@@ -136,7 +136,7 @@ test('a legacy fallback with fewer than two confirmed closes remains unavailable
     {time:Date.parse('2026-11-06T14:30:00Z')/1000,close:999},
   ]})
   await writeFile(output,JSON.stringify(snapshot([old],{generatedAt:old.fetchedAt})))
-  const data=await collectComparisonHistory(output,{catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>collectionTime,logger:quiet,chartService:async symbol=>{
     if(symbol==='B')throw new Error('Provider unavailable')
     return quote(catalog[0],{fetchedAt:new Date(collectionTime).toISOString()})
   }})
@@ -148,7 +148,7 @@ test('a legacy fallback with fewer than two confirmed closes remains unavailable
 })
 test('missing prior observations stay unavailable and one-year responses never become three years',async t=>{
   const {output}=await outputFile(t)
-  const data=await collectComparisonHistory(output,{catalog,now:()=>now,logger:quiet,chartService:async symbol=>symbol==='A'?quote():quote(catalog[1],{range:'1y'})})
+  const data=await collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>now,logger:quiet,chartService:async symbol=>symbol==='A'?quote():quote(catalog[1],{range:'1y'})})
   const missing=data.quotes.find(item=>item.symbol==='B')
   assert.equal(missing.status,'error');assert.equal(missing.fetchedAt,null);assert.deepEqual(missing.bars,[])
   assert.match(missing.error,/3년 일봉/)
@@ -156,9 +156,9 @@ test('missing prior observations stay unavailable and one-year responses never b
 test('all failures and oversize responses preserve the old file byte for byte',async t=>{
   const {output,folder}=await outputFile(t),original=JSON.stringify(snapshot([quote(),quote(catalog[1])]))+'\n'
   await writeFile(output,original)
-  await assert.rejects(collectComparisonHistory(output,{catalog,now:()=>now,logger:quiet,chartService:async()=>{throw new Error('Unavailable')}}),/전체/)
+  await assert.rejects(collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>now,logger:quiet,chartService:async()=>{throw new Error('Unavailable')}}),/전체/)
   assert.equal(await readFile(output,'utf8'),original)
-  await assert.rejects(collectComparisonHistory(output,{catalog,now:()=>now,logger:quiet,maxBytes:100,chartService:async symbol=>quote(catalog.find(item=>item.symbol===symbol))}),/크기 제한/)
+  await assert.rejects(collectComparisonHistory(output,{collectionEnabled:true,catalog,now:()=>now,logger:quiet,maxBytes:100,chartService:async symbol=>quote(catalog.find(item=>item.symbol===symbol))}),/크기 제한/)
   assert.equal(await readFile(output,'utf8'),original);assert.deepEqual(await readdir(folder),['comparison-history.json'])
 })
 function responseRecorder(){return {headers:{},statusCode:0,body:undefined,setHeader(name,value){this.headers[name]=value},end(body){this.body=body}}}
@@ -177,4 +177,17 @@ test('comparison API serves validated public Pages data with GET, HEAD and metho
   const error=responseRecorder();await broken({method:'GET'},error)
   assert.equal(error.statusCode,502);assert.equal(error.headers['Cache-Control'],'no-store')
   assert.ok(!error.body.includes('비교 일봉 스냅샷 오류'))
+})
+
+
+test('paused comparison collection makes no provider calls and preserves stored history byte for byte', async t=>{
+  const {output,folder}=await outputFile(t),original=JSON.stringify(snapshot([quote(),quote(catalog[1])]))+'\n'
+  await writeFile(output,original)
+  let calls=0
+  const result=await collectComparisonHistory(output,{catalog,logger:quiet,chartService:async()=>{calls++;throw new Error('unexpected provider request')}})
+  assert.equal(result.status,'paused')
+  assert.equal(result.paused,true)
+  assert.equal(calls,0)
+  assert.equal(await readFile(output,'utf8'),original)
+  assert.deepEqual(await readdir(folder),['comparison-history.json'])
 })

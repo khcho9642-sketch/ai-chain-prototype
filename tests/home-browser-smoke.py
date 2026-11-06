@@ -93,6 +93,7 @@ feeds = {'market': fixture_data['market'], 'ripple': fixture_data['ripple'], 'ma
 page_errors = []
 pages = []
 checks = []
+price_requests = []
 
 def percent(value):
     return ('+' if value > 0 else '') + f'{value:.2f}%'
@@ -117,11 +118,15 @@ def attach_routes(context):
             encoded[name]=cached
         return cached[1]
     def market_response(route):
+        price_requests.append(route.request.url)
         route.fulfill(status=feeds['market_status'], content_type='application/json', body=payload('market'))
     def ripple_response(route):
+        price_requests.append(route.request.url)
         route.fulfill(status=feeds['ripple_status'], content_type='application/json', body=payload('ripple'))
+    context.route('**/data/market-display.json', market_response)
     context.route('**/api/snapshot?*', market_response)
     context.route('**/data/market.json?*', market_response)
+    context.route('**/data/ripple.json', ripple_response)
     context.route('**/api/ripple?*', ripple_response)
     context.route('**/data/ripple.json?*', ripple_response)
     context.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"homepage browser fixture: market calls disabled"}'))
@@ -150,6 +155,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
             context = browser.new_context(ignore_https_errors=True, viewport={'width':1440,'height':1100})
             attach_routes(context)
             page = new_page(context)
+            page.clock.install()
             try:
                 page.goto(origin+'/#home')
                 home = wait_home(page)
@@ -272,18 +278,16 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 page.goto(origin+'/#home'); home=wait_home(page)
                 previous_date=home.locator('[data-home-close-date]').inner_text()
                 previous_trigger=home.locator('.ripple-trigger-card').get_attribute('data-ripple-node')
-                feeds['ripple_status']=503
-                newer=json.loads(json.dumps(feeds['market']))
-                # A genuinely newer market file makes the old derived feed stale.
-                newer['generatedAt']=newer['generatedAt'].replace('Z','+00:00')
-                page.evaluate("value => {value.generatedAt=new Date(Date.parse(value.generatedAt)+2000).toISOString();window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}));}",newer)
-                home.locator('[data-ripple-status]').filter(has_text='이전 수집값').wait_for()
-                assert home.locator('.ripple-trigger-card').get_attribute('data-ripple-node')==previous_trigger
-                feeds['market_status']=503
+                before_requests=list(price_requests)
+                assert '시세 수집 중지' in home.locator('[data-home-market-policy]').inner_text()
+                page.clock.fast_forward(185000)
                 page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
-                home.locator('[data-home-close-date]').filter(has_text='이전 수집값').wait_for()
-                assert previous_date.split(' 종가')[0] in home.locator('[data-home-close-date]').inner_text()
-                checks.append('failed market and derived-feed refresh retain dated previous observations')
+                assert price_requests==before_requests
+                assert previous_date==home.locator('[data-home-close-date]').inner_text()
+                assert home.locator('.ripple-trigger-card').get_attribute('data-ripple-node')==previous_trigger
+                assert all('/data/market-display.json' in url or '/data/ripple.json' in url for url in price_requests)
+                assert all('?' not in url for url in price_requests)
+                checks.append('three-minute clock advance and manual refresh make zero additional price or ripple requests; stable cached archive paths only')
                 feeds.update(market_status=200,ripple_status=200,market=fixture_data['calm'],ripple=fixture_data['calmRipple'])
                 page.reload()
                 home.locator('.ripple-empty-wide').get_by_text('오늘은 크게 움직인 대장주가 없어요',exact=True).wait_for()
