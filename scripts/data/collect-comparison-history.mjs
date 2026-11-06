@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { instruments } from '../../assets/instruments.js'
 import { dailyClose } from '../../server/market-close.mjs'
 import { comparisonHistoryCatalog, MAX_COMPARISON_HISTORY_BYTES, validateComparisonHistorySnapshot } from '../../assets/comparison-history-core.js'
+import { MARKET_DATA_POLICY } from '../../assets/market-data-policy.js'
 
 const source = 'Yahoo Finance'
 const sourceUrl = symbol => 'https://finance.yahoo.com/quote/' + encodeURIComponent(symbol) + '/'
@@ -41,7 +42,12 @@ export function compactComparisonQuote(item, quote, now = Date.now()) {
 export async function collectComparisonHistory(output = 'data/comparison-history.json', {
   chartService = dailyClose, now = Date.now, catalog = instruments, concurrency = 3,
   maxBytes = MAX_COMPARISON_HISTORY_BYTES, logger = console,
+  collectionEnabled = MARKET_DATA_POLICY.collectionEnabled,
 } = {}) {
+  if (!collectionEnabled) {
+    logger.log?.(MARKET_DATA_POLICY.statusLabel)
+    return { status: 'paused', paused: true, output: resolve(output) }
+  }
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 10) throw new RangeError('수집 동시 실행 수 오류')
   if (!Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_COMPARISON_HISTORY_BYTES) throw new RangeError('공개 응답 크기 제한 오류')
   const nowMs = Number(now())

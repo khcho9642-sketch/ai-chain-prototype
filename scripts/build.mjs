@@ -15,11 +15,12 @@ import { verifyTodayPersonaHashes } from './community/today-persona.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
 import { buildRippleSnapshot, validateRippleSnapshot, rippleMatchesSelection } from '../assets/ripple-core.js'
 import { buildDebatePublication } from './deployment/debate-publication.mjs'
+import { buildMarketDisplaySnapshot } from './data/market-display.mjs'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json','ripple.json']
+export const publicSnapshotFiles = ['market.json','market-display.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json','ripple.json']
 
 // A derived feed is only meaningful for the exact market snapshot in this build.
 // Older collectors and isolated fixtures may have no ripple file; derive it from
@@ -44,6 +45,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   catch (error) { if (error.code !== 'ENOENT') throw error }
   const data = JSON.parse(await readFile(join(source, 'data', 'market.json'), 'utf8'))
   if (!Array.isArray(data.quotes)) throw new Error('시세 스냅샷 형식이 올바르지 않습니다.')
+  const displayData = buildMarketDisplaySnapshot(data)
   const ripple = await resolveBuildRippleSnapshot(source, data)
   validateEpochSnapshot(JSON.parse(await readFile(join(source, 'data', 'epoch-ai.json'), 'utf8')))
   validateIndustry(JSON.parse(await readFile(join(source, 'data', 'industry.json'), 'utf8')))
@@ -77,7 +79,8 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   }
   await writeFile(join(output, 'index.html'), html)
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
-  await Promise.all(publicSnapshotFiles.filter(name => name !== 'ripple.json').map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  await Promise.all(publicSnapshotFiles.filter(name => !['ripple.json', 'market-display.json'].includes(name)).map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
+  await writeFile(join(output, 'data', 'market-display.json'), JSON.stringify(displayData) + '\n')
   await writeFile(join(output, 'data', 'ripple.json'), JSON.stringify(ripple) + '\n')
   await buildDebatePublication(source, output)
   if (assets.some(entry => entry.name === 'community.js')) await writeFile(join(output, 'assets', 'community-runtime.js'), `export const communityApiOrigin = ${JSON.stringify(communityOrigin)}\n`)

@@ -7,6 +7,7 @@ import { dailyClose } from '../../server/market-close.mjs'
 import { batchQuotes } from '../../server/market-quotes.mjs'
 import { loadMarketUniverse } from './market-universe.mjs'
 import { enrichHomeMarket } from './enrich-home-market.mjs'
+import { MARKET_DATA_POLICY } from '../../assets/market-data-policy.js'
 export { instruments }
 
 const positive = value => Number.isFinite(value) && value > 0
@@ -38,7 +39,12 @@ export async function collect(output = 'data/market.json', {
   now = Date.now, logger = console, concurrency = 4, includeHistories = true,
   includeHomeData = !universe, homeEnricher = enrichHomeMarket,
   maxBytes = 25_000_000,
+  collectionEnabled = MARKET_DATA_POLICY.collectionEnabled,
 } = {}) {
+  if (!collectionEnabled) {
+    logger.log?.(MARKET_DATA_POLICY.statusLabel)
+    return { status: 'paused', paused: true, output: resolve(output) }
+  }
   const startedAt = new Date(now()).toISOString()
   const loaded = universe || await loadMarketUniverse()
   const targets = loaded.targets

@@ -3,9 +3,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    # UTC: Asian markets, Singapore, Europe, then Americas; includes Sunday markets.
-    - cron: '20 8,10,18,23 * * *'
 permissions:
   contents: read
 concurrency:
@@ -29,11 +26,9 @@ jobs:
       - name: Restore previous deployed snapshot for failure fallback
         run: |
           curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json -o data/previous.json && mv data/previous.json data/market.json || true
-      - name: Collect completed daily closes and batch capitalizations
-        id: collect
-        continue-on-error: true
-        run: node scripts/data/collect-market.mjs
-      - name: Build same-session ripple observations from collected closes
+      # Price collection is paused by the user. Only the already published
+      # snapshot is restored; deployment must not call quote/cap/FX providers.
+      - name: Build ripple observations from stored closes
         run: node scripts/data/build-ripple.mjs --allow-unavailable
       - name: Restore previous industry statistics for failure fallback
         run: |
@@ -50,9 +45,6 @@ jobs:
       - name: Collect free Epoch AI datasets
         continue-on-error: true
         run: npm run collect:epoch -- --no-evidence
-      - name: Collect three-year daily closes for company comparison
-        continue-on-error: true
-        run: npm run collect:comparison
       - name: Collect public OpenRouter token statistics
         continue-on-error: true
         env:

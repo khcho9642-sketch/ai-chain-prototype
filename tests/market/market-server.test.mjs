@@ -10,6 +10,7 @@ import { build } from '../../scripts/build.mjs'
 import { createEmptyCompanyDisclosures } from '../../assets/company-disclosures-core.js'
 
 import { emptyEpochSnapshot } from '../../assets/epoch-ai-core.js'
+import chartHandler from '../../api/chart.js'
 
 function fixture({ range = '1d', symbol = 'NVDA' } = {}) {
   return {
@@ -113,6 +114,35 @@ test('invalid inputs are rejected before any external request', async () => {
   }
   assert.equal(calls, 0)
   await assert.rejects(chart('../.env'), error => error.status === 400)
+})
+
+test('paused default chart service and API do not run the live provider path', async () => {
+  await assert.rejects(chart('NVDA', '1d'), error => error.status === 503 && error.code === 'market_collection_paused')
+  for (const method of ['GET', 'POST']) {
+    const headers = {}, response = {
+      statusCode: 200,
+      setHeader(name, value) { headers[name.toLowerCase()] = value },
+      end(body) { this.body = body },
+    }
+    await chartHandler({ method, url: '/api/chart?symbol=NVDA&range=1d' }, response)
+    const body = JSON.parse(response.body)
+    assert.equal(response.statusCode, method === 'GET' ? 503 : 405)
+    assert.equal(headers['cache-control'], 'no-store')
+    if (method === 'GET') {
+      assert.equal(body.code, 'market_collection_paused')
+      assert.match(body.error, /시세 수집 중지/)
+    } else assert.equal(headers.allow, 'GET')
+  }
+})
+
+test('the default local chart endpoint honors the same paused policy', async t => {
+  const server = createSiteServer()
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  t.after(() => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())))
+  const response = await fetch(`http://127.0.0.1:${server.address().port}/api/chart?symbol=NVDA&range=1y`)
+  assert.equal(response.status, 503)
+  assert.equal((await response.json()).code, 'market_collection_paused')
 })
 
 test('upstream HTTP failure retries the second host', async () => {
@@ -220,7 +250,7 @@ test('build publishes only the public site; server handles API errors without ex
   const output = await build(source)
   assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
-  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','epoch-ai.json','industry.json','market.json','ripple.json','today-discussion.json','today-personas.json','today-picks.json'])
+  assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','comparison-history.json','epoch-ai.json','industry.json','market-display.json','market.json','ripple.json','today-discussion.json','today-personas.json','today-picks.json'])
   const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })

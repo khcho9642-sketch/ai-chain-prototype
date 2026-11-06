@@ -2,6 +2,7 @@ import {SECTORS,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map
 import { instruments } from './instruments.js';
 import { companyHrefForTicker } from './company-links.js';
 import { focusCompanies } from './home-focus.js';
+import { MARKET_DATA_POLICY } from './market-data-policy.js';
 import { buildSectorReturns } from './home-performance.js';
 import { buildActualMap, buildMapCatalogue } from './home-map-data.js';
 import { MAP_UNIVERSE } from './home-map-universe.js';
@@ -19,7 +20,7 @@ const content = document.createElement('div');
 content.innerHTML = `<div class="map-main">
     <section class="intro" aria-label="시장 지도">
       <div><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1><p>반도체에서 모델까지, AI 산업의 움직임을 한눈에.</p></div>
-      <div class="home-badges"><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div>
+      <div class="home-badges"><span class="home-badge" data-home-market-policy>${MARKET_DATA_POLICY.statusLabel}</span><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div>
     </section>
     <section id="home-sector-summary" class="home-sector-summary" aria-label="AI 밸류체인 업종별 수익률">
       <div class="sector-summary-heading"><div><h2>업종별 수익률</h2><p data-home-card-caption>선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 최근 90일 종가 수익률</p></div><div class="home-summary-controls"><label class="home-card-period-label">기간 <select aria-label="업종 수익률 기간" data-home-card-period><option value="1d">1일</option><option value="1w">1주</option><option value="1m">1개월</option><option value="3mo" selected>3개월</option><option value="1y">1년</option></select></label><div class="home-weight-switch" role="group" aria-label="업종별 수익률 가중 방식"><button type="button" data-home-weight="eq" aria-pressed="true">동일가중</button><button type="button" data-home-weight="cap" aria-pressed="false">시총가중</button></div></div></div>
@@ -70,7 +71,7 @@ let marketError = '';
 let weightMode = 'eq';
 let summaryPeriod = '3mo';
 try { if (localStorage.getItem('ai-chain.home-weight.v1') === 'cap') weightMode = 'cap'; } catch {}
-let rippleSnapshot = null, rippleError = '', rippleBusy = false, selectedRipple = null, rippleRequest = 0;
+let rippleSnapshot = null, rippleError = '', rippleBusy = false, rippleAttempted = false, selectedRipple = null, rippleRequest = 0;
 const sectorCardNodes = new Map();
 const COUNTRY_NAMES={US:'미국',KR:'한국',TW:'대만',JP:'일본',CN:'중국',NL:'네덜란드',DE:'독일',FR:'프랑스',GB:'영국',IE:'아일랜드',CH:'스위스',HK:'홍콩',SG:'싱가포르',MY:'말레이시아',BE:'벨기에',IL:'이스라엘',IN:'인도',TH:'태국',AU:'호주',AT:'오스트리아',CA:'캐나다',FI:'핀란드',DK:'덴마크',BR:'브라질',SE:'스웨덴',ES:'스페인',IT:'이탈리아',ZA:'남아프리카공화국',NZ:'뉴질랜드',BH:'바레인',VN:'베트남',SA:'사우디아라비아',ID:'인도네시아',QA:'카타르',TR:'튀르키예',PH:'필리핀',RU:'러시아',AE:'아랍에미리트'};
 const EUROPE_COUNTRIES = new Set(['NL','DE','FR','GB','IE','CH','BE','AT','FI','DK','SE','ES','IT']);
@@ -403,11 +404,12 @@ function renderRipple() {
   const entry = entries.find(entry => rippleIdentity(entry.trigger) === selectedRipple);
   const mismatched = !!rippleSnapshot && !!marketSnapshot && rippleSnapshot.sourceSnapshotGeneratedAt !== marketSnapshot.generatedAt;
   status.classList.toggle('is-warning', !!rippleError || mismatched);
-  status.textContent = rippleError ? (rippleSnapshot ? '이전 수집값 · 파급 자료 갱신을 확인할 수 없습니다.' : '파급 자료를 아직 확인할 수 없습니다.') : mismatched ? '이전 수집값 · 종가 갱신 후 파급 자료 반영 대기' : rippleBusy && !rippleSnapshot ? '종가와 함께 움직인 종목을 확인하고 있습니다.' : '';
+  status.textContent = rippleError ? (rippleSnapshot ? '이전 수집값 · 파급 자료 갱신을 확인할 수 없습니다.' : '파급 자료를 아직 확인할 수 없습니다.') : mismatched ? (MARKET_DATA_POLICY.autoRefreshEnabled ? '이전 수집값 · 종가 갱신 후 파급 자료 반영 대기' : '저장된 종가와 파급 자료의 기준 시각이 다릅니다.') : rippleBusy && !rippleSnapshot ? '종가와 함께 움직인 종목을 확인하고 있습니다.' : '';
+  if (!MARKET_DATA_POLICY.collectionEnabled) status.textContent = [MARKET_DATA_POLICY.statusLabel, status.textContent].filter(Boolean).join(' · ');
   status.hidden = !status.textContent;
   timeline.replaceChildren(); flow.replaceChildren();
   if (!entry) {
-    const message = rippleSnapshot?.reason === 'no-large-moves' ? '오늘은 크게 움직인 대장주가 없어요' : rippleSnapshot ? '확정 종가 이력이 충분하지 않아 함께 움직인 종목을 기다리고 있어요' : '종가 수집 후 함께 움직인 종목을 표시합니다.';
+    const message = rippleSnapshot?.reason === 'no-large-moves' ? '오늘은 크게 움직인 대장주가 없어요' : rippleSnapshot ? '확정 종가 이력이 충분하지 않아 함께 움직인 종목을 기다리고 있어요' : MARKET_DATA_POLICY.collectionEnabled ? '종가 수집 후 함께 움직인 종목을 표시합니다.' : '저장된 파급 자료가 없습니다. 시세 수집은 중지되어 있습니다.';
     flow.append(htmlElement('p', 'ripple-empty ripple-empty-wide', message));
     return;
   }
@@ -444,11 +446,11 @@ function drawRippleLines() {
 }
 
 async function loadRipple() {
-  if (rippleBusy) return;
-  rippleBusy = true; renderRipple();
+  if (rippleBusy || !MARKET_DATA_POLICY.autoRefreshEnabled && rippleAttempted) return;
+  rippleAttempted = true; rippleBusy = true; renderRipple();
   const current = ++rippleRequest;
   const read = async path => {
-    const response = await fetch(`${path}?t=${Math.floor(Date.now()/60000)}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    const response = await fetch(path, { cache: MARKET_DATA_POLICY.autoRefreshEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error('파급 자료 수신 실패');
     const value = validateRippleSnapshot(await response.json());
     if (!rippleMatchesSelection(value)) throw new Error('현재 선정표와 파급 대상이 다릅니다.');
@@ -456,7 +458,7 @@ async function loadRipple() {
   };
   try {
     let value;
-    if (!location.hostname.endsWith('.github.io') && location.protocol !== 'file:') {
+    if (MARKET_DATA_POLICY.liveRequestsEnabled && !location.hostname.endsWith('.github.io') && location.protocol !== 'file:') {
       try { value = await read('./api/ripple'); } catch { value = await read('./data/ripple.json'); }
     } else value = await read('./data/ripple.json');
     if (current !== rippleRequest) return;
@@ -483,7 +485,7 @@ function renderMapStatus(model, matchingCatalog, sizedItems) {
   else {
     const dates = model.dates || [];
     const dateText = dates.length ? `종가 ${dates[0]}${dates.length > 1 ? ` ~ ${dates.at(-1)}` : ''} · 시장별 현지 기준` : '확정 종가 미확보';
-    const notes = [dateText, `현재 조건 ${matchingCatalog.length}개 · 시총 반영 ${sizedItems.length}개 · ${periodName()} 등락률 미확보 ${missingReturns}개${missingReturns ? state.view === 'bubble' ? ' · 버블 제외' : ' · 회색 — 표시' : ''}`];
+    const notes = [MARKET_DATA_POLICY.statusLabel, dateText, `현재 조건 ${matchingCatalog.length}개 · 시총 반영 ${sizedItems.length}개 · ${periodName()} 등락률 미확보 ${missingReturns}개${missingReturns ? state.view === 'bubble' ? ' · 버블 제외' : ' · 회색 — 표시' : ''}`];
     if (coverage?.staleCount) notes.push(`이전 수집값 ${coverage.staleCount}개`);
     if (marketError) notes.push('최신 파일 조회 실패 · 마지막 확인 자료 표시');
     status.textContent = notes.join(' / ');
@@ -619,4 +621,4 @@ window.addEventListener('market-snapshot-error', () => {
 window.addEventListener('resize', drawRippleLines);
 window.addEventListener('hashchange', () => requestAnimationFrame(drawRippleLines));
 void loadRipple();
-setInterval(() => { if (!document.hidden && !host.hidden) void loadRipple(); }, 60000);
+if (MARKET_DATA_POLICY.autoRefreshEnabled) setInterval(() => { if (!document.hidden && !host.hidden) void loadRipple(); }, 60000);

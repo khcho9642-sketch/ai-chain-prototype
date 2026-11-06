@@ -121,6 +121,7 @@ test('deployment derives its ripple from the downloaded market rather than racin
   const requested = [], restored = []
   let built = false
   const result = await prepareDeployment({
+    collectionEnabled: true,
     root, now: () => now, logger: {},
     fetcher: async url => {
       requested.push(url)
@@ -151,6 +152,7 @@ test('deployment rejects an incomplete market before modifying existing derived 
   await writeFile(file, 'preserved prior source')
   let built = false
   await assert.rejects(prepareDeployment({
+    collectionEnabled: true,
     root, now: () => now, logger: {},
     fetcher: async () => new Response(JSON.stringify(market('2026-11-06T08:00:00Z'))),
     buildSite: async () => { built = true },
@@ -159,4 +161,27 @@ test('deployment rejects an incomplete market before modifying existing derived 
   assert.equal(built, false)
   assert.equal(await readFile(file, 'utf8'), 'preserved prior source')
   assert.deepEqual(await readdir(join(root, 'data')), ['ripple.json'])
+})
+
+
+test('paused deployment prepares only the existing archive without network or replacing stored observations', async t => {
+  const { prepareDeployment } = await import('../../scripts/deployment/prepare-deployment.mjs')
+  const { instruments } = await import('../../assets/instruments.js')
+  const { root, file } = await fixture(t)
+  const current = { ...market('2026-11-06T08:00:00Z'), quotes: instruments.map(({ symbol }) => ({ symbol })) }
+  const path = join(root, 'data', 'market.json'), original = JSON.stringify(current)
+  await writeFile(path, original)
+  let network = 0, restores = 0
+  await prepareDeployment({ root, now: () => now, logger: {},
+    fetcher: async () => { network++; throw new Error('unexpected download') },
+    restoreSnapshots: async () => { restores++ },
+    buildSite: async () => {
+      assert.equal(await readFile(path, 'utf8'), original)
+      assert.equal(rippleMatchesSelection(JSON.parse(await readFile(file, 'utf8'))), true)
+      return join(root, 'dist')
+    },
+  })
+  assert.equal(network, 0)
+  assert.equal(restores, 0)
+  assert.equal(await readFile(path, 'utf8'), original)
 })

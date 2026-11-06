@@ -1,7 +1,14 @@
+import { MARKET_DATA_POLICY } from '../assets/market-data-policy.js'
+
 export const ranges = Object.freeze({ '1d': '5m', '5d': '30m', '1mo': '1d', '3mo': '1d', '1y': '1d', '3y': '1d', '5y': '1wk' })
 const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']
 const number = value => Number.isFinite(value) ? value : null
 const failure = (message, status) => Object.assign(new Error(message), { status })
+function validateInput(symbol, range) {
+  if (typeof symbol !== 'string' || !/^[A-Z0-9^=.-]{1,24}$/i.test(symbol) || !Object.hasOwn(ranges, range)) {
+    throw failure('종목 코드 또는 조회 기간이 올바르지 않습니다.', 400)
+  }
+}
 
 export function normalize(result, range = '1d', dailyResult = range === '1d' ? result : null) {
   const meta = dailyResult?.meta || result?.meta || {}
@@ -88,9 +95,7 @@ export function createChartService({ fetchImpl = globalThis.fetch, now = Date.no
     try { return await request } finally { rawPending.delete(key) }
   }
   return async function chart(symbol, range = '1d') {
-    if (typeof symbol !== 'string' || !/^[A-Z0-9^=.-]{1,24}$/i.test(symbol) || !Object.hasOwn(ranges, range)) {
-      throw failure('종목 코드 또는 조회 기간이 올바르지 않습니다.', 400)
-    }
+    validateInput(symbol, range)
     symbol = symbol.toUpperCase()
     const key = `${symbol}:${range}`
     if (cache.get(key)?.expires > now()) return cache.get(key).value
@@ -105,7 +110,14 @@ export function createChartService({ fetchImpl = globalThis.fetch, now = Date.no
   }
 }
 
-export const chart = createChartService()
+const liveChart = createChartService()
+export async function chart(symbol, range = '1d') {
+  validateInput(symbol, range)
+  if (!MARKET_DATA_POLICY.liveRequestsEnabled) {
+    throw Object.assign(failure(MARKET_DATA_POLICY.statusLabel, 503), { code: 'market_collection_paused' })
+  }
+  return liveChart(symbol, range)
+}
 
 export async function middleware(req, res, next = () => {}, chartService = chart) {
   let url
@@ -125,7 +137,8 @@ export async function middleware(req, res, next = () => {}, chartService = chart
     res.statusCode = 200
     res.end(JSON.stringify(result))
   } catch (error) {
-    res.statusCode = [400, 404, 405, 502].includes(error.status) ? error.status : 500
-    res.end(JSON.stringify({ error: error.status ? error.message : '시세 조회 중 오류가 발생했습니다.' }))
+    res.statusCode = [400, 404, 405, 502, 503].includes(error.status) ? error.status : 500
+    res.end(JSON.stringify({ error: error.status ? error.message : '시세 조회 중 오류가 발생했습니다.',
+      ...(error.code === 'market_collection_paused' ? { code: error.code } : {}) }))
   }
 }

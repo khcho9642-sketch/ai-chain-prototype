@@ -1,17 +1,29 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build, projectRoot } from '../build.mjs'
 import { instruments } from '../../assets/instruments.js'
 import { restoreAiSnapshots } from './restore-ai-snapshots.mjs'
 import { buildRippleFile } from '../data/build-ripple.mjs'
+import { MARKET_DATA_POLICY } from '../../assets/market-data-policy.js'
 
 const source = 'https://khcho9642-sketch.github.io/ai-chain-prototype/data/'
 
 export async function prepareDeployment({
   root = projectRoot, fetcher = fetch, buildSite = build, restoreSnapshots = restoreAiSnapshots,
   now = Date.now, logger = console,
+  collectionEnabled = MARKET_DATA_POLICY.collectionEnabled,
 } = {}) {
+  if (!collectionEnabled) {
+    const snapshot = JSON.parse(await readFile(join(root, 'data', 'market.json'), 'utf8'))
+    if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.quotes)
+      || !instruments.every(item => snapshot.quotes.some(quote => quote.symbol === item.symbol))) {
+      throw new Error('저장된 시세 스냅샷의 통합 종목이 누락되었습니다.')
+    }
+    logger.log?.(MARKET_DATA_POLICY.statusLabel)
+    await buildRippleFile({ input: join(root, 'data', 'market.json'), output: join(root, 'data', 'ripple.json'), allowUnavailable: true, now: now(), logger })
+    return buildSite(root)
+  }
   // Keep the API deployment aligned with the independently refreshed snapshot.
   const response = await fetcher(source + 'market.json?t=' + now(), { signal: AbortSignal.timeout(30000) })
   if (!response.ok) throw new Error(`배포용 시세 스냅샷 HTTP ${response.status}`)

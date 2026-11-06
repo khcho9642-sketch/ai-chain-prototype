@@ -196,6 +196,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 route.fulfill(status=status, content_type='application/json', body=json.dumps(market_fixture['value']))
             page.route('**/api/snapshot?*', serve_market_fixture)
             page.route('**/data/market.json?*', serve_market_fixture)
+            page.route('**/data/market-display.json', serve_market_fixture)
             page.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             home_requests = []
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
@@ -241,6 +242,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                               body=json.dumps(comparison_fixture['value'], ensure_ascii=False))
             page.route('**/api/comparison-history?*', serve_comparison_fixture)
             page.route('**/data/comparison-history.json?*', serve_comparison_fixture)
+            page.route('**/data/comparison-history.json', serve_comparison_fixture)
             def show_company_chain(scope, chain):
                 picker = scope.locator('[data-peer-company-picker]')
                 if picker.get_attribute('open') is None:
@@ -359,15 +361,16 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             slider.evaluate("el => { el.value = '0'; el.dispatchEvent(new Event('input', {bubbles:true})); }")
             assert '+0.00%' not in comparison.locator('#peer-date-values').inner_text()
             assert comparison.locator('#peer-date-values').inner_text().count('0.00%') == 3
-            # A refresh failure keeps the original history and explicitly identifies it as an earlier success.
+            # A stopped collector keeps the cached archive and never redownloads it on refresh.
             comparison_fixture['status'] = 503
+            requests_before_refresh=len(comparison_history_requests)
             comparison.locator('[data-peer-refresh]').click()
-            comparison.get_by_role('alert').filter(has_text='마지막 성공 수집값을 유지합니다.').wait_for()
+            assert len(comparison_history_requests)==requests_before_refresh
             assert comparison.locator('[data-peer-series="NVDA"]').count() == 1
             assert comparison.locator('[data-peer-remove-symbol]').count() == 3
             comparison_fixture['status'] = 200
             comparison.locator('[data-peer-refresh]').click()
-            page.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
+            assert len(comparison_history_requests)==requests_before_refresh
             assert comparison.locator('[data-peer-remove-symbol]').count() == 3
             comparison.locator('[data-peer-remove-symbol="005930.KS"]').click()
             assert all(not samsung.nth(i).is_checked() for i in range(samsung.count()))
@@ -417,40 +420,35 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
                 assert card.locator('.today-initial-comment > .today-message-label').inner_text() == '의견'
             assert today.locator('[data-today-comment]').count() == 3
             assert today.locator('[data-today-response]').count() == 3
-            # Shared market updates change the displayed price, not the AI's historical source or opinion.
+            # The collector is paused; explicit in-memory archive events still update display logic.
             market_quote['price'] = 124.56
-            # The API can fail while the saved public feed remains valid.
-            market_fixture['api_status'] = 503
-            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.evaluate("value=>window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",market_fixture['value'])
             today.locator('[data-today-agent=gpt]').get_by_text('124.56 USD', exact=True).wait_for()
-            market_fixture.pop('api_status')
             assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '+20.42%'
-            market_fixture['status'] = 503
-            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.evaluate("window.dispatchEvent(new CustomEvent('market-snapshot-error',{detail:'browser fixture: stored archive unavailable'}))")
             today.locator('[data-today-agent=gpt]').get_by_text('이전 확인값 · 조회 실패 · 지연 시세 · Yahoo Finance', exact=True).wait_for()
             assert today.locator('[data-today-agent=gpt] [data-today-price]').inner_text() == '124.56 USD'
             assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '—'
             assert '비교 불가' in today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]').inner_text()
-            market_fixture['status'] = 200
-            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.evaluate("value=>window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",market_fixture['value'])
             page.wait_for_function("!document.querySelector('[data-today-agent=gpt] [data-today-field=price]').textContent.includes('조회 실패')")
             # Compare the unchanged estimate honestly, including nonzero differences that round to zero.
             for current_price, expected_gap, expected_state in [(151, '−0.66%', 'below'), (150, '0.00%', 'equal'),
                                                                (149.999, '+0.01% 미만', 'above'), (150.001, '−0.01% 미만', 'below')]:
                 market_quote['price'] = current_price
-                page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+                page.evaluate("value=>window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",market_fixture['value'])
                 today.locator('[data-today-agent=gpt]').get_by_text(expected_gap, exact=True).wait_for()
                 gap = today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]')
                 assert gap.get_attribute('data-estimate-state') == expected_state
                 assert ('추정 가격이 시가보다 높음' if expected_state == 'above' else '상승 여력 조건 미충족') in gap.inner_text()
                 assert today.locator('[data-today-agent=gpt] [data-today-fair-value]').inner_text() == '150 USD'
             market_quote.update(price=124.56, currency='KRW')
-            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.evaluate("value=>window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",market_fixture['value'])
             today.locator('[data-today-agent=gpt]').get_by_text('124.56 KRW', exact=True).wait_for()
             assert '비교 불가' in today.locator('[data-today-agent=gpt] [data-today-field=estimate-gap]').inner_text()
             assert today.locator('[data-today-agent=gpt] [data-today-estimate-gap]').inner_text() == '—'
             market_quote['currency'] = 'USD'
-            page.evaluate("window.dispatchEvent(new Event('market-refresh-request'))")
+            page.evaluate("value=>window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",market_fixture['value'])
             today.locator('[data-today-agent=gpt]').get_by_text('+20.42%', exact=True).wait_for()
             for response in today_fixture['value']['responses']:
                 parent_card = today.locator('[data-pick-id="' + response['parentId'] + '"]')
@@ -786,6 +784,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))
             mobile.route('**/api/snapshot?*', serve_market_fixture)
             mobile.route('**/data/market.json?*', serve_market_fixture)
+            mobile.route('**/data/market-display.json', serve_market_fixture)
             mobile.route('**/data/today-picks.json', lambda route: route.fulfill(status=200, content_type='application/json', body=json.dumps(empty_today_fixture())))
             mobile.goto(origin + '/#today')
             mobile.locator('#v-today').get_by_text('추천 미발행', exact=True).first.wait_for()
@@ -793,12 +792,13 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'today-mobile.png'), full_page=True)
             # Company picking and a long-period chart fit a narrow screen without clipping the page.
-            mobile_comparison_fixture = {'status': 503, 'value': comparison_fixture['value']}
+            mobile_comparison_fixture = {'status': 200, 'value': comparison_fixture['value']}
             def serve_mobile_comparison(route):
                 route.fulfill(status=mobile_comparison_fixture['status'], content_type='application/json',
                               body=json.dumps(mobile_comparison_fixture['value'], ensure_ascii=False))
             mobile.route('**/api/comparison-history?*', serve_mobile_comparison)
             mobile.route('**/data/comparison-history.json?*', serve_mobile_comparison)
+            mobile.route('**/data/comparison-history.json', serve_mobile_comparison)
             mobile.evaluate("location.hash = 'compare'")
             mobile_comparison = mobile.locator('#v-compare')
             mobile_comparison.locator('#peer-chart [data-peer-series="000660.KS"]').wait_for()
@@ -817,12 +817,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'comparison-default-companies-mobile.png'))
             mobile_comparison.locator('[data-peer-period="1095"]').click()
-            mobile_comparison.get_by_role('alert').filter(has_text='2·3년 비교를 표시할 수 없습니다.').wait_for()
-            assert mobile_comparison.locator('#peer-chart').count() == 0
+            mobile_comparison.locator('#peer-chart [data-peer-series="000660.KS"]').wait_for()
             assert mobile_comparison.locator('[data-peer-period="1095"]').get_attribute('aria-pressed') == 'true'
-            mobile_comparison_fixture['status'] = 200
+            mobile_comparison_fixture['status'] = 503
             mobile_comparison.locator('[data-peer-refresh]').click()
-            mobile.wait_for_function("!document.querySelector('[data-peer-refresh]').disabled")
+            assert mobile_comparison.locator('#peer-chart [data-peer-series="000660.KS"]').count()==1
             show_company_chain(mobile_comparison, 1)
             assert mobile_picker.locator('.peer-card:visible').count() == 1
             assert mobile_picker.locator('[data-peer-chain="1"]').is_visible()
@@ -948,7 +947,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; quote API failure uses the saved feed, dual failure preserves prior quote', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()
