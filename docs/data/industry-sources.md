@@ -1,5 +1,18 @@
 # Official Korean export statistics
 
+## KOSIS semiconductor production, shipments and inventories
+
+The Memory sector includes the nationwide, unadjusted monthly indices for semiconductor manufacturing (2020=100).
+[KOSIS table DT_1F02001](https://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1F02001) belongs to organization 101.
+Use region 00, industry C261 and items T10 (production), T11 (shipments), T12 (inventories).
+
+Get a [KOSIS OpenAPI key](https://kosis.kr/openapi/index/index.jsp) and save it in this repository's
+[GitHub Actions secrets](https://github.com/khcho9642-sketch/ai-chain-prototype/settings/secrets/actions/new)
+as `KOSIS_API_KEY`. The Market data and Pages workflow picks up the key on its next run. It queries the
+latest 36 published months, applies revisions, and keeps older collected observations. On a failed
+request the site retains the previous successful observations and their check dates.
+Keys are used only in the collector process. Public source links point to the table.
+
 Collected and checked on 2026-10-26 KST. All numbers below are from primary sources.
 
 ## Integrated collection and source evidence

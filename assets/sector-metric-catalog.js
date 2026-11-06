@@ -26,6 +26,9 @@ const sectorCatalog = {
   memory: [
     monthly('kr-semiconductor-volume', '반도체 전체 기준 · 메모리 참고 지표', 'reference'),
     observation('micron_cloud_memory_revenue', 'Micron Cloud Memory 사업부 전체 · 회계분기'),
+    monthly('kr-semiconductor-production', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
+    monthly('kr-semiconductor-shipments', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
+    monthly('kr-semiconductor-inventory', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
     monthly('kr-semiconductor-value-index', '반도체 전체 기준 · 메모리 참고 지표', 'reference'),
     monthly('kr-semiconductor-export-usd', '한국 반도체 수출 전체 · 메모리 참고 지표', 'reference'),
     comparison('hardware', 'memory', '가속기별 탑재 메모리 용량', 'Epoch AI에 수록된 가속기 사양 · 메모리 수요 참고 지표', 'reference'),
