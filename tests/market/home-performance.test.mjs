@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { buildComparison } from '../../assets/peer-comparison-core.js'
 import { buildSectorReturns } from '../../assets/home-performance.js'
+import { focusCompanies } from '../../assets/home-focus.js'
+import { MAP_COMPANIES, MAP_UNIVERSE } from '../../assets/home-map-universe.js'
 
 const now = Date.parse('2026-11-10T12:00:00Z')
 const sectorId = SECTORS[0].id
@@ -23,6 +25,33 @@ function quote(symbol, prices = [100, 110], dates = ['2026-11-02', '2026-11-03']
 const snapshot = (quotes, extra = {}) => ({ schemaVersion: 1, generatedAt: '2026-11-10T10:00:00Z', source: 'Yahoo Finance', quotes, ...extra })
 const model = (quotes, options = {}) => buildSectorReturns({ snapshot: snapshot(quotes), companies, period: '1d', now, ...options })
 const close = (actual, expected, epsilon = 1e-9) => assert.ok(Math.abs(actual - expected) < epsilon, `${actual} != ${expected}`)
+
+test('cards use every approved listed company with exact selected ticker and sector, excluding private companies', () => {
+  const selected = MAP_COMPANIES.filter(company => company.listed)
+  assert.equal(focusCompanies.length, MAP_UNIVERSE.listedCompanyCount)
+  assert.deepEqual(focusCompanies.map(company => [company.id, company.ticker, company.sectorId]), selected.map(company => [company.id, company.primaryTicker, company.sectorId]))
+  assert.ok(!focusCompanies.some(company => MAP_COMPANIES.some(row => !row.listed && row.id === company.id)))
+  assert.equal(focusCompanies.find(company => company.ticker === 'ASML.AS').market, 'ETC')
+  assert.equal(focusCompanies.find(company => company.ticker === '2330.TW').market, 'ETC')
+  assert.equal(focusCompanies.find(company => company.ticker === 'ARM').market, 'US')
+  assert.equal(focusCompanies.find(company => company.ticker === '042700.KS').sectorId, 'semiconductor-equipment')
+  assert.equal(focusCompanies.find(company => company.ticker === '007660.KS').sectorId, 'ai-equipment')
+  assert.equal(focusCompanies.find(company => company.ticker === '005930.KS').sectorId, 'memory')
+  assert.equal(focusCompanies.find(company => company.ticker === 'GOOGL').sectorId, 'ai-models')
+})
+
+test('default sector totals follow uneven approved membership and give private model companies no return weight', () => {
+  const result = buildSectorReturns({ snapshot: snapshot(focusCompanies.map(company => quote(company.ticker))), period:'1d', now })
+  assert.equal(result.coverage.companyCount, focusCompanies.length)
+  for (const sector of result.sectors) {
+    const expected = focusCompanies.filter(company => company.sectorId === sector.sectorId).length
+    assert.equal(sector.total, expected)
+    assert.equal(sector.eqCount, expected)
+    assert.equal(sector.capCount, expected)
+    close(sector.eq, 10)
+  }
+  assert.equal(result.sectors.find(sector => sector.sectorId === 'ai-models').total, 2)
+})
 
 test('default result preserves all existing sectors and gracefully handles missing snapshots', () => {
   const result = buildSectorReturns({ companies })
@@ -75,6 +104,23 @@ test('confirmed USD FX quote histories can supply the exact conversion date', ()
   const sector = model(quotes).sectors[0]
   close(sector.cap, 10 / 11)
   assert.equal(sector.peers[0].capUSD, 10)
+})
+
+test('selected European and Hong Kong listings use exact-date USD-base FX without inverse inference', () => {
+  const quotes = [quote('AAA', [100, 110], undefined, { marketCapHistory:[cap('2026-11-02', 90, 'EUR')] }),
+    quote('BBB', [100, 100], undefined, { marketCapHistory:[cap('2026-11-02', 780, 'HKD')] }),
+    quote('EUR=X', [.9,.91], undefined, {currency:'EUR',timezone:'UTC'}),
+    quote('HKD=X', [7.8,7.8], undefined, {currency:'HKD',timezone:'UTC'})]
+  const sector = model(quotes).sectors[0]
+  close(sector.cap, 5)
+  assert.deepEqual(sector.peers.map(peer => peer.capUSD), [100,100])
+  const inverse = snapshot(quotes.slice(0,2), {fxHistory:{
+    EUR:{currency:'EUR',baseCurrency:'EUR',quoteConvention:'USD-per-currency',observations:[{date:'2026-11-02',unitsPerUSD:1/.9}]},
+    HKD:{currency:'HKD',baseCurrency:'USD',quoteConvention:'currency-per-USD',observations:[{date:'2026-11-01',unitsPerUSD:7.8}]},
+  }})
+  const missing = model(quotes, {snapshot:inverse}).sectors[0]
+  assert.equal(missing.capCount, 0)
+  assert.ok(missing.peers.every(peer => peer.capReason.includes('환율')))
 })
 
 test('missing exact start cap or FX excludes only affected weighted peers and suppresses cohort-dependent tags', () => {

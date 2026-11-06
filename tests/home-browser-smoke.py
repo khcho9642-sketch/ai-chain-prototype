@@ -78,7 +78,7 @@ calm.generatedAt=new Date(now+1000).toISOString();
 for(const quote of calm.quotes){quote.bars.at(-1).close=quote.bars.at(-2).close*1.001;quote.price=quote.bars.at(-1).close;quote.changePercent=.1;}
 const calmRipple=buildRippleSnapshot({marketSnapshot:calm,now:now+1000});
 const actualMap=buildActualMap({snapshot:market,now});
-if(actualMap.coverage.catalogCount!==586||actualMap.coverage.renderableCount<500||actualMap.coverage.returnableCount<500)throw new Error('Browser map fixture must cover full586-issuer master');
+if(actualMap.coverage.catalogCount!==49||actualMap.coverage.renderableCount!==46||actualMap.coverage.returnableCount!==46)throw new Error('Browser map fixture must cover exactly approved49 companies with46 listed');
 const incomplete=structuredClone(market);
 incomplete.quotes.find(q=>q.symbol==='AMD').marketCap=null;
 delete incomplete.fxHistory.EUR;
@@ -158,7 +158,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert home.locator('[data-home-weight=eq]').get_attribute('aria-pressed') == 'true'
                 assert home.locator('[data-home-card-period]').input_value() == '3mo'
                 assert '586개 추적' in home.locator('[data-home-coverage]').inner_text()
-                assert '핵심 45개' in home.locator('[data-home-coverage]').inner_text()
+                assert '핵심 49개' in home.locator('[data-home-coverage]').inner_text()
                 for sector in fixture_data['model']['sectors']:
                     card=home.locator('[data-sector="'+sector['sectorId']+'"]')
                     assert card.locator('.sector-return-value').count()==1
@@ -178,7 +178,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 page.reload(); home=wait_home(page)
                 assert home.locator('[data-home-weight=cap]').get_attribute('aria-pressed')=='true'
                 home.locator('[data-home-card-period]').select_option('1d')
-                assert home.locator('[data-home-card-caption]').inner_text()=='핵심 기업의 최근 1거래일 종가 수익률'
+                assert home.locator('[data-home-card-caption]').inner_text()=='선정 49개 중 상장 46개의 최근 1거래일 종가 수익률'
                 assert home.locator('.sector-return-value').all_inner_texts()!=weighted
                 checks.append('nine actual closed-price sector cards; equal/cap toggle, exact-date weights, divergence, storage and independent periods')
 
@@ -217,7 +217,10 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert fixture_data['usEnd'] in home.locator('#selection').inner_text()
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
-                assert home.locator('.tile').count()>500
+                assert home.locator('.tile').count()==46
+                assert home.locator('[data-map-private-company]').count()==3
+                assert all(name in home.locator('[data-map-private]').inner_text() for name in ['OpenAI','Anthropic','DeepSeek'])
+                assert home.locator('.tile[data-ticker=AAPL],.tile[data-ticker=TSLA]').count()==0
                 ids=home.locator('.tile').evaluate_all('els=>els.map(el=>el.dataset.id)')
                 assert len(ids)==len(set(ids))
                 expected_nvda=next(row for row in fixture_data['actualMap']['companies'] if row['ticker']=='NVDA')
@@ -227,12 +230,13 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                     assert abs(float(nvda.get_attribute('data-return'))-expected_nvda['returns'][period])<1e-8
                     assert float(nvda.get_attribute('data-cap-usd'))==expected_nvda['capUSD']
                     assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
-                home.locator('#country').select_option('IN')
-                assert 0<home.locator('.tile').count()<100
+                home.locator('#country').select_option('TW')
+                assert 0<home.locator('.tile').count()<46
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 home.get_by_role('button',name='버블',exact=True).click()
                 home.locator('.bubble-node').first.wait_for()
                 assert home.locator('.bubble-node').count()==fixture_data['actualMap']['coverage']['returnableCount']
+                assert home.locator('[data-map-private-company]').count()==3
                 home.get_by_role('button',name='히트맵',exact=True).click()
                 home.locator('.sector-return-card[data-sector=memory]').click()
                 assert home.locator('.sector-heading').count()==1
@@ -240,7 +244,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert home.locator('.sector-heading').count()==9
                 home.locator('.ripple-trigger-card').click()
                 page.wait_for_function("location.hash.startsWith('#company-info/company/')")
-                checks.append('full586-issuer heatmap/bubbles, one listing per issuer, exact NVDA completed return, provenance, search, sector and detail interactions')
+                checks.append('exact approved49 selection,46 listed heatmap/bubbles and3 named private companies, no Apple/Tesla, exact NVDA completed return, provenance, search, sector and detail interactions')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
                 incomplete=fixture_data['incomplete']

@@ -43,7 +43,7 @@ function candidatesFor(company) {
     .filter(ticker=>typeof ticker === 'string' && /^[A-Z0-9.-]{1,24}$/.test(ticker)))]
 }
 
-/** The entire issuer master, including private and unresolved companies. A
+/** The approved map selection, including its private companies. A
  * preliminary successful listing is useful for search; projection below makes
  * the final choice only after cap, FX and completed-price validation. */
 export function buildMapCatalogue(snapshot) {

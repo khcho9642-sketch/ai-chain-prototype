@@ -6,6 +6,7 @@ import { SECTORS } from '../../assets/home-map-core.js'
 import { loadMarketUniverse } from './market-universe.mjs'
 
 const masterPath = new URL('../../research/market/company-universe.json', import.meta.url)
+const selectionPath = new URL('../../research/market/home-map-selection.json', import.meta.url)
 const outputPath = new URL('../../assets/home-map-universe.js', import.meta.url)
 const countries = Object.freeze({
   한국:'KR', 미국:'US', 일본:'JP', 대만:'TW', 중국:'CN', 홍콩:'HK',
@@ -17,43 +18,47 @@ const countries = Object.freeze({
   아랍에미리트:'AE', 바레인:'BH', 튀르키예:'TR',
 })
 
-// Export only public identity fields. Source workbooks, provider observations,
-// synthetic cap/return values and private analysis never enter this module.
-export function buildHomeMapUniverse({ master, universe } = {}) {
+// The curated sheet controls membership, order, names, sectors and the exact
+// selected listing. The broader 586-company master remains a collection source.
+export function buildHomeMapUniverse({ master, universe, selection } = {}) {
   if (master?.schemaVersion !== 1 || !Array.isArray(master.companies) || !Array.isArray(universe?.targets)) throw new Error('지도 기업 원장 형식 오류')
-  const sectors = new Map(SECTORS.map((sector, index) => ['SEG' + (index + 1), sector]))
-  const unresolved = new Map((universe.coverage?.unmapped || []).map(row => [row.companyId, row.reason]))
-  const ids = new Set(), symbols = new Map()
-  const companies = master.companies.map(company => {
-    const sector = sectors.get(company.sector)
-    const countryCodes = String(company.country).split('·').map(name => countries[name.trim()])
-    if (!/^C\d{4}$/.test(company.id) || ids.has(company.id) || !company.name || !sector
-      || typeof company.listed !== 'boolean' || countryCodes.some(code => !code)) throw new Error('지도 기업 식별·분류 오류')
-    ids.add(company.id)
-    const targets = universe.targets.filter(target => target.companyId === company.id)
-    const unique = new Map()
-    for (const target of targets) {
-      const ticker = target.symbol
-      if (!/^[A-Z0-9^=.-]{1,24}$/.test(ticker) || (symbols.has(ticker) && symbols.get(ticker) !== company.id)) throw new Error('지도 상장 종목 중복·형식 오류')
-      symbols.set(ticker, company.id)
-      if (unique.has(ticker)) throw new Error('지도 회사 내 상장 종목 중복')
-      unique.set(ticker, { ticker, primary: target.primaryForCompany === true,
-        currency: target.currency || null, exchange: target.exchange || null })
-    }
-    const listings = [...unique.values()].sort((a, b) => Number(b.primary) - Number(a.primary) || a.ticker.localeCompare(b.ticker))
-    const primary = listings.filter(listing => listing.primary)
-    if (primary.length > 1 || (!company.listed && listings.length)) throw new Error('지도 회사 대표 상장 구분 오류')
-    const row = { id: company.id, name: company.name, country: countryCodes[0],
-      countryName: company.country, countryCodes, sector: sector.name, sectorId: sector.id,
-      listed: company.listed, primaryTicker: primary[0]?.ticker || null, listings }
-    if (!company.listed) row.unmappedReason = '비상장: 공개 시총·종가 없음'
-    else if (!row.primaryTicker) row.unmappedReason = unresolved.get(company.id) || '현재 공급처의 대표 상장 연결 미확인'
+  if (selection?.schemaVersion !== 1 || !Array.isArray(selection.companies) || selection.companies.length !== 49
+    || selection.companyCount !== 49 || selection.listedCompanyCount !== 46 || selection.unlistedCompanyCount !== 3
+    || selection.source?.sheet !== '핵심기업 49' || !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//.test(selection.source.url || '')
+    || !/^[a-f0-9]{64}$/.test(selection.source.sha256 || '') || !Number.isFinite(Date.parse(selection.source.modifiedAt))) throw new Error('지도 49개사 선정표·출처 오류')
+  const sectors = new Map(SECTORS.map(sector => [sector.name, sector]))
+  sectors.set('클라우드·GPU',sectors.get('클라우드·GPU 컴퓨팅'))
+  const masterCompanies = new Map(master.companies.map(company=>[company.id,company]))
+  if (masterCompanies.size !== master.companies.length) throw new Error('지도 기업 식별 중복')
+  const ids = new Set(), symbols = new Set()
+  const companies = selection.companies.map((selected,index) => {
+    const company=masterCompanies.get(selected.companyId),sector=sectors.get(selected.sector)
+    const countryCodes=String(company?.country).split('·').map(name=>countries[name.trim()])
+    if (!company || !/^C\d{4}$/.test(selected.companyId) || ids.has(selected.companyId) || !selected.name || !sector
+      || selected.order !== index+1 || typeof selected.listed !== 'boolean' || !selected.role
+      || countryCodes.some(code=>!code)) throw new Error('지도 선정 기업 식별·분류·순서 오류')
+    ids.add(selected.companyId)
+    const listings=[]
+    if (selected.listed) {
+      if (!/^[A-Z0-9.-]{1,24}$/.test(selected.ticker || '') || symbols.has(selected.ticker)) throw new Error('지도 선정 상장 종목 중복·형식 오류')
+      const targets=universe.targets.filter(target=>target.companyId===company.id && target.symbol===selected.ticker)
+      if (targets.length !== 1) throw new Error('지도 선정 티커와 기업 연결 불일치: '+selected.ticker)
+      symbols.add(selected.ticker)
+      listings.push({ticker:selected.ticker,primary:true,currency:targets[0].currency || null,exchange:targets[0].exchange || null})
+    } else if (selected.ticker !== null) throw new Error('지도 비상장 선정 기업의 티커 오류')
+    const row={id:company.id,name:selected.name,country:countryCodes[0],countryName:company.country,countryCodes,
+      sector:sector.name,sectorId:sector.id,sourceOrder:selected.order,sourceSector:selected.sector,
+      selectionChange:selected.change,role:selected.role,listed:selected.listed,primaryTicker:selected.ticker,listings}
+    if (!selected.listed) row.unmappedReason='비상장: 공개 시총·종가 없음'
     return row
   })
   const listedCompanyCount = companies.filter(company => company.listed).length
+  if (listedCompanyCount !== 46) throw new Error('지도 선정 상장·비상장 기업 수 오류')
   return { companies, metadata: {
-    schemaVersion: 1, source: 'company-master-public-identity', sourceAsOf: master.asOf || null,
-    sourceStatus: master.sourceStatus || 'review-draft', mappingStatus: 'candidate',
+    schemaVersion: 1, source: 'approved-home-map-selection',
+    sourceAsOf:new Date(Date.parse(selection.source.modifiedAt)+9*3600000).toISOString().slice(0,10),sourceTimezone:'Asia/Seoul',
+    sourceUrl:selection.source.url,sourceSheet:selection.source.sheet,sourceModifiedAt:selection.source.modifiedAt,sourceSha256:selection.source.sha256,
+    sourceStatus: 'user-selected', mappingStatus: 'candidate',listingPolicy:'exact-approved-ticker',masterCompanyCount:master.companies.length,
     companyCount: companies.length, listedCompanyCount, unlistedCompanyCount: companies.length - listedCompanyCount,
     mappedListedCompanyCount: companies.filter(company => company.listed && company.primaryTicker).length,
     alternateOnlyCompanyCount: companies.filter(company => company.listed && !company.primaryTicker && company.listings.length).length,
@@ -71,8 +76,8 @@ export function renderHomeMapUniverse({ companies, metadata }) {
 }
 
 export async function writeHomeMapUniverse({ destination = outputPath } = {}) {
-  const [master, universe] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse()])
-  const value = buildHomeMapUniverse({ master, universe })
+  const [master, universe, selection] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse)])
+  const value = buildHomeMapUniverse({ master, universe, selection })
   const path = destination instanceof URL ? fileURLToPath(destination) : resolve(destination)
   const temporary = path + '.' + randomUUID() + '.tmp'
   try {

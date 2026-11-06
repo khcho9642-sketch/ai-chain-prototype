@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { enrichHomeMarket } from '../../scripts/data/enrich-home-market.mjs'
+import { focusCompanies } from '../../assets/home-focus.js'
+import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
 const now = () => Date.parse('2026-11-06T10:00:00Z')
 const stamp = '2026-11-06T09:00:00Z'
 const point = (date, value = 100) => ({date,value,currency:'USD',basis:'provider-dated',source:'Yahoo Finance',observedAt:stamp})
@@ -10,6 +12,19 @@ const pairs = {KRW:'KRW=X',JPY:'JPY=X',TWD:'TWD=X',EUR:'EUR=X',CHF:'USDCHF=X',HK
   AED:'AED=X',AUD:'AUD=X',BRL:'BRL=X',CAD:'CAD=X',IDR:'IDR=X',INR:'INR=X',MYR:'MYR=X',NZD:'NZD=X',
   QAR:'QAR=X',SAR:'SAR=X',SEK:'SEK=X',THB:'THB=X',TRY:'TRY=X',DKK:'DKK=X',GBP:'GBP=X'}
 const fx = async symbol => ({symbol,currency:Object.keys(pairs).find(currency=>pairs[currency]===symbol),priceBasis:'previous-completed-session',closeDate:'2026-11-04',interval:'1d',timezone:'UTC',source:'Yahoo Finance',fetchedAt:stamp,bars:[{time:Date.parse('2026-11-04T00:00:00Z')/1000,close:1000}]})
+
+test('default historical-cap enrichment targets every approved listed ticker and excludes other collected issuers', async () => {
+  const requested = []
+  const input = {...snapshot,quotes:[...focusCompanies.map(company=>({symbol:company.ticker})),{symbol:'UNSELECTED'}]}
+  const data = await enrichHomeMarket(input,{now,fxService:fx,capService:async symbol=>{
+    requested.push(symbol)
+    return {symbol,status:'ok',fetchedAt:stamp,observations:[point('2026-11-04')],conflictingDates:[]}
+  }})
+  assert.deepEqual(requested.sort(),MAP_COMPANIES.filter(company=>company.listed).map(company=>company.primaryTicker).sort())
+  assert.equal(data.homeCoverage.focusCount,focusCompanies.length)
+  assert.equal(data.homeCoverage.historicalCapCompanies,focusCompanies.length)
+  assert.equal(data.quotes.find(quote=>quote.symbol==='UNSELECTED').marketCapHistory,undefined)
+})
 
 test('home enrichment preserves actual price timestamps and collects separately dated caps and FX', async () => {
   const data = await enrichHomeMarket(snapshot,{now,companies,fxService:fx,capService:async symbol=>({symbol,status:'ok',fetchedAt:stamp,observations:[point('2026-11-04')],conflictingDates:[]})})

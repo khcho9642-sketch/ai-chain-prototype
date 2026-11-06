@@ -13,7 +13,7 @@ import { verifyTodayDiscussionHashes } from './community/today-discussion.mjs'
 import { validateTodayPersonas, TODAY_PERSONAS_MAX_BYTES } from '../assets/today-persona-core.js'
 import { verifyTodayPersonaHashes } from './community/today-persona.mjs'
 import { validateComparisonHistorySnapshot, MAX_COMPARISON_HISTORY_BYTES } from '../assets/comparison-history-core.js'
-import { buildRippleSnapshot, validateRippleSnapshot } from '../assets/ripple-core.js'
+import { buildRippleSnapshot, validateRippleSnapshot, rippleMatchesSelection } from '../assets/ripple-core.js'
 import { buildDebatePublication } from './deployment/debate-publication.mjs'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
@@ -28,7 +28,7 @@ export async function resolveBuildRippleSnapshot(root, marketSnapshot, { now = D
   const expectedSource = marketSnapshot?.generatedAt ?? null
   try {
     const value = validateRippleSnapshot(JSON.parse(await readFile(join(root, 'data', 'ripple.json'), 'utf8')))
-    if (value.sourceSnapshotGeneratedAt === expectedSource) return value
+    if (value.sourceSnapshotGeneratedAt === expectedSource && rippleMatchesSelection(value)) return value
   } catch {}
   return validateRippleSnapshot(buildRippleSnapshot({ marketSnapshot, now }))
 }

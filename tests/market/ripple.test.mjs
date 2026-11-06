@@ -6,6 +6,8 @@ import { join } from 'node:path'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { buildRippleSnapshot, createUnavailableRippleSnapshot, rippleMarket, validateRippleSnapshot } from '../../assets/ripple-core.js'
 import { buildRippleFile } from '../../scripts/data/build-ripple.mjs'
+import { focusCompanies } from '../../assets/home-focus.js'
+import { MAP_UNIVERSE } from '../../assets/home-map-universe.js'
 
 const now = '2026-11-06T09:00:00.000Z'
 const company = (ticker, order = 4) => ({ ticker, name: ticker + ' company', sectorId: SECTORS[order - 1].id })
@@ -31,6 +33,16 @@ function quote(ticker, sessionDates, returns = 1, { market = 'US', fetchedAt = n
 const snapshot = quotes => ({ schemaVersion: 1, generatedAt: now, mode: 'scheduled-close', quotes })
 const build = (quotes, companies, extra = {}) => buildRippleSnapshot({ marketSnapshot: snapshot(quotes), companies, now, ...extra })
 function rippleFor(value, ticker) { return value.ripples.find(ripple => ripple.trigger.ticker === ticker) }
+
+test('default ripple basket uses the approved listed selection and revised sector assignments', () => {
+  const selectedQuotes = focusCompanies.map(company => quote(company.ticker, usDates, company.ticker === '042700.KS' ? 3 : 1))
+  const value = buildRippleSnapshot({marketSnapshot:snapshot(selectedQuotes),now})
+  assert.equal(value.coverage.targetCompanies, MAP_UNIVERSE.listedCompanyCount)
+  assert.equal(value.coverage.usableCompanies, focusCompanies.length)
+  const hanmi = value.triggers.find(trigger => trigger.ticker === '042700.KS')
+  assert.equal(hanmi.sectorId, 'semiconductor-equipment')
+  assert.ok(!value.triggers.some(trigger => ['OpenAI','Anthropic','DeepSeek'].includes(trigger.name)))
+})
 
 test('top three triggers are largest absolute completed daily changes, with a two-percent floor', () => {
   const companies = ['ONE','TWO','THREE','SMALL'].map(ticker => company(ticker))
