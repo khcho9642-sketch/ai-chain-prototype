@@ -1,37 +1,29 @@
-import { sectorEvents } from './sector-event-catalog.js';
+import { getSectorEventCandidates } from './sector-event-candidates.js';
 
 const formatDate = date => date.replaceAll('-', '.');
 const toggleKey = 'sector-compare.show-event-pins';
+const kindNames = { high: '기간 고점', low: '기간 저점', rise: '급등', fall: '급락' };
+const pct = value => (value > 0 ? '+' : '') + value.toFixed(2) + '%';
 
-// The chart spaces common trading sessions evenly. A local trading date missing
-// from that axis belongs between its neighbours, while the card keeps its true date.
-export function eventsOnAxis(dates, events = sectorEvents) {
-  if (dates.length < 2) return [];
-  const last = dates.length - 1;
-  return events.filter(event => event.tradingDate >= dates[0] && event.tradingDate <= dates[last])
-    .map(event => {
-      const day = event.tradingDate;
-      const next = dates.findIndex(date => date >= day);
-      if (dates[next] === day) return { event, fraction: next / last };
-      const before = Date.parse(dates[next - 1]);
-      const offset = (Date.parse(day) - before) / (Date.parse(dates[next]) - before);
-      return { event, fraction: (next - 1 + offset) / last };
-    }).sort((a, b) => a.fraction - b.fraction);
-}
-
-export function groupPins(pins, left, right) {
+// Reserve the selected date and the two extrema first. Each of the remaining
+// dates joins a marker within 40 px or receives its own spot on the same row.
+export function groupPins(pins, left, right, activeDate) {
+  const priority = pin => pin.date === activeDate ? 2 : pin.mandatory ? 1 : 0;
+  const ordered = [...pins].sort((a, b) => priority(b) - priority(a) || a.fraction - b.fraction);
   const groups = [];
-  for (const { event, fraction } of pins) {
-    const x = left + fraction * (right - left);
-    const last = groups.at(-1);
-    // Keep groups anchored to their first date and separated by a full hit target.
-    if (last && x - last.x < 40) {
-      last.events.push(event);
-    } else {
-      groups.push({ x, events: [event] });
+  for (const pin of ordered) {
+    const x = left + pin.fraction * (right - left);
+    let closest;
+    let gap = 40;
+    for (const group of groups) {
+      const distance = Math.abs(group.x - x);
+      if (distance < gap) { closest = group; gap = distance; }
     }
+    if (closest) closest.pins.push(pin);
+    else groups.push({ x, anchor: pin, pins: [pin] });
   }
-  return groups;
+  for (const group of groups) group.pins.sort((a, b) => a.date.localeCompare(b.date));
+  return groups.sort((a, b) => a.x - b.x);
 }
 
 function node(tag, className, text) {
@@ -45,6 +37,46 @@ function button(label, className) {
   const el = node('button', className, label);
   el.type = 'button';
   return el;
+}
+
+function titleFor(pin, sector) {
+  if (!pin.kinds.length) return pin.events[0].title;
+  const labels = pin.kinds.map(kind => kindNames[kind]);
+  if (pin.kinds.includes('rise') || pin.kinds.includes('fall')) labels.push(pct(pin.changePct));
+  return sector.name + ' ' + labels.join(' · ');
+}
+
+function appendAnnouncement(card, event, sectors) {
+  const line = node('div', 'scv-event-meta');
+  const announced = node('time', '', formatDate(event.date));
+  announced.dateTime = event.date;
+  line.append(announced, document.createTextNode(' · ' + (event.timing || '발표')));
+  if (event.date !== event.tradingDate) line.append(' · ' + formatDate(event.tradingDate).slice(5) + ' 거래분');
+  const link = node('a', 'scv-event-source', event.sourceName + ' 원문 ↗');
+  link.href = event.sourceUrl;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  card.append(line, node('h4', '', event.title), node('p', 'scv-event-summary', event.summary), link);
+  const labels = sectors.filter(row => event.sectorIds.includes(row.id)).map(row => row.name);
+  if (labels.length) card.append(node('span', 'scv-event-sectors', labels.join(' · ')));
+}
+
+function appendMoves(card, model, date) {
+  const moves = node('dl', 'scv-event-moves');
+  for (const row of model.eventMovesOn(date)) {
+    const pair = node('div', 'scv-event-move');
+    const name = node('dt', '', row.name);
+    const dot = node('i', 'scv-dot');
+    dot.style.background = row.color;
+    name.prepend(dot);
+    const rate = row.changePct;
+    const value = node('dd', rate > 0 ? 'scv-gain' : rate < 0 ? 'scv-loss' : '', rate == null ? '—' : pct(rate));
+    value.append(node('small', '', row.observedCount + '/' + row.totalCount + '종목'));
+    pair.append(name, value);
+    moves.append(pair);
+  }
+  card.append(node('h5', '', formatDate(date) + ' 거래일 · 섹터 등락률'), moves, node('p', 'scv-event-note',
+    '각 종목의 현지 전 거래일 종가 대비 등락률을 동일 비중으로 평균했습니다. 종목 수는 집계/등록 기준이며, 두 종가를 확인할 수 없는 종목은 제외합니다.'));
 }
 
 export function mountEventPins(host) {
@@ -65,96 +97,88 @@ export function mountEventPins(host) {
 
   let visible = true;
   try { visible = localStorage.getItem(toggleKey) !== 'off'; } catch { /* Storage is optional. */ }
-  let model, sectorId, bounds, activeId;
+  let model, sector, bounds, activeDate, hoverDate, focusDate, setGuide;
   let pins = [];
-  let groups = [];
 
-  function renderDetail() {
-    const group = groups.find(group => group.events.some(event => event.id === activeId));
-    card.hidden = !visible || !group;
+  function syncGuide() {
+    const date = hoverDate ?? focusDate ?? activeDate;
+    const pin = visible && !host.hidden && pins.find(item => item.date === date);
+    setGuide?.(pin || null);
+  }
+
+  function renderDetail(group) {
+    card.hidden = !group;
     card.replaceChildren();
-    if (card.hidden) return;
-    const event = group.events.find(event => event.id === activeId);
-    if (group.events.length > 1) {
+    if (!group) return;
+    const selected = group.anchor;
+    if (group.pins.length > 1) {
       const choices = node('div', 'scv-event-choices');
       choices.setAttribute('role', 'group');
       choices.setAttribute('aria-label', '인접한 사건 선택');
-      for (const choice of group.events) {
-        const item = button(formatDate(choice.tradingDate).slice(5) + ' · ' + choice.title, 'scv-event-choice');
-        item.setAttribute('aria-pressed', String(choice.id === event.id));
+      for (const choice of group.pins) {
+        const item = button(formatDate(choice.date).slice(5) + ' · ' + titleFor(choice, sector), 'scv-event-choice');
+        item.setAttribute('aria-pressed', String(choice === selected));
         item.onclick = () => {
-          activeId = choice.id;
-          renderDetail();
-          card.querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
+          activeDate = choice.date;
+          renderTrack();
+          const target = card.querySelector('[aria-pressed="true"]') ?? track.querySelector('[aria-expanded="true"]');
+          target?.focus({ preventScroll: true });
         };
         choices.append(item);
       }
       card.append(choices);
     }
-    const line = node('div', 'scv-event-meta');
-    const announced = node('time', '', formatDate(event.date));
-    announced.dateTime = event.date;
-    line.append(announced, document.createTextNode(' · ' + (event.timing || '발표')));
-    const link = node('a', 'scv-event-source', event.sourceName + ' 원문 ↗');
-    link.href = event.sourceUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    const labels = model.sectors.filter(row => event.sectorIds.includes(row.id)).map(row => row.name);
-    const title = node('h4', '', event.title);
-    const summary = node('p', 'scv-event-summary', event.summary);
-    card.append(line, title, summary, link);
-    if (labels.length) card.append(node('span', 'scv-event-sectors', labels.join(' · ')));
-    const movesHead = node('h5', '', formatDate(event.tradingDate) + ' 거래일 · 섹터 등락률');
-    const moves = node('dl', 'scv-event-moves');
-    for (const row of model.eventMovesOn(event.tradingDate)) {
-      const pair = node('div', 'scv-event-move');
-      const name = node('dt', '', row.name);
-      const dot = node('i', 'scv-dot');
-      dot.style.background = row.color;
-      name.prepend(dot);
-      const rate = row.changePct;
-      const rateText = rate == null ? '—' : (rate > 0 ? '+' : '') + rate.toFixed(2) + '%';
-      const value = node('dd', rate > 0 ? 'scv-gain' : rate < 0 ? 'scv-loss' : '', rateText);
-      value.append(node('small', '', row.observedCount + '/' + row.totalCount + '종목'));
-      pair.append(name, value);
-      moves.append(pair);
+    if (selected.kinds.length) {
+      card.append(node('div', 'scv-event-meta', formatDate(selected.date) + ' · ' + titleFor(selected, sector)));
+      if (selected.mandatory && selected.events.length) {
+        card.append(node('p', 'scv-event-note', '이 날짜 전후 3거래일의 ' + sector.name + ' 관련 발표'));
+      }
     }
-    card.append(movesHead, moves, node('p', 'scv-event-note',
-      '각 종목의 현지 전 거래일 종가 대비 등락률을 동일 비중으로 평균했습니다. 종목 수는 집계/등록 기준이며, 두 종가를 확인할 수 없는 종목은 제외합니다.'));
+    if (!selected.events.length) card.append(node('h4', '', '사건 미확인'));
+    for (const event of selected.events) appendAnnouncement(card, event, model.sectors);
+    appendMoves(card, model, selected.date);
   }
 
-  function renderTrack(focusSelected = false) {
+  function renderTrack() {
+    hoverDate = focusDate = undefined;
     track.replaceChildren();
-    groups = bounds ? groupPins(pins, bounds.left, bounds.right) : [];
+    const groups = bounds && visible ? groupPins(pins, bounds.left, bounds.right, activeDate) : [];
+    let selectedGroup;
     for (const group of groups) {
-      const first = group.events[0];
-      const multiple = group.events.length > 1;
-      const related = group.events.some(event => event.sectorIds.includes(sectorId));
-      const selected = group.events.some(event => event.id === activeId);
-      const pin = button('', 'scv-event-pin');
-      const label = group.events.map(event => formatDate(event.tradingDate) + ' ' + event.title).join(' / ');
+      const pin = button('', 'scv-event-pin is-related');
+      const date = group.anchor.date;
+      const selected = date === activeDate;
+      if (selected) selectedGroup = group;
+      const label = group.pins.map(item => formatDate(item.date) + ' ' + titleFor(item, sector)
+        + (item.events.length ? '' : ' · 사건 미확인')).join(' / ');
       pin.style.left = group.x + 'px';
-      const singleSectorId = new Set(group.events.flatMap(event => event.sectorIds));
-      const colorId = related ? sectorId : singleSectorId.size === 1 ? first.sectorIds[0] : null;
-      const color = model.sectors.find(row => row.id === colorId)?.color;
-      pin.style.setProperty('--pin-color', color || '#becdd9');
-      pin.classList.toggle('is-related', related);
+      pin.style.setProperty('--pin-color', sector.color);
+      pin.dataset.date = date;
       pin.title = label;
       pin.setAttribute('aria-label', label);
       pin.setAttribute('aria-controls', card.id);
       pin.setAttribute('aria-expanded', String(selected));
-      const dot = node('span', 'scv-pin-dot', multiple ? group.events.length : '');
+      const dot = node('span', 'scv-pin-dot', group.pins.length > 1 ? group.pins.length : '');
       dot.setAttribute('aria-hidden', 'true');
       pin.append(dot);
-      pin.onclick = () => {
-        activeId = selected ? undefined : first.id;
-        renderTrack(true);
-        if (selected) [...track.children].find(item => item.title === label)?.focus({ preventScroll: true });
+      pin.onpointerenter = e => { if (e.pointerType !== 'touch') { hoverDate = date; syncGuide(); } };
+      pin.onpointerleave = () => { hoverDate = undefined; syncGuide(); };
+      pin.onfocus = () => { if (pin.matches(':focus-visible')) { focusDate = date; syncGuide(); } };
+      pin.onblur = () => { focusDate = undefined; syncGuide(); };
+      pin.onclick = e => {
+        activeDate = selected ? undefined : date;
+        renderTrack();
+        const same = [...track.children].find(el => el.dataset.date === date || el.title.includes(formatDate(date)));
+        if (same) {
+          if (e.detail && e.pointerType !== 'touch' && same.matches(':hover')) hoverDate = same.dataset.date;
+          same.focus({ preventScroll: true });
+          syncGuide();
+        }
       };
       track.append(pin);
-      if (focusSelected && selected) pin.focus({ preventScroll: true });
     }
-    renderDetail();
+    syncGuide();
+    renderDetail(selectedGroup);
   }
 
   function updateControls() {
@@ -167,20 +191,26 @@ export function mountEventPins(host) {
   toggle.onclick = () => {
     visible = !visible;
     try { localStorage.setItem(toggleKey, visible ? 'on' : 'off'); } catch { /* Storage is optional. */ }
-    activeId = undefined;
+    activeDate = undefined;
     updateControls();
     renderTrack();
   };
   return {
-    update(nextModel, nextSectorId) {
+    update(nextModel, nextSectorId, days) {
+      setGuide?.(null);
+      setGuide = undefined;
+      if (model !== nextModel || sector?.id !== nextSectorId) activeDate = undefined;
       model = nextModel;
-      host.hidden = !model || model.dates.length < 2;
-      if (host.hidden) { activeId = undefined; bounds = null; return; }
-      sectorId = nextSectorId;
-      pins = eventsOnAxis(model.dates);
-      if (!pins.some(pin => pin.event.id === activeId)) activeId = undefined;
+      sector = model?.sectors.find(row => row.id === nextSectorId);
+      host.hidden = !sector || model.dates.length < 2;
+      if (host.hidden) { pins = []; bounds = undefined; return; }
+      pins = getSectorEventCandidates(model, sector.id, undefined, { days });
       updateControls();
       renderTrack();
+    },
+    guideReady(setter) {
+      setGuide = setter;
+      syncGuide();
     },
     layout(nextBounds) {
       if (bounds?.left === nextBounds.left && bounds?.right === nextBounds.right) return;

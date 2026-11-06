@@ -268,10 +268,11 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       (!sectorMode && (stockScope === 'all' || stockScope === 'custom') ? '<small class="scv-stock-sector">' + escape(row.sectorName) + '</small>' : '') +
       '</span></span><b class="' + tone(row.rate) + '">' + pct(row.rate) +
       '</b><span class="scv-drawdown">' + pct(row.belowPeak) + '</span></button>').join('');
-    eventPins.update(sectorMode ? model : null, sectorId);
+    eventPins.update(sectorMode ? model : null, sectorId, days);
     renderFlowChart(ui.plot, {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
       onLayout: sectorMode ? eventPins.layout : undefined,
+      onPinGuideReady: sectorMode ? eventPins.guideReady : undefined,
       lines: rows.map(row => ({ id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused })),
     });
 
