@@ -401,6 +401,8 @@ function projectDcf(assumptions, primitiveBundle, request, activeDriverIds) {
   const scenarioEnterpriseValue = scenarioPresentValue + terminalValue / scenarioDiscountFactor
   return {
     baselineEnterpriseValue,
+    baselineTerminalValuePvSharePct: baselineEnterpriseValue > 0
+      ? 100 * (terminalValue / baseDiscountFactor) / baselineEnterpriseValue : null,
     scenarioEnterpriseValue,
     scenarioValueIndex: baselineEnterpriseValue > 0 ? scenarioEnterpriseValue / baselineEnterpriseValue * 100 : null,
     baseline,
@@ -535,6 +537,7 @@ function buildEntityResult({ id, name, listingStatus = null, segmentWeights, exp
       normalizedStartingRevenue: actual ? null : financialBasis.startingRevenue,
       horizonMonths: MODEL_ASSUMPTIONS.horizonMonths,
       baselineEnterpriseValueUnits: round(projection.baselineEnterpriseValue),
+      baselineTerminalValuePvSharePct: comparable ? round(projection.baselineTerminalValuePvSharePct) : null,
       scenarioEnterpriseValueUnits: round(projection.scenarioEnterpriseValue),
       enterpriseValueRatio: comparable ? round(projection.scenarioValueIndex / 100, 6) : null,
       ...equityBridge,

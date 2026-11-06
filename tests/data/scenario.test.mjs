@@ -370,6 +370,7 @@ test('negative observed cash margins remain in the forecast and a nonpositive ba
   })
   const unavailable = company(result, 'CRWV')
   assert.ok(unavailable.valuation.baselineEnterpriseValueUnits <= 0)
+  assert.equal(unavailable.valuation.baselineTerminalValuePvSharePct, null)
   assert.equal(unavailable.valuation.comparisonStatus, 'nonpositive-baseline')
   assert.equal(unavailable.valueChangePct, null)
   for (const field of ['directPct', 'chainPct', 'rateDiscountPct', 'rateDirectDemandPct']) {

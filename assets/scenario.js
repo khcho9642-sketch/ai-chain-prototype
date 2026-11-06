@@ -634,6 +634,10 @@ function companyDetail() {
     return `<li><span>${esc(meta?.label || field)} <small>· ${esc(source)} · C</small></span><b>${Number(company.assumptions[field]).toFixed(2)}×</b></li>`
   }).join('')
   const paths = company.paths || []
+  const terminalShare = company.valuation?.baselineTerminalValuePvSharePct
+  const terminalNote = finite(terminalShare)
+    ? `잔존가치의 현재가치는 기준 기업가치의 ${Number(terminalShare).toFixed(1)}%이며, 할인율 변화만 반영합니다.`
+    : '기준 기업가치가 0 이하이거나 자료가 없어 잔존가치 비중을 산정할 수 없습니다.'
 
   return `<section class="scenario-panel scenario-company-detail" aria-labelledby="scenario-company-detail-heading">
     <div class="scenario-detail-hero"><div><h2 id="scenario-company-detail-heading" tabindex="-1">${esc(company.name || source.name)} <small>${esc(company.symbol || source.symbol || '비상장')}</small></h2><p>${esc(pathSummary(company.topPath, company))}</p><button type="button" class="scenario-quote-button" data-toggle-quotes aria-pressed="${uiState.showObservedQuotes}">${uiState.showObservedQuotes ? '관측·환산주가 숨기기' : '관측·환산주가 보기'}</button></div><div class="scenario-detail-index"><span>총 EV 변화</span><strong class="${impactClass(parts.total)}">${totalChange(parts.total)}</strong><small>가치지수 ${indexValue(company.scenarioValueIndex)}</small></div></div>
@@ -652,6 +656,7 @@ function companyDetail() {
       return `<label><span>${esc(field.label)}${field.optional ? ' · 선택' : ''}</span><span class="scenario-signed-input"><input type="number" inputmode="decimal" min="${field.min}" max="${field.max}" step="${field.step}" value="${finite(value) ? value : ''}" placeholder="${placeholder}" data-company-assumption="${esc(field.id)}" data-company-id="${esc(id)}"><small>${field.unit}</small></span></label>`
     }).join('')}${Object.entries(company.assumptions?.driverExposureMultipliers || {}).map(([driver, value]) => `<label><span>${esc(driverLabel(driver))} 노출 배수</span><span class="scenario-signed-input"><input type="number" min="0" max="2" step="0.05" value="${value}" data-company-exposure="${esc(driver)}" data-company-id="${esc(id)}"><small>×</small></span></label>`).join('')}</div></details>
     <details class="scenario-detail-fold"><summary>${esc(result?.model?.horizonMonths || 96)}개월 현금흐름 전망</summary>${operatingBridge(company)}</details>
+    <p class="scenario-note" data-terminal-share>충격은 일시적이며 8년 이후 현금흐름은 기준 전망으로 돌아간다고 가정합니다. ${esc(terminalNote)}</p>
     <p class="scenario-note">관측시가 환산은 동일 기준일 순차입금/EV 입력과 유효 시세가 있을 때만 표시합니다.</p>
     ${uiState.showObservedQuotes ? `<div data-company-quote>${quoteContent(company)}</div>` : ''}
   </section>`

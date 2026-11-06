@@ -48,6 +48,7 @@ test('a flat perpetual monthly cash flow has its monthly perpetuity value at bot
   const perpetuity = row.valuation.startingRevenue * 0.10 / 12 / monthlyRate
   close(row.valuation.terminalValueAtMonth96, perpetuity)
   close(row.valuation.baselineEnterpriseValueUnits, perpetuity)
+  close(row.valuation.baselineTerminalValuePvSharePct, 100 / 1.10 ** 8)
 })
 
 test('a temporary rate below terminal growth is valid when the permanent discount spread is positive', () => {
