@@ -1,6 +1,6 @@
 const flowChartDisposers = new WeakMap();
 
-export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, onGuideLayer, showPeak = true } = {}) {
+export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, onPinGuideReady, showPeak = true } = {}) {
   flowChartDisposers.get(container)?.();
   container.replaceChildren();
 
@@ -56,20 +56,33 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
   let y;
   let overlay;
   const x = i => left + i / last * (right - left);
-  const guideLayer = onGuideLayer && svgNode('g', { 'class': 'sector-flow-chart-guides', 'pointer-events': 'none', 'aria-hidden': 'true' });
-  let guides = [];
+  const pinLayer = onPinGuideReady && svgNode('g', {
+    class: 'sector-flow-pin-guide', 'pointer-events': 'none', 'aria-hidden': 'true',
+  });
+  let pinFraction = null;
 
-  function drawGuides() {
-    guideLayer.replaceChildren();
-    for (const { fraction, color, selected } of guides) {
-      const position = left + fraction * (right - left);
-      const marker = svgNode('line', {
-        class: selected ? 'sector-flow-chart-guide is-selected' : 'sector-flow-chart-guide',
-        x1: position, x2: position, y1: top, y2: bottom, stroke: color || '#becdd9',
-      });
-      if (selected) guideLayer.append(marker);
-      else guideLayer.prepend(marker);
-    }
+  function drawPinGuide() {
+    pinLayer.replaceChildren();
+    if (pinFraction === null) return;
+    const index = pinFraction * last;
+    const px = x(index);
+    const line = highlight[0];
+    const color = line?.color || '#b8c8d8';
+    pinLayer.append(svgNode('line', {
+      x1: px, x2: px, y1: top, y2: bottom, stroke: color,
+      'stroke-width': 1, 'stroke-dasharray': '3 4', 'stroke-opacity': .85,
+    }));
+    if (!line) return;
+    // Fractions computed from exact trading dates can pick up a rounding error.
+    const rounded = Math.round(index);
+    const position = Math.abs(index - rounded) <= Number.EPSILON * last * 2 ? rounded : index;
+    const start = Math.floor(position);
+    const a = line.values[start], b = line.values[Math.ceil(position)];
+    if (!valid(a) || !valid(b)) return;
+    const value = a + (b - a) * (position - start);
+    pinLayer.append(svgNode('circle', {
+      cx: px, cy: y(value - 100), r: 3.5, fill: color, stroke: '#101922', 'stroke-width': 1.25,
+    }));
   }
 
   function describeCursor() {
@@ -178,10 +191,6 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
       const label = multiYear ? day.slice(2).replaceAll('-', '.') : day.slice(5).replace('-', '.');
       svg.append(svgNode('text', { ...axisStyle, x: x(index), y: bottom + 18, 'text-anchor': t === 0 ? 'start' : t === dateCount - 1 ? 'end' : 'middle' }, label));
     }
-    if (guideLayer) {
-      svg.append(guideLayer);
-      drawGuides();
-    }
     for (const line of drawOrder) {
       let d = '';
       let continuous = false;
@@ -202,6 +211,10 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
       }
       svg.append(path);
       if (valid(line.values[last])) svg.append(svgNode('circle', { cx: x(last), cy: y(line.values[last] - 100), r: muted ? 1.8 : 3, fill: line.color, opacity: muted ? .55 : 1 }));
+    }
+    if (pinLayer) {
+      svg.append(pinLayer);
+      drawPinGuide();
     }
     markPeak();
     overlay = svgNode('g', { 'pointer-events': 'none' });
@@ -252,9 +265,10 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
   observer.observe(widget);
   flowChartDisposers.set(container, dispose);
   draw();
-  onGuideLayer?.(nextGuides => {
-    guides = nextGuides;
-    if (guideLayer.parentNode === svg) drawGuides();
+  onPinGuideReady?.(guide => {
+    const fraction = guide?.fraction;
+    pinFraction = valid(fraction) && fraction >= 0 && fraction <= 1 ? fraction : null;
+    if (pinLayer.parentNode === svg) drawPinGuide();
   });
   return dispose;
 }

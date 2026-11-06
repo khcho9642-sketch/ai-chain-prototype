@@ -40,11 +40,10 @@ function extremaDates(dates, series) {
 }
 
 function standardLimit(days) {
-  if (days <= 30) return 10;
-  if (days <= 90) return 16;
-  if (days <= 180) return 18;
-  if (days <= 365) return 22;
-  return 25;
+  if (days <= 30) return 5;
+  if (days <= 90) return 6;
+  if (days <= 180) return 8;
+  return 12;
 }
 
 export function getSectorEventCandidates(model, sectorId, catalog = sectorEvents, options = {}) {
@@ -56,7 +55,8 @@ export function getSectorEventCandidates(model, sectorId, catalog = sectorEvents
   const { limit = standardLimit(range), threshold = 4, radius = 3 } = options;
   const sessions = model.sectorSessionDates?.(sectorId) ?? dates;
   const extrema = extremaDates(dates, sector.series);
-  const directDates = new Set(catalog.map(event => event.tradingDate)
+  const focusedEvents = catalog.filter(event => event.sectorIds?.includes(sectorId));
+  const directDates = new Set(focusedEvents.map(event => event.tradingDate)
     .filter(date => date >= first && date <= last));
   const moves = new Map();
   const candidates = new Set([...directDates, ...extrema.keys()]);
@@ -84,23 +84,24 @@ export function getSectorEventCandidates(model, sectorId, catalog = sectorEvents
     }
     // The trading date, including an after-hours shift, locates an announcement.
     // Keep its original record intact so the card can separately show its publication date.
-    const relevant = event => event.sectorIds?.includes(sectorId) ?? false;
     const distance = event => Math.abs(firstOnOrAfter(sessions, event.tradingDate) - center);
-    const events = catalog.filter(event => event.tradingDate >= from && event.tradingDate <= through)
-      .sort((a, b) => Number(relevant(b)) - Number(relevant(a)) || distance(a) - distance(b) ||
+    const events = focusedEvents.filter(event => event.tradingDate >= from && event.tradingDate <= through)
+      .sort((a, b) => distance(a) - distance(b) ||
         a.tradingDate.localeCompare(b.tradingDate) || a.id.localeCompare(b.id));
-    const directlyRelated = events.some(event => event.tradingDate === date && relevant(event));
-    const related = mandatory || large || directlyRelated;
-    // Mandatory extrema come first. Within the remaining budget favour sourced sector
-    // events, then price moves of either sign, then other announcements.
-    let score = 20;
+    let score = 50 + Math.min(40, Number(magnitude.toFixed(6)));
     if (mandatory) score = 100;
-    else if (directlyRelated) score = 95;
-    else if (large) score = 50 + Math.min(40, Number(magnitude.toFixed(6)));
+    else if (directDates.has(date)) score = 95;
     rows.push({ date, fraction: fractionOnAxis(dates, date), sectorId, kinds,
-      changePct, events, mandatory, related, score });
+      changePct, events, mandatory, related: true, score });
   }
-  rows.sort((a, b) => b.score - a.score || b.date.localeCompare(a.date));
+  // Reserve one recent observation in each direction so a later sell-off (or rally)
+  // can still be seen when much larger historical moves fill the score ranking.
+  const recentStart = new Date(Date.parse(last) - 90 * DAY).toISOString().slice(0, 10);
+  const recent = rows.filter(row => row.date >= recentStart).sort((a, b) => b.date.localeCompare(a.date));
+  const represented = new Set(['rise', 'fall'].map(kind => recent.find(row => row.kinds.includes(kind))));
+  rows.sort((a, b) => Number(b.mandatory) - Number(a.mandatory) ||
+    Number(represented.has(b)) - Number(represented.has(a)) || b.score - a.score ||
+    b.date.localeCompare(a.date));
   return rows.slice(0, Math.max(extrema.size, limit))
     .sort((a, b) => a.date.localeCompare(b.date));
 }

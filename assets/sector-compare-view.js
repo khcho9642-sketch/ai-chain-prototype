@@ -272,7 +272,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     renderFlowChart(ui.plot, {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
       onLayout: sectorMode ? eventPins.layout : undefined,
-      onGuideLayer: sectorMode ? eventPins.connectGuides : undefined,
+      onPinGuideReady: sectorMode ? eventPins.guideReady : undefined,
       lines: rows.map(row => ({ id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused })),
     });
 
