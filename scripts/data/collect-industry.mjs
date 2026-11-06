@@ -21,7 +21,7 @@ export async function collectIndustry(output = 'data/industry.json') {
   const hasCustomsState = previous.sources.some(source => source.id === 'customs-itemtrade') || oldGaps.some(isCustomsGap)
   const customsKeyJustAdded = Boolean(process.env.CUSTOMS_SERVICE_KEY?.trim()) && oldGaps.some(gap => gap.id === 'customs-itemtrade-key-missing')
   const refreshKosis = dailyRefresh || !hasKosisState || kosisKeyJustAdded
-  const refreshCustoms = dailyRefresh || !hasCustomsState || customsKeyJustAdded
+  const refreshCustoms = dailyRefresh || !hasCustomsState || customsKeyJustAdded || process.argv.includes('--force-customs')
   if (!dailyRefresh && !refreshKosis && !refreshCustoms) {
     console.log('산업통계: 오늘 확인한 자료 유지 (하루 한 번 갱신)')
     return previous

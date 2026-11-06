@@ -30,8 +30,13 @@ function amount(value) {
 
 export function parseCustomsXml(xml, code, start, end) {
   if (typeof xml !== 'string' || Buffer.byteLength(xml) > 1_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml) || XMLValidator.validate(xml) !== true) throw new Error('Invalid customs XML')
-  const response = parser.parse(xml).response
-  if (response?.header?.resultCode !== '00') throw new Error('Customs API rejected request')
+  const document = parser.parse(xml)
+  const response = document.response
+  if (response?.header?.resultCode !== '00') {
+    const result = response?.header?.resultCode ?? document.OpenAPI_ServiceResponse?.cmmMsgHeader?.returnReasonCode
+    const code = /^\d{1,3}$/.test(String(result)) ? String(result) : 'unknown'
+    throw new Error('CUSTOMS_API_' + code)
+  }
   const entries = response.body?.items?.item
   const rows = entries ? (Array.isArray(entries) ? entries : [entries]) : []
   const periods = new Map()
@@ -40,7 +45,9 @@ export function parseCustomsXml(xml, code, start, end) {
     if (/^(총계|합계|총 계|합 계)$/.test(year)) continue
     const match = /^(\d{4})\.(0[1-9]|1[0-2])$/.exec(year)
     const period = match ? match[1] + '-' + match[2] : ''
-    if (String(row.hsCode).trim() !== code || !period || period < start || period > end || periods.has(period)) throw new Error('Customs series identity changed')
+    if (String(row.hsCode).trim() !== code) throw new Error('CUSTOMS_HS_MISMATCH')
+    if (!period) throw new Error('CUSTOMS_PERIOD_FORMAT')
+    if (period < start || period > end || periods.has(period)) throw new Error('CUSTOMS_PERIOD_RANGE')
     periods.set(period, { period, usd: amount(row.expDlr), kg: amount(row.expWgt) })
   }
   if (periods.size !== periodsBetween(start, end).length) throw new Error('Incomplete customs monthly response')
@@ -63,6 +70,7 @@ export async function collectCustoms(previous = {}, { now = new Date(), serviceK
   const available = Boolean(serviceKey?.trim())
   const series = new Map(oldSeries.map(item => [item.id, item]))
   const failures = []
+  const diagnostics = []
   let successes = 0
   // Until the monthly revision around the 15th, collect through the preceding complete release month.
   const end = monthAt(now, now.getUTCDate() >= 15 ? -1 : -2)
@@ -99,9 +107,13 @@ export async function collectCustoms(previous = {}, { now = new Date(), serviceK
           })
         }
         successes++
-      } catch {
+      } catch (error) {
         // URL-bearing transport errors may include the service key. Only publish a fixed status.
         failures.push(group.label)
+        const known = ['Missing trade value', 'Invalid trade value', 'Invalid customs XML', 'Incomplete customs monthly response', 'Customs request failed']
+        const reason = /^CUSTOMS_(?:API_(?:\d{1,3}|unknown)|HS_MISMATCH|PERIOD_FORMAT|PERIOD_RANGE)$/.test(error.message) || known.includes(error.message)
+          ? error.message : (error.name === 'TimeoutError' ? 'Request timeout' : 'Transport error')
+        diagnostics.push({ group: group.id, reason })
       }
     }
   }
@@ -112,7 +124,7 @@ export async function collectCustoms(previous = {}, { now = new Date(), serviceK
     gaps: !available || failures.length ? [{
       id: available ? 'customs-itemtrade-refresh-failed' : 'customs-itemtrade-key-missing', name: '메모리·변압기 수출액·순중량',
       status: available ? 'refresh-failed' : 'credential-required', reason, message: reason, sourceUrl: catalogUrl,
-      ...(failures.length ? { groups: failures } : {}),
+      ...(failures.length ? { groups: failures, diagnostics } : {}),
     }] : [],
   }
 }

@@ -41,7 +41,7 @@ jobs:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
           KOSIS_API_KEY: ${{ secrets.KOSIS_API_KEY }}
           CUSTOMS_SERVICE_KEY: ${{ secrets.CUSTOMS_SERVICE_KEY }}
-        run: node scripts/data/collect-industry.mjs
+        run: node scripts/data/collect-industry.mjs ${{ github.event_name == 'workflow_dispatch' && '--force-customs' || '' }}
       - name: Restore validated public collector state
         run: node scripts/deployment/restore-ai-snapshots.mjs --with-comparison
       - name: Collect free Epoch AI datasets
