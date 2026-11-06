@@ -7,6 +7,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [시나리오 분석](data/scenario.md) | 5개 시나리오 입력, 9개 섹터, 대표기업과 빅테크 7개, 가정 기반 가치 계산 |
+| [CAPEX 예산 주체와 공급 경로](data/scenario-capex-scope.md) | 금리 시나리오 참여 기업 41곳, 예산 주체 4곳의 경로별 기여도, 오라클·코어위브의 범위 점검 |
 | [시세·기업·피어 비교](data/market.md) | Yahoo Finance 출처·조회 환경·관심종목 저장·고리 평균·회사별 비교 계산 |
 | [산업통계 출처](data/industry-sources.md) | ECOS·TWSE·관세청 자료, 단위와 수집 한계 |
 | [AI 사업·산업 검토 통계](data/ai-statistics.md) | 지표 정의·관측 범위·검토 원본·수치 승인 |
