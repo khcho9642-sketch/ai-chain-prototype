@@ -39,6 +39,7 @@ jobs:
         continue-on-error: true
         env:
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          KOSIS_API_KEY: ${{ secrets.KOSIS_API_KEY }}
         run: node scripts/data/collect-industry.mjs
       - name: Restore validated public collector state
         run: node scripts/deployment/restore-ai-snapshots.mjs --with-comparison

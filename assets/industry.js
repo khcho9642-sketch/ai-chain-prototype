@@ -125,6 +125,14 @@ function paintMetrics() {
     <caption class="sr">${esc(title)} 최신값과 기준 시점</caption>
     <thead><tr><th scope="col">지표명</th><th scope="col">최신값·단위</th><th scope="col">기준 시점</th><th scope="col">출처</th></tr></thead>
     <tbody>${metricRows()}</tbody></table></div>` : `<p role="status">${loading ? '지표를 불러오는 중…' : keys.some(key => warnings.has(key) && !snapshots[key]) ? '자료를 불러오지 못했습니다.' : '연결된 지표 없음'}</p>`)
+  const industry = snapshots.industry
+  if ((sector === 'memory' || sector === 'monthly') && industry?.gaps?.some(gap => gap.id?.startsWith('kosis-'))) {
+    const saved = industry.series.some(series => series.sourceId === 'kosis-mining-manufacturing' && series.points.length)
+    const note = document.createElement('p')
+    note.className = 'note'
+    note.textContent = saved ? 'KOSIS 반도체 생산·출하·재고지수는 최근 저장한 자료를 표시합니다.' : 'KOSIS 반도체 생산·출하·재고지수는 첫 자료 수집을 기다리고 있습니다.'
+    list.append(note)
+  }
   if (previousScroll && list.querySelector('.sector-table-wrap')) list.querySelector('.sector-table-wrap').scrollTop = previousScroll
   paintChart()
   root.querySelector('[data-load-status]').textContent = keys.map(key => warnings.get(key)).filter(Boolean).join(' ')

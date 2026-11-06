@@ -100,6 +100,25 @@ test('monthly graphs break at missing months and a single observation keeps its 
   assert.doesNotMatch(single, /class="sector-chart-line"/u)
 })
 
+test('memory shows collected KOSIS indices as references and omits empty series', async () => {
+  const [industry, ai] = await Promise.all([snapshot('industry'), snapshot('ai-statistics')])
+  const source = {id: 'kosis-mining-manufacturing', name: 'KOSIS', url: 'https://kosis.kr/'}
+  const ids = ['kr-semiconductor-production', 'kr-semiconductor-shipments', 'kr-semiconductor-inventory']
+  industry.sources = [...industry.sources.filter(item => item.id !== source.id), source]
+  const indices = ids.map(id => ({ ...series, id, sourceId: source.id }))
+  industry.series = [...industry.series.filter(item => !ids.includes(item.id)), ...indices]
+  validateIndustry(industry)
+  const metrics = sectorMetrics('memory', { industry, ai })
+  assert.deepEqual(metrics.slice(0, 5).map(metric => metric.id), ['kr-semiconductor-volume', 'micron_cloud_memory_revenue', ...ids])
+  for (const metric of metrics.slice(2, 5)) {
+    assert.equal(metric.relation, 'reference')
+    assert.equal(metric.sourceUrl, source.url)
+    assert.equal(metric.latest.label, '2026-09')
+  }
+  indices[2].points = []
+  assert.ok(!sectorMetrics('memory', { industry, ai }).some(metric => metric.id === indices[2].id))
+})
+
 test('Epoch product ranks compare available values, include zero and export the complete original sample', () => {
   const rows = Array.from({ length: 10 }, (_, i) => ({ name: `GPU ${i}`, memory: i }))
   const epoch = { datasets: [{ id: 'hardware', lastSuccessAt: '2026-11-01T00:00:00Z', rows: [...rows, { name: '미공개', memory: null }] }] }
