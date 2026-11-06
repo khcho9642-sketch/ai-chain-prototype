@@ -350,3 +350,36 @@
   .sector-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sector-return-value{font-size:24px}
 }
+
+/* Actual capitalization and completed-session map provenance. */
+.map-data-status{margin:0;padding:4px 21px 1px;color:#839cb2;font-size:10px;line-height:1.7;overflow-wrap:anywhere}
+.map-data-status.is-stale{color:#d4b17e}
+.map-data-details{margin:5px 21px 0;border:1px solid #2a4054;border-radius:6px;color:#92aabe;font-size:10px;line-height:1.7}
+.map-data-details>summary{cursor:pointer;padding:6px 9px;color:#b5cadb}
+.map-data-details ul{margin:0;padding:2px 12px 10px 28px;max-height:180px;overflow:auto}
+.map-data-details li{padding:2px 0;overflow-wrap:anywhere}
+.chart-meta{height:auto;min-height:44px;gap:12px}
+#chart-explainer{flex-wrap:wrap;justify-content:flex-end;line-height:1.6}
+.breadcrumb{flex-shrink:0}
+.missing-legend{margin-left:5px;white-space:nowrap}
+.missing-legend::before{content:'';display:inline-block;width:7px;height:7px;margin-right:4px;background:#4e5967;border-radius:2px}
+.tooltip{max-width:min(390px,calc(100% - 16px))}
+.tooltip-provenance{margin-top:8px;line-height:1.6}
+.tooltip-provenance small{display:block;font-size:9px;overflow-wrap:anywhere}
+.selection-provenance{flex-basis:100%;order:5;border-top:1px solid #2d465d;padding-top:8px;line-height:1.6;min-width:0}
+.selection-provenance small{font-size:10px;overflow-wrap:anywhere;margin:1px 0}
+.selection-source-links{display:flex;gap:13px;flex-wrap:wrap;margin-top:6px}
+.selection-source-links a{font-size:10px;color:#a9d4f4;text-decoration:underline;text-underline-offset:3px;min-height:24px;display:inline-flex;align-items:center}
+#bubble-legend{line-height:1.6}
+@media(max-width:720px){
+  .map-data-status{padding:4px 13px 1px;font-size:9px}
+  .map-data-details{margin:5px 13px 0;font-size:9px}
+  .chart-meta{align-items:stretch;flex-direction:column;gap:5px;padding:8px 13px 10px;min-height:58px}
+  #chart-explainer{justify-content:flex-start;font-size:9px}
+  .return-legend{flex-wrap:wrap;max-width:100%}
+  .missing-legend{font-size:8px}
+  .selection{max-height:55svh;overflow:auto}
+  .selection-provenance small{font-size:9px}
+  .selection-source-links a{min-height:36px}
+  .page-footer p{overflow-wrap:anywhere}
+}

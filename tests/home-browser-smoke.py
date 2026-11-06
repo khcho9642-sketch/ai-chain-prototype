@@ -23,7 +23,8 @@ output.mkdir(parents=True, exist_ok=True)
 # contract only. Actual source files and deployed snapshots remain untouched.
 fixture_script = r"""
 import {focusCompanies} from './assets/home-focus.js';
-import {SECTORS} from './assets/home-map-core.js';
+import {SECTORS,COMPANIES} from './assets/home-map-core.js';
+import {buildActualMap} from './assets/home-map-data.js';
 import {buildRippleSnapshot} from './assets/ripple-core.js';
 import {buildSectorReturns} from './assets/home-performance.js';
 const DAY=86400000, now=Date.now(), stamp=new Date(now).toISOString();
@@ -34,11 +35,12 @@ let today=iso(now);while(!weekday(today))today=iso(Date.parse(today+'T12:00:00Z'
 const usEnd=shiftBusiness(today,-3),krEnd=shiftBusiness(usEnd,1);
 function datesTo(end){const rows=[];let date=end;while(rows.length<160){if(weekday(date))rows.unshift(date);date=iso(Date.parse(date+'T12:00:00Z')-DAY);}return rows;}
 const usDates=datesTo(usEnd),krDates=datesTo(krEnd);
-const fxRates={USD:1,KRW:1400,JPY:150,TWD:32};
-const quotes=focusCompanies.map((company,index)=>{
- const within=index%5,market=company.market;
- const currency=market==='KR'?'KRW':/\.T$/.test(company.ticker)?'JPY':/\.(TW|TWO)$/.test(company.ticker)?'TWD':'USD';
- const timezone=market==='KR'?'Asia/Seoul':currency==='JPY'?'Asia/Tokyo':currency==='TWD'?'Asia/Taipei':'America/New_York';
+const fxRates={USD:1,KRW:1400,JPY:150,TWD:32,EUR:.9,CHF:.85,HKD:7.8,SGD:1.3,CNY:7.1};
+const quotes=COMPANIES.map((company,index)=>{
+ const within=COMPANIES.filter(row=>row.sector===company.sector).findIndex(row=>row.ticker===company.ticker);
+ const currency=/\.(KS|KQ)$/.test(company.ticker)?'KRW':/\.T$/.test(company.ticker)?'JPY':/\.(TW|TWO)$/.test(company.ticker)?'TWD':/\.(PA|AS)$/.test(company.ticker)?'EUR':/\.SW$/.test(company.ticker)?'CHF':/\.HK$/.test(company.ticker)?'HKD':/\.SI$/.test(company.ticker)?'SGD':/\.(SS|SZ)$/.test(company.ticker)?'CNY':'USD';
+ const market=currency==='KRW'?'KR':currency==='USD'?'US':'OTHER';
+ const timezone=({KRW:'Asia/Seoul',JPY:'Asia/Tokyo',TWD:'Asia/Taipei',EUR:'Europe/Paris',CHF:'Europe/Zurich',HKD:'Asia/Hong_Kong',SGD:'Asia/Singapore',CNY:'Asia/Shanghai',USD:'America/New_York'})[currency];
  const dates=market==='KR'?krDates:usDates;
  let price=100+index*3;
  const bars=dates.map((date,j)=>{
@@ -54,14 +56,14 @@ const quotes=focusCompanies.map((company,index)=>{
   price:latest.close,previousClose:prior.close,change:latest.close-prior.close,changePercent:(latest.close/prior.close-1)*100,
   closeDate:dates.at(-1),previousCloseDate:dates.at(-2),priceBasis:'previous-completed-session',range:'1y',interval:'1d',marketTime:latest.time,
   fetchedAt:stamp,source:'Yahoo Finance',sourceUrl:'https://finance.yahoo.com/quote/'+encodeURIComponent(company.ticker)+'/',status:'ok',error:null,
-  delayed:true,bars,histories:{},marketCap:capUSD*fxRates[currency],marketCapStatus:'ok',marketCapCurrency:currency,
+  delayed:true,bars,histories:{},marketCap:capUSD*fxRates[currency],marketCapStatus:'ok',marketCapCurrency:currency,marketCapObservedAt:stamp,marketCapFetchedAt:stamp,marketCapBasis:'provider-current',
   marketCapHistory:dates.map(date=>({date,value:capUSD*fxRates[currency],currency,basis:'provider-dated',source:'browser-fixture'})),
   fixture:true};
 });
 const unionDates=[...new Set([...usDates,...krDates])].sort();
 const market={schemaVersion:1,generatedAt:stamp,source:'Yahoo Finance',mode:'scheduled-close',priceBasis:'previous-completed-session',refreshMinutes:null,
  coverage:{companyCount:586,listedCompanyCount:537,unlistedCompanyCount:49,targetSymbols:quotes.length},
- fxHistory:Object.fromEntries(['KRW','JPY','TWD'].map(currency=>[currency,{currency,observations:unionDates.map(date=>({date,unitsPerUSD:fxRates[currency]}))}])),
+ fxHistory:Object.fromEntries(Object.keys(fxRates).filter(currency=>currency!=='USD').map(currency=>[currency,{currency,baseCurrency:'USD',quoteConvention:'currency-per-USD',source:'browser-fixture',timezone:'UTC',fetchedAt:stamp,observations:unionDates.map(date=>({date,unitsPerUSD:fxRates[currency]}))}])),
  quotes,fixtureOnly:true};
 const ripple=buildRippleSnapshot({marketSnapshot:market,now});
 const model=buildSectorReturns({snapshot:market,period:'3mo',now});
@@ -70,7 +72,9 @@ const calm=structuredClone(market);
 calm.generatedAt=new Date(now+1000).toISOString();
 for(const quote of calm.quotes){quote.bars.at(-1).close=quote.bars.at(-2).close*1.001;quote.price=quote.bars.at(-1).close;quote.changePercent=.1;}
 const calmRipple=buildRippleSnapshot({marketSnapshot:calm,now:now+1000});
-console.log(JSON.stringify({market,ripple,model,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
+const actualMap=buildActualMap({snapshot:market,now});
+if(actualMap.coverage.renderableCount!==64||actualMap.coverage.returnableCount!==64)throw new Error('Browser map fixture must cover all64 companies');
+console.log(JSON.stringify({market,ripple,model,actualMap,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
 """
 prepared = subprocess.run(['node', '--input-type=module'], cwd=root, input=fixture_script,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
@@ -186,11 +190,16 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 search=home.get_by_role('searchbox',name='기업명 또는 티커 검색')
                 search.fill('NVDA')
                 assert home.locator('.tile').count()==1
+                assert '+8.00%' in home.locator('.tile').inner_text()
+                home.locator('.tile').click()
+                assert '시총 관측' in home.locator('#selection').inner_text()
+                assert '확정 종가' in home.locator('#selection').inner_text()
+                assert fixture_data['usEnd'] in home.locator('#selection').inner_text()
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
-                assert home.locator('.tile').count()>45
+                assert home.locator('.tile').count()==64
                 home.get_by_role('button',name='버블',exact=True).click()
                 home.locator('.bubble-node').first.wait_for()
-                assert home.locator('.bubble-node').count()>45
+                assert home.locator('.bubble-node').count()==64
                 home.get_by_role('button',name='히트맵',exact=True).click()
                 home.locator('.sector-return-card[data-sector=memory]').click()
                 assert home.locator('.sector-heading').count()==1
@@ -198,7 +207,30 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert home.locator('.sector-heading').count()==9
                 home.locator('.ripple-trigger-card').click()
                 page.wait_for_function("location.hash.startsWith('#company-info/company/')")
-                checks.append('existing heatmap/bubble/search/sector interactions and company-detail deep link')
+                checks.append('64 actual-cap heatmap/bubbles, exact NVDA completed return, provenance, search, sector and detail interactions')
+
+                page.goto(origin+'/#home'); home=wait_home(page)
+                incomplete=json.loads(json.dumps(fixture_data['market']))
+                by_symbol={quote['symbol']:quote for quote in incomplete['quotes']}
+                by_symbol['AMD']['marketCap']=None
+                incomplete['fxHistory'].pop('EUR')
+                by_symbol['NVDA']['bars']=by_symbol['NVDA']['bars'][-1:]
+                page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",incomplete)
+                assert home.locator('.tile').count()==61
+                assert '시총/환율 미확보 3' in home.locator('[data-map-coverage]').inner_text()
+                assert 'AMD' in home.locator('#map-exclusions').text_content()
+                assert '시총 관측일 기준 환율 미확보' in home.locator('#map-exclusions').text_content()
+                home.get_by_role('searchbox',name='기업명 또는 티커 검색').fill('NVDA')
+                assert '—' in home.locator('.tile').inner_text()
+                assert home.locator('.tile').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgb(78, 89, 103)'
+                home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
+                home.get_by_role('button',name='버블',exact=True).click()
+                assert home.locator('.bubble-node').count()==60
+                assert '등락률 미확보 1개 · 버블 제외' in home.locator('#map-data-status').inner_text()
+                home.get_by_role('button',name='히트맵',exact=True).click()
+                page.evaluate("value => window.dispatchEvent(new CustomEvent('market-snapshot',{detail:value}))",fixture_data['market'])
+                assert home.locator('.tile').count()==64
+                checks.append('missing cap/FX excluded, missing comparison close neutral in heatmap and excluded from bubbles, snapshot rerenders full map')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
                 previous_date=home.locator('[data-home-close-date]').inner_text()

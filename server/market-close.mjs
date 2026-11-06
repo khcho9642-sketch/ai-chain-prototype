@@ -105,13 +105,17 @@ export function createDailyCloseService({
         try {
           const url = new URL(`https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}`)
           const params = new URLSearchParams({ interval: '1d', events: 'div,splits' })
-          if (range === '3y') {
-            const end = new Date(timeMs(now)), start = new Date(end)
-            start.setUTCFullYear(start.getUTCFullYear() - 3)
-            start.setUTCDate(start.getUTCDate() - 14)
-            params.set('period1', String(Math.floor(start.getTime() / 1000)))
-            params.set('period2', String(Math.floor(end.getTime() / 1000)))
-          } else params.set('range', range)
+          const end = new Date(attemptMs), start = new Date(end)
+          const bufferDays = range === '3y' ? 14 : 15
+          if (range === '3y') start.setUTCFullYear(start.getUTCFullYear() - 3)
+          else start.setUTCDate(start.getUTCDate() - 365)
+          // A provider's exact one-year window can start after the completed
+          // session's year-ago baseline. Keep a short session/holiday buffer;
+          // the requested comparison range remains one year.
+          start.setUTCDate(start.getUTCDate() - bufferDays)
+          const period1 = Math.floor(start.getTime() / 1000), period2 = Math.floor(end.getTime() / 1000)
+          params.set('period1', String(period1))
+          params.set('period2', String(period2))
           url.search = params.toString()
           const response = await fetchImpl(url, {
             headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' },
@@ -122,6 +126,8 @@ export function createDailyCloseService({
           if (!result?.meta) throw new Error(body.chart?.error?.description || '조회 가능한 일별 종가가 없습니다.')
           if (typeof result.meta.symbol !== 'string' || result.meta.symbol.toUpperCase() !== symbol) throw new Error('요청 종목과 제공처 종목이 일치하지 않습니다.')
           const value = normalizeDailyClose(result, { now: timeMs(now), graceMinutes, range })
+          value.historyWindow = { requestedRange: range, from: new Date(period1 * 1000).toISOString(),
+            to: new Date(period2 * 1000).toISOString(), bufferDays }
           if (cache.size >= maxEntries) cache.delete(cache.keys().next().value)
           cache.set(key, { expires: timeMs(now) + ttl, value })
           return value

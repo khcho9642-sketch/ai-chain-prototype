@@ -134,9 +134,13 @@ test('daily service makes only a daily history request, shares concurrent work, 
   assert.deepEqual(quote, duplicate)
   await service('NVDA')
   assert.equal(urls.length, 1)
-  assert.equal(urls[0].searchParams.get('range'), '1y')
+  assert.equal(urls[0].searchParams.has('range'), false)
+  assert.equal(Number(urls[0].searchParams.get('period1')), seconds('2025-10-22T18:00:00Z'))
+  assert.equal(Number(urls[0].searchParams.get('period2')), seconds('2026-11-06T18:00:00Z'))
   assert.equal(urls[0].searchParams.get('interval'), '1d')
   assert.equal(urls[0].searchParams.get('events'), 'div,splits')
+  assert.equal(quote.range, '1y')
+  assert.deepEqual(quote.historyWindow, {requestedRange:'1y',from:'2025-10-22T18:00:00.000Z',to:'2026-11-06T18:00:00.000Z',bufferDays:15})
   const mismatch = createDailyCloseService({ fetchImpl: async () => responseFor(fixture({ symbol: 'AAPL' })) })
   await assert.rejects(mismatch('NVDA'), error => error.status === 502 && error.message.includes('일치'))
 })
@@ -151,6 +155,19 @@ test('daily service fails over to the second host and never fetches an invalid s
   assert.deepEqual(seen, ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'])
   for (const symbol of ['../.env', '', null, 'https://example.com']) await assert.rejects(service(symbol), error => error.status === 400)
   assert.equal(seen.length, 2)
+})
+
+test('one-year requests include 380 calendar days through a leap year without promoting incomplete candles', async () => {
+  const nowMs=Date.parse('2028-02-29T18:00:00Z'),urls=[]
+  const raw=fixture({rows:[['2027-02-26T14:30:00Z',50],['2028-02-28T14:30:00Z',100],['2028-02-29T14:30:00Z',999]],
+    session:['2028-02-29T14:30:00Z','2028-02-29T21:00:00Z']})
+  const service=createDailyCloseService({now:()=>nowMs,fetchImpl:async url=>{urls.push(url);return responseFor(raw)}})
+  const quote=await service('NVDA')
+  const start=Number(urls[0].searchParams.get('period1')),end=Number(urls[0].searchParams.get('period2'))
+  assert.equal((end-start)/86400,380)
+  assert.equal(start,seconds('2027-02-14T18:00:00Z'))
+  assert.equal(quote.closeDate,'2028-02-28')
+  assert.deepEqual(quote.bars.map(bar=>bar.close),[50,100])
 })
 
 test('three-year completed closes request exact daily periods and use a distinct cache entry', async () => {

@@ -2,7 +2,12 @@ import { focusCompanies } from '../../assets/home-focus.js'
 import { historicalMarketCap } from '../../server/market-cap-history.mjs'
 import { dailyClose } from '../../server/market-close.mjs'
 
-const currencies = { KRW: 'KRW=X', JPY: 'JPY=X', TWD: 'TWD=X' }
+// Each symbol is explicitly quoted as local-currency units per one USD.
+// Do not substitute inverse pairs such as EURUSD=X without a conversion rule.
+const currencies = Object.freeze({
+  KRW: 'KRW=X', JPY: 'JPY=X', TWD: 'TWD=X', EUR: 'EUR=X',
+  CHF: 'USDCHF=X', HKD: 'HKD=X', SGD: 'SGD=X', CNY: 'CNY=X',
+})
 const positive = value => Number.isFinite(value) && value > 0
 const reason = error => String(error?.message || '홈 기준일 자료 수집 실패').slice(0, 400)
 const localDate = (time, timezone) => {
@@ -52,18 +57,24 @@ export async function enrichHomeMarket(snapshot, {
       let quote = quotes.find(quote => quote.symbol === symbol && quote.priceBasis === 'previous-completed-session' && quote.status === 'ok')
       if (!quote) quote = await fxService(symbol)
       if (quote.symbol !== symbol || quote.currency !== currency || quote.priceBasis !== 'previous-completed-session'
-        || quote.interval !== '1d' || !Array.isArray(quote.bars) || !quote.timezone) throw new Error('환율 통화·기준일 오류')
+        || quote.interval !== '1d' || !Array.isArray(quote.bars) || !quote.timezone
+        || !/^\d{4}-\d{2}-\d{2}$/.test(quote.closeDate || '')) throw new Error('환율 통화·기준일 오류')
       const points = new Map()
       for (const bar of quote.bars) if (positive(bar.time) && bar.time * 1000 <= nowMs && positive(bar.close)) {
-        points.set(localDate(bar.time, quote.timezone), bar.close)
+        const date = localDate(bar.time, quote.timezone)
+        if (date <= quote.closeDate) points.set(date, bar.close)
       }
       const observations = [...points].sort(([a], [b]) => a.localeCompare(b)).map(([date, unitsPerUSD]) => ({ date, unitsPerUSD }))
       if (!observations.length) throw new Error('유효 환율 이력 없음')
-      fxHistory[currency] = { symbol, source: quote.source, fetchedAt: quote.fetchedAt,
+      fxHistory[currency] = { symbol, currency, baseCurrency: 'USD', quoteConvention: 'currency-per-USD',
+        source: quote.source, sourceUrl: quote.sourceUrl || `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/`, fetchedAt: quote.fetchedAt,
         timezone: quote.timezone, status: 'ok', error: null, observations }
     } catch (error) {
-      const prior = previous.fxHistory?.[currency]
+      const candidate = previous.fxHistory?.[currency]
+      const prior = candidate && (!candidate.currency || candidate.currency === currency)
+        && (!candidate.symbol || candidate.symbol === symbol) && (!candidate.baseCurrency || candidate.baseCurrency === 'USD') ? candidate : null
       fxHistory[currency] = { ...(prior || { symbol, observations: [], fetchedAt: null }),
+        symbol, currency, baseCurrency: 'USD', quoteConvention: 'currency-per-USD',
         status: prior?.observations?.length ? 'stale' : 'unavailable', error: reason(error) }
     }
   }))
