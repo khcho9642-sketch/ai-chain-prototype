@@ -1,7 +1,7 @@
 import { validateComparisonHistorySnapshot } from './comparison-history-core.js';
 import { getSectorPeriod } from './sector-compare-data.js';
 import { mountSectorCompare } from './sector-compare-view.js';
-import { createSectorEventIndex } from './sector-event-moves.js';
+import { createSectorEventMoves } from './sector-event-moves.js';
 
 const host = document.getElementById('v-sector-compare');
 const staticSite = location.hostname.endsWith('.github.io') || location.protocol === 'file:';
@@ -64,13 +64,19 @@ async function loadMarket() {
 function draw(feed, period) {
   let cache = periodModels.get(feed.snapshot);
   if (!cache) {
-    cache = { periods: new Map(), events: createSectorEventIndex(feed.snapshot) };
+    let moves;
+    cache = {
+      periods: new Map(),
+      movesOn(date) {
+        moves ??= createSectorEventMoves(feed.snapshot);
+        return moves(date);
+      },
+    };
     periodModels.set(feed.snapshot, cache);
   }
   if (!cache.periods.has(period)) {
     const model = getSectorPeriod(feed.snapshot, period);
-    model.eventMovesOn = cache.events.movesOn;
-    model.sectorSessionDates = cache.events.sessionDates;
+    model.eventMovesOn = cache.movesOn;
     if (feed.saved) model.source = (model.source || '종가') + ' · 배포 저장본';
     cache.periods.set(period, model);
   }

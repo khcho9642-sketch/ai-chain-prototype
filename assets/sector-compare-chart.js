@@ -1,6 +1,6 @@
 const flowChartDisposers = new WeakMap();
 
-export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, onGuideLayer, showPeak = true } = {}) {
+export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, showPeak = true } = {}) {
   flowChartDisposers.get(container)?.();
   container.replaceChildren();
 
@@ -56,21 +56,6 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
   let y;
   let overlay;
   const x = i => left + i / last * (right - left);
-  const guideLayer = onGuideLayer && svgNode('g', { 'class': 'sector-flow-chart-guides', 'pointer-events': 'none', 'aria-hidden': 'true' });
-  let guides = [];
-
-  function drawGuides() {
-    guideLayer.replaceChildren();
-    for (const { fraction, color, selected } of guides) {
-      const position = left + fraction * (right - left);
-      const marker = svgNode('line', {
-        class: selected ? 'sector-flow-chart-guide is-selected' : 'sector-flow-chart-guide',
-        x1: position, x2: position, y1: top, y2: bottom, stroke: color || '#becdd9',
-      });
-      if (selected) guideLayer.append(marker);
-      else guideLayer.prepend(marker);
-    }
-  }
 
   function describeCursor() {
     const rows = plotted.filter(l => valid(l.values[cursor]));
@@ -178,10 +163,6 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
       const label = multiYear ? day.slice(2).replaceAll('-', '.') : day.slice(5).replace('-', '.');
       svg.append(svgNode('text', { ...axisStyle, x: x(index), y: bottom + 18, 'text-anchor': t === 0 ? 'start' : t === dateCount - 1 ? 'end' : 'middle' }, label));
     }
-    if (guideLayer) {
-      svg.append(guideLayer);
-      drawGuides();
-    }
     for (const line of drawOrder) {
       let d = '';
       let continuous = false;
@@ -252,9 +233,5 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
   observer.observe(widget);
   flowChartDisposers.set(container, dispose);
   draw();
-  onGuideLayer?.(nextGuides => {
-    guides = nextGuides;
-    if (guideLayer.parentNode === svg) drawGuides();
-  });
   return dispose;
 }

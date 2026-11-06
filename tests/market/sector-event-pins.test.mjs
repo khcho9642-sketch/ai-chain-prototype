@@ -2,28 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SECTORS } from '../../assets/home-map-core.js';
 import { sectorEvents } from '../../assets/sector-event-catalog.js';
-import { groupPins } from '../../assets/sector-event-pins.js';
+import { eventsOnAxis, groupPins } from '../../assets/sector-event-pins.js';
 
-const pin = (date, fraction, score = 20, mandatory = false) => ({ date, fraction, score, mandatory });
-
-test('recent dates use a tighter cluster distance while individual controls remain reachable', () => {
-  const pins = [pin('2026-03-01', 0), pin('2026-03-02', .2), pin('2026-09-03', .55), pin('2026-09-04', .8)];
-  const groups = groupPins(pins, 0, 100, '2026-08-06');
-  assert.deepEqual(groups.map(g => g.pins.length), [2, 1, 1]);
-  assert.notEqual(groups[1].lane, groups[2].lane);
+test('a local session missing from the common axis keeps its own trading date', () => {
+  const dates = ['2026-09-29', '2026-10-02', '2026-10-05'];
+  const events = [
+    { id: 'outside', tradingDate: '2026-09-28' },
+    { id: 'first', tradingDate: '2026-09-29' },
+    { id: 'missing', tradingDate: '2026-09-30' },
+    { id: 'after-close', date: '2026-10-02', tradingDate: '2026-10-05' },
+  ];
+  const pins = eventsOnAxis(dates, events);
+  assert.deepEqual(pins.map(pin => pin.fraction), [0, 1 / 6, 1]);
+  assert.equal(pins[1].event.tradingDate, '2026-09-30');
+  assert.deepEqual(eventsOnAxis([dates[0]], events), []);
 });
 
-test('extrema keep separate markers; a group opens on its strongest candidate, then follows selection', () => {
-  const high = pin('2026-09-01', .1, 100, true);
-  const low = pin('2026-09-02', .12, 100, true);
-  const news = pin('2026-09-03', .14), related = pin('2026-09-04', .15, 95);
-  const pins = [high, low, news, related];
-  const groups = groupPins(pins, 0, 500, '2026-01-01');
-  assert.deepEqual(groups.map(g => g.pin.date), [high.date, low.date, related.date]);
-  assert.equal(groups[2].x, 75);
-  const selected = groupPins(pins, 0, 500, '2026-01-01', news.date);
-  assert.equal(selected[2].pin, news);
-  assert.equal(selected[2].x, 70);
+test('a narrow chart groups close pins without losing individual events', () => {
+  const pins = [0, 0.03, 0.09, 1].map((fraction, i) => ({ fraction, event: { id: i } }));
+  assert.deepEqual(groupPins(pins, 40, 240).map(g => g.events.map(e => e.id)), [[0, 1, 2], [3]]);
+  assert.deepEqual(groupPins(pins, 40, 1640).map(g => g.events.length), [1, 1, 1, 1]);
+  const consecutive = [0, 0.12, 0.25, 0.38, 0.5].map(fraction => ({ fraction, event: { id: fraction } }));
+  assert.deepEqual(groupPins(consecutive, 0, 200).map(g => g.events.length), [2, 2, 1]);
 });
 
 test('curated announcements link to a source and reference existing sectors', () => {

@@ -47,7 +47,7 @@ function closingPrices(quote, generatedAt, markets) {
 
 // Return the equally weighted mean of members' individual daily moves. Each member needs
 // both closes on adjacent observed sessions in its own market, including after holidays.
-export function createSectorEventIndex(snapshot) {
+export function createSectorEventMoves(snapshot) {
   if (snapshot?.schemaVersion !== 1 || !Array.isArray(snapshot.quotes)) {
     throw new TypeError('A version 1 snapshot with a quotes array is required');
   }
@@ -68,21 +68,7 @@ export function createSectorEventIndex(snapshot) {
       if (Date.parse(date) - Date.parse(prior) <= 7 * DAY_MS) market.previous.set(date, prior);
     }
   }
-  const sessionsBySector = new Map();
-  function sessionDates(sectorId) {
-    if (!sessionsBySector.has(sectorId)) {
-      const days = new Set();
-      for (const symbol of stocksBySector.get(sectorId) ?? []) {
-        for (const [date, bar] of stocks.get(symbol)?.prices ?? []) {
-          if (Number.isFinite(bar.close) && bar.close > 0) days.add(date);
-        }
-      }
-      sessionsBySector.set(sectorId, [...days].sort());
-    }
-    return sessionsBySector.get(sectorId);
-  }
-
-  function sectorMove(date, { id: sectorId, name, color }) {
+  return date => SECTORS.map(({ id: sectorId, name, color }) => {
     const symbols = stocksBySector.get(sectorId);
     let sum = 0;
     let observedCount = 0;
@@ -101,16 +87,5 @@ export function createSectorEventIndex(snapshot) {
       sectorId, name, color, changePct: observedCount ? sum / observedCount : null,
       observedCount, totalCount: symbols.length,
     };
-  }
-
-  const movesByDate = new Map();
-  function movesOn(date) {
-    if (!movesByDate.has(date)) movesByDate.set(date, SECTORS.map(sector => sectorMove(date, sector)));
-    return movesByDate.get(date);
-  }
-  return { sessionDates, movesOn };
-}
-
-export function createSectorEventMoves(snapshot) {
-  return createSectorEventIndex(snapshot).movesOn;
+  });
 }
