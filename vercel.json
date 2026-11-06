@@ -6,7 +6,7 @@
   "functions": {
     "api/debate-votes.js": {
       "maxDuration": 30,
-      "includeFiles": ["data/debate/index.json", "data/debate/*.json"]
+      "includeFiles": "data/debate/*.json"
     },
     "api/chart.js": {
       "maxDuration": 30
