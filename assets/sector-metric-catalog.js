@@ -29,6 +29,8 @@ const sectorCatalog = {
     monthly('kr-semiconductor-production', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
     monthly('kr-semiconductor-shipments', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
     monthly('kr-semiconductor-inventory', '국내 반도체 제조업 전체 · 메모리 참고 지표', 'reference'),
+    monthly('kr-memory-export-usd', '한국 전자집적회로 메모리 수출 · HS 854232'),
+    monthly('kr-memory-export-weight', '한국 전자집적회로 메모리 수출 순중량 · HS 854232'),
     monthly('kr-semiconductor-value-index', '반도체 전체 기준 · 메모리 참고 지표', 'reference'),
     monthly('kr-semiconductor-export-usd', '한국 반도체 수출 전체 · 메모리 참고 지표', 'reference'),
     comparison('hardware', 'memory', '가속기별 탑재 메모리 용량', 'Epoch AI에 수록된 가속기 사양 · 메모리 수요 참고 지표', 'reference'),
@@ -52,6 +54,8 @@ const sectorCatalog = {
   ],
   'power-cooling': [
     monthly('kr-transformer-volume', '한국 변압기 수출 전체 · 전력설비 수요 참고 지표', 'reference'),
+    monthly('kr-transformer-export-usd', '변압기 7개 HS 품목 합계 · 한국의 전 세계 수출'),
+    monthly('kr-transformer-export-weight', '변압기 7개 HS 품목 합계 · 한국의 전 세계 수출 순중량'),
     monthly('kr-transformer-value-index', '한국 변압기 수출 전체 · 전력설비 수요 참고 지표', 'reference'),
     monthly('kr-electrical-volume', '한국 전기장비 수출 전체 · 전력설비 수요 참고 지표', 'reference'),
     observation('ge_vernova_data_center_orders_ytd', 'GE Vernova가 공개한 데이터센터 관련 누적 주문액'),

@@ -105,7 +105,6 @@ export async function collectOfficialTrade(previous = {}, options = {}) {
   const lastSuccessAt = successes ? checkedAt : oldSource?.checkedAt;
   const source = { id: 'bok-ecos', name: '한국은행 ECOS 수출입무역지수', url: ECOS_URL, ...(lastSuccessAt ? { checkedAt: lastSuccessAt } : {}), attemptedAt: checkedAt, apiMode: key === 'sample' ? 'public-sample-10-rows' : 'registered-key', note: '2020=100, 달러 기준. 당해 연도는 잠정치이며 이후 수정될 수 있습니다. 선박·무기류·항공기·예술품 등 가격조사 제외 품목이 빠져 관세청 전체 수출액·중량의 움직임과 다를 수 있습니다.' };
   return { sources: [source], series, gaps: [
-    { id: 'customs-hs-weight', name: 'HS 품목별 수출금액·순중량', status: 'credential-required', sourceUrl: 'https://www.data.go.kr/data/15101609/openapi.do', message: '관세청 HS 품목별 kg·달러 API는 승인된 serviceKey가 필요합니다. 수출물량지수와 kg을 혼용하지 않습니다.', reason: '관세청 HS 품목별 kg·달러 API는 승인된 serviceKey가 필요합니다. 수출물량지수와 kg을 혼용하지 않습니다.' },
     ...errors.map((message, index) => ({ id: `ecos-error-${index}`, status: 'refresh-failed', message, reason: message })),
   ] };
 }

@@ -137,3 +137,33 @@ test('Epoch product ranks compare available values, include zero and export the 
   assert.doesNotMatch(csv, /미공개/u)
   assert.deepEqual(sectorMetrics('memory', {}), [])
 })
+
+test('customs memory and transformer exports use direct USD and kg series with the selected chart unit and source', async () => {
+  const [industry, ai] = await Promise.all([snapshot('industry'), snapshot('ai-statistics')])
+  const source = { id: 'customs-itemtrade', name: '관세청 품목별 수출입실적', url: 'https://www.data.go.kr/data/15101609/openapi.do' }
+  const goods = ['memory', 'transformer'].flatMap(group => [
+    { ...series, id: `kr-${group}-export-usd`, name: `${group} 수출액`, kind: 'value', unit: 'USD', sourceId: source.id },
+    { ...series, id: `kr-${group}-export-weight`, name: `${group} 수출 순중량`, kind: 'weight', unit: 'kg', sourceId: source.id },
+  ])
+  const ids = new Set(goods.map(item => item.id))
+  industry.sources = [...industry.sources.filter(item => item.id !== source.id), source]
+  industry.series = [...industry.series.filter(item => !ids.has(item.id)), ...goods]
+  validateIndustry(industry)
+  for (const [sector, group] of [['memory', 'memory'], ['power-cooling', 'transformer']]) {
+    const metrics = sectorMetrics(sector, { industry, ai })
+    const dollars = metrics.find(metric => metric.id === `kr-${group}-export-usd`)
+    const weight = metrics.find(metric => metric.id === `kr-${group}-export-weight`)
+    assert.deepEqual([dollars.unit, weight.unit], ['USD', 'kg'])
+    for (const metric of [dollars, weight]) {
+      assert.equal(metric.relation, 'direct')
+      assert.equal(metric.sourceUrl, source.url)
+      assert.equal(metric.latest.label, '2026-09')
+      assert.match(metricDetailHTML(metric), new RegExp(metric.unit, 'u'))
+      assert.doesNotMatch(metricDetailHTML(metric), /2020=100/u)
+      assert.ok(metricCsv(metric).includes(`"${metric.unit}"`))
+    }
+    assert.ok(!metrics.some(metric => metric.id.startsWith(`kr-${group === 'memory' ? 'transformer' : 'memory'}-export-`)))
+  }
+  goods[1].points = []
+  assert.ok(!sectorMetrics('memory', { industry, ai }).some(metric => metric.id === goods[1].id))
+})

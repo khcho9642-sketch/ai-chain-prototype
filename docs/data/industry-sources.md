@@ -58,7 +58,13 @@ Parameters: required `serviceKey`, `strtYymm`, `endYymm`; optional `hsSgn`. Resp
 
 Country-by-item alternative: https://www.data.go.kr/data/15100475/openapi.do and `https://apis.data.go.kr/1220000/nitemtrade/getNitemtradeList`; additionally required `cntyCd`, period within one year. Its HS response field is `hsCd`, unlike the national API's `hsCode`.
 
-Official catalog says export amounts are FOB USD and weights are net weight; updates incorporate correction/withdrawal around the 15th of each month. Do not relabel value as shipment volume and do not infer chip prices from USD/kg without product mix and quantity evidence. No approved Customs service key was available during this work, so the UI should show that HS-specific kg remains unconnected. Real BOK sector-volume indices and reviewed Customs overall net weight are available now.
+The registered service key is stored only in GitHub Actions as `CUSTOMS_SERVICE_KEY`.
+`scripts/data/collect-customs.mjs` queries 36 months using windows of at most 12 months.
+Before the 15th it collects through the month before the preceding month, then includes the preceding month after the regular revision date. The existing daily industry collection refreshes all 36 months and retains older history. Failed requests preserve each group's last successful pair of USD and kg series.
+
+Memory is HS 854232 (memory integrated circuits including DRAM, SRAM and flash). Transformers sum the seven disjoint HS6 codes 850421, 850422, 850423, 850431, 850432, 850433 and 850434. See the [current Customs memory classification](https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201005Q.do?searchVal=854232) and [transformer classification](https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201005Q.do?searchVal=8504). Each code must have the requested monthly rows before publishing its group. Total rows are excluded and missing values are not zero-filled.
+
+Export amounts are FOB USD and weights are net kg. Updates incorporate correction/withdrawal around the 15th of each month, and the response has no final/provisional flag. Points use `published` and retain their successful collection date. Public evidence links point to the catalog and never contain the service key. Memory and power-cooling sector charts label the measured product scope and use independent USD/kg axes.
 
 ## TSMC monthly revenue
 

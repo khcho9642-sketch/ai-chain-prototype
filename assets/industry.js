@@ -133,6 +133,15 @@ function paintMetrics() {
     note.textContent = saved ? 'KOSIS 반도체 생산·출하·재고지수는 최근 저장한 자료를 표시합니다.' : 'KOSIS 반도체 생산·출하·재고지수는 첫 자료 수집을 기다리고 있습니다.'
     list.append(note)
   }
+  if (['memory', 'power-cooling', 'monthly'].includes(sector) && industry?.gaps?.some(gap => gap.id?.startsWith('customs-itemtrade-'))) {
+    const prefix = sector === 'memory' ? 'kr-memory-' : sector === 'power-cooling' ? 'kr-transformer-' : ''
+    const saved = industry.series.some(series => series.sourceId === 'customs-itemtrade' && series.id.startsWith(prefix) && series.points.length)
+    const label = sector === 'memory' ? '메모리' : sector === 'power-cooling' ? '변압기' : '품목별'
+    const note = document.createElement('p')
+    note.className = 'note'
+    note.textContent = `관세청 ${label} 수출액·순중량은 ${saved ? '최근 저장한 자료를 표시합니다.' : '첫 자료 수집을 기다리고 있습니다.'}`
+    list.append(note)
+  }
   if (previousScroll && list.querySelector('.sector-table-wrap')) list.querySelector('.sector-table-wrap').scrollTop = previousScroll
   paintChart()
   root.querySelector('[data-load-status]').textContent = keys.map(key => warnings.get(key)).filter(Boolean).join(' ')
