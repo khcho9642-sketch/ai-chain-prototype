@@ -18,9 +18,10 @@ import { buildDebatePublication } from './deployment/debate-publication.mjs'
 import { buildMarketDisplaySnapshot } from './data/market-display.mjs'
 
 import { validateEpochSnapshot } from '../assets/epoch-ai-core.js'
+import { validateCompanyMarket } from '../assets/company-market-data.js'
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url))
-export const publicSnapshotFiles = ['market.json','market-display.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json','ripple.json']
+export const publicSnapshotFiles = ['market.json','market-display.json','industry.json','ai-statistics.json','ai-tokens.json','ai-disclosures.json','company-disclosures.json','company-market.json','today-picks.json','today-discussion.json','today-personas.json','comparison-history.json','epoch-ai.json','ripple.json']
 
 // A derived feed is only meaningful for the exact market snapshot in this build.
 // Older collectors and isolated fixtures may have no ripple file; derive it from
@@ -47,6 +48,7 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   if (!Array.isArray(data.quotes)) throw new Error('시세 스냅샷 형식이 올바르지 않습니다.')
   const displayData = buildMarketDisplaySnapshot(data)
   const ripple = await resolveBuildRippleSnapshot(source, data)
+  validateCompanyMarket(JSON.parse(await readFile(join(source,'data','company-market.json'),'utf8')))
   validateEpochSnapshot(JSON.parse(await readFile(join(source, 'data', 'epoch-ai.json'), 'utf8')))
   validateIndustry(JSON.parse(await readFile(join(source, 'data', 'industry.json'), 'utf8')))
   validateAiStatistics(JSON.parse(await readFile(join(source, 'data', 'ai-statistics.json'), 'utf8')))

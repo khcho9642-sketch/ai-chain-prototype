@@ -8,6 +8,11 @@ test('every mapped security opens its issuer, including multiple listings', () =
   for (const issuer of catalog.companies) {
     for (const { ticker } of issuer.listings) {
       assert.equal(findCompanyByTicker(ticker).id, issuer.id);
+      if (!issuer.selection) {
+        assert.equal(new URLSearchParams(companyHrefForTicker(ticker).split('?')[1]).get('q'),issuer.name);
+        assert.equal(companyHrefForTicker(ticker,'quote'),null);
+        continue;
+      }
       assert.equal(companyHrefForTicker(ticker), '#company-info/company/' + encodeURIComponent(issuer.id));
       const [route, params] = companyHrefForTicker(ticker, 'quote').split('?');
       assert.equal(route, companyHrefForTicker(ticker) + '/quote');

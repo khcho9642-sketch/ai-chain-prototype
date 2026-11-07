@@ -1,0 +1,16 @@
+{
+  "reviewedThrough": "2026-11-06",
+  "observations": [
+    {"companyId":"C0015","date":"2023-11-21","currency":"USD","value":1400000000,"kind":"Series C","url":"https://www.ai21.com/blog/ai21-completes-208-million-oversubscribed-series-c-round/"},
+    {"companyId":"C0037","date":"2026-05-28","currency":"USD","value":965000000000,"kind":"Series H · post-money","url":"https://www.anthropic.com/news/series-h"},
+    {"companyId":"C0070","date":"2025-12-01","currency":"USD","value":3250000000,"kind":"Series B · post-money","url":"https://bfl.ai/blog/our-300m-series-b"},
+    {"companyId":"C0126","date":"2026-01-13","currency":"USD","value":1300000000,"kind":"Series C","url":"https://deepgram.com/blog/press-release-deepgram-raises-series-c"},
+    {"companyId":"C0127","date":"2024-05-22","currency":"USD","value":2000000000,"kind":"투자 라운드","url":"https://www.deepl.com/en/press-release/deepl-announces-300-million-investment-at-2-billion-valuation-fueled-by-global-demand-for-ai-language-solutions"},
+    {"companyId":"C0144","date":"2026-09-30","currency":"USD","value":22000000000,"kind":"임직원 지분 공개매수","url":"https://elevenlabs.io/blog/tender-22bn"},
+    {"companyId":"C0272","date":"2024-01-26","currency":"USD","value":1000000000,"kind":"첫 투자 라운드","url":"https://blog.olakrutrim.com/press-release/"},
+    {"companyId":"C0312","date":"2026-09-09","currency":"EUR","value":21000000000,"qualifier":"above","kind":"Series D · post-money","url":"https://mistral.ai/news/mistral-makes-sovereign-open-weight-ai-to-frontier/"},
+    {"companyId":"C0351","date":"2026-03-31","currency":"USD","value":852000000000,"kind":"투자 라운드 · post-money","url":"https://openai.com/index/accelerating-the-next-phase-ai/"},
+    {"companyId":"C0448","date":"2026-06-03","currency":"USD","value":5400000000,"kind":"Series D · post-money","url":"https://suno.com/blog/series-d-announcement"},
+    {"companyId":"C0512","date":"2024-11-12","currency":"USD","value":1900000000,"kind":"Series C","url":"https://writer.com/blog/series-c-funding-writer-press-release/"}
+  ]
+}

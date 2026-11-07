@@ -6,8 +6,12 @@ import { SECTORS } from '../../assets/home-map-core.js'
 import { instruments } from '../../assets/instruments.js'
 import { dartCompanies } from '../../assets/company-disclosure-sources.js'
 import { approvedCatalog } from '../../assets/company-approved-catalog.js'
+import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
+import { registryRows } from '../../assets/company-registry-rows.js'
 
 const sectorIds = new Set(SECTORS.map(s => s.id))
+const registryIds = new Set(registryRows.map(row => row.id))
+const coreIds = new Map(MAP_COMPANIES.map(row => [row.id, row]))
 const discussionSymbols = new Set(instruments.filter(row => row.chains.some(id => id > 0)).map(row => row.symbol))
 const dartSymbols = new Set(dartCompanies.map(row => row.symbol))
 const output = fileURLToPath(new URL('../../assets/company-approved-catalog.js', import.meta.url))
@@ -35,8 +39,8 @@ function sourceURL(value) {
   return url.href
 }
 
-function sources(rows) {
-  requireValue(Array.isArray(rows) && rows.length, '원문 출처가 필요합니다.')
+function sources(rows, allowPending = false) {
+  requireValue(Array.isArray(rows) && (allowPending || rows.length), '원문 출처가 필요합니다.')
   return rows.map(s => ({ label: text(s.label, '출처 이름'), url: sourceURL(s.url) }))
 }
 
@@ -68,12 +72,20 @@ function publicCompany(row) {
   requireValue(row.dartSymbol == null || dartSymbols.has(row.dartSymbol), id + ' DART 수집 대상 오류')
   requireValue(row.discussionTicker == null || discussionSymbols.has(row.discussionTicker), id + ' 종목 토론 대상 오류')
   const financialId = row.financialId == null ? null : text(row.financialId, '재무 DB ID')
+  const references = sources(row.sources, row.sourceStatus === 'pending' && !coreIds.has(id))
+  const tags = (row.tags || []).map(s => text(s, '사업 특징'))
+  const listingCodes = (row.listingCodes || []).map(s => text(s, '원장 종목코드'))
+  requireValue(row.listed || !listingCodes.length, id + ' 비상장 종목코드 오류')
+  if (id === 'C0041' || id === 'SCN038') {
+    requireValue(tags.includes('자체 설계 칩') && sectorId !== 'ai-chips' && !secondarySectorIds.includes('ai-chips'), id + ' 자체 설계 칩 분류 오류')
+  }
   return {
-    id, name: text(row.name, '기업명'), englishName: text(row.englishName, '영문명'),
+    id, name: text(row.name, '기업명'), englishName: row.englishName ? text(row.englishName, '영문명') : '',
     aliases: (row.aliases || []).map(s => text(s, '별칭')),
     country: text(row.country, '국가'), sectorId, secondarySectorIds,
     product: text(row.product, '주요 제품'), overview: text(row.overview, '기업 개요'),
-    listed: row.listed, listings, sources: sources(row.sources), financialId,
+    listed: row.listed, listings, listingCodes, tags, sources: references,
+    sourceStatus: references.length ? 'linked' : 'pending', financialId,
     dartSymbol: row.dartSymbol || null, discussionTicker: row.discussionTicker || null,
     selection: null, analysis: null,
   }
@@ -113,16 +125,19 @@ export function buildCompanyRelease(input, previous = null) {
   unique(input.companies.map(row => text(row.id, '회사 ID')), '회사 ID')
   requireValue(input.companies.every(row => typeof row.public === 'boolean'), '회사 공개 여부 누락')
   const companies = input.companies.filter(row => row.public).map(publicCompany)
-  requireValue(companies.length === 500, '공개 기업은 고유 500개사여야 합니다.')
+  requireValue(companies.length === 586 && companies.every(c => registryIds.has(c.id)), '공개 기업 ID는 신기업정보 원장 586개사와 일치해야 합니다.')
   unique(companies.flatMap(c => c.listings.map(l => l.ticker)), '시세 티커')
   unique(companies.map(c => c.financialId).filter(Boolean), '재무 DB ID')
   const byId = new Map(companies.map(c => [c.id, c]))
-  requireValue(input.selections.length === 46, '핵심 기업은 46개사여야 합니다.')
+  requireValue(input.selections.length === 49, '핵심 기업은 49개사여야 합니다.')
   for (const entry of input.selections) {
     const company = byId.get(entry.companyId)
-    requireValue(company && !company.selection, '원장 밖 또는 중복 핵심 기업 ' + entry.companyId)
-    requireValue(Number.isSafeInteger(entry.order) && entry.order >= 0, '핵심 기업 표시 순서 오류')
-    company.selection = { reason: text(entry.reason, '선정 이유'), order: entry.order }
+    const selected = coreIds.get(entry.companyId)
+    requireValue(company && selected && !company.selection, '선정표 밖 또는 중복 핵심 기업 ' + entry.companyId)
+    requireValue(company.sectorId === selected.sectorId && company.listed === selected.listed &&
+      (company.listings[0]?.ticker || null) === selected.primaryTicker, '핵심 회사 섹터·상장 정보 불일치: ' + company.id)
+    requireValue(entry.order === selected.sourceOrder, '핵심 기업 표시 순서 오류')
+    company.selection = { reason: text(entry.reason, '선정 이유'), role:selected.role, order: entry.order }
   }
   requireValue(new Set(companies.filter(c => c.selection).map(c => c.sectorId)).size === SECTORS.length, '9개 핵심 섹터 모두에 기업이 필요합니다.')
   for (const old of previous?.companies || []) {
@@ -158,7 +173,7 @@ async function main() {
       await rm(temporary, { force: true })
     }
   }
-  console.log('공개 기업 500개사 · 핵심 기업 46개사 · 발행본 ' + release.companies.filter(c => c.analysis).length + '건')
+  console.log('전체 기업 586개사 · 핵심 기업 49개사 · 발행본 ' + release.companies.filter(c => c.analysis).length + '건')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

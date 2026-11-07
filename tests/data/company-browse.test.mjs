@@ -22,7 +22,7 @@ test('switching from core to all retains combined product, listing, country and 
   assert.equal(matchCompanies([company],filters).length,0)
   assert.deepEqual(matchCompanies([company],{...filters,tab:'all'}),[company])
   assert.equal(matchCompanies([company],{...filters,tab:'all',country:'미국'}).length,0)
-  assert.equal(matchCompanies([company],{...filters,tab:'all',sector:'packaging'}).length,1)
+  assert.equal(matchCompanies([company],{...filters,tab:'all',sector:'packaging'}).length,0)
   assert.equal(matchCompanies([company],{...filters,tab:'all',listing:'private'}).length,0)
   assert.equal(matchCompanies([company],{...filters,tab:'all',q:'042700.ks'}).length,1)
 })

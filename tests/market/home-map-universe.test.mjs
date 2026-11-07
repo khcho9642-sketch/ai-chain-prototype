@@ -35,7 +35,7 @@ test('the map contains exactly the approved sheet 49, preserving source order, n
   assert.ok(MAP_COMPANIES.every(company=>/^[A-Z]{2}$/.test(company.country) && company.countryCodes.every(code=>/^[A-Z]{2}$/.test(code))))
   assert.ok(MAP_COMPANIES.every(company=>!['cap','day','returns','marketCap'].some(key=>Object.hasOwn(company,key))))
   const source=await readFile(new URL('../../assets/home-map-universe.js',import.meta.url),'utf8')
-  assert.equal(source,renderHomeMapUniverse(expected))
+  assert.equal(source.replaceAll('\r\n','\n'),renderHomeMapUniverse(expected).replaceAll('\r\n','\n'))
   assert.ok(!source.includes('.xlsx'))
 })
 

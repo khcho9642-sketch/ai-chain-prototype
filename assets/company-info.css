@@ -99,3 +99,53 @@
   .ci-table .ci-sector-cell { grid-column:2; grid-row:1; font-size:12px }
   .ci-table .ci-product { grid-column:1/-1; color:#bac5d1 }
 }
+.ci-kicker {display:block;color:var(--accent);font:600 10px/1.5 ui-monospace,monospace;letter-spacing:.16em;margin-bottom:6px}
+.ci-card-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:1px;background:var(--line)}
+.ci-core-card {display:flex;flex-flow:column;align-items:flex-start;gap:6px;min-width:0;padding:15px 16px;background:var(--panel);color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+.ci-core-card:hover,.ci-core-card:focus-visible {background:var(--card-on);box-shadow:inset 0 -2px var(--sector)}
+.ci-core-card small {font:600 11px/1.4 ui-monospace,monospace;color:var(--accent)}
+.ci-core-card small span,.ci-read {color:var(--muted);font:400 11px/1.4 sans-serif}
+.ci-core-card strong {font-size:16px;letter-spacing:-.025em}
+.ci-core-card p {font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 5px}
+.ci-read {margin-top:auto;align-self:flex-end}
+.ci-display {display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ci-columns {position:relative;font-size:12px}
+.ci-columns summary,.ci-column-options button,.ci-market-note button {cursor:pointer;border:1px solid var(--dash);border-radius:6px;color:var(--ink);background:var(--card);padding:7px 10px}
+.ci-column-options {position:absolute;z-index:5;right:0;top:calc(100% + 5px);width:max-content;max-width:80vw;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:15px;border:1px solid var(--dash);border-radius:8px;background:var(--panel);box-shadow:0 12px 30px #0005}
+.ci-column-options label {display:flex;align-items:center;gap:5px}
+.ci-column-options input {accent-color:var(--accent)}
+.ci-column-options button {grid-column:1/-1}
+.ci-scroll-table {max-width:100%;overflow:auto;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:9px;scrollbar-color:var(--dash) var(--panel)}
+.ci-market-table {width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.ci-market-table td,.ci-market-table th {border-bottom:1px solid var(--line);padding:9px 12px;vertical-align:middle;background:var(--panel)}
+.ci-market-table tbody tr:last-child td {border-bottom:0}
+.ci-market-table tbody tr:hover td {background:var(--card-on)}
+.ci-market-table th {padding:0;text-align:left;background:var(--card-on);font-weight:600}
+.ci-market-table th button {display:block;width:100%;text-align:inherit;background:none;border:0;padding:11px 12px;color:var(--ink);white-space:nowrap;cursor:pointer}
+.ci-market-table th button span {color:var(--muted)}
+.ci-market-table th[aria-sort] button,.ci-market-table th[aria-sort] button span {color:var(--accent)}
+.ci-market-table td:first-child,.ci-market-table th:first-child {position:sticky;left:0;z-index:1;border-right:1px solid var(--line);max-width:195px;min-width:135px;overflow-wrap:anywhere}
+.ci-market-table small,.ci-asof-link {display:block;font:400 10px/1.45 sans-serif;color:var(--muted);margin-top:2px}
+.ci-asof-link {color:var(--accent)}
+.ci-market-table td[data-col=role] {max-width:250px;min-width:130px;line-height:1.5}
+.ci-market-table td[data-col=country] {max-width:145px}
+.ci-market-table td[data-col=ticker] {font-family:ui-monospace,monospace}
+.ci-market-table td.ci-number,.ci-market-table th:nth-child(n+6) {text-align:right;white-space:nowrap}
+.ci-market-table .ci-up {color:#ea9a92}.ci-market-table .ci-down {color:#91bbf0}
+.ci-na,.ci-loss {color:var(--muted)}
+.ci-market-note {margin-top:18px;font-size:12px;line-height:1.65;color:var(--muted)}
+.ci-market-note strong {color:var(--ink);font-weight:500}
+.ci-market-note p {margin:5px 0}
+.ci-market-note a {color:var(--accent)}
+@media(max-width:760px) {
+  .ci-shell {grid-template-columns:minmax(0,1fr)}
+  .ci-card-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ci-core-card {padding:12px;gap:5px}
+  .ci-core-card strong {font-size:14px}
+  .ci-market-table td:first-child,.ci-market-table th:first-child {min-width:110px;max-width:125px}
+  .ci-market-table td {padding:9px}
+  .ci-display {margin-left:auto}
+}
+
+.ci-value-source {color:inherit;text-decoration:underline dotted var(--dash);text-underline-offset:3px}
+.ci-value-source:hover {color:var(--accent)}

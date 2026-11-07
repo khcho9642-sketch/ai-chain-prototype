@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { catalog, findCompanyByTicker } from '../../assets/company-catalog.js'
-import { COMPANIES, SECTORS } from '../../assets/home-map-core.js'
+import { SECTORS } from '../../assets/home-map-core.js'
+import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
 import { instruments } from '../../assets/instruments.js'
 import { buildCompanyRelease } from '../../scripts/data/publish-company-catalog.mjs'
 
@@ -9,50 +10,63 @@ const source = { label: '사업보고서', url: 'https://www.sec.gov/edgar/searc
 const metric = { label: '매출', value: null, currency: 'USD', scope: '연결', unit: '백만', period: 'FY2025', sourceUrl: source.url }
 
 function input() {
-  const companies = Array.from({ length: 500 }, (_, i) => ({
-    id: 'test-' + i, name: '샘플' + i, englishName: 'Issuer ' + i, country: '한국',
-    sectorId: SECTORS[i % SECTORS.length].id, listed: false, listings: [],
-    product: '샘플 제품', overview: '샘플 회사', public: true, sources: [source],
-  }))
-  const selections = companies.slice(0, 46).map((c, i) => ({ companyId: c.id, reason: '선정 근거', order: i }))
-  return { status: 'approved', approvedAt: '2026-11-06', reviewer: '검토자', companies, selections, editions: [] }
+  const companies = structuredClone(catalog.companies).map(c => ({ ...c, public:true }))
+  const selections = MAP_COMPANIES.map(c => ({companyId:c.id, reason:c.role, order:c.sourceOrder}))
+  return { status:'approved', approvedAt:'2026-11-07', reviewer:'검토자', companies, selections, editions:[] }
 }
 
 function edition(overrides = {}) {
   return {
-    companyId: 'test-0', status: 'published', asOf: '2026-10-31', publishedAt: '2026-11-01', updatedAt: '2026-11-02',
+    companyId: 'C0051', status: 'published', asOf: '2026-10-31', publishedAt: '2026-11-01', updatedAt: '2026-11-02',
     reviewer: '검토자', conclusion: '결론', problem: '문제', solution: '해결', verification: '실적 검증',
     outlook: '불확실성과 다음 지표', sources: [source], metrics: [metric], ...overrides,
   }
 }
 
-test('preview follows the local DB issuer cohort and reconciles public market map symbols', () => {
-  if (catalog.mode !== 'preview') return
+test('586 issuer scope uses the approved 49-company roster, sectors, ordered primary listings and private identities', () => {
   const core = catalog.companies.filter(c => c.selection)
-  assert.equal(core.length, 46)
-  assert.equal(new Set(core.map(c => c.financialId)).size, 46)
+  assert.equal(catalog.companies.length, 586)
+  assert.equal(core.length, 49)
+  assert.equal(catalog.companies.filter(c=>c.listed).length, 537)
+  assert.equal(core.filter(c => c.listed).length, 46)
   assert.equal(new Set(core.map(c => c.sectorId)).size, 9)
+  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,5,5,6,7,4,6,5])
   assert.equal(core.filter(c => !c.listed && !c.listings.length).length, 3)
-  assert.ok(core.every(c => c.analysis === null && c.selection.reason && c.overview && c.product))
+  for (const selected of MAP_COMPANIES) {
+    const row = core.find(c=>c.id===selected.id)
+    assert.equal(row.listings[0]?.ticker || null, selected.primaryTicker)
+    assert.equal(row.sectorId, selected.sectorId)
+    assert.equal(row.selection.order, selected.sourceOrder)
+    assert.ok(row.selection.reason && row.overview && row.product && row.sources.length)
+  }
   assert.equal(new Set(catalog.companies.map(c => c.id)).size, catalog.companies.length)
   assert.equal(findCompanyByTicker('042700.KS').id, 'C0582')
   assert.equal(findCompanyByTicker('042700.KS').sectorId, 'semiconductor-equipment')
   assert.equal(findCompanyByTicker(' asx '), findCompanyByTicker('3711.tw'))
   assert.equal(findCompanyByTicker('2330.TW'), findCompanyByTicker('TSM'))
-  assert.ok(COMPANIES.every(c => findCompanyByTicker(c.ticker)))
+  for(const ticker of ['AAPL','TSLA']){
+    const row=findCompanyByTicker(ticker)
+    assert.equal(row.selection,null)
+    assert.ok(row.tags.includes('자체 설계 칩'))
+    assert.notEqual(row.sectorId,'ai-chips')
+  }
+  assert.equal(findCompanyByTicker('TSLA').id,'SCN038')
+  assert.ok(!catalog.companies.some(c=>c.id==='C0435' || c.name.toLowerCase()==='xai'))
   const discussion = new Set(instruments.filter(x => x.chains.some(id => id > 0)).map(x => x.symbol))
   assert.ok(catalog.companies.every(c => !c.discussionTicker || discussion.has(c.discussionTicker)))
-  assert.ok(catalog.companies.every(c => c.sources.length && c.overview.length > c.product.length))
+  assert.ok(catalog.companies.every(c => c.product && c.overview && c.sourceStatus === (c.sources.length ? 'linked' : 'pending')))
   assert.equal(findCompanyByTicker('GC=F'), undefined)
 })
 
 test('an approved release validates issuer counts, publication flags and sector identities', () => {
   const out = buildCompanyRelease(input())
-  assert.equal(out.companies.length, 500)
+  assert.equal(out.companies.length, 586)
   for (const change of [
     r => { r.status = 'draft' }, r => { r.companies.pop() }, r => { r.selections.pop() },
     r => { r.companies[0].id = r.companies[1].id }, r => { r.companies[0].sectorId = '8' },
     r => { r.selections[0].companyId = 'missing' }, r => { r.companies[0].public = 'true' },
+    r => { r.selections[0].companyId = 'C0041' },
+    r => { r.companies.find(c=>c.id==='C0051').listings.reverse() },
     r => { r.companies[0].secondarySectorIds = [r.companies[0].sectorId] },
     r => { r.companies[0].listed = true; r.companies[0].listings = [{ ticker: 'AAPL', exchange: 'NASDAQ', currency: 'USD' }]; r.companies[0].discussionTicker = 'AAPL' },
     r => { for (const c of r.companies) c.sectorId = SECTORS[0].id },
@@ -70,7 +84,7 @@ test('publishing rejects missing text, invalid dates, unsourced metrics and unsu
     { metrics: [{ ...metric, value: 12, currency: '' }] }, { metrics: [{ ...metric, unit: '' }] },
     { metrics: [{ ...metric, period: '' }] }, { sources: [{ label: '공시', url: 'javascript:alert(1)' }] },
     { sources: [{ label: '공시', url: 'http://example.org/filing' }] },
-    { companyId: 'test-499' },
+    { companyId: 'C0041' },
   ]) {
     assert.throws(() => buildCompanyRelease({ ...input(), editions: [edition(bad)] }))
   }
@@ -87,12 +101,12 @@ test('only the latest public edition is serialized and a revision in review reta
     edition(),
   ]
   const projected = buildCompanyRelease(data)
-  const article = projected.companies[0].analysis
+  const article = projected.companies.find(c=>c.id==='C0051').analysis
   assert.equal(article.conclusion, '최신 발행본')
   assert.equal(article.metrics[0].value, null)
   data.editions = [edition({ status: 'review', conclusion: 'HIDDEN' })]
   const revised = buildCompanyRelease(data, projected)
-  assert.deepEqual(revised.companies[0].analysis, article)
-  assert.equal(revised.companies[1].analysis, null)
+  assert.deepEqual(revised.companies.find(c=>c.id==='C0051').analysis, article)
+  assert.equal(revised.companies.find(c=>c.id==='C0041').analysis, null)
   assert.ok(!JSON.stringify(revised).includes('HIDDEN'))
 })

@@ -192,10 +192,14 @@ function renderSelection(){
     const info = document.createElement('a');
     info.href = companyHref;
     info.textContent = '신기업정보';
+    actions.append(info);
+  }
+  const quoteHref = companyHrefForTicker(c.ticker, 'quote');
+  if (quoteHref) {
     const chart = document.createElement('a');
-    chart.href = companyHrefForTicker(c.ticker, 'quote');
+    chart.href = quoteHref;
     chart.textContent = '시세·차트 보기';
-    actions.append(info, chart);
+    actions.append(chart);
   } else {
     const chart = document.createElement('button');
     chart.type = 'button';

@@ -1,11 +1,17 @@
 import { readFile } from 'node:fs/promises'
 import { instruments } from '../../assets/instruments.js'
-import { catalog } from '../../assets/company-catalog.js'
+import { previewRecords } from '../../assets/company-preview-records.js'
 import { SECTORS } from '../../assets/home-map-core.js'
 
 const defaultMaster = new URL('../../research/market/company-universe.json', import.meta.url)
 const defaultResolutions = new URL('../../research/market/listing-resolutions.json', import.meta.url)
 const sectorIds = Object.fromEntries(SECTORS.map((sector, index) => ['SEG' + (index + 1), sector.id]))
+// Preserve the historical ADR/share-class mappings independently of which issuers
+// are currently featured in the company directory.
+const listingSupplements = previewRecords.map(({ id, name, sectorId, country, listings }) => ({
+  id, name, sectorId, country, listed: listings.length > 0,
+  listings: listings.map(([ticker, exchange, currency]) => ({ ticker, exchange, currency })),
+}))
 
 // These are symbol-format mappings, not a claim that a listing is still traded
 // or that the provider has returned it. Collection validates those separately.
@@ -68,7 +74,7 @@ function primaryListing(company, knownSymbols) {
   return { exchange, ticker, ...normalizeListing(ticker, exchange, knownSymbols) }
 }
 
-export function buildMarketUniverse({ master, legacyItems = instruments, catalogCompanies = catalog.companies, listingResolutions = [], alternateListings = [] } = {}) {
+export function buildMarketUniverse({ master, legacyItems = instruments, catalogCompanies = listingSupplements, listingResolutions = [], alternateListings = [] } = {}) {
   if (!master || master.schemaVersion !== 1 || !Array.isArray(master.companies)) throw new Error('기업 수집 원장 형식 오류')
   const ids = new Set()
   for (const company of master.companies) {

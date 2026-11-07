@@ -1,43 +1,31 @@
 import { SECTORS } from './home-map-core.js'
-import { dartCompanies } from './company-disclosure-sources.js'
-import { companyProfiles } from './company-profiles.js'
+import { MAP_COMPANIES, MAP_UNIVERSE } from './home-map-universe.js'
 import { approvedCatalog } from './company-approved-catalog.js'
-import { previewRecords } from './company-preview-records.js'
+import { registryRows } from './company-registry-rows.js'
 
-const dartSymbols = new Set(dartCompanies.map(row => row.symbol))
-
-function previewCompany(row) {
-  const listings = row.listings.map(([ticker, exchange, currency]) => ({ ticker, exchange, currency }))
-  const primary = listings[0]?.ticker
-  const profile = companyProfiles[primary]
+const selectedById = new Map(MAP_COMPANIES.map(row => [row.id, row]))
+const currentCompanies = registryRows.map(company => {
+  const core = selectedById.get(company.id)
   return {
-    id: row.id,
-    name: row.name,
-    englishName: row.englishName,
-    aliases: row.aliases || [],
-    country: row.country,
-    sectorId: row.sectorId,
-    secondarySectorIds: row.secondarySectorIds || [],
-    product: row.product,
-    overview: row.overview || (profile?.exposure ? row.product + ' · ' + profile.exposure : row.product),
-    listed: listings.length > 0,
-    listings,
-    sources: row.urls.map(url => ({
-      label: url === profile?.sourceUrl ? profile.sourceLabel : new URL(url).hostname.replace(/^www\./, ''),
-      url,
-    })),
-    financialId: row.financialId || null,
-    dartSymbol: dartSymbols.has(primary) ? primary : null,
-    discussionTicker: row.discussionTicker || null,
-    selection: row.financialId ? { reason: row.reason, order: Number(row.financialId.slice(3)) } : null,
+    ...company,
+    selection: core ? { reason: company.overview, role: core.role, order: core.sourceOrder } : null,
     analysis: null,
   }
-}
+})
 
 export const catalog = {
-  mode: approvedCatalog ? 'approved' : 'preview',
+  mode: approvedCatalog ? 'approved' : 'registry',
   sectors: SECTORS,
-  companies: approvedCatalog?.companies || previewRecords.map(previewCompany),
+  source: {
+    url: MAP_UNIVERSE.sourceUrl,
+    asOf: MAP_UNIVERSE.sourceAsOf,
+    coreSheet: MAP_UNIVERSE.sourceSheet,
+    registrySheet: '회사리스트',
+    excludedId: 'C0435',
+    includedId: 'SCN038',
+    note: '회사리스트 586개사 중 xAI 사업만으로 편입된 SpaceX(C0435)를 제외하고, Tesla(SCN038)를 자체 설계 칩 기업으로 포함했습니다.',
+  },
+  companies: approvedCatalog?.companies || currentCompanies,
 }
 
 const tickerIndex = new Map(catalog.companies.flatMap(company =>

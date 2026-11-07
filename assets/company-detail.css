@@ -63,8 +63,9 @@
 .cid-card h2 { font-size: 20px; line-height: 1.45; }
 .cid-card h3 { margin-top: 24px; font-size: 14px; }
 .cid-card p { line-height: 1.8; }
-.cid-overview { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); align-items: start; gap: 16px; }
-.cid-overview h2 + p { margin-top: 12px; }
+.cid-business-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.cid-business-grid h2 + p, .cid-story h2 + p, [data-detail-financials] h2 + p { margin-top: 12px; }
+.cid-business-grid p, .cid-story p { word-break: keep-all; overflow-wrap: anywhere; }
 .cid-description, .cid-related p, .cid-analysis section > p { white-space: pre-line; }
 .cid-related h2 { font-size: 17px; }
 .cid-related small { display: block; }
@@ -108,7 +109,7 @@
 .cid-metrics thead { background: var(--card); color: var(--muted); }
 .cid-metrics .cid-number { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 720px) {
-  .cid-overview { grid-template-columns: 1fr; }
+  .cid-business-grid { grid-template-columns: 1fr; gap: 12px; }
   .cid-tabs { gap: 0 14px; }
   .cid-tabs .cid-discussion { margin-left: 0; }
   .cid-name > span { font-size: 14px; }

@@ -9,6 +9,7 @@ import { build } from '../../scripts/build.mjs'
 import { createSiteServer } from '../../scripts/serve.mjs'
 import { createEmptyCompanyDisclosures } from '../../assets/company-disclosures-core.js'
 import { emptyEpochSnapshot } from '../../assets/epoch-ai-core.js'
+import { companyMarketFixture } from '../helpers/company-market-fixture.mjs'
 import {
   BIG7_COMPANY_IDS,
   COMPANIES,
@@ -57,6 +58,7 @@ async function fixtureRoot(t) {
   await writeFile(join(root, '.env'), 'PRIVATE')
 
   const snapshots = {
+    'company-market.json': companyMarketFixture(),
     'market.json': { quotes: [] },
     'industry.json': { schemaVersion: 1, sources: [], series: [] },
     'epoch-ai.json': emptyEpochSnapshot(),
@@ -140,7 +142,7 @@ test('static build publishes the scenario chapter without widening the public fi
   const output = await build(root)
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), [...scenarioAssets].sort())
   assert.deepEqual((await readdir(join(output, 'data'))).sort(), [
-    'ai-disclosures.json', 'ai-statistics.json', 'ai-tokens.json', 'company-disclosures.json',
+    'ai-disclosures.json', 'ai-statistics.json', 'ai-tokens.json', 'company-disclosures.json','company-market.json',
     'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market-display.json', 'market.json', 'ripple.json', 'today-discussion.json', 'today-personas.json', 'today-picks.json',
   ])
 
