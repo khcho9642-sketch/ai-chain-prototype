@@ -5,7 +5,8 @@
 - 운영 주소: https://ai-chain-prototype.pages.dev/
 - 공통 소스: https://github.com/khcho9642-sketch/ai-chain-prototype 의 최신 main을 반영한 작업 사본. 특정 컴퓨터의 절대 경로나 무시되는 임시 폴더를 공통 기준으로 삼지 않는다.
 - 최신 화면 복구와 상단 저장 지수 띠를 함께 유지한다. 개발 채팅마다 현재 브랜치·HEAD·미커밋 변경을 확인하며, 기존 작업을 보존하고 최신 main에서 독립 worktree로 이어갈 수 있다.
-- 2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가한다. 현재 선정 기준은 핵심 50개(상장 47·비상장 3), AI 칩 6개이며 전체 회사 원장은 586개로 유지한다. 원본 ‘핵심기업 49’ 시트·`research/market/home-map-selection.json`·원본 시트명·SHA-256은 보존하고, `research/market/home-map-additions.json`의 사용자 추가를 원본 뒤 순서 50으로 합성한다. 과거 배포 이력의 49개와 원장 비상장 49개는 이 변경으로 바꾸지 않는다.
+- 2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가한다. 후속 CXMT 추가를 반영한 현재 선정 기준은 핵심 51개(상장 48·비상장 3), AI 칩 6개·메모리 6개이며 전체 회사 원장은 586개로 유지한다. 원본 ‘핵심기업 49’ 시트·`research/market/home-map-selection.json`·원본 시트명·SHA-256은 보존하고, `research/market/home-map-additions.json`의 사용자 추가를 원본 뒤 QCOM 순서 50·CXMT 순서 51로 합성한다. 원본 `sourceAsOf`는 원래 날짜를 보존한다. 과거 배포 이력의 49개와 원장 비상장 49개는 이 변경으로 바꾸지 않는다.
+- 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 실시간 시세·원천 수집·자동 폴링·댓글·회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
 
 ## 검증과 수동 배포

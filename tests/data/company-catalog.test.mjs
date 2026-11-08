@@ -23,14 +23,14 @@ function edition(overrides = {}) {
   }
 }
 
-test('586 issuer scope uses the approved 50-company roster including Qualcomm without duplicating issuers', () => {
+test('586 issuer scope uses the approved 51-company roster including Qualcomm and CXMT without duplicating issuers', () => {
   const core = catalog.companies.filter(c => c.selection)
   assert.equal(catalog.companies.length, 586)
-  assert.equal(core.length, 50)
+  assert.equal(core.length, 51)
   assert.equal(catalog.companies.filter(c=>c.listed).length, 537)
-  assert.equal(core.filter(c => c.listed).length, 47)
+  assert.equal(core.filter(c => c.listed).length, 48)
   assert.equal(new Set(core.map(c => c.sectorId)).size, 9)
-  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,5,6,6,7,4,6,5])
+  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,6,6,6,7,4,6,5])
   assert.equal(core.filter(c => !c.listed && !c.listings.length).length, 3)
   for (const selected of MAP_COMPANIES) {
     const row = core.find(c=>c.id===selected.id)
@@ -45,6 +45,11 @@ test('586 issuer scope uses the approved 50-company roster including Qualcomm wi
   assert.equal(qualcomm.sectorId, 'ai-chips')
   assert.ok(qualcomm.selection)
   assert.equal(catalog.companies.filter(c => c.listings.some(l => l.ticker === 'QCOM')).length, 1)
+  const cxmt = findCompanyByTicker('688825.SS')
+  assert.equal(cxmt.id, 'C0119')
+  assert.equal(cxmt.sectorId, 'memory')
+  assert.ok(cxmt.selection)
+  assert.equal(catalog.companies.filter(c => c.listings.some(l => l.ticker === '688825.SS')).length, 1)
   assert.equal(findCompanyByTicker('042700.KS').id, 'C0582')
   assert.equal(findCompanyByTicker('042700.KS').sectorId, 'semiconductor-equipment')
   assert.equal(findCompanyByTicker(' asx '), findCompanyByTicker('3711.tw'))
