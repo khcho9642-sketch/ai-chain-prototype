@@ -4,11 +4,13 @@
 
 ## 현재 운영과 공통 작업 기준 — 2026-11-08
 
-Cloudflare Pages를 주 배포로 사용하고 모든 개발 채팅은 GitHub 최신 main을 반영한 작업 사본에서 이어간다. 현재 공유 소스는 최신 화면 복구와 5개 저장 지수를 함께 보존한다. 지수는 홈의 큰 **AI 시장 지도** 제목 오른쪽에 작게 표시하는 홈 전용 영역이다. 모바일에서는 제목 오른쪽에서 가로로 넘겨 보고, 각 **자료** 버튼을 펼쳐 원래 날짜·출처를 확인한다. 이 배치 변경은 추가 수집이나 자동 재조회를 만들지 않는다. 핵심 51개(상장 48·비상장 3)·전체 586개 기업, 승인된 PC 14열 스타일, 시장 지도·오늘의 토론·섹터 핀·시나리오 기능을 유지한다.
+Cloudflare Pages를 주 배포로 사용하고 모든 개발 채팅은 GitHub 최신 main을 반영한 작업 사본에서 이어간다. 현재 공유 소스는 최신 화면 복구와 5개 저장 지수를 함께 보존한다. 지수는 홈의 큰 **AI 시장 지도** 제목 오른쪽에 작게 표시하는 홈 전용 영역이다. 모바일에서는 제목 오른쪽에서 가로로 넘겨 보고, 각 **자료** 버튼을 펼쳐 원래 날짜·출처를 확인한다. 이 배치 변경은 추가 수집이나 자동 재조회를 만들지 않는다. 핵심 52개(상장 48·비상장 4)·효과적 전체 587개 기업(원본 586+사용자 신규 1), 승인된 PC 14열 스타일, 시장 지도·오늘의 토론·섹터 핀·시나리오 기능을 유지한다.
 
-2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가해 AI 칩 상장 대상은 6개다. 전체 회사 수는 586개로 유지한다. 원본 ‘핵심기업 49’ 시트와 `research/market/home-map-selection.json`은 수정하지 않으며 원본 시트명·SHA-256을 보존한다. 사용자 추가는 `research/market/home-map-additions.json`에 분리하고 원본 49개 뒤 순서 50으로 합성한다.
+2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가해 AI 칩 상장 대상은 6개다. QCOM 편입 당시 전체 회사 수는 586개로 유지했으며 이 원본은 보존한다. 원본 ‘핵심기업 49’ 시트와 `research/market/home-map-selection.json`은 수정하지 않으며 원본 시트명·SHA-256을 보존한다. 사용자 추가는 `research/market/home-map-additions.json`에 분리하고 원본 49개 뒤 순서 50으로 합성한다.
 
 같은 날 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심의 순서 51로 추가한다. QCOM의 순서 50과 AI 칩 6개를 보존하며 메모리는 6개가 된다. 원본 49개와 시트 출처·SHA-256·`sourceAsOf`는 그대로 두고 `research/market/home-map-additions.json`에 두 사용자 추가를 함께 기록한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 선정·상장 연결과 가격 관측은 구분하며 새 시세 수집이나 실시간 재개는 하지 않는다.
+
+같은 날 사용자 신규 회사 추가 요청으로 영국 비상장 Nscale(C0587)을 클라우드·GPU 컴퓨팅 핵심의 순서 52로 포함한다. 원본 회사 원장 586개와 사용자 신규 원장 `research/market/company-additions.json`의 1개를 합친 효과적 전체는 587개다. 핵심 선정은 기존 QCOM 50·CXMT 51을 보존하고 `research/market/home-map-additions.json`에 Nscale 52를 이어 붙인다. 클라우드·GPU는 7개(상장 6·비상장 1), AI 모델은 기존 5개(상장 2·비상장 3)를 유지한다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다. 원본 49개 선정 JSON과 586개 원장 JSON/CSV·출처 날짜·SHA-256·`sourceAsOf`, 수집 당시 586개·555종목 스냅샷은 변경하지 않는다.
 
 실시간 API·원천 자동 수집·폴링·댓글·회원·투표 연결·AI 워커는 계속 중지한다. 저장된 시세·통계·AI 발행물의 출처와 기준시각을 보존하며, 과거 기획의 실시간 기능은 재개 지시가 아니다. 기존 미커밋 변경과 원본·DB를 보존하고 작업 사본의 Git 상태·[AGENTS](AGENTS.md)·[배포 안내](docs/deployment/overview.md)를 먼저 확인한다. 정적 배포 완료와 댓글·회원·AI 워커의 운영 연결·실제 모델 검증은 구분한다.
 

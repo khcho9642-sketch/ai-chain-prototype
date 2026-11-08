@@ -125,7 +125,7 @@ export function buildCompanyRelease(input, previous = null) {
   unique(input.companies.map(row => text(row.id, '회사 ID')), '회사 ID')
   requireValue(input.companies.every(row => typeof row.public === 'boolean'), '회사 공개 여부 누락')
   const companies = input.companies.filter(row => row.public).map(publicCompany)
-  requireValue(companies.length === 586 && companies.every(c => registryIds.has(c.id)), '공개 기업 ID는 신기업정보 원장 586개사와 일치해야 합니다.')
+  requireValue(companies.length === registryIds.size && companies.every(c => registryIds.has(c.id)), '공개 기업 ID는 신기업정보 원장 ' + registryIds.size + '개사와 일치해야 합니다.')
   unique(companies.flatMap(c => c.listings.map(l => l.ticker)), '시세 티커')
   unique(companies.map(c => c.financialId).filter(Boolean), '재무 DB ID')
   const byId = new Map(companies.map(c => [c.id, c]))

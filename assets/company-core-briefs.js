@@ -369,6 +369,15 @@ export const coreBriefs = {
     risk: '시설 투자가 매출보다 앞서고 훗날 가동률이 낮으면 고정비 부담이 커진다. 매각 사업을 제외한 계속영업 실적과 재무 조달을 확인한다.',
     source: ['Nebius · 2025 Form 20-F', 'https://www.sec.gov/Archives/edgar/data/1513845/000110465926052948/nbis-20251231x20f.htm'],
   },
+  C0587: { // Nscale
+    business: 'AI 학습·추론용 GPU 클라우드와 관리형 플랫폼을 제공한다. 소프트웨어, 컴퓨팅 자원, 데이터센터와 전력을 함께 구성하는 사업이다.',
+    role: '고객이 GPU 인프라에서 모델을 학습하고 추론 서비스를 운영하도록 지원한다. Kubernetes·Slurm과 네트워크·스토리지로 작업 배치와 클러스터 운영을 연결한다.',
+    buyers: '기업과 AI 개발팀이 전용 추론, 모델 학습과 관리형 플랫폼을 이용한다. 서비스 소개만으로 개별 고객의 계약 규모나 매출 비중을 판단할 수는 없다.',
+    supply: 'GPU·CPU 컴퓨팅 장비와 고속 네트워크·스토리지, 데이터센터·냉각 및 전력 인프라가 필요하다. 공식 서비스 자료는 공급사별 조달 금액을 공개하지 않는다.',
+    risk: 'GPU 용량 확보와 데이터센터·전력 구축이 실제 고객 사용으로 이어지는지 확인해야 한다. 플랫폼 기능이나 상장 신청만으로 가동률·수익성·상장 완료를 판단하지 않는다.',
+    source: ['Nscale · 공식 AI 클라우드·GPU 인프라 서비스', 'https://www.nscale.com/service-overview'],
+    observation: ['2026년 9월 18일 Nscale은 기업공개 등록 신청과 NYSE 예정 기호 NSCL을 발표했다. 2026년 11월 8일 확인한 공식 제출 내역에서는 상장 완료가 확인되지 않아 비상장으로 표시한다. NSCL은 예정 기호다. 주가·시가총액과 비교 가능한 연간 재무 자료는 이 화면에 제공하지 않는다.', 'Nscale · 2026년 9월 18일 기업공개 신청 발표', 'https://www.nscale.com/press-releases/nscale-files-initial-public-offering'],
+  },
   C0024: { // Alphabet
     business: 'Google은 검색·YouTube 광고, 구독 및 Google Cloud로 매출을 얻는다. Gemini 모델을 소비자 서비스와 클라우드의 개발 도구·API에 적용한다.',
     role: '기초모델 개발부터 자체 TPU, 클라우드 배포와 검색·생산성 서비스까지 연결한다. 모델 채택이 광고·구독·클라우드에 서로 다르게 반영된다.',

@@ -3,7 +3,7 @@
   "source": {
     "type": "user-request",
     "requestedOn": "2026-11-08",
-    "note": "사용자 요청으로 퀄컴(QCOM)을 AI 칩 핵심기업에, CXMT를 메모리 핵심기업에 추가한다. 원본 핵심기업 49 시트와 회사 원장은 보존한다."
+    "note": "사용자 요청으로 퀄컴(QCOM)을 AI 칩, CXMT를 메모리, Nscale을 클라우드·GPU 핵심기업에 추가한다. 원본 핵심기업 49 시트와 회사 원장은 보존한다."
   },
   "companies": [
     {
@@ -23,6 +23,15 @@
       "listed": true,
       "change": "사용자 추가",
       "role": "DRAM·DDR5·LPDDR"
+    },
+    {
+      "companyId": "C0587",
+      "name": "Nscale",
+      "sector": "클라우드·GPU",
+      "ticker": null,
+      "listed": false,
+      "change": "사용자 추가",
+      "role": "AI 학습·추론용 GPU 클라우드"
     }
   ]
 }

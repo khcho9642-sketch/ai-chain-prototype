@@ -5,9 +5,10 @@ AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글�
 ## 현재 운영과 개발 기준
 
 - [Cloudflare 운영 사이트](https://ai-chain-prototype.pages.dev/)와 GitHub의 최신 main을 공동 기준으로 사용한다. 다른 개발 채팅도 최신 main을 반영한 작업 사본에서 이어간다. 컴퓨터마다 다른 로컬 경로를 공통 지침으로 지정하지 않는다.
-- 최신 화면 복구와 나스닥·S&P 500·SOX·코스피·코스닥 5개 저장 지수를 보존한다. 지수는 홈의 큰 **AI 시장 지도** 제목 오른쪽에 작게 표시하고 홈에서만 제공한다. 모바일은 제목 오른쪽에서 가로로 넘겨 보며, 각 **자료** 버튼에서 원래 날짜·출처를 펼쳐 확인한다. 추가 수집이나 자동 재조회는 하지 않는다. 핵심 51개(상장 48·비상장 3)·전체 586개 기업과 승인된 PC 14열 배치를 유지한다.
+- 최신 화면 복구와 나스닥·S&P 500·SOX·코스피·코스닥 5개 저장 지수를 보존한다. 지수는 홈의 큰 **AI 시장 지도** 제목 오른쪽에 작게 표시하고 홈에서만 제공한다. 모바일은 제목 오른쪽에서 가로로 넘겨 보며, 각 **자료** 버튼에서 원래 날짜·출처를 펼쳐 확인한다. 추가 수집이나 자동 재조회는 하지 않는다. 핵심 52개(상장 48·비상장 4)·효과적 전체 587개 기업(원본 586+사용자 신규 1)과 승인된 PC 14열 배치를 유지한다.
 - 2026-11-08 사용자 요청으로 기존 전체 목록의 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가했다. 원본 ‘핵심기업 49’ 시트와 `research/market/home-map-selection.json`·시트 출처·SHA-256은 보존하며, 별도 `research/market/home-map-additions.json`의 사용자 추가 근거를 합성한다.
-- 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. 사용자 추가 순서는 QCOM 50번을 보존하고 CXMT 51번으로 이어진다. 메모리 6개·AI 칩 6개이며 원본 49개와 전체 586개는 유지한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 새 시세는 수집하지 않는다.
+- 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. 사용자 추가 순서는 QCOM 50번을 보존하고 CXMT 51번으로 이어진다. 메모리 6개·AI 칩 6개이며 이 편입 당시 원본 49개와 회사 원장 586개를 유지했다. 이 원본은 이후 사용자 신규 회사와 분리해 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 새 시세는 수집하지 않는다.
+- 2026-11-08 사용자 요청으로 영국 비상장 Nscale(C0587)을 클라우드·GPU 컴퓨팅 핵심의 순서 52로 추가한다. `research/market/company-additions.json`에 신규 회사 1개를, `research/market/home-map-additions.json`에 핵심 선정 근거를 분리한다. 클라우드·GPU는 7개(상장 6·비상장 1), AI 모델은 기존 5개(상장 2·비상장 3)다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다.
 - 실시간 시세·원천 자동 수집·폴링·댓글·회원·투표 API·AI 워커는 중지 상태다. 기존 종가·통계·AI 발행물은 기준일과 출처를 보존한다.
 - 작업 시작 시 Git 상태와 [공통 작업 안내](AGENTS.md)를 읽는다. 기존 미커밋 작업을 보존하며 오래된 폴더를 그대로 재배포하지 않는다. [배포 절차와 검증 이력](docs/deployment/overview.md)을 따른다.
 

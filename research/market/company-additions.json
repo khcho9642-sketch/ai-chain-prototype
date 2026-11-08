@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "user-request",
+    "requestedOn": "2026-11-08",
+    "note": "원본 회사 원장 586개를 보존하고 사용자 요청으로 Nscale을 추가한다. IPO 추진 단계의 비상장 기업으로 표시하며 제안 티커·시세·시총은 연결하지 않는다."
+  },
+  "companies": [
+    {
+      "id": "C0587",
+      "name": "Nscale",
+      "englishName": "Nscale",
+      "aliases": [
+        "엔스케일",
+        "Nscale plc"
+      ],
+      "country": "영국",
+      "listed": false,
+      "ticker": null,
+      "exchange": null,
+      "sector": "SEG8",
+      "product": "AI 학습·추론용 GPU 클라우드",
+      "overview": "GPU 컴퓨팅과 Kubernetes·Slurm 관리 환경, 데이터센터·전력을 결합해 AI 학습·추론 인프라를 제공합니다.",
+      "sources": [
+        {
+          "label": "Nscale · 공식 서비스",
+          "url": "https://www.nscale.com/service-overview"
+        },
+        {
+          "label": "Nscale · IPO 추진 공식 발표 (2026-09-18)",
+          "url": "https://www.nscale.com/press-releases/nscale-files-initial-public-offering"
+        },
+        {
+          "label": "Companies House · NSCALE PLC 법인 정보",
+          "url": "https://find-and-update.company-information.service.gov.uk/company/16925886"
+        }
+      ]
+    }
+  ]
+}

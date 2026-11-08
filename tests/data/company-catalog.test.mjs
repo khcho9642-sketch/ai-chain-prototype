@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { catalog, findCompanyByTicker } from '../../assets/company-catalog.js'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
@@ -23,15 +24,15 @@ function edition(overrides = {}) {
   }
 }
 
-test('586 issuer scope uses the approved 51-company roster including Qualcomm and CXMT without duplicating issuers', () => {
+test('587 issuer scope uses the approved 52-company roster including Qualcomm, CXMT and Nscale without duplicating issuers', () => {
   const core = catalog.companies.filter(c => c.selection)
-  assert.equal(catalog.companies.length, 586)
-  assert.equal(core.length, 51)
+  assert.equal(catalog.companies.length, 587)
+  assert.equal(core.length, 52)
   assert.equal(catalog.companies.filter(c=>c.listed).length, 537)
   assert.equal(core.filter(c => c.listed).length, 48)
   assert.equal(new Set(core.map(c => c.sectorId)).size, 9)
-  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,6,6,6,7,4,6,5])
-  assert.equal(core.filter(c => !c.listed && !c.listings.length).length, 3)
+  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,6,6,6,7,4,7,5])
+  assert.equal(core.filter(c => !c.listed && !c.listings.length).length, 4)
   for (const selected of MAP_COMPANIES) {
     const row = core.find(c=>c.id===selected.id)
     assert.equal(row.listings[0]?.ticker || null, selected.primaryTicker)
@@ -68,9 +69,34 @@ test('586 issuer scope uses the approved 51-company roster including Qualcomm an
   assert.equal(findCompanyByTicker('GC=F'), undefined)
 })
 
+test('Nscale is added once as an unlisted cloud issuer without turning the proposed NSCL symbol into a quote lookup', () => {
+  const nscale = catalog.companies.find(c => c.id === 'C0587')
+  assert.equal(catalog.companies.filter(c => c.id === 'C0587' || c.name.toLowerCase() === 'nscale').length, 1)
+  assert.equal(nscale.sectorId, 'cloud-gpu')
+  assert.equal(nscale.country, '영국')
+  assert.equal(nscale.selection.order, 52)
+  assert.equal(nscale.listed, false)
+  assert.deepEqual(nscale.listings, [])
+  assert.deepEqual(nscale.listingCodes, [])
+  for (const field of ['financialId', 'discussionTicker', 'dartSymbol']) assert.equal(nscale[field], null)
+  assert.equal(findCompanyByTicker('NSCL'), undefined)
+  assert.equal(findCompanyByTicker(' nScL '), undefined)
+  assert.ok(nscale.sources.some(s => s.url === 'https://www.nscale.com/service-overview'))
+})
+
+test('the original 586 issuer IDs stay intact with the existing SpaceX-to-Tesla exception and one separate Nscale addition', () => {
+  const master = JSON.parse(readFileSync(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8'))
+  assert.equal(master.companies.length, 586)
+  assert.equal(new Set(master.companies.map(c => c.id)).size, 586)
+  assert.ok(master.companies.some(c => c.id === 'C0435'))
+  assert.ok(!master.companies.some(c => c.id === 'C0587' || c.id === 'SCN038'))
+  const preservedIds = master.companies.map(c => c.id === 'C0435' ? 'SCN038' : c.id)
+  assert.deepEqual(catalog.companies.map(c => c.id).sort(), [...preservedIds, 'C0587'].sort())
+})
+
 test('an approved release validates issuer counts, publication flags and sector identities', () => {
   const out = buildCompanyRelease(input())
-  assert.equal(out.companies.length, 586)
+  assert.equal(out.companies.length, 587)
   for (const change of [
     r => { r.status = 'draft' }, r => { r.companies.pop() }, r => { r.selections.pop() },
     r => { r.companies[0].id = r.companies[1].id }, r => { r.companies[0].sectorId = '8' },
