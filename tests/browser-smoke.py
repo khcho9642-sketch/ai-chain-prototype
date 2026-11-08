@@ -175,6 +175,31 @@ export const staticHost = typeof location !== 'undefined' &&
 """))
 
 
+def verify_compact_home_indices(page):
+    strip = page.locator('#v-home > [data-index-strip]')
+    strip.wait_for(state='visible')
+    page.wait_for_function("document.querySelectorAll('#v-home [data-index-strip] [data-index-symbol]').length === 5")
+    assert strip.locator('[data-index-symbol]').evaluate_all(
+        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^SOX', '^KS11', '^KQ11']
+    geometry = strip.evaluate("""strip => {
+      const home = document.getElementById('v-home');
+      const title = home.shadowRoot.querySelector('h1');
+      const slot = strip.assignedSlot;
+      const rect = element => { const box = element.getBoundingClientRect();
+        return {left:box.left, right:box.right, top:box.top, bottom:box.bottom, height:box.height}; };
+      return {homeChild:strip.parentElement === home, slot:slot?.name,
+        homeSlot:slot?.getRootNode() === home.shadowRoot, title:title.textContent,
+        strip:rect(strip), heading:rect(title), globalStrip:!!document.querySelector('body > [data-index-strip]')};
+    }""")
+    assert geometry['homeChild'] and geometry['homeSlot'] and geometry['slot'] == 'home-indices', geometry
+    assert geometry['title'].startswith('AI 시장 지도') and not geometry['globalStrip'], geometry
+    actual, heading = geometry['strip'], geometry['heading']
+    assert actual['left'] >= heading['right'] - 1, geometry
+    assert actual['top'] < heading['bottom'] and actual['bottom'] > heading['top'], geometry
+    assert 0 < actual['height'] <= 71, geometry
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+    return strip
+
 def verify_paused_static_runtime(browser, origin, captured_pages):
     """Exercise the actual default false switch before any fixture-only opt-in."""
     paused = browser.new_context(ignore_https_errors=True,
@@ -206,30 +231,18 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     current.wait_for_function('window.aiChainSnapshot?.quotes?.length > 0')
     assert current.evaluate("async () => (await import('./assets/site-runtime.js')).realtimeEnabled") is False
     assert current.evaluate("async () => (await import('./assets/community-runtime.js')).communityApiOrigin") == ''
-    strip = current.locator('[data-index-strip]')
-    strip.wait_for()
-    current.wait_for_function("document.querySelectorAll('[data-index-strip] [data-index-symbol]').length === 5")
-    assert current.locator('[data-index-strip] [data-index-symbol]').count() == 5
-    assert current.locator('[data-index-strip] [data-index-symbol]').evaluate_all(
-        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^SOX', '^KS11', '^KQ11']
-    assert current.evaluate("""() => {
-      const strip = document.querySelector('[data-index-strip]');
-      const header = document.querySelector('body > header');
-      return !strip.closest('.view') &&
-        Boolean(strip.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        strip.getBoundingClientRect().bottom <= header.getBoundingClientRect().top + 1;
-    }""")
-    assert '실시간 갱신 중지' in strip.inner_text()
-    saved_indices = strip.locator('[data-index-strip-cards]').inner_text()
+    strip = verify_compact_home_indices(current)
+    assert '실시간 갱신 중지' in strip.locator('[data-index-strip-status]').text_content()
+    saved_indices = strip.locator('[data-index-strip-cards]').text_content()
     current.set_viewport_size({'width': 390, 'height': 844})
     assert current.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+    verify_compact_home_indices(current)
     assert strip.bounding_box()['width'] <= 391
     assert strip.locator('[data-index-strip-cards]').evaluate('el => el.scrollWidth > el.clientWidth')
     current.set_viewport_size({'width': 1440, 'height': 1000})
     current.locator('.topnav [data-r=today]').click()
     current.wait_for_function("document.querySelectorAll('#v-today [data-today-cards] [data-today-comment]').length === 3")
-    assert strip.is_visible()
-    assert strip.locator('[data-index-strip-cards]').inner_text() == saved_indices
+    assert strip.is_hidden()
     current.locator('#v-today [data-recommendation-comments]').first.locator('summary').click()
     current.locator('#v-today').get_by_text('댓글 기능은 일시 중지되어 있습니다.', exact=True).first.wait_for()
     current.evaluate("location.hash = 'talk/NVDA'")
@@ -249,7 +262,9 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     assert current.evaluate('window.__pausedRuntimeProbe') == {'eventSources': 0, 'intervals': []}
     current.evaluate("location.hash = 'home'")
     current.locator('#v-home').wait_for(state='visible')
-    current.screenshot(path=str(output / 'paused-indices-above-chapters.png'), full_page=True)
+    strip = verify_compact_home_indices(current)
+    assert strip.locator('[data-index-strip-cards]').text_content() == saved_indices
+    current.screenshot(path=str(output / 'paused-indices-beside-home-heading.png'), full_page=True)
     paused.close()
 
 
@@ -915,7 +930,6 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile_picker.locator('.peer-card:visible').count() == 0
             assert mobile_comparison.locator('.peer-selection').is_hidden()
             assert mobile_comparison.locator('[data-peer-series="005930.KS"]').get_attribute('stroke') != mobile_comparison.locator('[data-peer-series="000660.KS"]').get_attribute('stroke')
-            # The new common index strip intentionally occupies the initial fold.
             # A normal page scroll must reveal the whole plot above the fixed menu.
             mobile_chart = mobile_comparison.locator('#peer-chart')
             mobile_chart.scroll_into_view_if_needed()
@@ -1071,7 +1085,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Default paused runtime reads stored AI publications without API calls, EventSource or polling', 'Five global indices precede the chapter header and persist across chapter navigation', 'Live community integration opts in only through in-memory fixture runtime routes', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Default paused runtime reads stored AI publications without API calls, EventSource or polling', 'Five compact saved indices sit beside the home H1, hide on other chapters and preserve values on return', 'Live community integration opts in only through in-memory fixture runtime routes', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

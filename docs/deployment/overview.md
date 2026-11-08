@@ -4,7 +4,7 @@
 
 - 운영 주소: https://ai-chain-prototype.pages.dev/
 - 공통 소스: https://github.com/khcho9642-sketch/ai-chain-prototype 의 최신 main을 반영한 작업 사본. 특정 컴퓨터의 절대 경로나 무시되는 임시 폴더를 공통 기준으로 삼지 않는다.
-- 최신 화면 복구와 상단 저장 지수 띠를 함께 유지한다. 개발 채팅마다 현재 브랜치·HEAD·미커밋 변경을 확인하며, 기존 작업을 보존하고 최신 main에서 독립 worktree로 이어갈 수 있다.
+- 최신 화면 복구와 5개 저장 지수를 함께 유지한다. 지수는 홈의 큰 **AI 시장 지도** 제목 오른쪽에 작게 표시하는 홈 전용 영역이며 모바일은 가로 스크롤로 제공한다. 각 **자료** 버튼의 기본 `<details>`에서 원래 날짜·출처를 확인한다. 개발 채팅마다 현재 브랜치·HEAD·미커밋 변경을 확인하며, 기존 작업을 보존하고 최신 main에서 독립 worktree로 이어갈 수 있다.
 - 2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가한다. 후속 CXMT 추가를 반영한 현재 선정 기준은 핵심 51개(상장 48·비상장 3), AI 칩 6개·메모리 6개이며 전체 회사 원장은 586개로 유지한다. 원본 ‘핵심기업 49’ 시트·`research/market/home-map-selection.json`·원본 시트명·SHA-256은 보존하고, `research/market/home-map-additions.json`의 사용자 추가를 원본 뒤 QCOM 순서 50·CXMT 순서 51로 합성한다. 원본 `sourceAsOf`는 원래 날짜를 보존한다. 과거 배포 이력의 49개와 원장 비상장 49개는 이 변경으로 바꾸지 않는다.
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 실시간 시세·원천 수집·자동 폴링·댓글·회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
@@ -26,7 +26,7 @@ wrangler.jsonc는 Pages 프로젝트와 dist 출력 폴더를 지정한다. 빌�
 
 ## 공개 자료
 
-공개 허용목록은 scripts/build.mjs가 관리한다. market, market-display, industry, ai-statistics, ai-tokens, ai-disclosures, company-disclosures, company-market, today-picks, today-discussion, today-personas, comparison-history, epoch-ai, ripple의 JSON 14종과 검토된 data/debate/index.json·발행일별 토론만 배포한다. market-display와 ripple은 같은 저장된 시세에서 로컬 계산한다. 상단 지수 띠는 이미 읽은 스냅샷을 재사용하며 별도 요청·타이머를 만들지 않는다.
+공개 허용목록은 scripts/build.mjs가 관리한다. market, market-display, industry, ai-statistics, ai-tokens, ai-disclosures, company-disclosures, company-market, today-picks, today-discussion, today-personas, comparison-history, epoch-ai, ripple의 JSON 14종과 검토된 data/debate/index.json·발행일별 토론만 배포한다. market-display와 ripple은 같은 저장된 시세에서 로컬 계산한다. 홈 제목 오른쪽의 지수는 이미 읽은 스냅샷을 재사용하며 별도 요청·타이머를 만들지 않는다. 홈에서 벗어나면 숨기고 복귀 시 저장값을 재사용한다. 자료 펼치기도 추가 수집이나 API 조회를 실행하지 않는다.
 
 ## 2026-11-08 복구 이력
 
@@ -34,7 +34,7 @@ wrangler.jsonc는 Pages 프로젝트와 dist 출력 폴더를 지정한다. 빌�
 
 저장 자료는 기존 GitHub Pages의 555종목 시세(2026-11-06 기준), 비교 이력, 산업통계를 검증해 복원했다. 새로운 원천 가격을 수집하지 않았다. 승인된 기업정보 PC 14열 패치는 고정 배포 47729716의 두 파일과 일치시켰으며 미승인 네오클라우드 변경은 제외했다.
 
-그 뒤 main에 추가된 상단 지수 띠(38e62af까지)와 복구 변경을 통합한다. 이전의 미푸시·별도 로컬 경로 기록은 당시 이력이며 현재 개발 경로를 강제하는 지침이 아니다. 현재 기준은 최신 main과 해당 커밋에서 검증한 빌드다.
+그 뒤 main에 추가된 상단 지수 띠(38e62af까지)와 복구 변경을 통합했다. 당시의 지수 위치는 챕터 메뉴 위 공통 영역이었다. 같은 날 후속 사용자 요청으로 지수를 홈의 큰 **AI 시장 지도** 제목 오른쪽의 소형 홈 전용 영역으로 옮긴다. 과거 위치와 배포 파일·해시 기록은 당시 이력으로 보존한다. 이전의 미푸시·별도 로컬 경로 기록은 현재 개발 경로를 강제하는 지침이 아니다. 현재 기준은 최신 main과 해당 커밋에서 검증한 빌드다.
 
 ## 보존한 서버 코드
 

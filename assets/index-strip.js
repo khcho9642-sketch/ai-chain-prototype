@@ -31,15 +31,16 @@ function render() {
     const label = !attempted ? '저장 자료 확인 중' : !card.available ? card.status === 'unconfirmed' ? '종가 미확인' : '저장 자료 없음' : card.stale ? '이전 저장값' : '저장 종가'
     const zone = zones[card.timezone] || card.timezone || '현지 기준'
     const close = card.available && card.closeDate ? `${card.closeDate} · ${zone}` : '확인된 종가 없음'
-    const provenance = [card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || '', card.reason || ''].filter(Boolean).join(' · ')
+    const provenance = [card.closeDate ? '종가 ' + card.closeDate + ' · ' + zone : '확인된 종가 없음', card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || '', card.reason || ''].filter(Boolean).join(' · ')
     const source = /^https?:\/\//.test(card.sourceUrl || '')
       ? `<a class="index-strip-source" href="${escape(card.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escape(card.name)} 저장 자료 출처">출처 ↗</a>` : ''
     return `<article class="index-strip-card${card.ai ? ' is-ai' : ''}${!card.available ? ' is-unavailable' : ''}" role="listitem" data-index-symbol="${escape(card.symbol)}" title="${escape(provenance)}">
       <div class="index-strip-name"><span class="index-strip-flag" aria-hidden="true">${escape(card.flag)}</span><span>${escape(card.name)}</span>${card.ai ? '<span class="index-strip-ai">AI</span>' : ''}</div>
-      <div class="index-strip-value">${number(value)}</div>
-      <div class="index-strip-change is-${direction}" aria-label="${Number.isFinite(change) ? `직전 저장 종가 대비 ${change > 0 ? '상승' : change < 0 ? '하락' : '보합'} ${number(Math.abs(change))}%` : '등락률 미확보'}">${rate}</div>
-      <div class="index-strip-meta"><span><i class="index-strip-dot" aria-hidden="true"></i>${escape(label)}</span>${source}</div>
-      <div class="index-strip-date">${escape(close)}</div>
+      <div class="index-strip-quote"><span class="index-strip-value">${number(value)}</span><span class="index-strip-change is-${direction}" aria-label="${Number.isFinite(change) ? `직전 저장 종가 대비 ${change > 0 ? '상승' : change < 0 ? '하락' : '보합'} ${number(Math.abs(change))}%` : '등락률 미확보'}">${rate}</span></div>
+      <details class="index-strip-provenance" name="saved-index-provenance"><summary aria-label="${escape(card.name)} 저장 종가 날짜와 출처" title="기준일과 출처 확인">ⓘ</summary><div class="index-strip-evidence">
+        <div class="index-strip-meta"><span><i class="index-strip-dot" aria-hidden="true"></i>${escape(label)}</span>${source}</div>
+        <div class="index-strip-date">${escape(close)}</div><p class="index-strip-note">${escape(provenance)}</p>
+      </div></details>
     </article>`
   }).join('')
 }

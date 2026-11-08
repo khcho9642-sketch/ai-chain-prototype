@@ -32,14 +32,21 @@ async function stripHarness(initialSnapshot) {
   return { cards, status, dispatch: (type, detail) => listeners.get(type)?.({ detail }) }
 }
 
-test('the common strip is outside chapter views and above the existing header navigation', async () => {
-  const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8')
-  const position = html.indexOf('<aside class="index-strip-shell"')
-  assert.ok(position > html.indexOf('<body>'))
-  assert.ok(position < html.indexOf('<header>'))
-  assert.ok(position < html.indexOf('id="v-home"'))
-  assert.equal((html.match(/data-index-strip aria-label=/g) || []).length, 1)
-  assert.ok(html.indexOf('src="./assets/index-strip.js"') < html.indexOf('src="./assets/dashboard.js"'))
+test('saved indices belong to the home heading slot without a global strip before navigation', async () => {
+  const [html, home] = await Promise.all([
+    readFile(new URL('../../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../../assets/home-map.js', import.meta.url), 'utf8'),
+  ])
+  const aside = html.match(/<aside\b[^>]*\bdata-index-strip\b[^>]*>/)?.[0]
+  assert.ok(aside, 'one saved-index strip must remain in the home light DOM')
+  assert.match(aside, /\bslot="home-indices"/)
+  const position = html.indexOf(aside)
+  assert.ok(position > html.indexOf('id="v-home"'))
+  assert.ok(position < html.indexOf('id="v-today"'))
+  assert.doesNotMatch(html.slice(html.indexOf('<body>'), html.indexOf('<header>')), /data-index-strip/)
+  assert.equal((html.match(/\bdata-index-strip(?=[\s>])/g) || []).length, 1)
+  assert.match(home, /attachShadow\(\{mode:'open'\}\)/)
+  assert.ok(home.indexOf('<slot name="home-indices"') > home.indexOf('<h1>AI 시장 지도'))
 })
 
 test('the mounted strip reuses stored dashboard events without any request or timer', async () => {
