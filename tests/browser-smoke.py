@@ -908,6 +908,18 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             plot_box = mobile_chart.bounding_box()
             menu_box = mobile.locator('.tabbar').bounding_box()
             bottom_limit = menu_box['y'] if menu_box else mobile.viewport_size['height']
+            # Browser auto-scroll does not account for the fixed bottom menu.
+            # One normal vertical scroll must make the full chart reachable.
+            covered = plot_box['y'] + plot_box['height'] - bottom_limit
+            if covered > 0:
+                mobile.mouse.move(120, 400)
+                mobile.mouse.wheel(0, covered + 16)
+                mobile.wait_for_function("""() => {
+                  const chart = document.getElementById('peer-chart').getBoundingClientRect();
+                  const menu = document.querySelector('.tabbar');
+                  return chart.bottom <= (menu ? menu.getBoundingClientRect().top : innerHeight) + 1;
+                }""")
+                plot_box = mobile_chart.bounding_box()
             assert plot_box['y'] >= -1 and plot_box['y'] + plot_box['height'] <= bottom_limit + 1, {
                 'plot': plot_box, 'bottomLimit': bottom_limit,
                 'viewport': mobile.viewport_size,
