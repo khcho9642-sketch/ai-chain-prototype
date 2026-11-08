@@ -24,8 +24,8 @@ root.append(stylesheet);
 const content = document.createElement('div');
 content.innerHTML = `<div class="map-main">
     <section class="intro" aria-label="시장 지도">
-      <div><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1><p>반도체에서 모델까지, AI 산업의 움직임을 한눈에.</p></div>
-      <div class="home-badges"><span class="home-badge" data-home-market-policy>${MARKET_DATA_POLICY.statusLabel}</span><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div>
+      <div class="home-title-row"><div class="home-title-copy"><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1></div><slot name="home-indices"></slot></div>
+      <div class="home-intro-meta"><p>반도체에서 모델까지, AI 산업의 움직임을 한눈에.</p><div class="home-badges"><span class="home-badge" data-home-market-policy>${MARKET_DATA_POLICY.statusLabel}</span><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div></div>
     </section>
     <section id="home-sector-summary" class="home-sector-summary" aria-label="AI 밸류체인 업종별 수익률">
       <div class="sector-summary-heading"><div><h2>업종별 수익률</h2><p data-home-card-caption>선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 최근 90일 종가 수익률</p></div><div class="home-summary-controls"><label class="home-card-period-label">기간 <select aria-label="업종 수익률 기간" data-home-card-period><option value="1d">1일</option><option value="1w">1주</option><option value="1m">1개월</option><option value="3mo" selected>3개월</option><option value="1y">1년</option></select></label><div class="home-weight-switch" role="group" aria-label="업종별 수익률 가중 방식"><button type="button" data-home-weight="eq" aria-pressed="true">동일가중</button><button type="button" data-home-weight="cap" aria-pressed="false">시총가중</button></div></div></div>
