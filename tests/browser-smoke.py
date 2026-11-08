@@ -178,6 +178,8 @@ export const staticHost = typeof location !== 'undefined' &&
 def verify_header_indices(page):
     strip = page.locator('header .wrap.top > .brand + [data-index-strip]')
     strip.wait_for(state='visible')
+    assert strip.locator('[data-index-strip-status],.index-strip-heading').count() == 0
+    assert '실시간 갱신 중지 · 저장된 종가' not in page.locator('body > header').inner_text()
     page.wait_for_function("document.querySelectorAll('header [data-index-strip] [data-index-symbol]').length === 5")
     assert strip.locator('[data-index-symbol]').evaluate_all(
         'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11']
@@ -235,7 +237,6 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     assert current.evaluate("async () => (await import('./assets/site-runtime.js')).realtimeEnabled") is False
     assert current.evaluate("async () => (await import('./assets/community-runtime.js')).communityApiOrigin") == ''
     strip = verify_header_indices(current)
-    assert '실시간 갱신 중지' in strip.locator('[data-index-strip-status]').text_content()
     saved_indices = strip.locator('[data-index-strip-cards]').text_content()
     current.set_viewport_size({'width': 390, 'height': 844})
     assert current.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
@@ -245,17 +246,22 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     current.set_viewport_size({'width': 1440, 'height': 1000})
     current.locator('.topnav [data-r=today]').click()
     current.wait_for_function("document.querySelectorAll('#v-today [data-today-cards] [data-today-comment]').length === 3")
-    assert strip.is_hidden()
+    assert strip.is_visible()
+    assert strip.locator('[data-index-strip-cards]').text_content() == saved_indices
     current.locator('#v-today [data-recommendation-comments]').first.locator('summary').click()
     current.locator('#v-today').get_by_text('댓글 기능은 일시 중지되어 있습니다.', exact=True).first.wait_for()
     current.evaluate("location.hash = 'talk/NVDA'")
     current.locator('#v-talk').get_by_text('댓글·회원·AI 실시간 기능은 일시 중지되어 있습니다.', exact=True).wait_for()
+    verify_header_indices(current)
+    assert strip.locator('[data-index-strip-cards]').text_content() == saved_indices
     current.evaluate("location.hash = 'debate'")
     current.locator('#v-debate').wait_for(state='visible')
     # A visible SPA shell and an already-reached networkidle state do not mean its first publication has loaded.
     current.locator('#v-debate .debate-topic').wait_for(state='visible')
     current.locator('#v-debate [data-debate-stance]').first.wait_for(state='visible')
     current.locator('#v-debate .debate-character-history').wait_for(state='visible')
+    verify_header_indices(current)
+    assert strip.locator('[data-index-strip-cards]').text_content() == saved_indices
     current.wait_for_load_state('networkidle')
     data_reads = [url for _, url in requests if '/data/' in url]
     current.clock.fast_forward(185000)
@@ -1088,7 +1094,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Default paused runtime reads stored AI publications without API calls, EventSource or polling', 'Five compact saved indices sit beside the top header logo above chapter navigation, hide on other chapters and preserve values on return', 'Live community integration opts in only through in-memory fixture runtime routes', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Default paused runtime reads stored AI publications without API calls, EventSource or polling', 'Five compact saved indices sit beside the top header logo above chapter navigation, remain visible across chapters without a status sentence and preserve values on return', 'Live community integration opts in only through in-memory fixture runtime routes', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()

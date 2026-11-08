@@ -16,12 +16,7 @@ function render() {
   if (!root) return
   const cards = buildIndexCards(saved)
   const target = root.querySelector('[data-index-strip-cards]')
-  const status = root.querySelector('[data-index-strip-status]')
-  if (!target || !status) return
-  status.textContent = error
-    ? '저장 자료 조회 실패 · 남아 있는 값 표시'
-    : !attempted ? '실시간 갱신 중지 · 저장 자료 확인 중' : '실시간 갱신 중지 · 저장된 종가'
-  status.title = error
+  if (!target) return
   target.innerHTML = cards.map(card => {
     const value = card.available ? card.price : null
     const change = card.available ? card.changePercent : null
@@ -31,7 +26,7 @@ function render() {
     const label = !attempted ? '저장 자료 확인 중' : !card.available ? card.status === 'unconfirmed' ? '종가 미확인' : '저장 자료 없음' : card.stale ? '이전 저장값' : '저장 종가'
     const zone = zones[card.timezone] || card.timezone || '현지 기준'
     const close = card.available && card.closeDate ? `${card.closeDate} · ${zone}` : '확인된 종가 없음'
-    const provenance = [card.closeDate ? '종가 ' + card.closeDate + ' · ' + zone : '확인된 종가 없음', card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || '', card.reason || ''].filter(Boolean).join(' · ')
+    const provenance = [card.closeDate ? '종가 ' + card.closeDate + ' · ' + zone : '확인된 종가 없음', card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || '', card.reason || '', error ? '저장 자료 조회 실패: ' + error : ''].filter(Boolean).join(' · ')
     const source = /^https?:\/\//.test(card.sourceUrl || '')
       ? `<a class="index-strip-source" href="${escape(card.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escape(card.name)} 저장 자료 출처">출처 ↗</a>` : ''
     return `<article class="index-strip-card${card.ai ? ' is-ai' : ''}${!card.available ? ' is-unavailable' : ''}" role="listitem" data-index-symbol="${escape(card.symbol)}" title="${escape(provenance)}">

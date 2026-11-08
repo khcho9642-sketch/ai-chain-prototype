@@ -19,9 +19,9 @@ const bar = (date, close, time = '14:30:00Z') => ({ time: Date.parse(date + 'T' 
 
 async function stripHarness(initialSnapshot) {
   const source = (await readFile(new URL('../../assets/index-strip.js', import.meta.url), 'utf8')).replace(/^import[^\n]+\n/gm, '')
-  const cards = { innerHTML: '' }, status = { textContent: '', title: '' }, listeners = new Map()
+  const cards = { innerHTML: '' }, listeners = new Map()
   const forbidden = () => { throw new Error('the saved index strip must not start requests or timers') }
-  const root = { querySelector: selector => selector === '[data-index-strip-cards]' ? cards : selector === '[data-index-strip-status]' ? status : null }
+  const root = { querySelector: selector => selector === '[data-index-strip-cards]' ? cards : null }
   vm.runInNewContext(source, {
     document: { querySelector: () => root },
     window: { aiChainSnapshot: initialSnapshot, addEventListener: (type, listener) => listeners.set(type, listener) },
@@ -29,7 +29,7 @@ async function stripHarness(initialSnapshot) {
     fetch: forbidden, XMLHttpRequest: forbidden, EventSource: forbidden, WebSocket: forbidden,
     setTimeout: forbidden, setInterval: forbidden,
   })
-  return { cards, status, dispatch: (type, detail) => listeners.get(type)?.({ detail }) }
+  return { cards, dispatch: (type, detail) => listeners.get(type)?.({ detail }) }
 }
 
 test('saved indices sit directly after the top header brand before chapter navigation without a home heading slot', async () => {
@@ -42,6 +42,7 @@ test('saved indices sit directly after the top header brand before chapter navig
   const aside = header.match(/<aside\b[^>]*\bdata-index-strip\b[^>]*>/)?.[0]
   assert.ok(aside, 'one saved-index strip must belong to the site header')
   assert.doesNotMatch(aside, /\bslot=/)
+  assert.doesNotMatch(header, /data-index-strip-status|index-strip-heading|실시간 갱신 중지/)
   assert.match(header, /<div class="wrap top">[\s\S]*?<a\b[^>]*class="[^"]*\bbrand\b[^"]*"[^>]*>[\s\S]*?<\/a>\s*<aside\b[^>]*\bdata-index-strip\b/)
   assert.ok(header.indexOf(aside) < header.indexOf('<nav class="topnav"'))
   assert.ok(html.indexOf(header) < html.indexOf('id="v-home"'))
@@ -50,24 +51,42 @@ test('saved indices sit directly after the top header brand before chapter navig
   assert.doesNotMatch(home, /<slot name="home-indices"/)
 })
 
-test('the mounted strip reuses stored dashboard events without any request or timer', async () => {
+test('the mounted strip renders without a status element and reuses stored dashboard events without requests or timers', async () => {
   const initial = snapshot(quote())
   const ui = await stripHarness(initial)
+  const storedFacts = html => ({
+    values: [...html.matchAll(/<span class="index-strip-value">([^<]*)<[/]span>/g)].map(match => match[1]),
+    dates: [...html.matchAll(/<div class="index-strip-date">([^<]*)<[/]div>/g)].map(match => match[1]),
+    sources: [...html.matchAll(/class="index-strip-source" href="([^"]*)"/g)].map(match => match[1]),
+  })
   assert.equal((ui.cards.innerHTML.match(/role="listitem"/g) || []).length, 5)
-  assert.match(ui.cards.innerHTML, /110\.00/)
+  assert.match(ui.cards.innerHTML, /110[.]00/)
   assert.match(ui.cards.innerHTML, /2026-11-06/)
   assert.match(ui.cards.innerHTML, /저장된 지수 자료가 없습니다/)
-  assert.match(ui.status.textContent, /실시간 갱신 중지/)
+  assert.doesNotMatch(ui.cards.innerHTML, /실시간 갱신 중지 · 저장된 종가/)
   const html = ui.cards.innerHTML
+  const facts = storedFacts(html)
   ui.dispatch('market-snapshot', initial)
   assert.equal(ui.cards.innerHTML, html)
   ui.dispatch('market-snapshot-error', '자료를 확인할 수 없습니다.')
-  assert.equal(ui.cards.innerHTML, html)
-  assert.match(ui.status.textContent, /조회 실패/)
-  assert.match(ui.status.title, /자료를 확인/)
+  assert.deepEqual(storedFacts(ui.cards.innerHTML), facts)
+  const notes = [...ui.cards.innerHTML.matchAll(/<p class="index-strip-note">([^<]*)<[/]p>/g)].map(match => match[1])
+  assert.equal(notes.length, 5)
+  assert.ok(notes.every(note => note.includes('저장 자료 조회 실패: 자료를 확인할 수 없습니다.')))
   ui.dispatch('market-snapshot', snapshot(quote({ price: 120 })))
-  assert.match(ui.cards.innerHTML, /120\.00/)
-  assert.equal(ui.status.title, '')
+  assert.match(ui.cards.innerHTML, /120[.]00/)
+  assert.doesNotMatch(ui.cards.innerHTML, /저장 자료 조회 실패/)
+})
+
+test('snapshot failure diagnostics are escaped inside provenance while stored prices and dates remain intact', async () => {
+  const ui = await stripHarness(snapshot(quote()))
+  ui.dispatch('market-snapshot-error', '<img src=x onerror=alert(1)> " onmouseover="alert(1)')
+  assert.doesNotMatch(ui.cards.innerHTML, /<img/)
+  assert.match(ui.cards.innerHTML, /&lt;img src=x onerror=alert[(]1[)]&gt;/)
+  assert.match(ui.cards.innerHTML, /&quot; onmouseover=&quot;/)
+  assert.match(ui.cards.innerHTML, /<p class="index-strip-note">[^<]*저장 자료 조회 실패:/)
+  assert.match(ui.cards.innerHTML, /110[.]00/)
+  assert.match(ui.cards.innerHTML, /2026-11-06 · 뉴욕/)
 })
 
 test('source metadata is escaped before rendering the saved index cards', async () => {
