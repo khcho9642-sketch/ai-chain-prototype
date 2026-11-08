@@ -30,3 +30,46 @@
 .index-strip-heading>[data-index-strip-status]{display:block;max-width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .index-strip-name>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:760px){.index-strip-flag{display:none}}
+
+/* The brand and saved indices share the very first header row, above chapter navigation. */
+header .top{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content max-content;column-gap:20px;row-gap:12px}
+header .top>.brand{grid-column:1;grid-row:1;white-space:nowrap}
+header .top>.index-strip-shell{grid-column:2;grid-row:1;min-width:0}
+header .top>.search{grid-column:3;grid-row:1}
+header .top>.mine-btn{grid-column:4;grid-row:1}
+header .top>.spacer{display:none}
+header .top>.topnav{grid-column:1/-1;grid-row:2}
+header .index-strip-shell{display:none}
+body[data-page="home"] header .index-strip-shell{display:block}
+@media(max-width:1100px) and (min-width:761px){
+  header .top{column-gap:14px}
+  header .top>.search{min-width:180px;width:180px}
+}
+@media(max-width:760px){
+  header .top{grid-template-columns:max-content minmax(0,1fr) 40px;column-gap:8px;row-gap:0;padding-top:12px;padding-bottom:12px}
+  header .top>.brand{font-size:14px;line-height:1.4}
+  header .top>.brand small{display:block;font-size:10px;line-height:1.4}
+  header .top>.mobile-menu{grid-column:3;grid-row:1;margin:0;min-width:0}
+  header .mobile-menu>summary{justify-content:center;width:40px;padding:8px}
+  header .mobile-menu-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  header .top>.search,header .top>.mine-btn,header .top>.topnav{display:none}
+}
+
+/* Compact inline quotes follow the supplied header reference on desktop. */
+header .index-strip-wrap{display:flex;flex-direction:column}
+header .index-strip-heading{order:2;margin:3px 0 0}
+header .index-strip-track{order:1}
+@media(min-width:761px){
+  header .index-strip-track{gap:4px;scrollbar-width:none}
+  header .index-strip-track::-webkit-scrollbar{display:none}
+  header .index-strip-card{display:grid;grid-template-columns:max-content max-content;align-items:baseline;column-gap:6px;flex:0 0 auto;padding:6px 24px 6px 10px;border:0;border-radius:8px}
+  header .index-strip-card:first-child{padding-left:10px}
+  header .index-strip-card:hover{background:var(--card)}
+  header .index-strip-name{padding-right:0;min-height:0;font-size:12px}
+  header .index-strip-flag,header .index-strip-ai{display:none}
+  header .index-strip-card.is-ai .index-strip-name{color:var(--accent)}
+  header .index-strip-value{font-size:13px;font-weight:500}
+  header .index-strip-change{font-size:12px;font-weight:500}
+  header .index-strip-provenance{grid-column:1/-1;min-width:0}
+  header .index-strip-provenance>summary{top:7px;right:2px}
+}

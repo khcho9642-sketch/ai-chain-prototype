@@ -420,12 +420,11 @@
   .map-private-country,.map-private-status{font-size:8px}
 }
 
-/* Saved indices share the home title row through a light-DOM slot. */
+/* The saved index strip lives in the global header, beside the brand. */
 .intro{display:block;align-items:stretch}
-.home-title-row{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:28px;width:100%;min-width:0}
+.home-title-row{display:block;width:100%;min-width:0}
 .home-title-copy{min-width:max-content}.home-title-row h1{margin:0;white-space:nowrap}
-.home-title-row slot[name="home-indices"]{display:block;min-width:0;width:100%}
 .home-intro-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}
 .home-intro-meta>p{flex-shrink:0}.home-intro-meta .home-badges{max-width:65%}
-@media(max-width:1050px){.home-title-row{gap:18px}.home-intro-meta{flex-wrap:wrap}.home-intro-meta .home-badges{max-width:100%}}
-@media(max-width:720px){.intro{margin-bottom:18px}.home-title-row{gap:12px}.home-title-copy{min-width:0}.home-title-row h1{font-size:26px}.home-intro-meta{align-items:flex-start;flex-direction:column;gap:10px;margin-top:11px}.home-intro-meta>p{font-size:10px}.home-intro-meta .home-badges{justify-content:flex-start;width:100%;max-width:100%}}
+@media(max-width:1050px){.home-intro-meta{flex-wrap:wrap}.home-intro-meta .home-badges{max-width:100%}}
+@media(max-width:720px){.intro{margin-bottom:18px}.home-title-copy{min-width:0}.home-title-row h1{font-size:26px}.home-intro-meta{align-items:flex-start;flex-direction:column;gap:10px;margin-top:11px}.home-intro-meta>p{font-size:10px}.home-intro-meta .home-badges{justify-content:flex-start;width:100%;max-width:100%}}

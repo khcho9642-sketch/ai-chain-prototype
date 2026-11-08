@@ -3,8 +3,8 @@
 export const INDEX_STRIP_INDICES = Object.freeze([
   { symbol: '^IXIC', name: '나스닥', flag: '🇺🇸', ai: false },
   { symbol: '^GSPC', name: 'S&P 500', flag: '🇺🇸', ai: false },
-  { symbol: '^SOX', name: '반도체(SOX)', flag: '🇺🇸', ai: true },
   { symbol: '^KS11', name: '코스피', flag: '🇰🇷', ai: false },
+  { symbol: '^SOX', name: '반도체(SOX)', flag: '🇺🇸', ai: true },
   { symbol: '^KQ11', name: '코스닥', flag: '🇰🇷', ai: false },
 ].map(Object.freeze))
 

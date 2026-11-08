@@ -24,7 +24,7 @@ root.append(stylesheet);
 const content = document.createElement('div');
 content.innerHTML = `<div class="map-main">
     <section class="intro" aria-label="시장 지도">
-      <div class="home-title-row"><div class="home-title-copy"><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1></div><slot name="home-indices"></slot></div>
+      <div class="home-title-row"><div class="home-title-copy"><div class="eyebrow">THE AI ECONOMY, AT A GLANCE</div><h1>AI 시장 지도<span>.</span></h1></div></div>
       <div class="home-intro-meta"><p>반도체에서 모델까지, AI 산업의 움직임을 한눈에.</p><div class="home-badges"><span class="home-badge" data-home-market-policy>${MARKET_DATA_POLICY.statusLabel}</span><span class="home-badge" data-home-close-date>종가 수집 확인 중</span><span class="home-badge" data-home-coverage>원장 확인 중 · 핵심 ${MAP_CATALOGUE.length}개</span></div></div>
     </section>
     <section id="home-sector-summary" class="home-sector-summary" aria-label="AI 밸류체인 업종별 수익률">

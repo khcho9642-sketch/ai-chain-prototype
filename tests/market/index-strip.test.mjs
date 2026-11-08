@@ -32,21 +32,22 @@ async function stripHarness(initialSnapshot) {
   return { cards, status, dispatch: (type, detail) => listeners.get(type)?.({ detail }) }
 }
 
-test('saved indices belong to the home heading slot without a global strip before navigation', async () => {
+test('saved indices sit directly after the top header brand before chapter navigation without a home heading slot', async () => {
   const [html, home] = await Promise.all([
     readFile(new URL('../../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../../assets/home-map.js', import.meta.url), 'utf8'),
   ])
-  const aside = html.match(/<aside\b[^>]*\bdata-index-strip\b[^>]*>/)?.[0]
-  assert.ok(aside, 'one saved-index strip must remain in the home light DOM')
-  assert.match(aside, /\bslot="home-indices"/)
-  const position = html.indexOf(aside)
-  assert.ok(position > html.indexOf('id="v-home"'))
-  assert.ok(position < html.indexOf('id="v-today"'))
-  assert.doesNotMatch(html.slice(html.indexOf('<body>'), html.indexOf('<header>')), /data-index-strip/)
+  const header = html.match(/<header>[\s\S]*?<\/header>/)?.[0]
+  assert.ok(header, 'the site header must remain')
+  const aside = header.match(/<aside\b[^>]*\bdata-index-strip\b[^>]*>/)?.[0]
+  assert.ok(aside, 'one saved-index strip must belong to the site header')
+  assert.doesNotMatch(aside, /\bslot=/)
+  assert.match(header, /<div class="wrap top">[\s\S]*?<a\b[^>]*class="[^"]*\bbrand\b[^"]*"[^>]*>[\s\S]*?<\/a>\s*<aside\b[^>]*\bdata-index-strip\b/)
+  assert.ok(header.indexOf(aside) < header.indexOf('<nav class="topnav"'))
+  assert.ok(html.indexOf(header) < html.indexOf('id="v-home"'))
   assert.equal((html.match(/\bdata-index-strip(?=[\s>])/g) || []).length, 1)
-  assert.match(home, /attachShadow\(\{mode:'open'\}\)/)
-  assert.ok(home.indexOf('<slot name="home-indices"') > home.indexOf('<h1>AI 시장 지도'))
+  assert.doesNotMatch(html.slice(html.indexOf('id="v-home"'), html.indexOf('id="v-today"')), /data-index-strip/)
+  assert.doesNotMatch(home, /<slot name="home-indices"/)
 })
 
 test('the mounted strip reuses stored dashboard events without any request or timer', async () => {
@@ -78,16 +79,17 @@ test('source metadata is escaped before rendering the saved index cards', async 
   assert.match(ui.cards.innerHTML, /이전 저장값/)
 })
 
-test('the global strip always keeps exactly five ordered indices including unavailable SOX', () => {
+test('the header strip prioritizes Nasdaq, S&P 500 and Kospi while retaining all five indices including unavailable SOX', () => {
   const cards = buildIndexCards(snapshot(quote()), { now })
-  assert.deepEqual(cards.map(row => row.symbol), ['^IXIC', '^GSPC', '^SOX', '^KS11', '^KQ11'])
+  assert.deepEqual(cards.map(row => row.symbol), ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11'])
   assert.equal(new Set(cards.map(row => row.symbol)).size, 5)
-  assert.equal(INDEX_STRIP_INDICES[2].ai, true)
-  assert.equal(cards[2].available, false)
-  assert.equal(cards[2].status, 'unavailable')
-  assert.equal(cards[2].price, null)
-  assert.equal(cards[2].changePercent, null)
-  assert.match(cards[2].reason, /저장된 지수 자료/)
+  assert.equal(INDEX_STRIP_INDICES.find(index => index.symbol === '^SOX').ai, true)
+  const sox = cards.find(index => index.symbol === '^SOX')
+  assert.equal(sox.available, false)
+  assert.equal(sox.status, 'unavailable')
+  assert.equal(sox.price, null)
+  assert.equal(sox.changePercent, null)
+  assert.match(sox.reason, /저장된 지수 자료/)
 })
 
 test('confirmed stored closes calculate positive, negative and flat changes from the same quote', () => {
