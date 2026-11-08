@@ -1,3 +1,4 @@
+import { realtimeEnabled } from './site-runtime.js'
 import { instruments } from './instruments.js'
 import { COMPANIES, SECTORS } from './home-map-core.js'
 import { TODAY_AGENTS, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
@@ -330,7 +331,7 @@ function cardsForSnapshot() {
 function render() {
   clearTimeout(dayTimer)
   const nextMidnight = (Math.floor((Date.now() + 9 * 3600000) / 86400000) + 1) * 86400000 - 9 * 3600000
-  dayTimer = setTimeout(render, Math.max(50, nextMidnight - Date.now() + 50))
+  if (realtimeEnabled) dayTimer = setTimeout(render, Math.max(50, nextMidnight - Date.now() + 50))
   if (!active()) return
   const cards = cardsForSnapshot(), grid = root.querySelector('[data-today-cards]'), retainedCards = new Set()
   reconcileCards(grid, cards.map(card => cachedCard(card, {}, retainedCards)))
@@ -369,7 +370,7 @@ async function readDiscussion() {
   state.discussionBusy = true; state.discussionError = false; render()
   discussionController?.abort(); discussionController = new AbortController(); const current = ++discussionGeneration
   try {
-    const response = await fetch('./data/today-discussion.json', { cache: 'no-store', signal: AbortSignal.any([discussionController.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
+    const response = await fetch('./data/today-discussion.json', { cache: realtimeEnabled ? 'no-store' : 'force-cache', signal: AbortSignal.any([discussionController.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
     if (!response.ok) throw new Error('discussion_unavailable')
     const value = await response.json()
     if (current !== discussionGeneration) return
@@ -400,7 +401,7 @@ async function readPersonas() {
   state.personasBusy = true; state.personasError = false; render()
   personasController?.abort(); personasController = new AbortController(); const current = ++personasGeneration
   try {
-    const response = await fetch('./data/today-personas.json', { cache: 'no-store', signal: AbortSignal.any([personasController.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
+    const response = await fetch('./data/today-personas.json', { cache: realtimeEnabled ? 'no-store' : 'force-cache', signal: AbortSignal.any([personasController.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
     if (!response.ok) throw new Error('personas_unavailable')
     const value = await response.json()
     if (current !== personasGeneration) return
@@ -419,7 +420,7 @@ async function readEdition() {
   state.busy = true; state.error = false; render()
   controller?.abort(); controller = new AbortController(); const current = ++generation
   try {
-    const response = await fetch('./data/today-picks.json', { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
+    const response = await fetch('./data/today-picks.json', { cache: realtimeEnabled ? 'no-store' : 'force-cache', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]), redirect: 'error' })
     if (!response.ok) throw new Error('edition_unavailable')
     const value = await response.json()
     validateTodaySnapshot(value, { catalog: instruments, now: Date.now() })

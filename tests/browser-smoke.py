@@ -158,6 +158,91 @@ def recommendation_only_browser_fixture():
     value['providerStates']['claude'] = {'status': 'disabled', 'reason': 'terms_not_cleared'}
     return value
 
+
+def enable_fixture_community_runtime(context):
+    """Opt this isolated test context into fixture APIs; never edit the public switch."""
+    context.route('**/assets/site-runtime.js', lambda route: route.fulfill(
+        status=200, content_type='application/javascript', body="""
+// Browser integration fixture only. Never written to application assets.
+export const realtimeEnabled = true;
+export const staticHost = typeof location !== 'undefined' &&
+  (location.hostname.endsWith('.github.io') || location.protocol === 'file:');
+"""))
+
+
+def verify_paused_static_runtime(browser, origin, captured_pages):
+    """Exercise the actual default false switch before any fixture-only opt-in."""
+    paused = browser.new_context(ignore_https_errors=True,
+                                 viewport={'width': 1440, 'height': 1000})
+    current = paused.new_page()
+    captured_pages.append(current)
+    current.on('pageerror', lambda error: errors.append(str(error)))
+    requests = []
+    current.on('request', lambda request: requests.append((request.method, request.url)))
+    # Any regression is recorded and blocked from reaching even the fixture backend.
+    current.route('**/api/**', lambda route: route.fulfill(
+        status=503, content_type='application/json', body='{"error":"paused_runtime_fixture"}'))
+    current.clock.install()
+    current.add_init_script("""(() => {
+      const probe = window.__pausedRuntimeProbe = {eventSources: 0, intervals: []};
+      const originalInterval = window.setInterval;
+      window.setInterval = (callback, delay, ...args) => {
+        probe.intervals.push(delay);
+        return originalInterval(callback, delay, ...args);
+      };
+      if (window.EventSource) window.EventSource = new Proxy(window.EventSource, {
+        construct(target, args, newTarget) {
+          probe.eventSources++;
+          return Reflect.construct(target, args, newTarget);
+        },
+      });
+    })();""")
+    current.goto(origin + '/')
+    current.wait_for_function('window.aiChainSnapshot?.quotes?.length > 0')
+    assert current.evaluate("async () => (await import('./assets/site-runtime.js')).realtimeEnabled") is False
+    strip = current.locator('[data-index-strip]')
+    strip.wait_for()
+    current.wait_for_function("document.querySelectorAll('[data-index-strip] [data-index-symbol]').length === 5")
+    assert current.locator('[data-index-strip] [data-index-symbol]').count() == 5
+    assert current.locator('[data-index-strip] [data-index-symbol]').evaluate_all(
+        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^SOX', '^KS11', '^KQ11']
+    assert current.evaluate("""() => {
+      const strip = document.querySelector('[data-index-strip]');
+      const header = document.querySelector('body > header');
+      return !strip.closest('.view') &&
+        Boolean(strip.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        strip.getBoundingClientRect().bottom <= header.getBoundingClientRect().top + 1;
+    }""")
+    assert '실시간 갱신 중지' in strip.inner_text()
+    saved_indices = strip.locator('[data-index-strip-cards]').inner_text()
+    current.set_viewport_size({'width': 390, 'height': 844})
+    assert current.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+    assert strip.bounding_box()['width'] <= 391
+    assert strip.locator('[data-index-strip-cards]').evaluate('el => el.scrollWidth > el.clientWidth')
+    current.set_viewport_size({'width': 1440, 'height': 1000})
+    current.locator('.topnav [data-r=today]').click()
+    current.wait_for_function("document.querySelectorAll('#v-today [data-today-cards] [data-today-comment]').length === 3")
+    assert strip.is_visible()
+    assert strip.locator('[data-index-strip-cards]').inner_text() == saved_indices
+    current.locator('#v-today [data-recommendation-comments]').first.locator('summary').click()
+    current.locator('#v-today').get_by_text('댓글 기능은 일시 중지되어 있습니다.', exact=True).first.wait_for()
+    current.evaluate("location.hash = 'talk/NVDA'")
+    current.locator('#v-talk').get_by_text('댓글·회원·AI 실시간 기능은 일시 중지되어 있습니다.', exact=True).wait_for()
+    current.evaluate("location.hash = 'debate'")
+    current.locator('#v-debate').wait_for(state='visible')
+    current.wait_for_load_state('networkidle')
+    data_reads = [url for _, url in requests if '/data/' in url]
+    current.clock.fast_forward(185000)
+    assert [url for _, url in requests if '/data/' in url] == data_reads
+    assert not any('/api/' in url for _, url in requests), requests
+    assert not any(method != 'GET' for method, _ in requests), requests
+    assert current.evaluate('window.__pausedRuntimeProbe') == {'eventSources': 0, 'intervals': []}
+    current.evaluate("location.hash = 'home'")
+    current.locator('#v-home').wait_for(state='visible')
+    current.screenshot(path=str(output / 'paused-indices-above-chapters.png'), full_page=True)
+    paused.close()
+
+
 @contextmanager
 def capture_failure_pages():
     pages = []
@@ -182,7 +267,9 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
         origin = endpoints['siteOrigin']
         with sync_playwright() as p, capture_failure_pages() as captured_pages:
             browser = p.chromium.launch(executable_path=args.browser or shutil.which('google-chrome') or shutil.which('chromium') or p.chromium.executable_path, headless=True, args=['--no-sandbox'])
+            verify_paused_static_runtime(browser, origin, captured_pages)
             context = browser.new_context(ignore_https_errors=True, viewport={'width': 1440, 'height': 1000})
+            enable_fixture_community_runtime(context)
             page = context.new_page()
             captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
@@ -779,6 +866,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.screenshot(path=str(output / 'stock-detail-desktop.png'))
             # Independent browser context reads the same durable shared API, no login needed.
             phone = browser.new_context(ignore_https_errors=True, viewport={'width': 390, 'height': 844}, is_mobile=True, device_scale_factor=1)
+            enable_fixture_community_runtime(phone)
             mobile = phone.new_page(); mobile.on('pageerror', lambda error: errors.append(str(error)))
             captured_pages.append(mobile)
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))
@@ -813,7 +901,29 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile_picker.locator('.peer-card:visible').count() == 0
             assert mobile_comparison.locator('.peer-selection').is_hidden()
             assert mobile_comparison.locator('[data-peer-series="005930.KS"]').get_attribute('stroke') != mobile_comparison.locator('[data-peer-series="000660.KS"]').get_attribute('stroke')
-            assert mobile_comparison.locator('#peer-chart').bounding_box()['y'] < mobile.viewport_size['height'] - 140
+            # The new common index strip intentionally occupies the initial fold.
+            # A normal page scroll must reveal the whole plot above the fixed menu.
+            mobile_chart = mobile_comparison.locator('#peer-chart')
+            mobile_chart.scroll_into_view_if_needed()
+            plot_box = mobile_chart.bounding_box()
+            menu_box = mobile.locator('.tabbar').bounding_box()
+            bottom_limit = menu_box['y'] if menu_box else mobile.viewport_size['height']
+            # Browser auto-scroll does not account for the fixed bottom menu.
+            # One normal vertical scroll must make the full chart reachable.
+            covered = plot_box['y'] + plot_box['height'] - bottom_limit
+            if covered > 0:
+                mobile.mouse.move(120, 400)
+                mobile.mouse.wheel(0, covered + 16)
+                mobile.wait_for_function("""() => {
+                  const chart = document.getElementById('peer-chart').getBoundingClientRect();
+                  const menu = document.querySelector('.tabbar');
+                  return chart.bottom <= (menu ? menu.getBoundingClientRect().top : innerHeight) + 1;
+                }""")
+                plot_box = mobile_chart.bounding_box()
+            assert plot_box['y'] >= -1 and plot_box['y'] + plot_box['height'] <= bottom_limit + 1, {
+                'plot': plot_box, 'bottomLimit': bottom_limit,
+                'viewport': mobile.viewport_size,
+            }
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'comparison-default-companies-mobile.png'))
             mobile_comparison.locator('[data-peer-period="1095"]').click()
@@ -947,7 +1057,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             mobile.screenshot(path=str(output / 'opinion-admin-mobile.png'))
             phone.close(); context.close(); browser.close()
         assert not errors, errors
-        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
+        (output / 'result.json').write_text(json.dumps({'passed': True, 'pageErrors': errors, 'checks': ['Default paused runtime reads stored AI publications without API calls, EventSource or polling', 'Five global indices precede the chapter header and persist across chapter navigation', 'Live community integration opts in only through in-memory fixture runtime routes', 'Today empty and three independent populated cards', 'Today per-parent replies preserve independent provenance and reject invalid parents, plus unknown actual model provenance', 'Default market home and explicit Today navigation; removed Today controls stay absent', 'Today previous edition and failed reload hide current picks; explicit saved-archive updates and failure events preserve quote provenance', 'Today populated mobile width', 'HTTPS and cross-origin API', 'member login', 'shared comments across browser contexts', 'latest opinions use shared message IDs', 'opinion history and provenance', 'actual failed and disabled states', 'hidden parent placeholder', 'AI/human filters', 'AI reply switches to mixed', 'XSS displayed as text', 'no credential persistence', 'new draft survives pending POST', 'deep link does not reset human tab', 'AI permission choice survives tab changes', 'per-symbol detail composer', 'draft survives quote refresh', 'mobile width', 'comparison 3-year lazy loading and failures', 'selected company curves and dates', 'Samsung and SK Hynix default curves, collapsed company picker, intentional removals and empty selection preserved, bounded desktop/mobile height and preserved scroll/focus', 'admin scope and per-symbol pause', 'daily limits and real usage metrics', 'opinion request retry idempotency', 'selected and all-symbol requests', 'hidden latest opinion removed from cards and history']}, ensure_ascii=False, indent=2))
         print('Browser smoke passed (fixture AI only). Screenshots:', output)
     finally:
         fixture.terminate()
