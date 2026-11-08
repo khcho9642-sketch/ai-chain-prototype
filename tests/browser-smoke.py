@@ -159,8 +159,13 @@ def recommendation_only_browser_fixture():
     return value
 
 
-def enable_fixture_community_runtime(context):
-    """Opt this isolated test context into fixture APIs; never edit the public switch."""
+def enable_fixture_community_runtime(context, api_origin):
+    """Opt this isolated test context into fixture APIs; never edit public runtime files."""
+    assert api_origin.startswith('https://localhost:'), api_origin
+    context.route('**/assets/community-runtime.js', lambda route: route.fulfill(
+        status=200, content_type='application/javascript',
+        body='// Loopback browser fixture only. Never written to application assets.\n'
+             + 'export const communityApiOrigin = ' + json.dumps(api_origin) + ';\n'))
     context.route('**/assets/site-runtime.js', lambda route: route.fulfill(
         status=200, content_type='application/javascript', body="""
 // Browser integration fixture only. Never written to application assets.
@@ -200,6 +205,7 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     current.goto(origin + '/')
     current.wait_for_function('window.aiChainSnapshot?.quotes?.length > 0')
     assert current.evaluate("async () => (await import('./assets/site-runtime.js')).realtimeEnabled") is False
+    assert current.evaluate("async () => (await import('./assets/community-runtime.js')).communityApiOrigin") == ''
     strip = current.locator('[data-index-strip]')
     strip.wait_for()
     current.wait_for_function("document.querySelectorAll('[data-index-strip] [data-index-symbol]').length === 5")
@@ -269,7 +275,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             browser = p.chromium.launch(executable_path=args.browser or shutil.which('google-chrome') or shutil.which('chromium') or p.chromium.executable_path, headless=True, args=['--no-sandbox'])
             verify_paused_static_runtime(browser, origin, captured_pages)
             context = browser.new_context(ignore_https_errors=True, viewport={'width': 1440, 'height': 1000})
-            enable_fixture_community_runtime(context)
+            enable_fixture_community_runtime(context, endpoints['apiOrigin'])
             page = context.new_page()
             captured_pages.append(page)
             page.on('pageerror', lambda error: errors.append(str(error)))
@@ -289,6 +295,10 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.on('request', lambda request: home_requests.append((request.method, request.url)))
             page.goto(origin + '/')
             assert page.locator('#v-home').is_visible()
+            assert page.evaluate("""async () => {
+              const {MARKET_DATA_POLICY: policy} = await import('./assets/market-data-policy.js');
+              return policy.collectionEnabled || policy.liveRequestsEnabled || policy.autoRefreshEnabled;
+            }""") is False
             assert page.locator('#v-today').is_hidden()
             page.locator('.topnav [data-r=today]').click()
             today = page.locator('#v-today')
@@ -866,7 +876,7 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             page.screenshot(path=str(output / 'stock-detail-desktop.png'))
             # Independent browser context reads the same durable shared API, no login needed.
             phone = browser.new_context(ignore_https_errors=True, viewport={'width': 390, 'height': 844}, is_mobile=True, device_scale_factor=1)
-            enable_fixture_community_runtime(phone)
+            enable_fixture_community_runtime(phone, endpoints['apiOrigin'])
             mobile = phone.new_page(); mobile.on('pageerror', lambda error: errors.append(str(error)))
             captured_pages.append(mobile)
             mobile.route('**/api/chart?*', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"fixture"}'))

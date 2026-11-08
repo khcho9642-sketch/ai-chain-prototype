@@ -188,7 +188,7 @@ function renderVote(day) {
   else if (presentation.kind === 'results') status.textContent = `${presentation.count}명이 논리를 골랐어요. · 네 선택은 ${DEBATE_CHARACTERS[state.vote.choice]?.name || ''}`
   else status.textContent = '한 주제에 한 번, 마음에 남은 논리를 골라봐요.'
   section.append(status)
-  if (presentation.kind === 'results') {
+  if (realtimeEnabled && presentation.kind === 'results') {
     const results = node('div', null, { class: 'debate-vote-result' })
     for (const row of presentation.rows) {
       const result = node('div', null, { class: 'debate-vote-result-row debate-agent-' + row.ai })
@@ -204,7 +204,7 @@ function updateVote() { const current = host?.querySelector('[data-debate-vote]'
 async function voteRequest(method = 'GET', choice, day = state.day) {
   if (!realtimeEnabled) throw new Error('votes_paused')
   const url = './api/debate-votes' + (method === 'GET' ? '?debateId=' + encodeURIComponent(day.id) : '')
-  const response = await fetch(url, { method, credentials: 'same-origin', cache: realtimeEnabled ? 'no-store' : 'force-cache', redirect: 'error', signal: AbortSignal.timeout(15000), ...(method === 'POST' ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ debateId: day.id, choice }) } : {}) })
+  const response = await fetch(url, { method, credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000), ...(method === 'POST' ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ debateId: day.id, choice }) } : {}) })
   const result = await response.json()
   if ((!response.ok && response.status !== 409) || result.debateId !== day.id || typeof result.hasVoted !== 'boolean') throw new Error('votes_unavailable')
   if (result.hasVoted && !AGENTS.includes(result.choice)) throw new Error('invalid_vote')

@@ -149,3 +149,35 @@
 
 .ci-value-source {color:inherit;text-decoration:underline dotted var(--dash);text-underline-offset:3px}
 .ci-value-source:hover {color:var(--accent)}
+/* The desktop comparison uses the whole chapter width for all fourteen columns. */
+@media (min-width:1024px) {
+  body[data-page="company-info"]:has(.ci-shell[data-scope="all"]) > main.wrap {max-width:1920px}
+  .ci-shell[data-scope="all"] .ci-layout {grid-template-columns:minmax(0,1fr);gap:20px}
+  .ci-shell[data-scope="all"] .ci-filters {grid-template-columns:auto minmax(0,1fr) 142px 112px;gap:10px 14px;padding:12px 14px;align-items:center}
+  .ci-shell[data-scope="all"] .ci-filters h2 {margin:0;font-size:12px}
+  .ci-shell[data-scope="all"] .ci-sector-list {display:flex;flex-wrap:wrap;gap:3px;padding:0;border:0}
+  .ci-shell[data-scope="all"] .ci-sector-list button {font-size:11px;padding:7px 8px;gap:5px}
+  .ci-shell[data-scope="all"] .ci-sector-list small {margin-left:3px;font-size:10px}
+  .ci-shell[data-scope="all"] .ci-filters label {font-size:10px;gap:4px;padding:0}
+  .ci-shell[data-scope="all"] .ci-filters select {font-size:11px;padding:7px}
+  .ci-market-table {width:100%;min-width:0;table-layout:fixed;font-size:clamp(10px,.82vw,13px)}
+  .ci-market-table td,.ci-market-table th {min-width:0;max-width:none;padding:10px clamp(4px,.5vw,9px);line-height:1.5;overflow-wrap:anywhere}
+  .ci-market-table th {padding:0;vertical-align:bottom}
+  .ci-market-table th button {padding:10px clamp(4px,.5vw,9px);white-space:normal;font-size:inherit;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+  .ci-market-table td:first-child,.ci-market-table th:first-child {min-width:0;max-width:none;position:static}
+  .ci-market-table td[data-col="role"],.ci-market-table td[data-col="country"] {min-width:0;max-width:none}
+  .ci-market-table th[data-col="name"] {width:11%}
+  .ci-market-table th[data-col="sector"] {width:7%}
+  .ci-market-table th[data-col="role"] {width:10%}
+  .ci-market-table th[data-col="country"] {width:7%}
+  .ci-market-table th[data-col="ticker"] {width:6%}
+  .ci-market-table th[data-col="price"] {width:6%}
+  .ci-market-table th[data-col="marketCapUsd"] {width:8%}
+  .ci-market-table th:is([data-col="change1d"],[data-col="change1mo"],[data-col="changeYtd"],[data-col="fromHigh52w"]) {width:6%}
+  .ci-market-table th[data-col="revenueTtmUsd"] {width:9%}
+  .ci-market-table th[data-col="revenueGrowth"] {width:7%}
+  .ci-market-table th[data-col="pe"] {width:5%}
+  .ci-market-table .ci-sector-tag {font-size:inherit;gap:4px}
+  .ci-market-table small,.ci-asof-link {font-size:clamp(9px,.7vw,11px);overflow-wrap:anywhere;white-space:normal}
+  .ci-market-table .ci-core-label {font-size:9px;padding:0 3px;vertical-align:middle}
+}

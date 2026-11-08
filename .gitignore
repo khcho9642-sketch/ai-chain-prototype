@@ -10,3 +10,5 @@ _site/
 *.sqlite
 *.sqlite-*
 .superdesign/
+
+.wrangler/

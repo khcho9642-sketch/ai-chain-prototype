@@ -199,8 +199,8 @@ function createView(root, symbol, selector = false) {
   function renderAuth() {
     if (state.disposed) return
     if (!realtimeEnabled) {
-      el('auth').replaceChildren(node('p', '댓글·회원·AI 실시간 기능은 일시 중지되어 있습니다.', { class: 'note' }))
-      el('form').hidden = true; el('admin').hidden = true; el('submit').disabled = true
+      el('auth').replaceChildren(node('p', '댓글·회원·AI 실시간 기능은 일시 중지되어 있습니다.', { class: 'note' })); el('form').hidden = true; el('admin').hidden = true; el('older').hidden = true
+      for (const control of el('form').querySelectorAll('input, textarea, button')) control.disabled = true
       return
     }
     if (!state.status) return
@@ -512,12 +512,16 @@ function createView(root, symbol, selector = false) {
     if (state.disposed) return
     saveDraft(); state.disposed = true; events?.close(); controller?.abort(); publishedController.abort(); clearTimeout(refreshTimer); generation++; views.delete(view)
   } }
-  views.add(view); setTab(state.tab); parentLabel(); renderAuth()
+  views.add(view); setTab(state.tab); parentLabel()
   readPublishedReports(publishedController.signal).then(snapshot => {
     if (state.disposed) return
     state.publishedReports = snapshot; renderPublishedReports(); renderOpinions()
   }).catch(() => { /* Snapshot failure must not block connected server comments. */ })
-  if (realtimeEnabled) {
+  if (!realtimeEnabled) {
+    renderAuth()
+    message('실시간 연결은 일시 중지되어 있습니다. 검토 후 발행한 저장 의견만 표시합니다.')
+    return view
+  }
   ;(async () => {
     try {
       state.status = await api('/status'); if (state.disposed) return
@@ -531,7 +535,6 @@ function createView(root, symbol, selector = false) {
       events.onerror = () => message('실시간 연결 복구 중입니다. 저장된 댓글은 새로고침으로 확인할 수 있습니다.')
     } catch { message('댓글 서버가 연결되지 않았습니다. 서버 주소 설정과 실행 상태를 확인해주세요.'); el('admin').hidden = true }
   })()
-  } else message('실시간 연결은 일시 중지되어 있습니다. 검토 후 발행한 저장 의견만 표시합니다.')
   return view
 }
 export function mountCommunity() {

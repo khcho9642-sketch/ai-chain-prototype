@@ -1,4 +1,4 @@
-name: Market data and Pages
+name: Static snapshot site and Pages
 on:
   push:
     branches: [main]
@@ -23,42 +23,8 @@ jobs:
 
       - name: Test data handling
         run: npm test
-      - name: Restore previous deployed snapshot for failure fallback
-        run: |
-          curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/market.json -o data/previous.json && mv data/previous.json data/market.json || true
-      # Price collection is paused by the user. Only the already published
-      # snapshot is restored; deployment must not call quote/cap/FX providers.
-      - name: Build ripple observations from stored closes
-        run: node scripts/data/build-ripple.mjs --allow-unavailable
-      - name: Restore previous industry statistics for failure fallback
-        run: |
-          curl --fail --silent --show-error --max-time 20 https://khcho9642-sketch.github.io/ai-chain-prototype/data/industry.json -o data/industry-previous.json && mv data/industry-previous.json data/industry.json || true
-      - name: Collect official monthly industry statistics
-        continue-on-error: true
-        env:
-          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
-          KOSIS_API_KEY: ${{ secrets.KOSIS_API_KEY }}
-          CUSTOMS_SERVICE_KEY: ${{ secrets.CUSTOMS_SERVICE_KEY }}
-        run: node scripts/data/collect-industry.mjs ${{ github.event_name == 'workflow_dispatch' && '--force-customs' || '' }}
-      - name: Restore validated public collector state
-        run: node scripts/deployment/restore-ai-snapshots.mjs --with-comparison
-      - name: Collect free Epoch AI datasets
-        continue-on-error: true
-        run: npm run collect:epoch -- --no-evidence
-      - name: Collect public OpenRouter token statistics
-        continue-on-error: true
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: npm run collect:tokens
-      - name: Monitor official OpenAI and Anthropic disclosures
-        continue-on-error: true
-        run: npm run collect:disclosures
-      - name: Collect official Korean company disclosures
-        continue-on-error: true
-        run: npm run collect:company-disclosures
-      - name: Build static site
-        env:
-          COMMUNITY_API_ORIGIN: ${{ vars.COMMUNITY_API_ORIGIN }}
+      # Automatic collection is paused. Publish reviewed repository snapshots only.
+      - name: Build static snapshot site
         run: |
           npm run build
           touch dist/.nojekyll
@@ -75,6 +41,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Publish actual data
+      - name: Publish static snapshot site
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

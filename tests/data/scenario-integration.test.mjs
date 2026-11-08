@@ -146,7 +146,7 @@ test('static build publishes the scenario chapter without widening the public fi
     'comparison-history.json', 'epoch-ai.json', 'industry.json', 'market-display.json', 'market.json', 'ripple.json', 'today-discussion.json', 'today-personas.json', 'today-picks.json',
   ])
 
-  const server = createSiteServer({ root: output })
+  const server = createSiteServer({ root: output, liveApi: true })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   t.after(() => new Promise((resolveClose, reject) => server.close(error => error ? reject(error) : resolveClose())))

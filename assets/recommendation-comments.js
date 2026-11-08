@@ -81,7 +81,6 @@ export function recommendationComments(report) {
   }
   const request = (method, payload) => {
     const perform = async () => {
-      if (!realtimeEnabled) throw new Error('댓글 기능은 일시 중지되어 있습니다.')
       if (state.disposed) throw new DOMException('Panel disposed', 'AbortError')
       const controller = new AbortController()
       state.controller = controller

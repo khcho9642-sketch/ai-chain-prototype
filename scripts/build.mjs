@@ -1,3 +1,4 @@
+import { realtimeEnabled } from '../assets/site-runtime.js'
 import { copyFile, lstat, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -38,6 +39,7 @@ export async function resolveBuildRippleSnapshot(root, marketSnapshot, { now = D
 export async function build(root = projectRoot, { communityOrigin = process.env.COMMUNITY_API_ORIGIN || '' } = {}) {
   // Only a public endpoint is emitted. Secrets never enter the browser build.
   if (communityOrigin) communityOrigin = resolveCommunityOrigin(communityOrigin, '')
+  if (!realtimeEnabled) communityOrigin = ''
   const source = resolve(root)
   const output = resolve(source, 'dist')
   // Only the generated dist folder directly inside this project can be replaced.
@@ -80,6 +82,8 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
       .replace('</body>', '<script type="module" src="./assets/community.js"></script>\n</body>')
   }
   await writeFile(join(output, 'index.html'), html)
+  await writeFile(join(output, '404.html'), '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="robots" content="noindex"><title>404</title><main><h1>페이지를 찾을 수 없습니다</h1></main></html>\n')
+  await writeFile(join(output, '_headers'), '/*\n  X-Content-Type-Options: nosniff\n\n/data/*\n  Cache-Control: public, max-age=60, must-revalidate\n')
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
   await Promise.all(publicSnapshotFiles.filter(name => !['ripple.json', 'market-display.json'].includes(name)).map(name=>copyFile(join(source,'data',name),join(output,'data',name))))
   await writeFile(join(output, 'data', 'market-display.json'), JSON.stringify(displayData) + '\n')

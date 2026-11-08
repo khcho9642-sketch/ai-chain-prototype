@@ -137,7 +137,7 @@ test('paused default chart service and API do not run the live provider path', a
 })
 
 test('the default local chart endpoint honors the same paused policy', async t => {
-  const server = createSiteServer()
+  const server = createSiteServer({ liveApi: true })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   t.after(() => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())))
@@ -250,10 +250,10 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
-  assert.deepEqual((await readdir(output)).sort(), ['assets', 'data', 'index.html'])
+  assert.deepEqual((await readdir(output)).sort(), ['404.html', '_headers', 'assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
   assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','company-market.json','comparison-history.json','epoch-ai.json','industry.json','market-display.json','market.json','ripple.json','today-discussion.json','today-personas.json','today-picks.json'])
-  const server = createSiteServer({ root: output, chartService: async (symbol, range) => {
+  const server = createSiteServer({ root: output, liveApi: true, chartService: async (symbol, range) => {
     if (symbol === 'FAIL') throw Object.assign(new Error('제공처 연결 실패'), { status: 502 })
     if (!symbol || !Object.hasOwn(ranges, range)) throw Object.assign(new Error('입력 오류'), { status: 400 })
     return { symbol, range, price: 110 }
