@@ -1,8 +1,8 @@
-.index-strip-shell{background:var(--panel);border-bottom:1px solid var(--line);color:var(--ink)}
-.index-strip-wrap{padding-top:10px;padding-bottom:11px}
+.index-strip-shell{display:block;width:100%;max-width:100%;min-width:0;background:var(--panel);border-bottom:1px solid var(--line);color:var(--ink)}
+.index-strip-wrap{width:100%;min-width:0;padding-top:10px;padding-bottom:11px}
 .index-strip-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:11px;color:var(--muted);line-height:1.5}
 .index-strip-heading strong{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap}
-.index-strip-track{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin;padding:2px 1px 5px}
+.index-strip-track{display:flex;width:100%;max-width:100%;min-width:0;gap:8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin;padding:2px 1px 5px}
 .index-strip-card{flex:1 0 172px;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:11px;padding:10px 12px;scroll-snap-align:start}
 .index-strip-card.is-ai{border-color:var(--accent)}
 .index-strip-name{display:flex;align-items:center;gap:6px;min-height:19px;font-size:12px;font-weight:500;color:var(--muted)}

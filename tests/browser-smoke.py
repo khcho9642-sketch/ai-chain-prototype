@@ -215,6 +215,11 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     }""")
     assert '실시간 갱신 중지' in strip.inner_text()
     saved_indices = strip.locator('[data-index-strip-cards]').inner_text()
+    current.set_viewport_size({'width': 390, 'height': 844})
+    assert current.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+    assert strip.bounding_box()['width'] <= 391
+    assert strip.locator('[data-index-strip-cards]').evaluate('el => el.scrollWidth > el.clientWidth')
+    current.set_viewport_size({'width': 1440, 'height': 1000})
     current.locator('.topnav [data-r=today]').click()
     current.wait_for_function("document.querySelectorAll('#v-today [data-today-cards] [data-today-comment]').length === 3")
     assert strip.is_visible()
@@ -896,7 +901,17 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert mobile_picker.locator('.peer-card:visible').count() == 0
             assert mobile_comparison.locator('.peer-selection').is_hidden()
             assert mobile_comparison.locator('[data-peer-series="005930.KS"]').get_attribute('stroke') != mobile_comparison.locator('[data-peer-series="000660.KS"]').get_attribute('stroke')
-            assert mobile_comparison.locator('#peer-chart').bounding_box()['y'] < mobile.viewport_size['height'] - 140
+            # The new common index strip intentionally occupies the initial fold.
+            # A normal page scroll must reveal the whole plot above the fixed menu.
+            mobile_chart = mobile_comparison.locator('#peer-chart')
+            mobile_chart.scroll_into_view_if_needed()
+            plot_box = mobile_chart.bounding_box()
+            menu_box = mobile.locator('.tabbar').bounding_box()
+            bottom_limit = menu_box['y'] if menu_box else mobile.viewport_size['height']
+            assert plot_box['y'] >= -1 and plot_box['y'] + plot_box['height'] <= bottom_limit + 1, {
+                'plot': plot_box, 'bottomLimit': bottom_limit,
+                'viewport': mobile.viewport_size,
+            }
             assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             mobile.screenshot(path=str(output / 'comparison-default-companies-mobile.png'))
             mobile_comparison.locator('[data-peer-period="1095"]').click()
