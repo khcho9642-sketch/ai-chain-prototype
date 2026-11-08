@@ -3,7 +3,7 @@
   "source": {
     "type": "user-request",
     "requestedOn": "2026-11-08",
-    "note": "사용자 요청으로 퀄컴(QCOM)을 AI 칩 핵심기업에 추가한다. 원본 핵심기업 49 시트와 회사 원장은 보존한다."
+    "note": "사용자 요청으로 퀄컴(QCOM)을 AI 칩 핵심기업에, CXMT를 메모리 핵심기업에 추가한다. 원본 핵심기업 49 시트와 회사 원장은 보존한다."
   },
   "companies": [
     {
@@ -14,6 +14,15 @@
       "listed": true,
       "change": "사용자 추가",
       "role": "온디바이스 AI SoC·NPU"
+    },
+    {
+      "companyId": "C0119",
+      "name": "CXMT",
+      "sector": "메모리",
+      "ticker": "688825.SS",
+      "listed": true,
+      "change": "사용자 추가",
+      "role": "DRAM·DDR5·LPDDR"
     }
   ]
 }

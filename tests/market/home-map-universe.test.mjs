@@ -12,21 +12,21 @@ const universe = await loadMarketUniverse()
 const approvedTickers = ['ASML.AS','AMAT','LRCX','KLAC','8035.T','042700.KS','2330.TW','INTC','0981.HK','3711.TW','AMKR',
   '005930.KS','000660.KS','MU','SNDK','285A.T','NVDA','AVGO','AMD','ARM','MRVL','CSCO','ANET','DELL','2317.TW','COHR',
   '007660.KS','GEV','ENR.DE','SU.PA','ETN','VRT','010120.KS','267260.KS','EQIX','DLR','IRM','GDS','MSFT','AMZN','ORCL',
-  'BABA','CRWV','NBIS','GOOGL','META','QCOM']
+  'BABA','CRWV','NBIS','GOOGL','META','QCOM','688825.SS']
 
-test('the map preserves the original 49 and adds the user-requested Qualcomm as the 50th issuer', async () => {
+test('the map preserves the original 49 and adds user-requested Qualcomm and CXMT as the 50th and 51st issuers', async () => {
   const expected = buildHomeMapUniverse({master,universe,selection,additions})
   assert.deepEqual(MAP_COMPANIES,expected.companies)
   assert.deepEqual(MAP_UNIVERSE,expected.metadata)
   assert.equal(HOME_MAP_UNIVERSE,MAP_COMPANIES)
-  assert.equal(MAP_COMPANIES.length,50)
-  assert.equal(new Set(MAP_COMPANIES.map(company=>company.id)).size,50)
-  assert.equal(MAP_COMPANIES.filter(company=>company.listed).length,47)
+  assert.equal(MAP_COMPANIES.length,51)
+  assert.equal(new Set(MAP_COMPANIES.map(company=>company.id)).size,51)
+  assert.equal(MAP_COMPANIES.filter(company=>company.listed).length,48)
   assert.equal(MAP_COMPANIES.filter(company=>!company.listed).length,3)
   assert.deepEqual(MAP_COMPANIES.slice(0,49).map(company=>[company.sourceOrder,company.id,company.name,company.sourceSector,company.role]),
     selection.companies.map(company=>[company.order,company.companyId,company.name,company.sector,company.role]))
   assert.equal(MAP_UNIVERSE.baseCompanyCount,49)
-  assert.deepEqual(MAP_UNIVERSE.userAdditions,[{companyId:'C0371',ticker:'QCOM',requestedOn:'2026-11-08'}])
+  assert.deepEqual(MAP_UNIVERSE.userAdditions,[{companyId:'C0371',ticker:'QCOM',requestedOn:'2026-11-08'},{companyId:'C0119',ticker:'688825.SS',requestedOn:'2026-11-08'}])
   assert.equal(MAP_UNIVERSE.sourceSheet,'핵심기업 49')
   assert.equal(MAP_UNIVERSE.sourceModifiedAt,'2026-11-06T15:21:47.237Z')
   assert.equal(MAP_UNIVERSE.sourceAsOf,'2026-11-07')
@@ -51,7 +51,7 @@ test('only exact approved listings are used while the full collection master rem
   assert.equal(master.companies.length,586)
   assert.equal(MAP_UNIVERSE.masterCompanyCount,586)
   assert.ok(universe.targets.length>500)
-  assert.equal(MAP_UNIVERSE.mappedListedCompanyCount,47)
+  assert.equal(MAP_UNIVERSE.mappedListedCompanyCount,48)
   assert.equal(MAP_UNIVERSE.unmappedListedCompanyCount,0)
   const hanmi=MAP_COMPANIES.find(company=>company.primaryTicker==='042700.KS')
   assert.equal(hanmi.sector,'반도체 소부장')
@@ -98,4 +98,17 @@ test('Qualcomm additions preserve the base roster and reject duplicate issuers, 
     const copy=structuredClone(additions); mutate(copy)
     assert.throws(()=>buildHomeMapUniverse({master,universe,selection,additions:copy}))
   }
+})
+
+test('CXMT joins memory once using its existing issuer ID and exact Shanghai listing', () => {
+  const rows=MAP_COMPANIES.filter(company=>company.id==='C0119')
+  assert.equal(rows.length,1)
+  const c=rows[0]
+  assert.equal(c.name,'CXMT')
+  assert.equal(c.sectorId,'memory')
+  assert.equal(c.sourceOrder,51)
+  assert.equal(c.primaryTicker,'688825.SS')
+  assert.equal(c.listed,true)
+  assert.equal(c.listings[0].currency,'CNY')
+  assert.equal(MAP_COMPANIES.filter(company=>company.sectorId==='memory').length,6)
 })
