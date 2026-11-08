@@ -236,10 +236,14 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     current.locator('#v-talk').get_by_text('댓글·회원·AI 실시간 기능은 일시 중지되어 있습니다.', exact=True).wait_for()
     current.evaluate("location.hash = 'debate'")
     current.locator('#v-debate').wait_for(state='visible')
+    # A visible SPA shell and an already-reached networkidle state do not mean its first publication has loaded.
+    current.locator('#v-debate .debate-topic').wait_for(state='visible')
+    current.locator('#v-debate [data-debate-stance]').first.wait_for(state='visible')
+    current.locator('#v-debate .debate-character-history').wait_for(state='visible')
     current.wait_for_load_state('networkidle')
     data_reads = [url for _, url in requests if '/data/' in url]
     current.clock.fast_forward(185000)
-    assert [url for _, url in requests if '/data/' in url] == data_reads
+    assert [url for _, url in requests if '/data/' in url] == data_reads, {'before': data_reads, 'after': [url for _, url in requests if '/data/' in url]}
     assert not any('/api/' in url for _, url in requests), requests
     assert not any(method != 'GET' for method, _ in requests), requests
     assert current.evaluate('window.__pausedRuntimeProbe') == {'eventSources': 0, 'intervals': []}
