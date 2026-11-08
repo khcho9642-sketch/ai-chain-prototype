@@ -1,3 +1,4 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { validateAiStatistics, safeSourceUrl } from './ai-statistics-core.js'
 import { validateDisclosureSnapshot } from './ai-disclosure-core.js'
 import {
@@ -314,13 +315,12 @@ async function fetchJSON(path) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12000)
   try {
-    const response = await fetch(path, { cache: 'no-cache', signal: controller.signal })
+    const response = await fetch(path, { cache: realtimeEnabled ? 'no-cache' : 'force-cache', signal: controller.signal })
     if (!response.ok) throw new Error(`자료 응답을 확인할 수 없습니다 (${response.status}).`)
     return await response.json()
   } finally { clearTimeout(timeout) }
 }
 async function fetchSnapshot(name, validate) {
-  const staticHost = location.hostname === 'github.io' || location.hostname.endsWith('.github.io') || location.protocol === 'file:'
   if (staticHost) return { data: validate(await fetchJSON(`./data/${name}.json`)), fallback: false }
   try { return { data: validate(await fetchJSON(`./api/${name}`)), fallback: false } }
   catch { return { data: validate(await fetchJSON(`./data/${name}.json`)), fallback: true } }

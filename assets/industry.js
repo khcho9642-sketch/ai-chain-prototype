@@ -1,3 +1,4 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { SECTORS } from './home-map-core.js'
 import { validateIndustry, latestPoint, yearOnYear } from './industry-core.js'
 import { safeSourceUrl, validateAiStatistics } from './ai-statistics-core.js'
@@ -61,14 +62,13 @@ function updateMapMetrics(data) {
 }
 
 async function readSnapshot(path, validate) {
-  const response = await fetch(path, { cache: 'no-cache', signal: AbortSignal.timeout(12000) })
+  const response = await fetch(path, { cache: realtimeEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(12000) })
   if (!response.ok) throw new Error(String(response.status))
   return validate(await response.json())
 }
 
 async function requestSource(key) {
   const {file, validate, label} = sources[key]
-  const staticHost = location.hostname.endsWith('.github.io') || location.protocol === 'file:'
   if (key !== 'ai' && !staticHost) {
     try {
       return await readSnapshot(`./api/${file}`, validate)

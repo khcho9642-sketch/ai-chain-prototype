@@ -15,10 +15,10 @@ const digests = {
   claude: '6ac72def4b6908f4f8fd70fc589e35824b5a58625848142cd9b7b8223141d928',
 }
 
-function moduleHarness(fetch) {
+function moduleHarness(fetch, { realtimeEnabled = false } = {}) {
   const context = vm.createContext({
-    instruments, validateTodaySnapshot, getTodayComment, getTodayWebProvider, fetch, AbortController, DOMException, URL, console,
-    location: { origin: 'https://ai-chain-prototype.vercel.app', hash: '' },
+    instruments, validateTodaySnapshot, getTodayComment, getTodayWebProvider, fetch, AbortController, DOMException, URL, console, realtimeEnabled,
+    location: { origin: 'https://ai-chain-prototype.pages.dev', hash: '' },
     document: { getElementById: () => null }, window: { addEventListener() {} },
     communityApiOrigin: '', resolveCommunityOrigin: (_, origin) => origin,
   })
@@ -255,19 +255,27 @@ test('read-only published comments respect human-only tabs and never mix other s
   assert.throws(() => publishedReportsForSymbol(malformed, 'NVDA'), /invalid_today_provenance/u)
 })
 
-test('views share one snapshot read independently of community backend connectivity', async () => {
+test('paused views share one stable cached snapshot read independently of community backend connectivity', async () => {
   let calls = 0
   const { readPublishedReports } = moduleHarness(async (url, options) => {
     calls++
     assert.equal(url, './data/today-picks.json')
     assert.equal(options.method, undefined)
+    assert.equal(options.cache, 'force-cache')
+    assert.equal(options.credentials, 'same-origin')
+    assert.equal(options.redirect, 'error')
     return { ok: true, json: async () => structuredClone(snapshot) }
   })
   const first = new AbortController(), second = new AbortController()
   const values = await Promise.all([readPublishedReports(first.signal), readPublishedReports(second.signal)])
   assert.equal(calls, 1)
   assert.equal(values[0], values[1])
-  assert.equal((await readPublishedReports(new AbortController().signal)).reports.length, 3)
+  assert.equal(values[0].generatedAt, snapshot.generatedAt)
+  assert.equal(values[0].reports[0].provenance.generatedAt, snapshot.reports[0].provenance.generatedAt)
+  first.abort(); second.abort()
+  const remounted = await readPublishedReports(new AbortController().signal)
+  assert.equal(remounted, values[0])
+  assert.equal(remounted.reports.length, 3)
   assert.equal(calls, 1)
 })
 

@@ -1,3 +1,4 @@
+import { realtimeEnabled } from './site-runtime.js'
 const panels = new Map()
 const nicknameKey = 'ai-chain.recommendation-comment.nickname'
 let fieldSequence = 0
@@ -37,6 +38,11 @@ export function recommendationComments(report) {
 
   const details = element('details', null, { class: 'recommendation-comments', 'data-recommendation-comments': report.id })
   const summary = element('summary', '댓글')
+  if (!realtimeEnabled) {
+    details.append(summary, element('p', '댓글 기능은 일시 중지되어 있습니다.', { class: 'recommendation-comments-status', role: 'status' }))
+    panels.set(report.id, { details, disposed: false, controller: null })
+    return details
+  }
   const content = element('div', null, { class: 'recommendation-comments-content' })
   const toolbar = element('div', null, { class: 'recommendation-comments-toolbar' })
   const refresh = element('button', '새로 불러오기', { type: 'button' })
@@ -75,6 +81,7 @@ export function recommendationComments(report) {
   }
   const request = (method, payload) => {
     const perform = async () => {
+      if (!realtimeEnabled) throw new Error('댓글 기능은 일시 중지되어 있습니다.')
       if (state.disposed) throw new DOMException('Panel disposed', 'AbortError')
       const controller = new AbortController()
       state.controller = controller

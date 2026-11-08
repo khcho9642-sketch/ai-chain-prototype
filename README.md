@@ -2,6 +2,18 @@
 
 AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글과 의견을 나누는 사이트다. 제품 목표와 첫 출시 기준은 [PLAN.md](PLAN.md)를 따른다. 이 저장소의 AI 밸류체인 사이트만 개발하며, 통합된 시세·차트·관심종목 기능을 계속 사용한다.
 
+## 현재 운영 기준 — 2026-11-08
+
+- 운영 주소는 [Cloudflare Pages](https://ai-chain-prototype.pages.dev/)다. 현행 배포 절차와 작업본 확인은 [배포 안내](docs/deployment/overview.md)를 따른다.
+- `assets/site-runtime.js`의 `realtimeEnabled = false`를 유지한다. 실시간 시세·임의 티커 API·자동 재조회·댓글/회원 API·이벤트 구독·AI 자동 반응·예약 수집은 사용자 후속 요청 없이 재개하지 않는다.
+- 지도·차트·비교·통계·기존 AI 발행물은 저장된 스냅샷과 원래 출처·기준시각으로 표시한다. 저장된 가격은 현재 시세가 아니다. 댓글·회원·AI 워커의 운영 연결과 실제 모델 검증은 계속 중지·미완료 상태다.
+- 사용자 인계 기준으로 GitHub `market-pages.yml`은 `disabled_manually` 상태다. Cloudflare 운영 배포는 로컬 `dist/` 직접 업로드로 완료했으며 해당 배포를 위한 커밋·푸시는 하지 않았다. GitHub main이나 다른 작업 사본을 운영본과 동일하다고 가정하지 않는다.
+- 후속 작업은 실제 작업 경로·Git 상태와 운영본의 정적 파일·중지 설정을 먼저 대조한다. 현재 지수 띠 작업의 구현·검증·운영 배포 완료 여부도 각각 구분한다.
+
+아래의 기존 기능·명령·발행물 설명은 구현과 발행 당시 기록을 보존한다. 현재 운영 상태는 위 기준이 우선하며, 기존 명령의 존재가 수집·API·워커 재개를 허용하지 않는다.
+
+## 기존 Today 발행 기록
+
 첫 화면은 **AI Value Chain Today**다. 실제 종목 의견은 **GPT의 엔비디아(NVDA), Claude의 버티브(VRT), Gemini의 브로드컴(AVGO)**으로 서로 다르다. 표기는 **AI 추정 가격**이며 2026-11-04 새 GPT의 조건부 추정값은 222 USD(PER 민감도 195.36~248.64 USD), Claude는 270 USD, Gemini는 375.20 USD다. GPT는 회사 Q2 조정 EPS 2.22 × 4 × 주관적 PER 25배를 사용하며 TTM·공식 연간 전망이 아니다. [GPT 새 추정과 검산](docs/community/nvda-estimate-2026-11-04.md)을 참고한다. Claude 입력 당시 관측 시세 249.525 USD 대비 차이는 +8.21%다. 정상 조회된 동일 종목·통화의 현재 시가보다 높을 때만 상승 여력 조건 충족으로 집계하며, 낮거나 같으면 참고 의견으로 표시한다. 시세 변경·조회 실패 때도 비교 상태를 다시 계산한다. 모델별 최근 의견을 원래 발행일과 함께 표시하고 오늘 새 발행 건수는 별도로 계산한다.
 이미 고른 종목은 다음 AI 후보에서 제외하며 중복 응답은 거절한다. 이전 의견서·대화체 댓글·가격·출처는 원래 날짜와 함께 이전 발행에 보존한다. 실제 답글은 0개이며 다른 모델의 대필을 채우지 않는다.
 Claude VRT 의견은 사용자가 직접 승인 방식으로 전환하도록 요청한 뒤 **공식 Claude 웹의 Opus 5.5 중간 선택 모드에서 요청 1회로 받은 실제 응답**이다. 270 USD는 회사의 Q4 조정 EPS 전망 2.25 × 4 × 주관적 30배이며 확정 실적이나 TTM이 아니다. 기존 Claude 실적 검토와 GPT·Gemini 전체 기록은 원래 날짜·원문 그대로 보존한다. Gemini CLI 개인용 Google 로그인과 개인 구독 `agy`의 타사 코딩 에이전트 내 실행은 기존 차단 상태다. AVGO 의견은 공식 Gemini 웹의 3.1 Pro 선택 모드에서 요청 1회로 받은 응답이며 이전 Antigravity VRT 원문·234 USD는 이력에 보존한다. 웹의 서버 모델 식별자는 미보고이고 앱 버전도 임의로 채우지 않는다. 공유 커뮤니티 DB·백그라운드 워커·기존 CLI 활성화 설정은 변경하지 않았다. [Claude 실제 웹 의견과 검토](docs/community/claude-web-2026-10-30.md), [추정 가격 비교와 Gemini 재선정](docs/community/estimated-price-2026-10-29.md), [서로 다른 종목 검증 기록](docs/community/distinct-recommendations-2026-10-29.md)을 참고한다.
@@ -15,7 +27,7 @@ Node.js 24에서 추가 패키지 설치 없이 실행한다.
 npm run dev
 ```
 
-개발 주소는 `http://127.0.0.1:5175`다. `npm run preview`와 `npm start`도 같은 화면·시세 API를 실행한다.
+개발 주소는 `http://127.0.0.1:5175`다. `npm run preview`와 `npm start`도 같은 개발 진입점을 사용한다. 개발 서버 실행이 중지된 운영 API나 수집기 재개를 뜻하지 않는다.
 
 ```sh
 npm test
@@ -24,7 +36,7 @@ npm run build
 
 빌드는 검증된 공개 파일만 `dist/`에 만든다. `dist/`가 없으면 개발 서버 시작 때 다시 생성한다.
 
-## 현재 기능과 남은 작업
+## 기존 구현 기능과 남은 작업
 
 | 영역 | 현재 범위 |
 | --- | --- |
@@ -41,7 +53,7 @@ npm run build
 
 ## 명령
 
-모든 명령은 저장소 루트에서 실행한다. 외부 수집은 아래 명령으로 수행하며 화면의 다시 읽기와 구분한다.
+모든 명령은 저장소 루트에서 실행한다. 아래 표는 기존 도구의 역할이다. 외부 수집·실시간 API·AI 워커는 현재 중지 상태이며 사용자 후속 요청 없이 실행하지 않는다.
 
 | 명령 | 역할 |
 | --- | --- |
@@ -70,10 +82,10 @@ npm run build
 - [데이터·운영 문서 목록](docs/README.md): 시세·통계·공시·배포·커뮤니티 상세 정의
 - [작업 규칙](AGENTS.md): 개발 위치·원본 보존·공개 데이터 허용목록
 - [Epoch AI 산업데이터](docs/data/epoch-ai.md): 공식 CSV 4종·일일 수집·검색·CSV·추정치와 출처
-- [배포 안내](docs/deployment/overview.md): GitHub Pages·Vercel 차이와 공개 스냅샷 9종
+- [배포 안내](docs/deployment/overview.md): 현행 Cloudflare 정적 배포·중지 상태와 과거 GitHub Pages·Vercel 보존 기록
 
-## 기존 사이트
+## 운영 및 과거 주소
 
-[GitHub 저장소](https://github.com/khcho9642-sketch/ai-chain-prototype) · [GitHub Pages](https://khcho9642-sketch.github.io/ai-chain-prototype/)
+[운영 사이트 — Cloudflare Pages](https://ai-chain-prototype.pages.dev/) · [GitHub 저장소](https://github.com/khcho9642-sketch/ai-chain-prototype) · [과거 GitHub Pages](https://khcho9642-sketch.github.io/ai-chain-prototype/)
 
-Pages는 수집된 정적 파일을 제공하며, 카탈로그 밖 임의 티커 조회는 로컬/API 배포에서 제공한다. 공개 시세의 출처·지연과 비교 계산은 [시세 안내](docs/data/market.md)를 따른다.
+Cloudflare Pages는 저장된 정적 파일을 제공한다. 카탈로그 밖 임의 티커 API를 포함한 실시간 기능은 현재 중지 상태다. 과거 GitHub Pages·Vercel 문서와 코드는 보존하며, 공개 가격의 원래 출처·기준시각과 비교 계산은 [시세 안내](docs/data/market.md)를 함께 확인한다.

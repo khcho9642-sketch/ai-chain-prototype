@@ -1,3 +1,4 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { instruments } from './instruments.js'
 import { companyProfiles } from './company-profiles.js'
 import { dartCompanies } from './company-disclosure-sources.js'
@@ -15,7 +16,6 @@ const membershipCount=companies.reduce((sum,item)=>sum+item.chains.filter(id=>id
 let search='',chain=0,market='전체',limit=PAGE_SIZE,snapshot=window.aiChainSnapshot||null
 let quoteMap=new Map((snapshot?.quotes||[]).map(quote=>[quote.symbol,quote]))
 const dartBySymbol=new Map(dartCompanies.map(company=>[company.symbol,company]))
-const staticHost=location.hostname.endsWith('.github.io')||location.protocol==='file:'
 const expandedFilings=new Set()
 let disclosures=null,disclosureError='',disclosureBusy=false,disclosureReadAt=0
 let disclosureMap=new Map()
@@ -49,7 +49,7 @@ async function loadDisclosures(){
   try{
     let value,fallback=false
     const request=async path=>{
-      const response=await fetch(path+'?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(15000)})
+      const response=await fetch(realtimeEnabled?path+'?t='+Date.now():path,{cache:realtimeEnabled?'no-store':'force-cache',signal:AbortSignal.timeout(15000)})
       if(!response.ok)throw new Error('공시 자료 HTTP '+response.status)
       return validateCompanyDisclosures(await response.json())
     }

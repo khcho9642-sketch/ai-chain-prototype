@@ -2,9 +2,13 @@
 
 이 폴더 `ai-chain-prototype`가 AI 체인 사이트의 유일한 개발 기준이다. 사이트 코드·문서·수집 근거·테스트·작업 산출물은 이 프로젝트 안에 둔다. 기존 교육 자료 폴더에 사이트 파일이나 별도 앱을 다시 만들지 않는다.
 
-## 운영과 시세 수집 중지
+## 현재 운영 기준 — 2026-11-08
 
-사용자 요청(2026-11-07)에 따라 코드는 GitHub에 보관하고 GitHub Pages로만 배포한다. Vercel 추가 배포·유료 전환은 진행하지 않는다. 사용자가 명시적으로 재개하기 전까지 새 시세 수집, 실시간 시세 API 호출, 자동 폴링을 중지한다. 화면은 기존 종가의 기준일·수집 시각을 유지하며, 최초 한 번의 경량 저장본 조회와 로컬 계산으로 동작한다. 수동 새로고침으로 시세를 다시 다운로드하지 않는다.
+- 운영 사이트는 Cloudflare Pages의 [https://ai-chain-prototype.pages.dev/](https://ai-chain-prototype.pages.dev/) 이다. Vercel 관련 코드와 과거 문서는 보존 자료이며, 현행 배포는 `docs/deployment/overview.md`를 따른다.
+- 사용자 요청으로 실시간 기능은 전부 일시 중지했다. `assets/site-runtime.js`의 `realtimeEnabled = false`를 유지하고 실시간 시세·임의 티커 API·자동 재조회·댓글/회원 API·이벤트 구독·AI 자동 반응과 예약 수집을 사용자의 후속 요청 없이 다시 활성화하지 않는다.
+- 지도·차트·비교·통계·기존 AI 발행물은 저장된 스냅샷과 원래 출처·기준시각으로 제공한다. 저장된 가격을 현재 시세로 표시하지 않는다.
+- GitHub `market-pages.yml`은 실제로 `disabled_manually` 상태다. 정적 사이트의 운영 배포는 완료했으며 댓글·회원·AI 워커의 운영 연결은 계속 중지·미완료 상태다.
+- 이번 Cloudflare 배포는 로컬 `dist/`를 직접 업로드했다. 커밋·푸시는 하지 않았으므로 GitHub main이나 다른 작업 사본을 운영본과 같다고 가정하지 않는다. 다른 채팅에서 이어갈 때도 현재 `README.md`, `PLAN.md`, `docs/deployment/overview.md`와 실제 작업 경로·Git 상태를 먼저 확인한다.
 
 ## 폴더와 실행
 
