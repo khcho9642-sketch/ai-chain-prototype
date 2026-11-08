@@ -113,7 +113,7 @@ export async function buildCompanyRegistry(csvText) {
     loadMarketUniverse(),
   ])
   const sheet = readBusinessSheet(csvText)
-  if (master.companies.length !== 586 || sheet.size !== 586 || MAP_UNIVERSE.companyCount !== 49) throw new Error('대상 원장 건수 불일치')
+  if (master.companies.length !== 586 || sheet.size !== 586 || MAP_UNIVERSE.companyCount !== MAP_COMPANIES.length || coreById.size !== MAP_COMPANIES.length) throw new Error('대상 원장 건수 불일치')
   const byIssuer = Map.groupBy(market.targets.filter(q => q.companyId), q => q.companyId)
   const rows = []
   for (const issuer of master.companies) {
@@ -130,7 +130,7 @@ export async function buildCompanyRegistry(csvText) {
   if (rows.some(r => r.listingCodes.includes('TSLA')) || rows.length !== 585) throw new Error('Tesla 편입 전 원장 확인 필요')
   const tesla = reviewedById.get('SCN038')
   rows.push(registryCompany({id:tesla.id,name:tesla.name,country:tesla.country,listed:true,ticker:'TSLA',sectors:[]}, null, byIssuer.get(tesla.id) || []))
-  if (rows.filter(c=>coreById.has(c.id)).length !== 49) throw new Error('핵심 49개사 원장 대조 실패')
+  if (rows.filter(c=>coreById.has(c.id)).length !== MAP_COMPANIES.length) throw new Error('핵심 ' + MAP_COMPANIES.length + '개사 원장 대조 실패')
   return rows.sort((a,b) => a.id.localeCompare(b.id))
 }
 

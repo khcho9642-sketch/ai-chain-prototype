@@ -7,6 +7,7 @@ import { loadMarketUniverse } from './market-universe.mjs'
 
 const masterPath = new URL('../../research/market/company-universe.json', import.meta.url)
 const selectionPath = new URL('../../research/market/home-map-selection.json', import.meta.url)
+const additionsPath = new URL('../../research/market/home-map-additions.json', import.meta.url)
 const outputPath = new URL('../../assets/home-map-universe.js', import.meta.url)
 const countries = Object.freeze({
   한국:'KR', 미국:'US', 일본:'JP', 대만:'TW', 중국:'CN', 홍콩:'HK',
@@ -20,18 +21,26 @@ const countries = Object.freeze({
 
 // The curated sheet controls membership, order, names, sectors and the exact
 // selected listing. The broader 586-company master remains a collection source.
-export function buildHomeMapUniverse({ master, universe, selection } = {}) {
+export function buildHomeMapUniverse({ master, universe, selection, additions } = {}) {
   if (master?.schemaVersion !== 1 || !Array.isArray(master.companies) || !Array.isArray(universe?.targets)) throw new Error('지도 기업 원장 형식 오류')
   if (selection?.schemaVersion !== 1 || !Array.isArray(selection.companies) || selection.companies.length !== 49
     || selection.companyCount !== 49 || selection.listedCompanyCount !== 46 || selection.unlistedCompanyCount !== 3
     || selection.source?.sheet !== '핵심기업 49' || !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//.test(selection.source.url || '')
     || !/^[a-f0-9]{64}$/.test(selection.source.sha256 || '') || !Number.isFinite(Date.parse(selection.source.modifiedAt))) throw new Error('지도 49개사 선정표·출처 오류')
+  const additionalCompanies = additions?.companies ?? []
+  if (additions && (additions.schemaVersion !== 1 || !Array.isArray(additions.companies)
+    || additions.source?.type !== 'user-request' || !additions.source.note?.trim()
+    || !/^\d{4}-\d{2}-\d{2}$/.test(additions.source.requestedOn || '')
+    || !Number.isFinite(Date.parse(additions.source.requestedOn)))) throw new Error('지도 사용자 추가 선정표·출처 오류')
+  // Keep the original sheet and its hash intact; later user requests are explicit additions.
+  const selectedCompanies = [...selection.companies, ...additionalCompanies.map((company, index) =>
+    ({...company, order: selection.companies.length + index + 1}))]
   const sectors = new Map(SECTORS.map(sector => [sector.name, sector]))
   sectors.set('클라우드·GPU',sectors.get('클라우드·GPU 컴퓨팅'))
   const masterCompanies = new Map(master.companies.map(company=>[company.id,company]))
   if (masterCompanies.size !== master.companies.length) throw new Error('지도 기업 식별 중복')
   const ids = new Set(), symbols = new Set()
-  const companies = selection.companies.map((selected,index) => {
+  const companies = selectedCompanies.map((selected,index) => {
     const company=masterCompanies.get(selected.companyId),sector=sectors.get(selected.sector)
     const countryCodes=String(company?.country).split('·').map(name=>countries[name.trim()])
     if (!company || !/^C\d{4}$/.test(selected.companyId) || ids.has(selected.companyId) || !selected.name || !sector
@@ -53,11 +62,13 @@ export function buildHomeMapUniverse({ master, universe, selection } = {}) {
     return row
   })
   const listedCompanyCount = companies.filter(company => company.listed).length
-  if (listedCompanyCount !== 46) throw new Error('지도 선정 상장·비상장 기업 수 오류')
+  if (listedCompanyCount !== selection.listedCompanyCount + additionalCompanies.filter(company => company.listed).length) throw new Error('지도 선정 상장·비상장 기업 수 오류')
   return { companies, metadata: {
     schemaVersion: 1, source: 'approved-home-map-selection',
     sourceAsOf:new Date(Date.parse(selection.source.modifiedAt)+9*3600000).toISOString().slice(0,10),sourceTimezone:'Asia/Seoul',
     sourceUrl:selection.source.url,sourceSheet:selection.source.sheet,sourceModifiedAt:selection.source.modifiedAt,sourceSha256:selection.source.sha256,
+    baseCompanyCount: selection.companyCount,
+    userAdditions: additionalCompanies.map(company => ({companyId: company.companyId, ticker: company.ticker, requestedOn: additions.source.requestedOn})),
     sourceStatus: 'user-selected', mappingStatus: 'candidate',listingPolicy:'exact-approved-ticker',masterCompanyCount:master.companies.length,
     companyCount: companies.length, listedCompanyCount, unlistedCompanyCount: companies.length - listedCompanyCount,
     mappedListedCompanyCount: companies.filter(company => company.listed && company.primaryTicker).length,
@@ -76,8 +87,8 @@ export function renderHomeMapUniverse({ companies, metadata }) {
 }
 
 export async function writeHomeMapUniverse({ destination = outputPath } = {}) {
-  const [master, universe, selection] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse)])
-  const value = buildHomeMapUniverse({ master, universe, selection })
+  const [master, universe, selection, additions] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse),readFile(additionsPath,'utf8').then(JSON.parse)])
+  const value = buildHomeMapUniverse({ master, universe, selection, additions })
   const path = destination instanceof URL ? fileURLToPath(destination) : resolve(destination)
   const temporary = path + '.' + randomUUID() + '.tmp'
   try {

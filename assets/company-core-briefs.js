@@ -1,4 +1,4 @@
-// Keyed by the issuer IDs in the project’s November 7 core-company register.
+// Keyed by the issuer IDs in the project’s approved core-company register.
 // Named relationships below are documented in the linked issuer materials.
 export const coreBriefs = {
   C0051: { // ASML
@@ -152,6 +152,14 @@ export const coreBriefs = {
     supply: 'TSMC 등 외부 파운드리와 조립·시험 업체에 생산을 의존한다. 가속기에는 고대역폭 메모리와 패키징이 필요하다.',
     risk: '경쟁 플랫폼에서 소프트웨어를 이전하는 비용과 고객 인증 기간이 실제 채택을 좌우한다. 데이터센터 부문 매출과 영업이익을 함께 본다.',
     source: ['AMD · 2025 Form 10-K', 'https://www.sec.gov/Archives/edgar/data/2488/000000248826000018/amd-20251227.htm'],
+  },
+  C0371: { // Qualcomm
+    business: 'Snapdragon 모바일·PC용 SoC와 통신 칩을 설계·판매하며, 무선 기술 특허 라이선스에서도 수익을 얻는다.',
+    role: 'Hexagon NPU가 CPU·GPU와 함께 기기에서 AI 추론을 처리한다. 낮은 전력으로 모델을 실행하는 칩과 개발 도구가 기기 내 AI 기능을 지원한다.',
+    buyers: '스마트폰·PC 등 기기 제조사가 연산·통신 플랫폼을 채택한다. 주요 단말 고객의 제품 채택과 출하가 반도체 수요에 영향을 준다.',
+    supply: 'TSMC·삼성전자·GlobalFoundries 등 외부 파운드리와 조립·테스트 업체를 활용한다. 생산능력과 패키징 공급이 출하 일정에 연결된다.',
+    risk: '고객의 자체 칩 전환과 경쟁 플랫폼 채택은 주문을 줄일 수 있다. AI 기기 수요가 실제 매출로 이어지는지 고객 채택과 사업별 실적을 함께 확인한다.',
+    source: ['Qualcomm · FY2026 Form 10-K', 'https://investor.qualcomm.com/files/content_files/QCOM-09-27-26-10-K_Final-v2-IR.pdf'],
   },
   C0047: { // Arm
     business: 'CPU 아키텍처와 프로세서 설계 IP를 고객에게 라이선스한다. 계약에 따른 라이선스 수입과 고객이 칩을 출하할 때 받는 로열티가 주요 매출원이다.',

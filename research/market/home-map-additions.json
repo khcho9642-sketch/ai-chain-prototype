@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "user-request",
+    "requestedOn": "2026-11-08",
+    "note": "사용자 요청으로 퀄컴(QCOM)을 AI 칩 핵심기업에 추가한다. 원본 핵심기업 49 시트와 회사 원장은 보존한다."
+  },
+  "companies": [
+    {
+      "companyId": "C0371",
+      "name": "퀄컴",
+      "sector": "AI 칩",
+      "ticker": "QCOM",
+      "listed": true,
+      "change": "사용자 추가",
+      "role": "온디바이스 AI SoC·NPU"
+    }
+  ]
+}
