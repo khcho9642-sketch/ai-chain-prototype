@@ -1,4 +1,4 @@
-import { staticHost } from './site-runtime.js'
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { SECTORS } from './home-map-core.js'
 import { validateIndustry, latestPoint, yearOnYear } from './industry-core.js'
 import { safeSourceUrl, validateAiStatistics } from './ai-statistics-core.js'
@@ -62,7 +62,7 @@ function updateMapMetrics(data) {
 }
 
 async function readSnapshot(path, validate) {
-  const response = await fetch(path, { cache: 'no-cache', signal: AbortSignal.timeout(12000) })
+  const response = await fetch(path, { cache: realtimeEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(12000) })
   if (!response.ok) throw new Error(String(response.status))
   return validate(await response.json())
 }

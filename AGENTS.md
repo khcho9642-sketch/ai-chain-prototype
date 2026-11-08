@@ -2,13 +2,15 @@
 
 이 폴더 `ai-chain-prototype`가 AI 체인 사이트의 유일한 개발 기준이다. 사이트 코드·문서·수집 근거·테스트·작업 산출물은 이 프로젝트 안에 둔다. 기존 교육 자료 폴더에 사이트 파일이나 별도 앱을 다시 만들지 않는다.
 
-## 현재 배포 소스 — 2026-11-08
+## 공통 개발 기준 — 2026-11-08
 
-최신 정적 운영본의 앱 소스 커밋은 `5878245c7efb5214a64f463707cbe3421b950f2a`, 브랜치는 `fix/cloudflare-latest-static-20261108`다. GitHub main `8a0eea41`에서 복구했으며 [Cloudflare 운영 주소](https://ai-chain-prototype.pages.dev/)와 [고정 배포 주소](https://d8a953fa.ai-chain-prototype.pages.dev/)의 공개 111개 파일을 로컬 빌드와 대조해 확인했다. 현재 개발·빌드 기준은 `C:/Users/khcho/Documents/개발프로젝트/ai-chain-prototype/.local/tmp/cloudflare-latest-8a0eea41`다. 부모 루트의 `HEAD 4e0533e7`은 45커밋 오래된 기존 작업 보존용이므로 그곳에서 재빌드·재배포하지 않는다. GitHub 푸시·병합은 아직 하지 않았다.
-
-## 운영과 시세 수집 중지
-
-사용자의 최신 요청(2026-11-08)에 따라 주 배포 대상을 Cloudflare Pages 정적 사이트로 전환한다. 코드는 GitHub에 보관하며 GitHub Pages는 보조 배포다. Vercel 추가 배포·유료 전환은 진행하지 않는다. 사용자가 명시적으로 재개하기 전까지 새 원천 수집, 실시간 API 호출, 자동 폴링, 댓글·회원·투표 API 연결과 AI 워커 실행을 중지한다. 화면은 저장된 종가·통계·AI 발행물의 기준일과 출처를 유지하며, 시세는 최초 한 번의 경량 저장본 조회와 로컬 계산으로 동작한다. 수동 새로고침으로 시세를 다시 다운로드하지 않는다. GitHub 수집 워크플로는 현재 `disabled_manually` 상태를 유지하며 임의로 재개하지 않는다.
+- GitHub 저장소의 최신 `origin/main`을 반영한 현재 작업 사본이 모든 개발 채팅의 공통 기준이다. 특정 컴퓨터의 절대 경로나 `.local/tmp/` 사본을 영구 기준으로 삼지 않는다.
+- 작업을 이어가기 전에 `git fetch origin main`, 현재 브랜치·HEAD·미커밋 변경과 `README.md`, `PLAN.md`, `docs/deployment/overview.md`를 확인한다. 오래된 브랜치를 그대로 운영에 배포하지 않는다.
+- 기존 미커밋 작업·원본·DB는 보존한다. 공유 폴더에서 다른 채팅의 브랜치를 임의로 바꾸거나 reset하지 않는다. 필요하면 최신 main에서 별도 worktree를 만들고 기존 변경은 검토 후 옮긴다.
+- 운영 주소는 https://ai-chain-prototype.pages.dev/ 이며 주 배포는 Cloudflare Pages 정적 사이트다. Vercel 추가 배포나 유료 전환은 하지 않는다.
+- `assets/site-runtime.js`의 `realtimeEnabled = false`와 `MARKET_DATA_POLICY`의 수집·실시간·자동 재조회 중지를 유지한다. 댓글·회원·투표 API, SSE와 AI 워커, 예약 수집은 사용자의 후속 요청 없이 재개하지 않는다.
+- 저장된 시세·차트·통계·검토한 AI 글과 상단 5개 지수 띠는 원래 출처·기준시각·결측 상태를 유지한다. GitHub 수집 워크플로는 `disabled_manually` 상태를 유지한다.
+- 현재 공유 소스는 최신 화면 복구(앱 커밋 `5878245c`)와 상단 지수 띠(`38e62af`까지)를 함께 포함한다. 배포 이력과 현재 Git 기준을 구분하고, 자세한 기록은 배포 문서에서 확인한다.
 
 ## 폴더와 실행
 

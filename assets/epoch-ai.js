@@ -1,4 +1,4 @@
-import { staticHost } from './site-runtime.js'
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import {EPOCH_DATASETS,validateEpochSnapshot,epochDatasetCsv} from './epoch-ai-core.js'
 
 const PAGE_SIZES=[25,50]
@@ -42,7 +42,7 @@ function paintStatus(){
   if(!panelHost?.isConnected)return
   const source=snapshot?.source,collection=snapshot?.collection
   panelHost.querySelector('[data-epoch-refresh]').disabled=busy
-  panelHost.querySelector('[data-epoch-refresh]').textContent=busy?'읽는 중…':'최신 수집값 읽기'
+  panelHost.querySelector('[data-epoch-refresh]').textContent=busy?'읽는 중…':realtimeEnabled?'최신 수집값 읽기':'저장 자료 다시 읽기'
   panelHost.querySelector('[data-epoch-status]').innerHTML=`${busy?'<span class="epoch-status-badge">저장된 자료 읽는 중</span>':collection?`<span class="epoch-status-badge${collection.status==='ok'?'':' epoch-status-warning'}">${esc(statusNames[collection.status]||collection.status)}</span>`:''}<span>마지막 성공 ${esc(stamp(collection?.lastSuccessAt))}</span>${collection?.lastAttemptAt?`<span>최근 수집 시도 ${esc(stamp(collection.lastAttemptAt))}</span>`:''}`
   panelHost.querySelector('[data-epoch-error]').innerHTML=loadError?`<p class="epoch-alert" role="alert">${esc(loadError)}${snapshot?' 이전에 읽은 자료를 표시합니다.':''}</p>`:''
   panelHost.querySelector('[data-epoch-license]').innerHTML=`${link(source?.url||'https://epoch.ai/data','Epoch AI')} · ${link(source?.licenseUrl||'https://creativecommons.org/licenses/by/4.0/','CC BY 4.0')}<br>${esc(source?.attribution||'출처: Epoch AI. 원자료의 일부 열을 선택하고 한국어 표제·검색·표시 형식을 적용했습니다.')}<br>원자료의 일부 열을 선택해 표시합니다. 빈칸은 공개된 값이 없는 항목이며 0을 뜻하지 않습니다.`
@@ -74,7 +74,7 @@ async function loadSnapshot(){
   busy=true;attempted=true;paintStatus();paintResults()
   try{
     const url=staticHost?'./data/epoch-ai.json':'./api/epoch-ai'
-    const response=await fetch(url+'?t='+Math.floor(Date.now()/60000),{cache:'no-store',signal:AbortSignal.timeout(20000)})
+    const response=await fetch(realtimeEnabled?url+'?t='+Math.floor(Date.now()/60000):url,{cache:realtimeEnabled?'no-store':'force-cache',signal:AbortSignal.timeout(20000)})
     if(!response.ok)throw new Error(`자료 HTTP ${response.status}`)
     snapshot=validateEpochSnapshot(await response.json())
     loadError=''

@@ -1,3 +1,4 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import {SECTORS,getReturn,filterCompanies,treemap,bubbleLayout} from './home-map-core.js';
 import { instruments } from './instruments.js';
 import { companyHrefForTicker } from './company-links.js';
@@ -7,6 +8,10 @@ import { buildSectorReturns } from './home-performance.js';
 import { buildActualMap, buildMapCatalogue } from './home-map-data.js';
 import { MAP_UNIVERSE } from './home-map-universe.js';
 import { validateRippleSnapshot, rippleMatchesSelection } from './ripple-core.js';
+
+const autoRefreshEnabled = realtimeEnabled && MARKET_DATA_POLICY.autoRefreshEnabled
+const liveRequestsEnabled = realtimeEnabled && MARKET_DATA_POLICY.liveRequestsEnabled
+const collectionEnabled = realtimeEnabled && MARKET_DATA_POLICY.collectionEnabled
 const MAP_CATALOGUE = buildMapCatalogue();
 const MAP_LISTED_COUNT = MAP_CATALOGUE.filter(company => company.listed).length;
 const MAP_PRIVATE_COUNT = MAP_CATALOGUE.length - MAP_LISTED_COUNT;
@@ -408,12 +413,12 @@ function renderRipple() {
   const entry = entries.find(entry => rippleIdentity(entry.trigger) === selectedRipple);
   const mismatched = !!rippleSnapshot && !!marketSnapshot && rippleSnapshot.sourceSnapshotGeneratedAt !== marketSnapshot.generatedAt;
   status.classList.toggle('is-warning', !!rippleError || mismatched);
-  status.textContent = rippleError ? (rippleSnapshot ? '이전 수집값 · 파급 자료 갱신을 확인할 수 없습니다.' : '파급 자료를 아직 확인할 수 없습니다.') : mismatched ? (MARKET_DATA_POLICY.autoRefreshEnabled ? '이전 수집값 · 종가 갱신 후 파급 자료 반영 대기' : '저장된 종가와 파급 자료의 기준 시각이 다릅니다.') : rippleBusy && !rippleSnapshot ? '종가와 함께 움직인 종목을 확인하고 있습니다.' : '';
-  if (!MARKET_DATA_POLICY.collectionEnabled) status.textContent = [MARKET_DATA_POLICY.statusLabel, status.textContent].filter(Boolean).join(' · ');
+  status.textContent = rippleError ? (rippleSnapshot ? '이전 수집값 · 파급 자료 갱신을 확인할 수 없습니다.' : '파급 자료를 아직 확인할 수 없습니다.') : mismatched ? (autoRefreshEnabled ? '이전 수집값 · 종가 갱신 후 파급 자료 반영 대기' : '저장된 종가와 파급 자료의 기준 시각이 다릅니다.') : rippleBusy && !rippleSnapshot ? '종가와 함께 움직인 종목을 확인하고 있습니다.' : '';
+  if (!collectionEnabled) status.textContent = [MARKET_DATA_POLICY.statusLabel, status.textContent].filter(Boolean).join(' · ');
   status.hidden = !status.textContent;
   timeline.replaceChildren(); flow.replaceChildren();
   if (!entry) {
-    const message = rippleSnapshot?.reason === 'no-large-moves' ? '오늘은 크게 움직인 대장주가 없어요' : rippleSnapshot ? '확정 종가 이력이 충분하지 않아 함께 움직인 종목을 기다리고 있어요' : MARKET_DATA_POLICY.collectionEnabled ? '종가 수집 후 함께 움직인 종목을 표시합니다.' : '저장된 파급 자료가 없습니다. 시세 수집은 중지되어 있습니다.';
+    const message = rippleSnapshot?.reason === 'no-large-moves' ? '오늘은 크게 움직인 대장주가 없어요' : rippleSnapshot ? '확정 종가 이력이 충분하지 않아 함께 움직인 종목을 기다리고 있어요' : collectionEnabled ? '종가 수집 후 함께 움직인 종목을 표시합니다.' : '저장된 파급 자료가 없습니다. 시세 수집은 중지되어 있습니다.';
     flow.append(htmlElement('p', 'ripple-empty ripple-empty-wide', message));
     return;
   }
@@ -450,11 +455,11 @@ function drawRippleLines() {
 }
 
 async function loadRipple() {
-  if (rippleBusy || !MARKET_DATA_POLICY.autoRefreshEnabled && rippleAttempted) return;
+  if (rippleBusy || !autoRefreshEnabled && rippleAttempted) return;
   rippleAttempted = true; rippleBusy = true; renderRipple();
   const current = ++rippleRequest;
   const read = async path => {
-    const response = await fetch(path, { cache: MARKET_DATA_POLICY.autoRefreshEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(15000) });
+    const response = await fetch(path, { cache: autoRefreshEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error('파급 자료 수신 실패');
     const value = validateRippleSnapshot(await response.json());
     if (!rippleMatchesSelection(value)) throw new Error('현재 선정표와 파급 대상이 다릅니다.');
@@ -462,7 +467,7 @@ async function loadRipple() {
   };
   try {
     let value;
-    if (MARKET_DATA_POLICY.liveRequestsEnabled && !location.hostname.endsWith('.github.io') && location.protocol !== 'file:') {
+    if (liveRequestsEnabled && !staticHost) {
       try { value = await read('./api/ripple'); } catch { value = await read('./data/ripple.json'); }
     } else value = await read('./data/ripple.json');
     if (current !== rippleRequest) return;
@@ -625,4 +630,4 @@ window.addEventListener('market-snapshot-error', () => {
 window.addEventListener('resize', drawRippleLines);
 window.addEventListener('hashchange', () => requestAnimationFrame(drawRippleLines));
 void loadRipple();
-if (MARKET_DATA_POLICY.autoRefreshEnabled) setInterval(() => { if (!document.hidden && !host.hidden) void loadRipple(); }, 60000);
+if (autoRefreshEnabled) setInterval(() => { if (!document.hidden && !host.hidden) void loadRipple(); }, 60000);

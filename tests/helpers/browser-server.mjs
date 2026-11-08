@@ -52,7 +52,8 @@ const failed = handler.store.claim(['claude']).job
 handler.store.fail({ id: failed.id, lease: failed.lease, code: 'fixture_cli_unavailable', retryable: false })
 handler.store.configure({ agent: 'gemini', enabled: false })
 const root = await build(undefined, { communityOrigin: apiOrigin })
-const staticServer = createSiteServer({ root })
+// Explicit opt-in for this guarded loopback HTTPS fixture only; production APIs remain paused.
+const staticServer = createSiteServer({ root, liveApi: true })
 site.on('request', staticServer.listeners('request')[0])
 console.log(JSON.stringify({ siteOrigin, apiOrigin, fixture: { previousOpinions, latestOpinions } }))
 let stopped = false

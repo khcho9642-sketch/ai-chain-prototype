@@ -39,8 +39,8 @@ export function recommendationComments(report) {
   const details = element('details', null, { class: 'recommendation-comments', 'data-recommendation-comments': report.id })
   const summary = element('summary', '댓글')
   if (!realtimeEnabled) {
-    details.append(summary, element('p', '댓글 기능을 일시 중지했습니다.', { class: 'recommendation-comments-status', role: 'status' }))
-    panels.set(report.id, { details, disposed: false })
+    details.append(summary, element('p', '댓글 기능은 일시 중지되어 있습니다.', { class: 'recommendation-comments-status', role: 'status' }))
+    panels.set(report.id, { details, disposed: false, controller: null })
     return details
   }
   const content = element('div', null, { class: 'recommendation-comments-content' })

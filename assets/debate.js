@@ -179,7 +179,7 @@ function renderVote(day) {
   }
   section.append(options)
   const status = node('p', null, { class: 'debate-vote-status', role: 'status', 'aria-live': 'polite' })
-  if (!realtimeEnabled) status.textContent = '투표 기능을 일시 중지했습니다.'
+  if (!realtimeEnabled) status.textContent = '투표 기능은 일시 중지되어 있습니다.'
   else if (state.voteError || presentation.kind === 'unavailable') {
     status.append(node('span', '잠시 후 다시 시도'))
     const retry = node('button', '다시 불러오기', { type: 'button' }); retry.addEventListener('click', loadVotes); status.append(retry)
@@ -316,7 +316,7 @@ function render() {
   host.replaceChildren(...children)
 }
 async function loadJson(url) {
-  const response = await fetch(url, { cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) })
+  const response = await fetch(url, { cache: realtimeEnabled ? 'no-store' : 'force-cache', redirect: 'error', signal: AbortSignal.timeout(15000) })
   if (!response.ok) throw new Error('debate_unavailable')
   return response.json()
 }

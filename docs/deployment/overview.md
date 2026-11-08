@@ -1,75 +1,39 @@
-# Cloudflare 정적 사이트·최신 소스 복구
+# Cloudflare 정적 사이트와 공통 소스 기준
 
-## 현재 상태 — 2026-11-08 KST
+## 현재 개발·운영 기준
 
-Cloudflare 이전에 사용한 로컬 `4e0533e7a8262116b0b9df72d2c3eec2b752f7ed`는 최신 GitHub main보다 45커밋 오래된 상태였다. 최신 홈 지도·공동 움직임·오늘의 토론·섹터 이벤트·시나리오·기업정보 코드가 빠진 배포를 최신 소스로 복구하고 운영 검증을 완료했다.
+- 운영 주소: https://ai-chain-prototype.pages.dev/
+- 공통 소스: https://github.com/khcho9642-sketch/ai-chain-prototype 의 최신 main을 반영한 작업 사본. 특정 컴퓨터의 절대 경로나 무시되는 임시 폴더를 공통 기준으로 삼지 않는다.
+- 최신 화면 복구와 상단 저장 지수 띠를 함께 유지한다. 개발 채팅마다 현재 브랜치·HEAD·미커밋 변경을 확인하며, 기존 작업을 보존하고 최신 main에서 독립 worktree로 이어갈 수 있다.
+- 실시간 시세·원천 수집·자동 폴링·댓글·회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
 
-복구 기준은 GitHub main **`8a0eea41ce08b43ef0e859916d0ce6f87cda3d85`**다. 마지막 정상 Vercel 운영본 `233d6fa1893c6a2be35068d70ff891ee3b866df2`의 후손이며 3커밋 앞인 것을 확인했다. 해당 Vercel 배포는 `dpl_A2yPkZdDdW5Y5m5Ke24PeQunFQ3B`, 배포 시각은 2026-11-07 00:56 KST다. 최신 소스에는 이후의 원천 시장 수집 중지와 핵심 49개·비교 586개 회사 개편도 포함된다.
+## 검증과 수동 배포
 
-현재 앱 소스는 `5878245c7efb5214a64f463707cbe3421b950f2a`, 브랜치는 `fix/cloudflare-latest-static-20261108`, 작업공간은 `C:/Users/khcho/Documents/개발프로젝트/ai-chain-prototype/.local/tmp/cloudflare-latest-8a0eea41`다. 45커밋 오래된 부모 루트 `4e0533e7`은 기존 작업 보존용이므로 그곳에서 재빌드·재배포하지 않는다. 기존 사용자 수정, 미승인 변경, 원본·DB·이전 배포본은 보존했고 GitHub 푸시·병합은 하지 않았다.
+1. 저장소 루트에서 git fetch origin main 후 현재 브랜치와 원격 main의 차이를 확인한다. 미커밋 변경을 임의로 reset하거나 다른 채팅의 공유 브랜치를 바꾸지 않는다.
+2. 관련 검사와 npm test, npm run build를 실행한다. 빌드는 저장 자료의 검증과 로컬 파생 계산만 수행한다. 외부 수집 명령이나 과거 Vercel 준비 스크립트를 실행하지 않는다.
+3. 검증한 dist만 기존 Cloudflare Pages 프로젝트 ai-chain-prototype에 업로드한다. Git 커밋과 배포 메타데이터를 일치시키고 비공개 원본·DB·환경파일·.local은 올리지 않는다.
+4. 공개 파일 해시·저장 자료의 기준일·필수 화면 모듈·실시간 API 차단을 확인한다. 코드·테스트·운영 배포와 실제 AI 모델 검증을 별도로 기록한다.
 
-운영 주소는 [ai-chain-prototype.pages.dev](https://ai-chain-prototype.pages.dev/), 고정 배포 주소는 [d8a953fa.ai-chain-prototype.pages.dev](https://d8a953fa.ai-chain-prototype.pages.dev/)다. 사전 미리보기 배포 식별자는 `fdee60be`이며 최종 운영 배포는 `d8a953fa`다.
-
-## 완료한 검증
-
-- 테스트 **703/703개**가 통과했다.
-- 운영 공개 **111개 파일 전체**의 SHA-256이 로컬 빌드와 같고 `X-Content-Type-Options: nosniff` 헤더를 확인했다. 공개 출력은 HTML 2개·assets 93개·스냅샷 14개·토론 발행물 2개다.
-- `/api/chart`, `/api/community/events`, `/api/recommendation-comments`, `/api/debate-votes`의 4개 경로는 모두 404였다. 실시간 기능은 다시 켜지 않았다.
-- 마지막 정상 Vercel 원본과 `home-focus.js`, `home-performance.js`, `scenario-profit-check.js`, `sector-event-pins.js` 4개 파일이 일치한다.
-- 시장 저장본은 **555종목·11월 6일 자료 기준**으로 복원했다. 핵심 49개·전체 586개 회사와 승인된 PC 14열 스타일을 보존했고 미승인 네오클라우드 변경은 제외했다.
-
-위 확인은 최신 정적 사이트의 운영 배포와 파일 무결성에 관한 것이다. 댓글·회원·투표 API와 AI 워커 운영 연결은 계속 중지·미완료 상태다.
-
-## 실시간 중지와 자동 작업
-
-- `assets/site-runtime.js`의 공통 정적 모드와 기존 `assets/market-data-policy.js`의 시세 수집·실시간 요청·자동 새로고침 중지 정책을 함께 유지한다.
-- 시장 시세는 `data/market-display.json`의 경량 저장본을 최초 한 번 읽고 로컬에서 계산한다. 클릭·기간 전환·수동 새로고침으로 원천 시세를 다시 다운로드하지 않는다.
-- 통계·공시·Epoch AI·기업 시세는 검증된 정적 JSON을 읽는다. Cloudflare에서 `/api/*`를 먼저 호출하던 호스트 판별은 공통 정적 모드로 바꿨다.
-- 댓글·회원·투표 API·실시간 이벤트·AI 워커는 중지한다. 이미 발행된 Today·AI 교차 의견·토론 자료는 보존한다.
-- 원격 `market-pages.yml` 워크플로(ID `396185253`)는 `disabled_manually` 상태를 유지한다. 이를 임의로 재개하지 않는다. 로컬 AIChain 워커 예약 작업과 실행 프로세스는 없는 것을 확인했다.
-
-격리 사본의 `.github/workflows/market-pages.yml`은 원천 수집·원격 스냅샷 복원·커뮤니티 주소 환경 설정 없이 테스트·정적 빌드·GitHub Pages 보조 배포만 수행하도록 정리했다. `main` 푸시와 수동 실행 정의는 남지만 원격 워크플로의 중지 상태와 소스 변경 반영은 별개다. Cloudflare 자동 배포와 DNS 변경은 구성하지 않는다.
-
-## Cloudflare 배포 절차
-
-프로젝트는 `ai-chain-prototype`, 배포 대상은 검증된 `dist/`다. 이후 배포도 기존 Pages 프로젝트를 사용한다.
-
-```sh
+~~~sh
 npm test
 npm run build
-npx wrangler pages deploy dist --project-name ai-chain-prototype
-```
+npx wrangler pages deploy dist --project-name ai-chain-prototype --branch main
+~~~
 
-실제 배포 전 대상 계정·최신 고정 커밋·공개 파일과 실시간 중지 동작을 확인한다. 최신화본의 운영 배포와 검증은 위 완료 기록을 따르며, 이후 배포도 이 절차로 진행한다. 기존 Vercel 준비 명령 `scripts/deployment/prepare-deployment.mjs`는 외부 갱신 경로가 있으므로 이번 정적 복구 빌드에서 실행하지 않는다. Vercel 함수나 서버·DB를 Cloudflare로 자동 이전하지 않는다.
+wrangler.jsonc는 Pages 프로젝트와 dist 출력 폴더를 지정한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
 
-정적 출력에는 `X-Content-Type-Options: nosniff`용 `_headers`와 명시적인 `404.html`을 포함한다. 누락된 `/api/*`와 비공개 소스 경로가 첫 화면 HTML의 200 응답으로 바뀌지 않는지 확인한다. 화면 전환은 기존 해시 주소를 유지한다. [Cloudflare 정적 HTML 배포](https://developers.cloudflare.com/pages/framework-guides/deploy-anything/), [헤더 설정](https://developers.cloudflare.com/pages/configuration/headers/), [404 처리](https://developers.cloudflare.com/pages/configuration/serving-pages/)를 따른다.
+## 공개 자료
 
-## 공개 자료와 저장본 보존
+공개 허용목록은 scripts/build.mjs가 관리한다. market, market-display, industry, ai-statistics, ai-tokens, ai-disclosures, company-disclosures, company-market, today-picks, today-discussion, today-personas, comparison-history, epoch-ai, ripple의 JSON 14종과 검토된 data/debate/index.json·발행일별 토론만 배포한다. market-display와 ripple은 같은 저장된 시세에서 로컬 계산한다. 상단 지수 띠는 이미 읽은 스냅샷을 재사용하며 별도 요청·타이머를 만들지 않는다.
 
-최신 소스의 공개 스냅샷 허용목록은 다음 14종이다. `market-display.json`과 `ripple.json` 등 파생 자료는 빌드에서 저장된 원본으로 계산하며 원천 시세를 수집하지 않는다. 검증된 토론 발행 파일은 별도 `data/debate/`에 포함한다. 최종 공개 파일 111개는 실제 빌드 결과와 운영 응답을 대조해 확인했다.
+## 2026-11-08 복구 이력
 
-| 공개 JSON | 내용 |
-| --- | --- |
-| `market.json` | 저장된 시세·일봉·시총 근거 |
-| `market-display.json` | 화면 최초 조회용 경량 종가 저장본 |
-| `comparison-history.json` | 고리·종목 비교용 장기 일별 종가·수집 상태 |
-| `company-market.json` | 기업 비교용 시세·시총·재무 자료와 기준일 |
-| `ripple.json` | 동일 종가 자료에 대응하는 공동 움직임 계산 결과 |
-| `industry.json` | 공식 산업통계 저장본 |
-| `ai-statistics.json` | 검토한 AI 통계 |
-| `ai-tokens.json` | OpenRouter 토큰 통계 저장본과 상태 |
-| `epoch-ai.json` | Epoch AI 공개 데이터의 선택 열·출처·수집 상태 |
-| `ai-disclosures.json` | 공식 문서 확인 상태와 검토 후보 |
-| `company-disclosures.json` | 국내 기업의 DART 공시 메타데이터와 수집 상태 |
-| `today-picks.json` | 검토한 실제 AI별 의견·추천·이전 원문 |
-| `today-discussion.json` | 원본 추천과 연결된 검토한 AI 교차 의견 |
-| `today-personas.json` | 검토한 분석 표현·AI 대화 원문과 출처 |
+이전 로컬 작업 폴더가 main보다 45커밋 뒤처진 것을 확인했다. 마지막 정상 Vercel 운영 소스 233d6fa1의 후손인 main 8a0eea41에서 복구했고 앱 커밋 5878245c로 정적 배포했다. 당시 703개 검사와 공개 111개 파일 해시·헤더 대조, 시세·커뮤니티 이벤트·추천 댓글·토론 투표 API의 404를 확인했다. 당시 고정 배포 주소는 https://d8a953fa.ai-chain-prototype.pages.dev/ 이다.
 
-자료의 저장·수집·관측 시각은 원래 상태를 보존하고 현재 시세나 오늘 새 발행으로 바꾸지 않는다. 최신 저장본 확인은 원천 자료 수집과 구분한다. `research/`, `docs/`, 환경 파일, 원본 검토 자료, DB와 `.local/`은 공개 빌드에 통째로 복사하지 않는다.
+저장 자료는 기존 GitHub Pages의 555종목 시세(2026-11-06 기준), 비교 이력, 산업통계를 검증해 복원했다. 새로운 원천 가격을 수집하지 않았다. 승인된 기업정보 PC 14열 패치는 고정 배포 47729716의 두 파일과 일치시켰으며 미승인 네오클라우드 변경은 제외했다.
 
-## 보존하는 기존 주소와 서버 구현
+그 뒤 main에 추가된 상단 지수 띠(38e62af까지)와 복구 변경을 통합한다. 이전의 미푸시·별도 로컬 경로 기록은 당시 이력이며 현재 개발 경로를 강제하는 지침이 아니다. 현재 기준은 최신 main과 해당 커밋에서 검증한 빌드다.
 
-- [GitHub 저장소](https://github.com/khcho9642-sketch/ai-chain-prototype)
-- [GitHub Pages 보조 주소](https://khcho9642-sketch.github.io/ai-chain-prototype/)
+## 보존한 서버 코드
 
-기존 `vercel.json`, `api/`, 공용 서버·수집·커뮤니티 패키징 코드는 보존한다. 추천 댓글의 Vercel Blob와 별도 커뮤니티 SQLite 데이터를 삭제하거나 옮기지 않는다. 정적 화면 복구는 댓글·회원·AI 워커의 운영 연결과 실제 모델 작동 검증을 완료했다는 의미가 아니다. [커뮤니티 현황](../community/ai-community.md)을 따른다.
+기존 vercel.json, api, 서버·수집·커뮤니티 패키징 코드는 보존한다. 추천 댓글 Blob나 별도 SQLite 데이터는 삭제하거나 이동하지 않는다. 정적 화면의 배포는 댓글·회원·AI 워커 운영 연결 또는 실제 모델 작동 완료를 의미하지 않는다.

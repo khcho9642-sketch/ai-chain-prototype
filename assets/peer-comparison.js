@@ -1,7 +1,11 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { instruments } from './instruments.js'
 import { buildComparison, buildCompanyComparison } from './peer-comparison-core.js'
 import { validateComparisonHistorySnapshot } from './comparison-history-core.js'
 import { MARKET_DATA_POLICY } from './market-data-policy.js'
+
+const autoRefreshEnabled = realtimeEnabled && MARKET_DATA_POLICY.autoRefreshEnabled
+const liveRequestsEnabled = realtimeEnabled && MARKET_DATA_POLICY.liveRequestsEnabled
 
 const COLORS=['#6ac9ff','#ffce62','#bbabff','#6ce0ce','#ff9e6d','#ff99c8','#b5d97e','#e3e9f2']
 const DASHES=['','','','','9 4','9 4','3 4','12 4 3 4']
@@ -50,18 +54,18 @@ function swatch(id){
 // Long histories are a separate collected file. Reading them never invokes an upstream collector.
 async function loadLongHistory(force=false){
   if(longRequest)return longRequest
-  if(longAttempted&&(!force||!MARKET_DATA_POLICY.autoRefreshEnabled))return
+  if(longAttempted&&(!force||!autoRefreshEnabled))return
   longAttempted=true;longLoading=true;longError='';render()
-  const staticHost=!MARKET_DATA_POLICY.liveRequestsEnabled||location.hostname.endsWith('.github.io')||location.protocol==='file:'
-  const url=staticHost?'./data/comparison-history.json':'./api/comparison-history'
+  const storedOnly=!liveRequestsEnabled||staticHost
+  const url=storedOnly?'./data/comparison-history.json':'./api/comparison-history'
   longRequest=(async()=>{
     try{
-      const response=await fetch(MARKET_DATA_POLICY.autoRefreshEnabled?url+'?t='+Date.now():url,{cache:MARKET_DATA_POLICY.autoRefreshEnabled?'no-store':'force-cache',signal:AbortSignal.timeout(20000)})
+      const response=await fetch(autoRefreshEnabled?url+'?t='+Date.now():url,{cache:autoRefreshEnabled?'no-store':'force-cache',signal:AbortSignal.timeout(20000)})
       if(!response.ok)throw new Error('HTTP '+response.status)
       const next=validateComparisonHistorySnapshot(await response.json())
       longSnapshot=next;longError=''
     }catch(error){
-      longError='장기 일봉 수집값을 읽지 못했습니다: '+error.message+'. '+(longSnapshot?'마지막 성공 수집값을 유지합니다. 수집 시각을 확인하세요.':MARKET_DATA_POLICY.autoRefreshEnabled?'2·3년 비교를 표시할 수 없습니다. 최신 수집값 읽기로 다시 확인하세요.':'시세 수집이 중지되어 저장된 장기 자료만 사용할 수 있습니다.')
+      longError='장기 일봉 수집값을 읽지 못했습니다: '+error.message+'. '+(longSnapshot?'마지막 성공 수집값을 유지합니다. 수집 시각을 확인하세요.':autoRefreshEnabled?'2·3년 비교를 표시할 수 없습니다. 최신 수집값 읽기로 다시 확인하세요.':'시세 수집이 중지되어 저장된 장기 자료만 사용할 수 있습니다.')
     }finally{
       longLoading=false;longRequest=null;calculate();render()
     }
@@ -142,8 +146,8 @@ function render(){
   const previousPicker=el.querySelector('[data-peer-company-picker]')
   const pickerOpen=previousPicker?.open??true
   const pickerScroll=el.querySelector('[data-peer-picker-list]')?.scrollTop||0
-  el.innerHTML='<section class="panel sec peer-comparison" data-peer-active-mode="'+mode+'"><div class="peer-heading"><div><p class="peer-kicker">VALUE CHAIN · SAME START</p><h1>'+title+'</h1></div><button class="f" data-peer-refresh'+(longLoading?' disabled':'')+'>'+(MARKET_DATA_POLICY.autoRefreshEnabled?'최신 수집값 읽기':'저장된 값 보기')+'</button></div>'+
-    (!MARKET_DATA_POLICY.autoRefreshEnabled?'<p class="peer-period-note" role="status">'+esc(MARKET_DATA_POLICY.statusLabel)+'</p>':'')+
+  el.innerHTML='<section class="panel sec peer-comparison" data-peer-active-mode="'+mode+'"><div class="peer-heading"><div><p class="peer-kicker">VALUE CHAIN · SAME START</p><h1>'+title+'</h1></div><button class="f" data-peer-refresh'+(longLoading?' disabled':'')+'>'+(autoRefreshEnabled?'최신 수집값 읽기':'저장된 값 보기')+'</button></div>'+
+    (!autoRefreshEnabled?'<p class="peer-period-note" role="status">'+esc(MARKET_DATA_POLICY.statusLabel)+'</p>':'')+
     '<div class="peer-modes" role="group" aria-label="비교 방식">'+[['groups','고리 평균'],['companies','회사별 비교']].map(([id,label])=>'<button class="f'+(mode===id?' on':'')+'" data-peer-mode="'+id+'" aria-pressed="'+(mode===id)+'">'+label+'</button>').join('')+'</div>'+
     '<div class="peer-toolbar"><div class="peer-periods" role="group" aria-label="비교 기간">'+PERIODS.map(([n,label])=>'<button class="f'+(days===n?' on':'')+'" data-peer-period="'+n+'" aria-pressed="'+(days===n)+'">'+label+'</button>').join('')+'</div><div><button class="f" data-peer-all>'+ (isCompany()?'선택 회사 모두 표시':'8개 모두 표시')+'</button></div></div>'+
     companyPicker(pickerOpen)+'<p class="peer-period-note'+(shortened?' peer-period-short':'')+'" data-peer-actual-period>요청 기간: '+PERIODS.find(([n])=>n===days)[1]+' · 실제 비교: <b>'+date(model.startDate)+' ~ '+date(model.endDate)+'</b> · 공통 거래일 '+model.dates.length+'개 · 수집 '+esc(sourceStamp())+'</p>'+
@@ -204,7 +208,7 @@ document.addEventListener('click',event=>{
   if(remove){changeSelection(remove.dataset.peerRemoveSymbol,false);return}
   if(event.target.closest('[data-peer-clear-companies]')){selected.clear();hiddenCompanies.clear();calculate();render();return}
   if(event.target.closest('[data-peer-all]')){if(isCompany())hiddenCompanies.clear();else visible=new Set(chains.map(c=>c.id));render();return}
-  if(event.target.closest('[data-peer-refresh]')){if(!MARKET_DATA_POLICY.autoRefreshEnabled){calculate();render();return}window.dispatchEvent(new Event('market-refresh-request'));if(days>365)loadLongHistory(true);return}
+  if(event.target.closest('[data-peer-refresh]')){if(!autoRefreshEnabled){calculate();render();return}window.dispatchEvent(new Event('market-refresh-request'));if(days>365)loadLongHistory(true);return}
 })
 document.addEventListener('change',event=>{
   const input=event.target.closest('[data-peer-symbol]');if(input)changeSelection(input.dataset.peerSymbol,input.checked)

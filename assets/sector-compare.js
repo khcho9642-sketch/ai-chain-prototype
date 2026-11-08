@@ -1,11 +1,15 @@
+import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { validateComparisonHistorySnapshot } from './comparison-history-core.js';
 import { getSectorPeriod } from './sector-compare-data.js';
 import { mountSectorCompare } from './sector-compare-view.js';
 import { createSectorEventIndex } from './sector-event-moves.js';
 import { MARKET_DATA_POLICY } from './market-data-policy.js';
 
+const autoRefreshEnabled = realtimeEnabled && MARKET_DATA_POLICY.autoRefreshEnabled
+const liveRequestsEnabled = realtimeEnabled && MARKET_DATA_POLICY.liveRequestsEnabled
+
 const host = document.getElementById('v-sector-compare');
-const staticSite = !MARKET_DATA_POLICY.liveRequestsEnabled || location.hostname.endsWith('.github.io') || location.protocol === 'file:';
+const staticSite = !liveRequestsEnabled || staticHost;
 const periodModels = new WeakMap();
 let view;
 let days = 90;
@@ -17,7 +21,7 @@ let marketFailed = false;
 let displayedSnapshot;
 
 async function readSnapshot(url, validate) {
-  const response = await fetch(url, { cache: MARKET_DATA_POLICY.autoRefreshEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(20000) });
+  const response = await fetch(url, { cache: autoRefreshEnabled ? 'no-cache' : 'force-cache', signal: AbortSignal.timeout(20000) });
   if (!response.ok) throw new Error('종가 조회 실패 (HTTP ' + response.status + ')');
   const snapshot = await response.json();
   if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.quotes)) throw new Error('종가 파일 형식 오류');
@@ -35,7 +39,7 @@ function loadHistory() {
         }
       }
       return { snapshot: await readSnapshot('./data/comparison-history.json', validateComparisonHistorySnapshot), saved: true };
-    })().catch(error => { if (MARKET_DATA_POLICY.autoRefreshEnabled) historyFeed = null; throw error; });
+    })().catch(error => { if (autoRefreshEnabled) historyFeed = null; throw error; });
   }
   return historyFeed;
 }
@@ -58,7 +62,7 @@ function waitForMarket() {
 async function loadMarket() {
   if (!window.aiChainSnapshot && !marketFailed && !savedMarket) await waitForMarket();
   if (window.aiChainSnapshot) return { snapshot: window.aiChainSnapshot };
-  savedMarket ??= readSnapshot(MARKET_DATA_POLICY.snapshotUrl).catch(error => { if (MARKET_DATA_POLICY.autoRefreshEnabled) savedMarket = null; throw error; });
+  savedMarket ??= readSnapshot(MARKET_DATA_POLICY.snapshotUrl).catch(error => { if (autoRefreshEnabled) savedMarket = null; throw error; });
   return { snapshot: await savedMarket, saved: true };
 }
 
@@ -73,7 +77,7 @@ function draw(feed, period) {
     model.eventMovesOn = cache.events.movesOn;
     model.sectorSessionDates = cache.events.sessionDates;
     if (feed.saved) model.source = (model.source || '종가') + ' · 배포 저장본';
-    if (!MARKET_DATA_POLICY.autoRefreshEnabled) model.source = (model.source || '종가') + ' · ' + MARKET_DATA_POLICY.statusLabel;
+    if (!autoRefreshEnabled) model.source = (model.source || '종가') + ' · ' + MARKET_DATA_POLICY.statusLabel;
     cache.periods.set(period, model);
   }
   view.showPeriod(cache.periods.get(period), period, { sectorId: entryTarget, openStocks: entryTarget === 'stocks' });
@@ -94,7 +98,7 @@ async function showPeriod(period, { loading = true } = {}) {
 }
 
 function retry() {
-  if (!MARKET_DATA_POLICY.autoRefreshEnabled) {
+  if (!autoRefreshEnabled) {
     showPeriod(days, { loading: false });
     return;
   }
