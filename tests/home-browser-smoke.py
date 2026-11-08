@@ -109,6 +109,8 @@ def wait_home(page):
 def verify_header_indices(page):
     strip = page.locator('header .wrap.top > .brand + [data-index-strip]')
     strip.wait_for(state='visible')
+    assert strip.locator('[data-index-strip-status],.index-strip-heading').count() == 0
+    assert '실시간 갱신 중지 · 저장된 종가' not in page.locator('header').inner_text()
     page.wait_for_function("document.querySelectorAll('header [data-index-strip] [data-index-symbol]').length === 5")
     assert strip.locator('[data-index-symbol]').evaluate_all(
         'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11']
@@ -187,8 +189,17 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
             try:
                 page.goto(origin+'/#home')
                 home = wait_home(page)
-                verify_header_indices(page)
-                checks.append('five saved indices stay beside the top header logo above chapter navigation')
+                indices = verify_header_indices(page)
+                saved_indices = indices.locator('[data-index-strip-cards]').text_content()
+                indices.evaluate('element => { window.__persistentIndexStrip = element }')
+                for menu in ['today','debate','sector-compare','data','company-info','map','compare','industry','scenario','talk','ai','home']:
+                    page.evaluate('menu => { location.hash = menu }', menu)
+                    page.wait_for_function('menu => document.body.dataset.page === menu', arg=menu)
+                    verify_header_indices(page)
+                    assert indices.evaluate('element => element === window.__persistentIndexStrip')
+                    assert indices.locator('[data-index-strip-cards]').text_content() == saved_indices
+                home = wait_home(page)
+                checks.append('five saved indices persist beside the top header logo across all twelve menus without a status sentence or changed values')
                 cards = home.locator('.sector-return-card')
                 assert cards.count() == 9
                 assert home.locator('[data-home-weight=eq]').get_attribute('aria-pressed') == 'true'
