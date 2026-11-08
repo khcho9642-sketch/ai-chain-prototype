@@ -7,8 +7,9 @@ import { yearsById } from '../../assets/company-financial-snapshot.js'
 import { supplementalFinancials } from '../../assets/company-core-financials.js'
 import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
 
-test('core articles and cited operating evidence cover precisely the 51 mapped issuers', () => {
-  assert.equal(MAP_COMPANIES.length, 51)
+test('core articles and cited operating evidence cover precisely the 52 mapped issuers', () => {
+  assert.equal(MAP_COMPANIES.length, 52)
+  assert.equal(MAP_COMPANIES.filter(c => !c.listed).length, 4)
   assert.deepEqual(Object.keys(coreBriefs).sort(), MAP_COMPANIES.map(c => c.id).sort())
   const seenRisks = new Set()
   for (const c of MAP_COMPANIES) {
@@ -54,6 +55,7 @@ test('the previously verified 46 listed issuers retain comparable cited revenues
 for (const { id, name, rolePattern, sourceHostname } of [
   { id: 'C0371', name: 'Qualcomm', rolePattern: /Hexagon NPU/, sourceHostname: 'investor.qualcomm.com' },
   { id: 'C0119', name: 'CXMT', rolePattern: /DDR5/, sourceHostname: 'www.cxmt.com' },
+  { id: 'C0587', name: 'Nscale', rolePattern: /GPU.*학습/, sourceHostname: 'www.nscale.com' },
 ]) {
   test(`${name} has a cited core introduction while missing stored annual financials stay explicit`, async t => {
     const company = catalog.companies.find(c => c.id === id)
@@ -69,7 +71,7 @@ for (const { id, name, rolePattern, sourceHostname } of [
     const dispose = mountCompanyFinancials(host, company)
     t.after(() => { dispose(); if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument })
     await new Promise(resolve => setImmediate(resolve))
-    assert.deepEqual(host.nodes.map(node => node.textContent), ['연간 실적 추이', '확인된 연간 재무제표가 없습니다.'])
+    assert.deepEqual(host.nodes.map(node => node.textContent), ['연간 실적 추이', company.listed ? '확인된 연간 재무제표가 없습니다.' : '공개 자료로 확인된 연간 재무제표가 없습니다.'])
   })
 }
 

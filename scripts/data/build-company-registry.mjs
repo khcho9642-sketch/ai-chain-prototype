@@ -8,6 +8,7 @@ import { instruments } from '../../assets/instruments.js'
 import { dartCompanies } from '../../assets/company-disclosure-sources.js'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { loadMarketUniverse } from './market-universe.mjs'
+import { buildCompanyAdditions } from './company-additions.mjs'
 
 // Reads a UTF-8 CSV export of the 원장's 회사리스트 sheet, including multiline cells.
 // Only identity, business descriptions, ticker mappings and public reference links
@@ -108,9 +109,10 @@ function registryCompany(issuer, sheet, targets) {
 }
 
 export async function buildCompanyRegistry(csvText) {
-  const [master, market] = await Promise.all([
+  const [master, market, issuerAdditions] = await Promise.all([
     readFile(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8').then(JSON.parse),
     loadMarketUniverse(),
+    readFile(new URL('../../research/market/company-additions.json', import.meta.url), 'utf8').then(JSON.parse),
   ])
   const sheet = readBusinessSheet(csvText)
   if (master.companies.length !== 586 || sheet.size !== 586 || MAP_UNIVERSE.companyCount !== MAP_COMPANIES.length || coreById.size !== MAP_COMPANIES.length) throw new Error('대상 원장 건수 불일치')
@@ -130,6 +132,7 @@ export async function buildCompanyRegistry(csvText) {
   if (rows.some(r => r.listingCodes.includes('TSLA')) || rows.length !== 585) throw new Error('Tesla 편입 전 원장 확인 필요')
   const tesla = reviewedById.get('SCN038')
   rows.push(registryCompany({id:tesla.id,name:tesla.name,country:tesla.country,listed:true,ticker:'TSLA',sectors:[]}, null, byIssuer.get(tesla.id) || []))
+  rows.push(...buildCompanyAdditions({master, additions:issuerAdditions}).registryRows)
   if (rows.filter(c=>coreById.has(c.id)).length !== MAP_COMPANIES.length) throw new Error('핵심 ' + MAP_COMPANIES.length + '개사 원장 대조 실패')
   return rows.sort((a,b) => a.id.localeCompare(b.id))
 }
@@ -137,7 +140,7 @@ export async function buildCompanyRegistry(csvText) {
 async function main() {
   if (process.argv.length !== 3) throw new Error('사용법: node scripts/data/build-company-registry.mjs <회사리스트.csv>')
   const rows = await buildCompanyRegistry(await readFile(process.argv[2], 'utf8'))
-  const generated = '// Generated from the company worksheet and verified project listing map.\nexport const registryRows = [\n' +
+  const generated = '// Generated from the original company worksheet, verified listing map and separately approved user additions.\nexport const registryRows = [\n' +
     rows.map(row => '  ' + JSON.stringify(row)).join(',\n') + '\n]\n'
   await writeFile(new URL('../../assets/company-registry-rows.js', import.meta.url), generated)
   console.log('신기업정보 원장: ' + rows.length + '개사')

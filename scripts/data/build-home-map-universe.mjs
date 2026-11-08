@@ -4,10 +4,12 @@ import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { loadMarketUniverse } from './market-universe.mjs'
+import { buildCompanyAdditions } from './company-additions.mjs'
 
 const masterPath = new URL('../../research/market/company-universe.json', import.meta.url)
 const selectionPath = new URL('../../research/market/home-map-selection.json', import.meta.url)
 const additionsPath = new URL('../../research/market/home-map-additions.json', import.meta.url)
+const issuerAdditionsPath = new URL('../../research/market/company-additions.json', import.meta.url)
 const outputPath = new URL('../../assets/home-map-universe.js', import.meta.url)
 const countries = Object.freeze({
   한국:'KR', 미국:'US', 일본:'JP', 대만:'TW', 중국:'CN', 홍콩:'HK',
@@ -21,7 +23,7 @@ const countries = Object.freeze({
 
 // The curated sheet controls membership, order, names, sectors and the exact
 // selected listing. The broader 586-company master remains a collection source.
-export function buildHomeMapUniverse({ master, universe, selection, additions } = {}) {
+export function buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions } = {}) {
   if (master?.schemaVersion !== 1 || !Array.isArray(master.companies) || !Array.isArray(universe?.targets)) throw new Error('지도 기업 원장 형식 오류')
   if (selection?.schemaVersion !== 1 || !Array.isArray(selection.companies) || selection.companies.length !== 49
     || selection.companyCount !== 49 || selection.listedCompanyCount !== 46 || selection.unlistedCompanyCount !== 3
@@ -37,8 +39,9 @@ export function buildHomeMapUniverse({ master, universe, selection, additions } 
     ({...company, order: selection.companies.length + index + 1}))]
   const sectors = new Map(SECTORS.map(sector => [sector.name, sector]))
   sectors.set('클라우드·GPU',sectors.get('클라우드·GPU 컴퓨팅'))
-  const masterCompanies = new Map(master.companies.map(company=>[company.id,company]))
-  if (masterCompanies.size !== master.companies.length) throw new Error('지도 기업 식별 중복')
+  const extra = buildCompanyAdditions({master, additions:issuerAdditions})
+  const masterCompanies = new Map([...master.companies,...extra.issuers].map(company=>[company.id,company]))
+  if (masterCompanies.size !== master.companies.length + extra.issuers.length) throw new Error('지도 기업 식별 중복')
   const ids = new Set(), symbols = new Set()
   const companies = selectedCompanies.map((selected,index) => {
     const company=masterCompanies.get(selected.companyId),sector=sectors.get(selected.sector)
@@ -69,7 +72,7 @@ export function buildHomeMapUniverse({ master, universe, selection, additions } 
     sourceUrl:selection.source.url,sourceSheet:selection.source.sheet,sourceModifiedAt:selection.source.modifiedAt,sourceSha256:selection.source.sha256,
     baseCompanyCount: selection.companyCount,
     userAdditions: additionalCompanies.map(company => ({companyId: company.companyId, ticker: company.ticker, requestedOn: additions.source.requestedOn})),
-    sourceStatus: 'user-selected', mappingStatus: 'candidate',listingPolicy:'exact-approved-ticker',masterCompanyCount:master.companies.length,
+    sourceStatus: 'user-selected', mappingStatus: 'candidate',listingPolicy:'exact-approved-ticker',masterCompanyCount:masterCompanies.size,baseMasterCompanyCount:master.companies.length,
     companyCount: companies.length, listedCompanyCount, unlistedCompanyCount: companies.length - listedCompanyCount,
     mappedListedCompanyCount: companies.filter(company => company.listed && company.primaryTicker).length,
     alternateOnlyCompanyCount: companies.filter(company => company.listed && !company.primaryTicker && company.listings.length).length,
@@ -87,8 +90,8 @@ export function renderHomeMapUniverse({ companies, metadata }) {
 }
 
 export async function writeHomeMapUniverse({ destination = outputPath } = {}) {
-  const [master, universe, selection, additions] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse),readFile(additionsPath,'utf8').then(JSON.parse)])
-  const value = buildHomeMapUniverse({ master, universe, selection, additions })
+  const [master, universe, selection, additions, issuerAdditions] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse),readFile(additionsPath,'utf8').then(JSON.parse),readFile(issuerAdditionsPath,'utf8').then(JSON.parse)])
+  const value = buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions })
   const path = destination instanceof URL ? fileURLToPath(destination) : resolve(destination)
   const temporary = path + '.' + randomUUID() + '.tmp'
   try {

@@ -57,7 +57,12 @@ test('wrong-symbol fundamentals or a false disclosure date cannot be accepted',(
 
 test('bundled public snapshot contains no duplicate issuer or pseudo-market securities',async()=>{
   const table=validateCompanyMarket(JSON.parse(await readFile(new URL('../../data/company-market.json',import.meta.url))))
-  assert.deepEqual(Object.keys(table.rows).sort(),catalog.companies.map(c=>c.id).sort())
+  // Preserve the archived 586-company snapshot; a new private issuer has no synthetic row.
+  assert.equal(Object.keys(table.rows).length,586)
+  assert.deepEqual(Object.keys(table.rows).sort(),catalog.companies.filter(c=>c.id!=='C0587').map(c=>c.id).sort())
+  assert.equal(catalog.companies.find(c=>c.id==='C0587').listed,false)
+  assert.equal(getCompanyMarket(table,'C0587'),null)
+  assert.ok(!Object.values(table.rows).some(row=>row.ticker==='NSCL'))
   assert.equal(table.rows.SCN038.ticker,'TSLA')
   assert.equal(table.rows.SCN038.listed,true)
   assert.ok(table.rows.SCN038.price > 0)

@@ -55,7 +55,7 @@ content.innerHTML = `<div class="map-main">
       <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>지도 선정 ${MAP_CATALOGUE.length} · 상장 ${MAP_LISTED_COUNT} · 비상장 ${MAP_PRIVATE_COUNT} · 수집 확인 중</span><span>상장 표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
       <p class="map-data-status" id="map-data-status" role="status">시총과 확정 종가를 확인하고 있습니다.</p>
       <details class="map-data-details" id="map-data-details" hidden><summary>미반영·수집 상태 보기</summary><ul id="map-exclusions"></ul></details>
-      <section class="map-private-roster" data-map-private data-map-private-roster aria-label="AI 모델 비상장 기업" hidden><div class="map-private-heading"><h2>AI 모델 · 비상장 기업</h2><p>시총·종가 없음 · 면적·수익률 계산에서 제외</p></div><div class="map-private-grid" data-map-private-cards></div></section>
+      <section class="map-private-roster" data-map-private data-map-private-roster aria-label="비상장 핵심기업" hidden><div class="map-private-heading"><h2>비상장 핵심기업</h2><p>시총·종가 없음 · 면적·수익률 계산에서 제외</p></div><div class="map-private-grid" data-map-private-cards></div></section>
       <div class="chart-meta"><div class="breadcrumb"><button id="overview">전체 산업</button><span id="crumb-sector"></span></div><div id="chart-explainer">크기: <b>최근 관측 시총 USD</b><span>·</span>색상: <b>확정 종가 등락률</b></div></div>
       <div class="chart-stage" id="chart-stage" aria-label="히트맵 차트">
         <div class="heatmap" id="heatmap"></div>
@@ -241,7 +241,7 @@ function renderPrivateCompanies(matchingCatalog) {
   section.hidden = !companies.length;
   cards.replaceChildren();
   host.dataset.mapPrivateCount = companies.length;
-  section.querySelector('h2').textContent = `AI 모델 · 비상장 ${companies.length}개`;
+  section.querySelector('h2').textContent = `비상장 핵심기업 ${companies.length}개`;
   for (const company of companies) {
     const card = htmlElement('article', 'map-private-company');
     card.dataset.mapPrivateCompany = company.id;
@@ -250,7 +250,7 @@ function renderPrivateCompanies(matchingCatalog) {
     card.setAttribute('aria-labelledby', name.id);
     card.append(name);
     if (company.role) card.append(htmlElement('p', 'map-private-role', company.role));
-    card.append(htmlElement('span', 'map-private-country', COUNTRY_NAMES[company.country] || company.countryName || company.country));
+    card.append(htmlElement('span', 'map-private-country', (COUNTRY_NAMES[company.country] || company.countryName || company.country) + ' · ' + company.sector));
     card.append(htmlElement('small', 'map-private-status', '비상장 · 시총·종가 없음'));
     cards.append(card);
   }
@@ -277,8 +277,8 @@ function renderHeader() {
   badge.textContent = dates.length ? `${shortDate(dates.at(-1))} 종가 기준${old ? ' · 이전 수집값' : ''}` : '확정 종가 수집 대기';
   badge.classList.toggle('is-stale', old);
   badge.title = dates.length ? `각 거래소 현지 종가 기준일: ${dates.join(', ')}` : '확정 종가를 수집한 뒤 기준일을 표시합니다.';
-  const count = marketSnapshot?.coverage?.companyCount || MAP_UNIVERSE.masterCompanyCount;
-  $('[data-home-coverage]').textContent = `${Number.isInteger(count) && count > 0 ? '전체 ' + count.toLocaleString('ko-KR') + '개 추적' : '원장 확인 중'} · 핵심 ${MAP_CATALOGUE.length}개`;
+  const count = MAP_UNIVERSE.masterCompanyCount;
+  $('[data-home-coverage]').textContent = `${Number.isInteger(count) && count > 0 ? '전체 ' + count.toLocaleString('ko-KR') + '개 기업' : '원장 확인 중'} · 핵심 ${MAP_CATALOGUE.length}개`;
 }
 function renderSectorSummary() {
   renderHeader();
@@ -531,7 +531,7 @@ function renderEmptyState(model, matchingCatalog, sizedItems) {
     message = '검색어를 바꾸거나 조회 조건을 초기화해 보세요.';
   } else if (matchingCatalog.every(company => !company.listed)) {
     title = '비상장 기업은 별도 명단으로 표시해요';
-    message = `${matchingCatalog.length}개 비상장 기업의 이름과 역할을 위의 AI 모델 명단에서 확인할 수 있습니다. 공개 시총·종가가 없어 면적과 수익률 계산에서 제외합니다.`;
+    message = `${matchingCatalog.length}개 비상장 기업의 이름과 역할을 위의 비상장 핵심기업 명단에서 확인할 수 있습니다. 공개 시총·종가가 없어 면적과 수익률 계산에서 제외합니다.`;
   } else if (matchingCatalog.every(company => !company.listed || company.unmappedReason)) {
     title = '시세 종목코드가 연결되지 않았어요';
     message = '기업 이름과 코드 미연결 사유를 위의 수집 상태에서 확인할 수 있습니다.';
