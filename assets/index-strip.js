@@ -28,10 +28,10 @@ function render() {
     const direction = Number.isFinite(change) ? change > 0 ? 'up' : change < 0 ? 'down' : 'flat' : 'flat'
     const arrow = Number.isFinite(change) ? change > 0 ? '▲' : change < 0 ? '▼' : '—' : ''
     const rate = Number.isFinite(change) ? `${arrow} ${number(Math.abs(change))}%` : '—'
-    const label = !attempted ? '저장 자료 확인 중' : !card.available ? card.reason || '저장 자료 없음' : card.stale ? '이전 저장값' : '저장 종가'
+    const label = !attempted ? '저장 자료 확인 중' : !card.available ? card.status === 'unconfirmed' ? '종가 미확인' : '저장 자료 없음' : card.stale ? '이전 저장값' : '저장 종가'
     const zone = zones[card.timezone] || card.timezone || '현지 기준'
     const close = card.available && card.closeDate ? `${card.closeDate} · ${zone}` : '확인된 종가 없음'
-    const provenance = [card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || ''].filter(Boolean).join(' · ')
+    const provenance = [card.source, card.fetchedAt ? `수집 시각 ${card.fetchedAt}` : '', card.lastAttemptAt ? `마지막 시도 ${card.lastAttemptAt}` : '', card.error || '', card.reason || ''].filter(Boolean).join(' · ')
     const source = /^https?:\/\//.test(card.sourceUrl || '')
       ? `<a class="index-strip-source" href="${escape(card.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escape(card.name)} 저장 자료 출처">출처 ↗</a>` : ''
     return `<article class="index-strip-card${card.ai ? ' is-ai' : ''}${!card.available ? ' is-unavailable' : ''}" role="listitem" data-index-symbol="${escape(card.symbol)}" title="${escape(provenance)}">
