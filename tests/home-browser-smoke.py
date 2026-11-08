@@ -106,30 +106,33 @@ def wait_home(page):
     return page.locator('#v-home')
 
 
-def verify_compact_home_indices(page):
-    strip = page.locator('#v-home > [data-index-strip]')
+def verify_header_indices(page):
+    strip = page.locator('header .wrap.top > .brand + [data-index-strip]')
     strip.wait_for(state='visible')
-    page.wait_for_function("document.querySelectorAll('#v-home [data-index-strip] [data-index-symbol]').length === 5")
+    page.wait_for_function("document.querySelectorAll('header [data-index-strip] [data-index-symbol]').length === 5")
     assert strip.locator('[data-index-symbol]').evaluate_all(
-        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^SOX', '^KS11', '^KQ11']
+        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11']
     geometry = strip.evaluate("""strip => {
-      const home = document.getElementById('v-home');
-      const title = home.shadowRoot.querySelector('h1');
-      const slot = strip.assignedSlot;
+      const brand = document.querySelector('header .wrap.top > .brand');
+      const navigation = document.querySelector('header .topnav');
       const rect = element => { const box = element.getBoundingClientRect();
         return {left:box.left, right:box.right, top:box.top, bottom:box.bottom, height:box.height}; };
-      return {homeChild:strip.parentElement === home, slot:slot?.name,
-        homeSlot:slot?.getRootNode() === home.shadowRoot, title:title.textContent,
-        strip:rect(strip), heading:rect(title), globalStrip:!!document.querySelector('body > [data-index-strip]')};
+      return {headerChild:strip.parentElement.matches('header .wrap.top'), adjacentBrand:strip.previousElementSibling === brand,
+        brand:brand.textContent.trim(), slot:strip.assignedSlot?.name || null, strip:rect(strip), logo:rect(brand),
+        navigation:navigation && getComputedStyle(navigation).display !== 'none' ? rect(navigation) : null,
+        homeStrip:!!document.querySelector('#v-home [data-index-strip]')};
     }""")
-    assert geometry['homeChild'] and geometry['homeSlot'] and geometry['slot'] == 'home-indices', geometry
-    assert geometry['title'].startswith('AI 시장 지도') and not geometry['globalStrip'], geometry
-    actual, heading = geometry['strip'], geometry['heading']
-    assert actual['left'] >= heading['right'] - 1, geometry
-    assert actual['top'] < heading['bottom'] and actual['bottom'] > heading['top'], geometry
+    assert geometry['headerChild'] and geometry['adjacentBrand'] and geometry['slot'] is None, geometry
+    assert geometry['brand'].startswith('AI Value Chain') and not geometry['homeStrip'], geometry
+    actual, logo = geometry['strip'], geometry['logo']
+    assert logo['right'] - 1 <= actual['left'] <= logo['right'] + 32, geometry
+    assert actual['top'] < logo['bottom'] and actual['bottom'] > logo['top'], geometry
     assert 0 < actual['height'] <= 71, geometry
+    if geometry['navigation']:
+        assert actual['bottom'] <= geometry['navigation']['top'] + 1, geometry
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
     return strip
+
 
 def attach_routes(context):
     encoded = {}
@@ -184,8 +187,8 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
             try:
                 page.goto(origin+'/#home')
                 home = wait_home(page)
-                verify_compact_home_indices(page)
-                checks.append('five saved indices stay compact beside the home H1 in its named slot')
+                verify_header_indices(page)
+                checks.append('five saved indices stay beside the top header logo above chapter navigation')
                 cards = home.locator('.sector-return-card')
                 assert cards.count() == 9
                 assert home.locator('[data-home-weight=eq]').get_attribute('aria-pressed') == 'true'
@@ -349,7 +352,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                     mobile=browser.new_context(ignore_https_errors=True,viewport={'width':width,'height':980},is_mobile=True,device_scale_factor=1)
                     attach_routes(mobile)
                     phone=new_page(mobile);phone.goto(origin+'/#home');mobile_home=wait_home(phone)
-                    indices = verify_compact_home_indices(phone)
+                    indices = verify_header_indices(phone)
                     if width == 390:
                         assert indices.locator('[data-index-strip-cards]').evaluate('el => el.scrollWidth > el.clientWidth')
                     assert phone.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
@@ -361,7 +364,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                     assert mobile_home.locator('[data-home-weight=cap]').get_attribute('aria-pressed')=='true'
                     phone.screenshot(path=str(output/f'home-mobile-{width}.png'),full_page=True)
                     mobile.close()
-                checks.append('390px and 820px compact home indices, stacked co-movement, touch controls and no horizontal page overflow')
+                checks.append('390px and 820px compact header indices, stacked co-movement, touch controls and no horizontal page overflow')
                 assert not page_errors,page_errors
                 browser.close()
             except Exception:
