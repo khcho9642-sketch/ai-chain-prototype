@@ -6,7 +6,7 @@ import { SECTORS } from '../../assets/home-map-core.js'
 import { instruments } from '../../assets/instruments.js'
 import { dartCompanies } from '../../assets/company-disclosure-sources.js'
 import { approvedCatalog } from '../../assets/company-approved-catalog.js'
-import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
+import { MAP_COMPANIES, MAP_UNIVERSE } from '../../assets/home-map-universe.js'
 import { registryRows } from '../../assets/company-registry-rows.js'
 
 const sectorIds = new Set(SECTORS.map(s => s.id))
@@ -129,7 +129,8 @@ export function buildCompanyRelease(input, previous = null) {
   unique(companies.flatMap(c => c.listings.map(l => l.ticker)), '시세 티커')
   unique(companies.map(c => c.financialId).filter(Boolean), '재무 DB ID')
   const byId = new Map(companies.map(c => [c.id, c]))
-  requireValue(input.selections.length === 49, '핵심 기업은 49개사여야 합니다.')
+  requireValue(coreIds.size === MAP_COMPANIES.length && MAP_UNIVERSE.companyCount === MAP_COMPANIES.length, '핵심 기업 선정표 건수 불일치')
+  requireValue(input.selections.length === coreIds.size, '핵심 기업은 선정표와 같은 ' + coreIds.size + '개사여야 합니다.')
   for (const entry of input.selections) {
     const company = byId.get(entry.companyId)
     const selected = coreIds.get(entry.companyId)
@@ -173,7 +174,7 @@ async function main() {
       await rm(temporary, { force: true })
     }
   }
-  console.log('전체 기업 586개사 · 핵심 기업 49개사 · 발행본 ' + release.companies.filter(c => c.analysis).length + '건')
+  console.log('전체 기업 ' + release.companies.length + '개사 · 핵심 기업 ' + release.companies.filter(c => c.selection).length + '개사 · 발행본 ' + release.companies.filter(c => c.analysis).length + '건')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

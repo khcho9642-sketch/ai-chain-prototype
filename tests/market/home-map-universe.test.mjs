@@ -7,23 +7,26 @@ import { MAP_COMPANIES, MAP_UNIVERSE, HOME_MAP_UNIVERSE } from '../../assets/hom
 
 const master = JSON.parse(await readFile(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8'))
 const selection = JSON.parse(await readFile(new URL('../../research/market/home-map-selection.json', import.meta.url), 'utf8'))
+const additions = JSON.parse(await readFile(new URL('../../research/market/home-map-additions.json', import.meta.url), 'utf8'))
 const universe = await loadMarketUniverse()
 const approvedTickers = ['ASML.AS','AMAT','LRCX','KLAC','8035.T','042700.KS','2330.TW','INTC','0981.HK','3711.TW','AMKR',
   '005930.KS','000660.KS','MU','SNDK','285A.T','NVDA','AVGO','AMD','ARM','MRVL','CSCO','ANET','DELL','2317.TW','COHR',
   '007660.KS','GEV','ENR.DE','SU.PA','ETN','VRT','010120.KS','267260.KS','EQIX','DLR','IRM','GDS','MSFT','AMZN','ORCL',
-  'BABA','CRWV','NBIS','GOOGL','META']
+  'BABA','CRWV','NBIS','GOOGL','META','QCOM']
 
-test('the map contains exactly the approved sheet 49, preserving source order, names, roles and provenance', async () => {
-  const expected = buildHomeMapUniverse({master,universe,selection})
+test('the map preserves the original 49 and adds the user-requested Qualcomm as the 50th issuer', async () => {
+  const expected = buildHomeMapUniverse({master,universe,selection,additions})
   assert.deepEqual(MAP_COMPANIES,expected.companies)
   assert.deepEqual(MAP_UNIVERSE,expected.metadata)
   assert.equal(HOME_MAP_UNIVERSE,MAP_COMPANIES)
-  assert.equal(MAP_COMPANIES.length,49)
-  assert.equal(new Set(MAP_COMPANIES.map(company=>company.id)).size,49)
-  assert.equal(MAP_COMPANIES.filter(company=>company.listed).length,46)
+  assert.equal(MAP_COMPANIES.length,50)
+  assert.equal(new Set(MAP_COMPANIES.map(company=>company.id)).size,50)
+  assert.equal(MAP_COMPANIES.filter(company=>company.listed).length,47)
   assert.equal(MAP_COMPANIES.filter(company=>!company.listed).length,3)
-  assert.deepEqual(MAP_COMPANIES.map(company=>[company.sourceOrder,company.id,company.name,company.sourceSector,company.role]),
+  assert.deepEqual(MAP_COMPANIES.slice(0,49).map(company=>[company.sourceOrder,company.id,company.name,company.sourceSector,company.role]),
     selection.companies.map(company=>[company.order,company.companyId,company.name,company.sector,company.role]))
+  assert.equal(MAP_UNIVERSE.baseCompanyCount,49)
+  assert.deepEqual(MAP_UNIVERSE.userAdditions,[{companyId:'C0371',ticker:'QCOM',requestedOn:'2026-11-08'}])
   assert.equal(MAP_UNIVERSE.sourceSheet,'핵심기업 49')
   assert.equal(MAP_UNIVERSE.sourceModifiedAt,'2026-11-06T15:21:47.237Z')
   assert.equal(MAP_UNIVERSE.sourceAsOf,'2026-11-07')
@@ -48,7 +51,7 @@ test('only exact approved listings are used while the full collection master rem
   assert.equal(master.companies.length,586)
   assert.equal(MAP_UNIVERSE.masterCompanyCount,586)
   assert.ok(universe.targets.length>500)
-  assert.equal(MAP_UNIVERSE.mappedListedCompanyCount,46)
+  assert.equal(MAP_UNIVERSE.mappedListedCompanyCount,47)
   assert.equal(MAP_UNIVERSE.unmappedListedCompanyCount,0)
   const hanmi=MAP_COMPANIES.find(company=>company.primaryTicker==='042700.KS')
   assert.equal(hanmi.sector,'반도체 소부장')
@@ -75,4 +78,24 @@ test('generation rejects enlarged selections, ambiguous identities, reordered ro
   assert.throws(()=>buildHomeMapUniverse({master,universe,selection:changed(copy=>copy.companies[0].ticker='NVDA')}),/연결 불일치/)
   assert.throws(()=>buildHomeMapUniverse({master,universe,selection:changed(copy=>copy.companies[48].ticker='PRIVATE')}),/비상장/)
   assert.throws(()=>buildHomeMapUniverse({master:{...master,companies:[...master.companies,master.companies[0]]},universe,selection}),/식별 중복/)
+})
+
+test('Qualcomm additions preserve the base roster and reject duplicate issuers, wrong listings and unapproved provenance', () => {
+  const q=MAP_COMPANIES.find(company=>company.primaryTicker==='QCOM')
+  assert.equal(q.id,'C0371')
+  assert.equal(q.sectorId,'ai-chips')
+  assert.equal(q.sourceOrder,50)
+  assert.equal(q.selectionChange,'사용자 추가')
+  assert.equal(MAP_COMPANIES.filter(company=>company.sectorId==='ai-chips').length,6)
+  assert.equal(buildHomeMapUniverse({master,universe,selection}).companies.length,49)
+  for (const mutate of [
+    copy=>copy.companies.push({...copy.companies[0]}),
+    copy=>copy.companies[0].companyId='C0347',
+    copy=>copy.companies[0].ticker='NVDA',
+    copy=>copy.source.type='inferred',
+    copy=>copy.source.requestedOn='',
+  ]) {
+    const copy=structuredClone(additions); mutate(copy)
+    assert.throws(()=>buildHomeMapUniverse({master,universe,selection,additions:copy}))
+  }
 })
