@@ -1,3 +1,4 @@
+import { staticHost } from './site-runtime.js'
 import {EPOCH_DATASETS,validateEpochSnapshot,epochDatasetCsv} from './epoch-ai-core.js'
 
 const PAGE_SIZES=[25,50]
@@ -72,7 +73,6 @@ async function loadSnapshot(){
   if(busy)return
   busy=true;attempted=true;paintStatus();paintResults()
   try{
-    const staticHost=location.hostname.endsWith('.github.io')||location.protocol==='file:'
     const url=staticHost?'./data/epoch-ai.json':'./api/epoch-ai'
     const response=await fetch(url+'?t='+Math.floor(Date.now()/60000),{cache:'no-store',signal:AbortSignal.timeout(20000)})
     if(!response.ok)throw new Error(`자료 HTTP ${response.status}`)

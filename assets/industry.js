@@ -1,3 +1,4 @@
+import { staticHost } from './site-runtime.js'
 import { SECTORS } from './home-map-core.js'
 import { validateIndustry, latestPoint, yearOnYear } from './industry-core.js'
 import { safeSourceUrl, validateAiStatistics } from './ai-statistics-core.js'
@@ -68,7 +69,6 @@ async function readSnapshot(path, validate) {
 
 async function requestSource(key) {
   const {file, validate, label} = sources[key]
-  const staticHost = location.hostname.endsWith('.github.io') || location.protocol === 'file:'
   if (key !== 'ai' && !staticHost) {
     try {
       return await readSnapshot(`./api/${file}`, validate)

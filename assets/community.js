@@ -1,3 +1,4 @@
+import { realtimeEnabled } from './site-runtime.js'
 import { instruments } from './instruments.js'
 import { communityApiOrigin } from './community-runtime.js'
 import { resolveCommunityOrigin, resolveDiscussionSymbol, mergeComments, opinionEntry, communityStateLabel, communityReasonLabel, messageProvenance, communityEvidenceUrl } from './community-ui-core.js'
@@ -61,6 +62,7 @@ function node(tag, value, attrs = {}) {
   return element
 }
 async function api(path, input, { admin = false, signal } = {}) {
+  if (!realtimeEnabled) throw new Error('실시간 토론과 댓글 작성을 일시 중지했습니다.')
   if (configurationError) throw new Error('댓글 서버 주소 설정이 올바르지 않습니다.')
   const token = admin && auth.localAdmin ? auth.localAdmin : auth.token
   const response = await fetch(`${apiRoot}${path}`, {
@@ -110,7 +112,7 @@ function createView(root, symbol, selector = false) {
   el('allow').checked = state.allowAi
   function saveDraft() { drafts.set(state.symbol, { text: el('text').value, parent: state.parent, tab: state.tab, allowAi: state.allowAi, request: state.request }) }
   function parentLabel() { el('parent').textContent = state.parent ? '선택한 댓글에 답글 작성 중 · 취소' : '' }
-  function canWrite() { return state.status?.developmentOnly || !!auth.user }
+  function canWrite() { return realtimeEnabled && (state.status?.developmentOnly || !!auth.user) }
   function canManage() { return auth.user?.role === 'admin' || !!auth.localAdmin }
   function provenance(message) {
     const value = messageProvenance(message), detail = node('details', null, { class: 'community-provenance' })
@@ -195,7 +197,13 @@ function createView(root, symbol, selector = false) {
     area.append(grid)
   }
   function renderAuth() {
-    if (state.disposed || !state.status) return
+    if (state.disposed) return
+    if (!realtimeEnabled) {
+      el('auth').replaceChildren(); el('admin').hidden = true; el('older').hidden = true
+      for (const control of el('form').querySelectorAll('input, textarea, button')) control.disabled = true
+      return
+    }
+    if (!state.status) return
     const box = el('auth'); box.replaceChildren()
     el('submit').disabled = busy || !canWrite()
     el('admin').hidden = !state.status.developmentOnly && auth.user?.role !== 'admin'
@@ -296,7 +304,7 @@ function createView(root, symbol, selector = false) {
     if (state.tab !== 'human') state.allowAi = el('allow').checked
     state.tab = tab
     root.querySelectorAll('[data-tab]').forEach(b => { const active = b.dataset.tab === tab; b.setAttribute('aria-selected', String(active)); b.tabIndex = active ? 0 : -1 })
-    el('allow').checked = tab !== 'human' && state.allowAi; el('allow').disabled = tab === 'human'
+    el('allow').checked = tab !== 'human' && state.allowAi; el('allow').disabled = !realtimeEnabled || tab === 'human'
     el('form').hidden = tab === 'ai'; renderComments(); renderOpinions(); saveDraft()
   }
   async function load(older = false) {
@@ -509,6 +517,11 @@ function createView(root, symbol, selector = false) {
     if (state.disposed) return
     state.publishedReports = snapshot; renderPublishedReports(); renderOpinions()
   }).catch(() => { /* Snapshot failure must not block connected server comments. */ })
+  if (!realtimeEnabled) {
+    renderAuth()
+    message('실시간 토론과 댓글 작성을 일시 중지했습니다. 발행된 AI 글은 계속 볼 수 있습니다.')
+    return view
+  }
   ;(async () => {
     try {
       state.status = await api('/status'); if (state.disposed) return

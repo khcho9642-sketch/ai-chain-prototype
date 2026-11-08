@@ -1,3 +1,4 @@
+import { realtimeEnabled } from '../assets/site-runtime.js'
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
@@ -11,9 +12,13 @@ import { createEvidenceSource } from '../server/community/evidence.mjs'
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json', '/api/epoch-ai':'epoch-ai.json',
   '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json', '/api/comparison-history':'comparison-history.json', '/api/ripple':'ripple.json'}
 
-export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null, debateVotes = null } = {}) {
+export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null, debateVotes = null, liveApi = realtimeEnabled } = {}) {
   return createServer(async (req, res) => {
     const pathname = URL.canParse(req.url, 'http://localhost') ? new URL(req.url, 'http://localhost').pathname : ''
+    if (!liveApi && (pathname === '/api' || pathname.startsWith('/api/'))) {
+      res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
+      return res.end(JSON.stringify({ error: 'live_services_paused' }))
+    }
     if (pathname === '/api/debate-votes') {
       const handler = debateVotes || (await import('../api/debate-votes.js')).default
       return handler(req, res)
@@ -77,12 +82,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT가 올바르지 않습니다.')
   const root = await build()
   let community = null
-  if (process.env.COMMUNITY_DEV_ENABLED === '1') {
+  if (realtimeEnabled && process.env.COMMUNITY_DEV_ENABLED === '1') {
     if (!['127.0.0.1','localhost'].includes(host)) throw new Error('댓글 개발 서버는 loopback에서만 실행합니다.')
     community = createCommunityHandler({ catalog: instruments.filter(x => x.chains.some(n => n > 0)), evidenceSource: createEvidenceSource(), path: join(projectRoot,'.local','community.sqlite'), workerToken: process.env.COMMUNITY_WORKER_TOKEN, adminToken: process.env.COMMUNITY_ADMIN_TOKEN })
   }
-  const server = createSiteServer({ root, community })
+  const server = createSiteServer({ root, community, liveApi: realtimeEnabled })
   server.once('close', () => community?.close())
   server.on('error', error => { console.error(error.message); process.exitCode = 1 })
-  server.listen(port, host, () => console.log(`AI CHAIN: http://${host}:${port} (실제 시세 API 포함${community ? ', 로컬 댓글 개발 모드' : ''})`))
+  server.listen(port, host, () => console.log(`AI CHAIN: http://${host}:${port} (저장된 자료 · 실시간 중지${community ? ', 로컬 댓글 개발 모드' : ''})`))
 }

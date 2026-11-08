@@ -1,3 +1,4 @@
+import { realtimeEnabled } from './site-runtime.js'
 import { DEBATE_CHARACTERS, debateCharacterChange } from './debate-characters.js'
 import { validateDebateDay, validateDebateIndex, debateStanceChanges, debateCharacterHistory, debateWritingDatesDiffer } from './debate-core.js'
 
@@ -172,13 +173,14 @@ function renderVote(day) {
     const character = DEBATE_CHARACTERS[ai]
     const button = node('button', null, { type: 'button', class: 'debate-vote-choice debate-agent-' + ai, 'aria-pressed': state.vote?.choice === ai ? 'true' : 'false' })
     button.append(node('span', character.icon, { 'aria-hidden': 'true' }), node('strong', character.name))
-    button.disabled = state.voteBusy || state.voteError || !state.vote || Boolean(state.vote.hasVoted) || !day.stances.some(row => row.ai === ai)
+    button.disabled = !realtimeEnabled || state.voteBusy || state.voteError || !state.vote || Boolean(state.vote.hasVoted) || !day.stances.some(row => row.ai === ai)
     button.addEventListener('click', () => submitVote(ai))
     options.append(button)
   }
   section.append(options)
   const status = node('p', null, { class: 'debate-vote-status', role: 'status', 'aria-live': 'polite' })
-  if (state.voteError || presentation.kind === 'unavailable') {
+  if (!realtimeEnabled) status.textContent = '투표 기능을 일시 중지했습니다.'
+  else if (state.voteError || presentation.kind === 'unavailable') {
     status.append(node('span', '잠시 후 다시 시도'))
     const retry = node('button', '다시 불러오기', { type: 'button' }); retry.addEventListener('click', loadVotes); status.append(retry)
   } else if (state.voteBusy) status.textContent = state.vote ? '의견을 기록하고 있어요.' : '투표를 불러오고 있어요.'
@@ -186,7 +188,7 @@ function renderVote(day) {
   else if (presentation.kind === 'results') status.textContent = `${presentation.count}명이 논리를 골랐어요. · 네 선택은 ${DEBATE_CHARACTERS[state.vote.choice]?.name || ''}`
   else status.textContent = '한 주제에 한 번, 마음에 남은 논리를 골라봐요.'
   section.append(status)
-  if (presentation.kind === 'results') {
+  if (realtimeEnabled && presentation.kind === 'results') {
     const results = node('div', null, { class: 'debate-vote-result' })
     for (const row of presentation.rows) {
       const result = node('div', null, { class: 'debate-vote-result-row debate-agent-' + row.ai })
@@ -200,6 +202,7 @@ function renderVote(day) {
 }
 function updateVote() { const current = host?.querySelector('[data-debate-vote]'); if (current && state.day) current.replaceWith(renderVote(state.day)) }
 async function voteRequest(method = 'GET', choice, day = state.day) {
+  if (!realtimeEnabled) throw new Error('votes_paused')
   const url = './api/debate-votes' + (method === 'GET' ? '?debateId=' + encodeURIComponent(day.id) : '')
   const response = await fetch(url, { method, credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000), ...(method === 'POST' ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ debateId: day.id, choice }) } : {}) })
   const result = await response.json()
@@ -208,7 +211,7 @@ async function voteRequest(method = 'GET', choice, day = state.day) {
   return result
 }
 async function loadVotes() {
-  if (!state.day) return
+  if (!realtimeEnabled || !state.day) return
   const request = ++state.voteRequest
   state.voteBusy = true; state.voteError = false; updateVote()
   try { const vote = await voteRequest(); if (request !== state.voteRequest) return; state.vote = vote }
@@ -216,7 +219,7 @@ async function loadVotes() {
   finally { if (request === state.voteRequest) { state.voteBusy = false; updateVote() } }
 }
 async function submitVote(choice) {
-  if (state.voteBusy || state.vote?.hasVoted || !state.day) return
+  if (!realtimeEnabled || state.voteBusy || state.vote?.hasVoted || !state.day) return
   const request = ++state.voteRequest
   state.voteBusy = true; state.voteError = false; updateVote()
   try {
@@ -335,6 +338,7 @@ async function loadHistory(request) {
   if (currentStances) currentStances.replaceWith(renderStances(state.day))
   const currentArchives = host.querySelector('[aria-label="지난 토론"]')
   if (currentArchives) currentArchives.replaceWith(renderArchives(state.day))
+  if (!realtimeEnabled) return
   const archives = state.index.days.filter(row => row.date !== state.day.date).slice(0, 12)
   await Promise.allSettled(archives.map(async row => {
     if (state.archiveVotes.has(row.id)) return

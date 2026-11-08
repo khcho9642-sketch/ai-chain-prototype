@@ -259,10 +259,10 @@ test('public service configuration rejects insecure origins before creating a st
   assert.throws(() => createPublicCommunityHandler({ catalog, workerToken, origin: 'https://api.example.test/path' }), /https_origin_required/)
 })
 
-test('static build emits only the public API origin and rejects URL credentials', async () => {
+test('paused static build omits the API origin and rejects URL credentials', async () => {
   const dir = await build(undefined, { communityOrigin: 'https://community.example.test/' })
   const runtime = await readFile(join(dir, 'assets', 'community-runtime.js'), 'utf8')
-  assert.match(runtime, /https:\/\/community\.example\.test/)
+  assert.equal(runtime.trim(), 'export const communityApiOrigin = ""')
   assert.equal(runtime.includes('TOKEN'), false)
   await assert.rejects(build(undefined, { communityOrigin: 'https://secret@community.example.test' }), /invalid_community_api_origin/)
   await build(undefined, { communityOrigin: '' })

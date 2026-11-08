@@ -1,3 +1,4 @@
+import { staticHost } from './site-runtime.js'
 import { validateAiStatistics, safeSourceUrl } from './ai-statistics-core.js'
 import { validateDisclosureSnapshot } from './ai-disclosure-core.js'
 import {
@@ -320,7 +321,6 @@ async function fetchJSON(path) {
   } finally { clearTimeout(timeout) }
 }
 async function fetchSnapshot(name, validate) {
-  const staticHost = location.hostname === 'github.io' || location.hostname.endsWith('.github.io') || location.protocol === 'file:'
   if (staticHost) return { data: validate(await fetchJSON(`./data/${name}.json`)), fallback: false }
   try { return { data: validate(await fetchJSON(`./api/${name}`)), fallback: false } }
   catch { return { data: validate(await fetchJSON(`./data/${name}.json`)), fallback: true } }

@@ -35,6 +35,7 @@ function tableResults(rows) {
 }
 function updateResults() {
   const rows=matchCompanies(catalog.companies,state), all=state.tab==='all'
+  root.querySelector('.ci-shell').dataset.scope = state.tab
   const conditions=[state.q&&'“'+state.q+'”',sectors.get(state.sector)?.name,state.country&&countryName(state.country),state.listing&&(state.listing==='listed'?'상장':'비상장')].filter(Boolean)
   const pool=all?catalog.companies:core
   root.querySelector('.ci-sector-list').innerHTML=[{id:'',name:'전체 섹터',color:'var(--muted)'},...catalog.sectors].map(s=>
@@ -73,7 +74,7 @@ function renderList(snapshot) {
     <div class="ci-layout"><aside id="ci-filters" class="ci-filters" data-open="${Boolean(snapshot?.open)}" aria-label="기업 필터"><h2>섹터</h2><div class="ci-sector-list"></div><label>국가<select data-ci-filter="country"><option value="">전체 국가</option>${countries.map(code=>'<option value="'+esc(code)+'">'+esc(countryName(code))+'</option>').join('')}</select></label>
       <label>상장 여부<select data-ci-filter="listing"><option value="">전체</option><option value="listed">상장</option><option value="private">비상장</option></select></label></aside>
     <section class="ci-results" aria-label="검색 결과"><div class="ci-results-head"><h2><span class="ci-results-name"></span> <span class="ci-count" aria-live="polite"></span></h2><div class="ci-display"><small class="ci-sort"></small><details class="ci-columns" hidden><summary>표시 열</summary><div class="ci-column-options">${columns.map(c=>'<label><input type="checkbox" data-ci-column value="'+c.id+'" '+(c.id==='name'?'disabled ':'')+'checked> '+esc(c.label)+'</label>').join('')}<button type="button" data-ci-allcols>14개 열 모두 표시</button></div></details></div></div>
-    <div class="ci-items"></div><div class="ci-market-note" hidden><strong aria-live="polite"></strong> <button data-ci-retry hidden>다시 불러오기</button><p>주가는 거래소 현지 통화의 확정 종가입니다. 시가총액과 최근 4분기 매출은 억 달러, 등락률은 현지 통화 기준입니다. 기준일의 종가가 없는 종목은 주가를 비워 둡니다. 매출 성장률은 전년 같은 기간 대비이며 비교 기간을 값 아래 표시합니다. 열 제목을 눌러 정렬하고 표를 좌우로 움직여 모든 지표를 볼 수 있습니다.</p><p>비상장 평가액은 출처와 평가일을 함께 표시하며, 시가총액 순위와 합계에서 제외합니다. — 는 확인된 값이 없다는 뜻입니다. <a href="#home">홈 업종 수익률</a>은 핵심 기업 중 상장사만을 대상으로 합니다.</p></div></section></div></div>`
+    <div class="ci-items"></div><div class="ci-market-note" hidden><strong aria-live="polite"></strong> <button data-ci-retry hidden>다시 불러오기</button><p>주가는 거래소 현지 통화의 확정 종가입니다. 시가총액과 최근 4분기 매출은 억 달러, 등락률은 현지 통화 기준입니다. 기준일의 종가가 없는 종목은 주가를 비워 둡니다. 매출 성장률은 전년 같은 기간 대비이며 비교 기간을 값 아래 표시합니다. 열 제목을 눌러 정렬할 수 있습니다. 좁은 화면에서는 표를 좌우로 움직여 모든 지표를 볼 수 있습니다.</p><p>비상장 평가액은 출처와 평가일을 함께 표시하며, 시가총액 순위와 합계에서 제외합니다. — 는 확인된 값이 없다는 뜻입니다. <a href="#home">홈 업종 수익률</a>은 핵심 기업 중 상장사만을 대상으로 합니다.</p></div></section></div></div>`
   for(const select of root.querySelectorAll('[data-ci-filter]'))select.value=state[select.dataset.ciFilter]
   updateResults()
 }
