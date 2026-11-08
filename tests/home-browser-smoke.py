@@ -110,7 +110,7 @@ def verify_header_indices(page):
     strip = page.locator('header .wrap.top > .brand + [data-index-strip]')
     strip.wait_for(state='visible')
     assert strip.locator('[data-index-strip-status],.index-strip-heading').count() == 0
-    assert '실시간 갱신 중지 · 저장된 종가' not in page.locator('header').inner_text()
+    assert '실시간 갱신 중지 · 저장된 종가' not in page.locator('body > header').inner_text()
     page.wait_for_function("document.querySelectorAll('header [data-index-strip] [data-index-symbol]').length === 5")
     assert strip.locator('[data-index-symbol]').evaluate_all(
         'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11']
