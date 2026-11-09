@@ -182,7 +182,7 @@ def verify_header_indices(page):
     assert '실시간 갱신 중지 · 저장된 종가' not in page.locator('body > header').inner_text()
     page.wait_for_function("document.querySelectorAll('header [data-index-strip] [data-index-symbol]').length === 5")
     assert strip.locator('[data-index-symbol]').evaluate_all(
-        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', 'NVDA', '^KQ11']
+        'cards => cards.map(card => card.dataset.indexSymbol)') == ['^IXIC', '^GSPC', '^KS11', '688825.SS', '^KQ11']
     geometry = strip.evaluate("""strip => {
       const brand = document.querySelector('header .wrap.top > .brand');
       const navigation = document.querySelector('header .topnav');

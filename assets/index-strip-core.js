@@ -4,7 +4,7 @@ export const INDEX_STRIP_INDICES = Object.freeze([
   { symbol: '^IXIC', name: '나스닥', flag: '🇺🇸', ai: false },
   { symbol: '^GSPC', name: 'S&P 500', flag: '🇺🇸', ai: false },
   { symbol: '^KS11', name: '코스피', flag: '🇰🇷', ai: false },
-  { symbol: 'NVDA', name: '엔비디아', flag: '🇺🇸', ai: true, currency: 'USD' },
+  { symbol: '688825.SS', name: 'CXMT', flag: '🇨🇳', ai: true, currency: 'CNY' },
   { symbol: '^KQ11', name: '코스닥', flag: '🇰🇷', ai: false },
 ].map(Object.freeze))
 
