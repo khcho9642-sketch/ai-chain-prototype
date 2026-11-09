@@ -127,7 +127,7 @@ async function currentUser(db, token, now) {
 export async function handleAuthRequest(request, env, options = {}) {
   try {
     const pathname = new URL(request.url).pathname
-    const routes = { '/api/auth/config': 'GET', '/api/auth/nonce': 'GET', '/api/auth/me': 'GET', '/api/auth/google': 'POST', '/api/auth/logout': 'POST', '/api/auth/profile': 'POST' }
+    const routes = { '/api/auth/config': 'GET', '/api/auth/nonce': 'GET', '/api/auth/me': 'GET', '/api/auth/google': 'POST', '/api/auth/logout': 'POST', '/api/auth/profile': 'POST', '/api/auth/withdraw': 'POST' }
     ensure(Object.hasOwn(routes, pathname), 'not_found', 404)
     if (request.method !== routes[pathname]) {
       const result = response(405, { error: 'method_not_allowed' }); result.headers.set('Allow', routes[pathname]); return result
@@ -160,6 +160,21 @@ export async function handleAuthRequest(request, env, options = {}) {
       const pendingNonce = tokenCookie(request, config.nonceCookie)
       if (pendingNonce) await db.prepare('DELETE FROM member_challenges WHERE token_hash=?').bind(await hashToken(pendingNonce)).run()
       return response(200, { loggedOut: true }, [cookie(config, config.sessionCookie, '', 0), cookie(config, config.nonceCookie, '', 0)])
+    }
+    if (pathname === '/api/auth/withdraw') {
+      ensure(await currentUser(db, session, now), 'login_required', 401)
+      ensure(input.confirmation === '탈퇴', 'invalid_confirmation')
+      // The DELETE rechecks the live session and active account atomically. The
+      // existing foreign key removes every session for this member, not others.
+      const statements = [db.prepare(`DELETE FROM member_users WHERE disabled=0
+        AND id=(SELECT user_id FROM member_sessions WHERE token_hash=? AND expires>?) RETURNING id`)
+        .bind(await hashToken(session), now)]
+      const pendingNonce = tokenCookie(request, config.nonceCookie)
+      if (pendingNonce) statements.push(db.prepare('DELETE FROM member_challenges WHERE token_hash=?').bind(await hashToken(pendingNonce)))
+      // A challenge cleanup failure must roll back account and session deletion.
+      const results = await db.batch(statements)
+      ensure(results[0].results?.length === 1, 'login_required', 401)
+      return response(200, { ok: true }, [cookie(config, config.sessionCookie, '', 0), cookie(config, config.nonceCookie, '', 0)])
     }
     if (pathname === '/api/auth/profile') {
       ensure(await currentUser(db, session, now), 'login_required', 401)

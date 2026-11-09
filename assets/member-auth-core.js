@@ -1,4 +1,4 @@
-const routes = Object.freeze({ config: '/api/auth/config', nonce: '/api/auth/nonce', google: '/api/auth/google', me: '/api/auth/me', logout: '/api/auth/logout', profile: '/api/auth/profile' })
+const routes = Object.freeze({ config: '/api/auth/config', nonce: '/api/auth/nonce', google: '/api/auth/google', me: '/api/auth/me', logout: '/api/auth/logout', profile: '/api/auth/profile', withdraw: '/api/auth/withdraw' })
 
 export class MemberAuthError extends Error {
   constructor(code, status = 0) { super(code); this.name = 'MemberAuthError'; this.code = code; this.status = status }
@@ -75,6 +75,10 @@ export function createMemberAuthClient({ fetcher = globalThis.fetch, timeoutMs =
     },
     async profile(nickname) {
       return readMember((await request('profile', { nickname: normalizeMemberNickname(nickname) })).user)
+    },
+    async withdraw() {
+      const value = await request('withdraw', { confirmation: '탈퇴' })
+      if (value.ok !== true) throw new MemberAuthError('invalid_response')
     },
     async logout() {
       const value = await request('logout', {})

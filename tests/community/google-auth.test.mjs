@@ -128,12 +128,13 @@ test('Missing Google configuration fails closed without making a session', async
     assert.equal((await f.call('/api/auth/nonce')).status, 503)
     assert.equal((await f.call('/api/auth/google', { method: 'POST' })).status, 503)
     assert.equal((await f.call('/api/auth/profile', { method: 'POST', body: { nickname: '회원' } })).status, 503)
+    assert.equal((await f.call('/api/auth/withdraw', { method: 'POST', body: { confirmation: '탈퇴' } })).status, 503)
   }
 })
 
 test('Cross-origin writes, missing origin and cross-site nonce requests are rejected', async t => {
   const f = fixture(t)
-  for (const path of ['/api/auth/google', '/api/auth/logout', '/api/auth/profile']) {
+  for (const path of ['/api/auth/google', '/api/auth/logout', '/api/auth/profile', '/api/auth/withdraw']) {
     assert.equal((await f.call(path, { method: 'POST', origin: 'https://attacker.example' })).status, 403)
     assert.equal((await f.call(path, { method: 'POST', origin: null })).status, 403)
   }
@@ -387,4 +388,126 @@ test('A session revoked or account disabled between authentication and nickname 
     assert.deepEqual(await result.json(), { error: 'login_required' })
     assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, null)
   }
+})
+test('Withdrawal deletes only the authenticated member, all their sessions and the current challenge; rejoining starts fresh', async t => {
+  const f = fixture(t)
+  const first = await login(f), second = await login(f), other = await login(f, { claims: { sub: 'unrelated-google-subject' } })
+  const { user } = await first.response.json(), otherUser = (await other.response.json()).user
+  const session = '__Host-ai_chain_session=' + cookieValue(first.response, '__Host-ai_chain_session')
+  assert.equal((await f.call('/api/auth/profile', { method: 'POST', cookie: session, body: { nickname: '떠나는회원' } })).status, 200)
+  const challenge = await f.call('/api/auth/nonce'), { nonce } = await challenge.json()
+  const otherChallenge = await f.call('/api/auth/nonce'), { nonce: otherNonce } = await otherChallenge.json()
+  const cookie = session + '; ' + cookieHeader(challenge)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions WHERE user_id=?').get(user.id).n, 2)
+  const removed = await f.call('/api/auth/withdraw', { method: 'POST', cookie, body: { confirmation: '탈퇴', id: otherUser.id } })
+  assert.equal(removed.status, 200)
+  assert.deepEqual(await removed.json(), { ok: true })
+  assert.equal(removed.headers.get('cache-control'), 'no-store')
+  assert.equal(cookies(removed).length, 2)
+  for (const name of ['__Host-ai_chain_session', '__Host-ai_chain_nonce']) {
+    assert.equal(cookieValue(removed, name), '')
+    assert.match(cookies(removed).find(value => value.startsWith(name + '=')), /Path=\/; HttpOnly; SameSite=Lax; Max-Age=0; Secure$/)
+  }
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users WHERE id=?').get(user.id).n, 0)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions WHERE user_id=?').get(user.id).n, 0)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_challenges WHERE token_hash=?').get(await hashToken(nonce)).n, 0)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_challenges WHERE token_hash=?').get(await hashToken(otherNonce)).n, 1)
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie: cookieHeader(first.response) })).json(), { user: null })
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie: cookieHeader(second.response) })).json(), { user: null })
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie: cookieHeader(other.response) })).json(), { user: otherUser })
+  assert.equal((await f.call('/api/auth/google', { method: 'POST', cookie: cookieHeader(challenge), body: { credential: await signed(nonce) } })).status, 401)
+  const joined = await login(f)
+  assert.equal(joined.response.status, 200)
+  const newUser = (await joined.response.json()).user
+  assert.notEqual(newUser.id, user.id)
+  assert.equal(newUser.nickname, null)
+  assert.equal(newUser.needsNickname, true)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users').get().n, 2)
+})
+
+test('Withdrawal requires the exact explicit confirmation and never accepts a GET or a foreign origin', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+  for (const confirmation of [undefined, null, true, '', '탈퇴 ', ' 탈퇴', '탈 퇴', 'withdraw']) {
+    const result = await f.call('/api/auth/withdraw', { method: 'POST', cookie, body: { confirmation } })
+    assert.equal(result.status, 400)
+    assert.deepEqual(await result.json(), { error: 'invalid_confirmation' })
+    assert.equal(cookies(result).length, 0)
+  }
+  const get = await f.call('/api/auth/withdraw', { cookie })
+  assert.equal(get.status, 405)
+  assert.equal(get.headers.get('allow'), 'POST')
+  for (const origin of [null, 'https://attacker.example']) {
+    assert.equal((await f.call('/api/auth/withdraw', { method: 'POST', cookie, origin, body: { confirmation: '탈퇴' } })).status, 403)
+  }
+  const foreignHost = await handleAuthRequest(new Request('https://other.example/api/auth/withdraw', {
+    method: 'POST', headers: { Origin: ORIGIN, Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ confirmation: '탈퇴' }),
+  }), f.env, { keyset, now: NOW })
+  assert.equal(foreignHost.status, 403)
+  assert.equal((await f.call('/api/auth/withdraw', { method: 'POST', cookie, headers: { 'Content-Type': 'text/plain' }, body: { confirmation: '탈퇴' } })).status, 415)
+  assert.equal((await f.call('/api/auth/withdraw', { method: 'POST', cookie, rawBody: 'x'.repeat(17000) })).status, 413)
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie })).json(), { user })
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions').get().n, 1)
+})
+
+test('Missing, expired and disabled member sessions cannot withdraw an account', async t => {
+  const f = fixture(t)
+  const body = { confirmation: '탈퇴' }
+  const unauthenticated = await f.call('/api/auth/withdraw', { method: 'POST', body })
+  assert.equal(unauthenticated.status, 401)
+  assert.deepEqual(await unauthenticated.json(), { error: 'login_required' })
+  const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+  assert.equal((await f.call('/api/auth/withdraw', { method: 'POST', cookie, body, now: NOW + 604800001 })).status, 401)
+  f.db.sqlite.prepare('UPDATE member_users SET disabled=1 WHERE id=?').run(user.id)
+  const disabled = await f.call('/api/auth/withdraw', { method: 'POST', cookie, body })
+  assert.equal(disabled.status, 401)
+  assert.deepEqual(await disabled.json(), { error: 'login_required' })
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users').get().n, 1)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions').get().n, 1)
+})
+
+test('Concurrent withdrawal succeeds once and rejects the remaining revoked session', async t => {
+  const f = fixture(t)
+  const first = await login(f), second = await login(f)
+  const responses = await Promise.all([first.response, second.response].map(response =>
+    f.call('/api/auth/withdraw', { method: 'POST', cookie: cookieHeader(response), body: { confirmation: '탈퇴' } })))
+  assert.deepEqual(responses.map(response => response.status).sort(), [200, 401])
+  assert.deepEqual(await responses.find(response => response.status === 200).json(), { ok: true })
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users').get().n, 0)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions').get().n, 0)
+})
+
+test('Withdrawal rechecks session revocation and suspension at deletion time', async t => {
+  for (const revoke of ['session', 'member']) {
+    const f = fixture(t)
+    const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+    const original = f.db.prepare
+    f.env.MEMBER_DB = { ...f.db, prepare(sql) {
+      if (sql.startsWith('DELETE FROM member_users')) {
+        if (revoke === 'session') f.db.sqlite.prepare('DELETE FROM member_sessions WHERE user_id=?').run(user.id)
+        else f.db.sqlite.prepare('UPDATE member_users SET disabled=1 WHERE id=?').run(user.id)
+      }
+      return original(sql)
+    } }
+    const result = await f.call('/api/auth/withdraw', { method: 'POST', cookie, body: { confirmation: '탈퇴' } })
+    assert.equal(result.status, 401)
+    assert.deepEqual(await result.json(), { error: 'login_required' })
+    assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users WHERE id=?').get(user.id).n, 1)
+  }
+})
+
+test('Challenge deletion failure rolls back member and session removal without clearing cookies', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), { user } = await response.json()
+  const session = '__Host-ai_chain_session=' + cookieValue(response, '__Host-ai_chain_session')
+  const challenge = await f.call('/api/auth/nonce'), { nonce } = await challenge.json()
+  f.db.sqlite.exec("CREATE TRIGGER fail_challenge_delete BEFORE DELETE ON member_challenges BEGIN SELECT RAISE(ABORT, 'fixture cleanup failure'); END")
+  const result = await f.call('/api/auth/withdraw', { method: 'POST', cookie: session + '; ' + cookieHeader(challenge), body: { confirmation: '탈퇴' } })
+  assert.equal(result.status, 503)
+  assert.deepEqual(await result.json(), { error: 'auth_unavailable' })
+  assert.equal(cookies(result).length, 0)
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie: session })).json(), { user })
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users').get().n, 1)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_sessions').get().n, 1)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_challenges WHERE token_hash=?').get(await hashToken(nonce)).n, 1)
 })
