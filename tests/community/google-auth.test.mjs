@@ -1,5 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { DatabaseSync } from 'node:sqlite'
+import { readFileSync, mkdtempSync, unlinkSync, rmdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { generateKeyPair, SignJWT, createLocalJWKSet, exportJWK } from 'jose'
 import { handleAuthRequest, hashToken } from '../../server/member/google-auth.mjs'
 import { createMemberDatabase } from '../../server/member/sqlite.mjs'
@@ -46,9 +50,12 @@ test('Google membership registers, restores, rotates and revokes a server sessio
   const { response, nonce } = await login(f)
   assert.equal(response.status, 200)
   const { user } = await response.json()
-  assert.deepEqual(Object.keys(user).sort(), ['email', 'id', 'name'])
-  assert.equal(user.name, '테스트 회원')
-  assert.equal(user.email, 'person@example.test')
+  assert.deepEqual(Object.keys(user).sort(), ['id', 'needsNickname', 'nickname'])
+  assert.equal(user.nickname, null)
+  assert.equal(user.needsNickname, true)
+  const member = f.db.sqlite.prepare('SELECT name,email FROM member_users WHERE id=?').get(user.id)
+  assert.equal(member.name, '회원')
+  assert.equal(member.email, 'person@example.test')
   const session = cookieValue(response, '__Host-ai_chain_session')
   assert.match(session, /^[a-f0-9]{64}$/)
   assert.match(cookies(response)[0], /HttpOnly; SameSite=Lax; Max-Age=604800; Secure/)
@@ -120,12 +127,13 @@ test('Missing Google configuration fails closed without making a session', async
     assert.deepEqual(await (await f.call('/api/auth/config')).json(), { enabled: false, clientId: null })
     assert.equal((await f.call('/api/auth/nonce')).status, 503)
     assert.equal((await f.call('/api/auth/google', { method: 'POST' })).status, 503)
+    assert.equal((await f.call('/api/auth/profile', { method: 'POST', body: { nickname: '회원' } })).status, 503)
   }
 })
 
 test('Cross-origin writes, missing origin and cross-site nonce requests are rejected', async t => {
   const f = fixture(t)
-  for (const path of ['/api/auth/google', '/api/auth/logout']) {
+  for (const path of ['/api/auth/google', '/api/auth/logout', '/api/auth/profile']) {
     assert.equal((await f.call(path, { method: 'POST', origin: 'https://attacker.example' })).status, 403)
     assert.equal((await f.call(path, { method: 'POST', origin: null })).status, 403)
   }
@@ -214,4 +222,120 @@ test('New challenge invalidates the previous browser challenge; logout revokes i
   assert.notEqual(stored.token_hash, nonce)
   assert.equal((await f.call('/api/auth/logout', { method: 'POST', cookie: cookieHeader(next) })).status, 200)
   assert.equal((await f.call('/api/auth/google', { method: 'POST', cookie: cookieHeader(next), body: { credential: await signed(nonce) } })).status, 401)
+})
+
+test('A nickname is normalized once, returned alone and preserved across Google logins', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+  const nickname = '가이드_É2'
+  const saved = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '가이드_E\u03012' } })
+  assert.equal(saved.status, 200)
+  assert.deepEqual(await saved.json(), { user: { id: user.id, nickname, needsNickname: false } })
+  assert.match(saved.headers.get('content-type'), /^application\/json/)
+  assert.equal(saved.headers.get('x-content-type-options'), 'nosniff')
+  assert.equal(saved.headers.get('cache-control'), 'no-store')
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie })).json(), { user: { id: user.id, nickname, needsNickname: false } })
+  const same = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '가이드_E\u03012' } })
+  assert.equal(same.status, 200)
+  const changed = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '다른닉네임' } })
+  assert.equal(changed.status, 409)
+  assert.deepEqual(await changed.json(), { error: 'nickname_already_set' })
+  const again = await login(f, { cookie: '__Host-ai_chain_session=' + cookieValue(response, '__Host-ai_chain_session'), claims: { name: '<script>실명</script>', email: 'updated@example.test' } })
+  assert.equal(again.response.status, 200)
+  assert.deepEqual(await again.response.json(), { user: { id: user.id, nickname, needsNickname: false } })
+  const member = f.db.sqlite.prepare('SELECT name,email,nickname FROM member_users WHERE id=?').get(user.id)
+  assert.deepEqual({ ...member }, { name: '회원', email: 'updated@example.test', nickname })
+})
+
+test('Nickname validation rejects spaces, markup, leading marks and invalid lengths without changing the account', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), cookie = cookieHeader(response)
+  const invalid = [undefined, null, 123, [], {}, '', '가', 'a'.repeat(21), ' 회원', '회원 ', '회 원', '회\t원', '회\n원', '😀회원', '<b>회원</b>', '회원"', "회원'", '\u0301\u0301', '\u0301회원', '회\u200b원']
+  for (const nickname of invalid) {
+    const result = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })
+    assert.equal(result.status, 400, `nickname ${JSON.stringify(nickname)}`)
+    assert.deepEqual(await result.json(), { error: 'invalid_nickname' })
+  }
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, null)
+  const nickname = '𐐀'.repeat(20) // Unicode letters: length is code points, not UTF-16 code units.
+  const valid = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })
+  assert.equal(valid.status, 200)
+  assert.equal((await valid.json()).user.nickname, nickname)
+})
+
+test('Nickname setup requires an active session and respects account suspension', async t => {
+  const f = fixture(t)
+  const body = { nickname: '회원_2' }
+  const unauthenticated = await f.call('/api/auth/profile', { method: 'POST', body })
+  assert.equal(unauthenticated.status, 401)
+  assert.deepEqual(await unauthenticated.json(), { error: 'login_required' })
+  const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+  assert.equal((await f.call('/api/auth/profile', { method: 'POST', cookie, body, now: NOW + 604800001 })).status, 401)
+  f.db.sqlite.prepare('UPDATE member_users SET disabled=1 WHERE id=?').run(user.id)
+  const disabled = await f.call('/api/auth/profile', { method: 'POST', cookie, body })
+  assert.equal(disabled.status, 401)
+  assert.deepEqual(await disabled.json(), { error: 'login_required' })
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, null)
+})
+
+test('Simultaneous nickname requests cannot overwrite each other and same-value retries succeed', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), cookie = cookieHeader(response)
+  const raced = await Promise.all(['첫닉네임', '다른닉네임'].map(nickname => f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })))
+  assert.deepEqual(raced.map(result => result.status).sort(), [200, 409])
+  const nickname = (await raced.find(result => result.status === 200).json()).user.nickname
+  const repeated = await Promise.all([1, 2].map(() => f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })))
+  assert.deepEqual(repeated.map(result => result.status), [200, 200])
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, nickname)
+})
+
+test('Duplicate nicknames are permitted and body IDs cannot select another member', async t => {
+  const f = fixture(t)
+  const first = await login(f), second = await login(f, { claims: { sub: 'other-member' } })
+  const firstUser = (await first.response.json()).user, secondUser = (await second.response.json()).user
+  const nickname = '_2'
+  const saved = await f.call('/api/auth/profile', { method: 'POST', cookie: cookieHeader(first.response), body: { nickname, id: secondUser.id } })
+  assert.equal((await saved.json()).user.id, firstUser.id)
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users WHERE id=?').get(secondUser.id).nickname, null)
+  const duplicate = await f.call('/api/auth/profile', { method: 'POST', cookie: cookieHeader(second.response), body: { nickname } })
+  assert.equal(duplicate.status, 200)
+  assert.equal((await duplicate.json()).user.id, secondUser.id)
+  assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users WHERE nickname=?').get(nickname).n, 2)
+})
+
+test('Existing members choose a nickname while stored legacy names remain internal and unchanged', async t => {
+  const f = fixture(t)
+  f.db.sqlite.prepare('INSERT INTO member_users(id,google_sub,name,email,created,last_login) VALUES(?,?,?,?,?,?)')
+    .run('legacy-user', 'google-subject-100', '기존 실명', 'old@example.test', NOW - 10000, NOW - 10000)
+  const { response } = await login(f, { claims: { name: '변경된 실명' } }), cookie = cookieHeader(response)
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { user: { id: 'legacy-user', nickname: null, needsNickname: true } })
+  const saved = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '기존회원' } })
+  assert.equal(saved.status, 200)
+  assert.deepEqual(await saved.json(), { user: { id: 'legacy-user', nickname: '기존회원', needsNickname: false } })
+  assert.equal(f.db.sqlite.prepare('SELECT name FROM member_users WHERE id=?').get('legacy-user').name, '기존 실명')
+})
+
+test('Local migration upgrades an existing member database without replacing rows or sessions and reopens safely', async t => {
+  const folder = mkdtempSync(join(tmpdir(), 'ai-chain-member-migration-')), path = join(folder, 'members.sqlite')
+  let database
+  t.after(() => { database?.close(); unlinkSync(path); rmdirSync(folder) })
+  const legacy = new DatabaseSync(path)
+  legacy.exec(readFileSync(new URL('../../deploy/auth/0001-members.sql', import.meta.url), 'utf8'))
+  legacy.prepare('INSERT INTO member_users(id,google_sub,name,email,created,last_login) VALUES(?,?,?,?,?,?)')
+    .run('legacy-user', 'legacy-sub', '기존 실명', 'legacy@example.test', NOW - 2000, NOW - 1000)
+  legacy.prepare('INSERT INTO member_sessions(token_hash,user_id,created,expires) VALUES(?,?,?,?)')
+    .run('a'.repeat(64), 'legacy-user', NOW - 1000, NOW + 600000)
+  legacy.close()
+  database = createMemberDatabase(path)
+  assert.deepEqual({ ...database.sqlite.prepare('SELECT * FROM member_users').get() }, {
+    id: 'legacy-user', google_sub: 'legacy-sub', name: '기존 실명', email: 'legacy@example.test', disabled: 0,
+    created: NOW - 2000, last_login: NOW - 1000, nickname: null,
+  })
+  assert.equal(database.sqlite.prepare('SELECT token_hash FROM member_sessions').get().token_hash, 'a'.repeat(64))
+  database.sqlite.prepare('UPDATE member_users SET nickname=? WHERE id=?').run('기존회원', 'legacy-user')
+  database.close(); database = undefined
+  database = createMemberDatabase(path)
+  assert.equal(database.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, '기존회원')
+  assert.deepEqual(database.sqlite.prepare('SELECT name FROM member_local_migrations ORDER BY name').all().map(row => row.name), ['0001-members.sql', '0002-member-nicknames.sql'])
 })

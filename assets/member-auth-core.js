@@ -1,10 +1,12 @@
-const routes = Object.freeze({ config: '/api/auth/config', nonce: '/api/auth/nonce', google: '/api/auth/google', me: '/api/auth/me', logout: '/api/auth/logout' })
+const routes = Object.freeze({ config: '/api/auth/config', nonce: '/api/auth/nonce', google: '/api/auth/google', me: '/api/auth/me', logout: '/api/auth/logout', profile: '/api/auth/profile' })
 
 export class MemberAuthError extends Error {
   constructor(code, status = 0) { super(code); this.name = 'MemberAuthError'; this.code = code; this.status = status }
 }
 
 export function memberAuthMessage(error) {
+  if (error?.code === 'invalid_nickname') return '닉네임은 공백 없이 2~20자의 문자·숫자·밑줄로 입력해 주세요.'
+  if (error?.code === 'nickname_already_set') return '이미 닉네임이 설정되어 있습니다. 계정 정보를 다시 확인해 주세요.'
   if (error?.status === 429) return '요청이 많습니다. 잠시 후 다시 시도해 주세요.'
   if (error?.status === 401 || ['invalid_token', 'invalid_nonce', 'nonce_expired', 'nonce_required'].includes(error?.code)) return '로그인 확인 시간이 만료되었거나 확인에 실패했습니다. 다시 시도해 주세요.'
   if (['not_configured', 'auth_not_configured', 'unavailable'].includes(error?.code) || [404, 503].includes(error?.status)) return 'Google 로그인 연결을 준비 중입니다. 잠시 후 다시 이용해 주세요.'
@@ -15,12 +17,24 @@ export function memberAuthMessage(error) {
 
 // A server response is the only source of signed-in state. ID tokens are never
 // decoded into a local user, or saved in browser storage.
+export function normalizeMemberNickname(value) {
+  if (typeof value !== 'string') throw new MemberAuthError('invalid_nickname', 400)
+  const nickname = value.normalize('NFC')
+  const length = [...nickname].length
+  if (length < 2 || length > 20 || !/^[\p{L}\p{N}_][\p{L}\p{M}\p{N}_]*$/u.test(nickname)) throw new MemberAuthError('invalid_nickname', 400)
+  return nickname
+}
+
 export function readMember(value) {
   if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !value.id || value.id.length > 255 ||
-      typeof value.name !== 'string' || value.name.length > 200 || typeof value.email !== 'string' || value.email.length > 320) {
-    throw new MemberAuthError('invalid_response')
+      typeof value.needsNickname !== 'boolean' || !(value.nickname === null || typeof value.nickname === 'string') ||
+      value.needsNickname !== (value.nickname === null)) throw new MemberAuthError('invalid_response')
+  let nickname = null
+  if (value.nickname !== null) {
+    try { nickname = normalizeMemberNickname(value.nickname) } catch { throw new MemberAuthError('invalid_response') }
   }
-  return { id: value.id, name: value.name.trim() || '회원', email: value.email }
+  // Google profile fields are deliberately excluded from the display identity.
+  return { id: value.id, nickname, needsNickname: value.needsNickname }
 }
 
 export function createMemberAuthClient({ fetcher = globalThis.fetch, timeoutMs = 15000 } = {}) {
@@ -59,6 +73,9 @@ export function createMemberAuthClient({ fetcher = globalThis.fetch, timeoutMs =
     async google(credential) {
       if (typeof credential !== 'string' || credential.length < 20 || credential.length > 16384) throw new MemberAuthError('invalid_token', 401)
       return readMember((await request('google', { credential })).user)
+    },
+    async profile(nickname) {
+      return readMember((await request('profile', { nickname: normalizeMemberNickname(nickname) })).user)
     },
     async logout() {
       const value = await request('logout', {})

@@ -9,7 +9,7 @@
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 2026-11-08 사용자 요청으로 Nscale(C0587)을 영국 비상장 클라우드·GPU 컴퓨팅 핵심에 포함한다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다. 원본 수집 스냅샷의 586개·555종목과 실제 날짜·결측 상태를 유지한다. 사용자 추가와 생성한 공용 원장 587개는 원천 자료 재수집이나 비상장 가격 생성의 근거가 아니다.
 - 실시간 시세·원천 수집·자동 폴링·댓글·기존 커뮤니티 회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
-- 사용자 승인으로 추가하는 Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. 회원 전용 D1 스키마와 운영 바인딩을 준비했으며 Google client ID 설정을 준비했으며 운영 배포·실제 계정 검증은 대기 상태다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
+- Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. `266322f`의 운영 배포와 실제 계정의 로그인 상태·새로고침 후 유지·로그아웃을 확인했다. 닉네임용 운영 DB 마이그레이션은 완료했으며 이번 닉네임 1회 설정·실명/이메일 미표시 변경의 배포·실제 흐름 검증은 대기다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
 
 ## 검증과 수동 배포
 
@@ -24,7 +24,15 @@ npm run build
 npx wrangler pages deploy dist --project-name ai-chain-prototype --branch main
 ~~~
 
-`wrangler.jsonc`는 Pages 프로젝트와 `dist` 출력 폴더를 지정한다. 로그인용 `MEMBER_DB`, `GOOGLE_CLIENT_ID`, `AUTH_ORIGIN`은 `env.production`에만 준비하며 preview는 별도 개발 프로젝트·원본·DB를 구성하기 전까지 비활성으로 둔다. 빌드의 `_routes.json`은 `/api/auth/*`만 Functions로 보내므로 저장 화면·데이터·정적 자산에는 인증 함수를 실행하지 않는다. Google client ID가 없으면 인증은 비활성으로 응답한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
+`wrangler.jsonc`는 Pages 프로젝트와 `dist` 출력 폴더를 지정한다. 로그인용 `MEMBER_DB`, `GOOGLE_CLIENT_ID`, `AUTH_ORIGIN`은 `env.production`에만 설정하며 preview는 별도 개발 프로젝트·원본·DB를 구성하기 전까지 비활성으로 둔다. 빌드의 `_routes.json`은 `/api/auth/*`만 Functions로 보내므로 저장 화면·데이터·정적 자산에는 인증 함수를 실행하지 않는다. Google client ID가 없으면 인증은 비활성으로 응답한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
+
+## Google 로그인 운영 검증 — 2026-11-09
+
+커밋 `266322f849202589f4a39222854bb90e2c420c21`을 기존 Pages 프로젝트에 배포했다. 고정 배포는 [6d7ec560](https://6d7ec560.ai-chain-prototype.pages.dev/)이며 운영 주소와 고정 배포 각각 정적 파일 119개의 SHA-256이 로컬 `dist`와 일치했다(총 238개, 모두 HTTP 200; `_headers`·`_routes.json` 등 비공개 배포 설정 제외). `realtimeEnabled=false`와 수집·실시간 요청·자동 재조회 중지, 555개 시세의 기존 기준시각을 확인했다.
+
+실제 Google 계정의 로그인 상태·새로고침 후 로그인 유지·로그아웃을 관찰했다. Google 앱의 외부 사용자용 프로덕션 전환은 완료했으며, 공개 전환 후 추가 재로그인 시험은 컴퓨터 사용 도구 중단으로 미완료다. 앱 공개 전환과 브랜드 검증 승인은 구분한다.
+
+이번 닉네임 변경은 아직 운영에 배포하지 않았다. `deploy/auth/0002-member-nicknames.sql`의 `ALTER TABLE member_users ADD COLUMN nickname TEXT;`를 Cloudflare Console에서 실행해 성공을 확인했다. 기존 행·컬럼을 보존했고 변경 코드의 배포·검증은 남아 있다. 기존 Google 회원·세션·이름 기록은 보존하며, 닉네임이 없는 기존 회원도 다음 로그인 상태 확인 때 설정을 안내한다. 설정 저장·새로고침·재로그인·로그아웃 후 화면과 API에서 Google 실명·이메일이 표시되지 않는지 확인한다.
 
 ## 공개 자료
 

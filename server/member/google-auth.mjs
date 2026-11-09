@@ -104,20 +104,30 @@ export async function verifyGoogleToken(credential, clientId, nonce, { keyset = 
   ensure(payload.nonce === nonce, 'invalid_nonce', 401)
   ensure(!payload.azp || payload.azp === clientId, 'invalid_google_token', 401)
   ensure(payload.email_verified === true && typeof payload.email === 'string' && payload.email.length > 3 && payload.email.length <= 320, 'unverified_google_email', 401)
-  const name = typeof payload.name === 'string' ? payload.name.normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 80) : ''
-  return { sub: payload.sub, email: payload.email, name: name || '회원' }
+  // Google identity stays internal; public membership uses the nickname chosen below.
+  return { sub: payload.sub, email: payload.email }
+}
+function publicUser(row) {
+  return row ? { id: row.id, nickname: row.nickname, needsNickname: row.nickname === null } : null
+}
+function normalizeNickname(value) {
+  ensure(typeof value === 'string', 'invalid_nickname')
+  const nickname = value.normalize('NFC'), length = [...nickname].length
+  ensure(length >= 2 && length <= 20 && /^[\p{L}\p{N}_][\p{L}\p{M}\p{N}_]*$/u.test(nickname), 'invalid_nickname')
+  return nickname
 }
 async function currentUser(db, token, now) {
   if (!token) return null
-  return await db.prepare(`SELECT u.id,u.name,u.email FROM member_sessions s JOIN member_users u ON u.id=s.user_id
+  const row = await db.prepare(`SELECT u.id,u.nickname FROM member_sessions s JOIN member_users u ON u.id=s.user_id
     WHERE s.token_hash=? AND s.expires>? AND u.disabled=0`).bind(await hashToken(token), now).first()
+  return publicUser(row)
 }
 
 /** Independent Google membership API. It never calls paused market/community/worker services. */
 export async function handleAuthRequest(request, env, options = {}) {
   try {
     const pathname = new URL(request.url).pathname
-    const routes = { '/api/auth/config': 'GET', '/api/auth/nonce': 'GET', '/api/auth/me': 'GET', '/api/auth/google': 'POST', '/api/auth/logout': 'POST' }
+    const routes = { '/api/auth/config': 'GET', '/api/auth/nonce': 'GET', '/api/auth/me': 'GET', '/api/auth/google': 'POST', '/api/auth/logout': 'POST', '/api/auth/profile': 'POST' }
     ensure(Object.hasOwn(routes, pathname), 'not_found', 404)
     if (request.method !== routes[pathname]) {
       const result = response(405, { error: 'method_not_allowed' }); result.headers.set('Allow', routes[pathname]); return result
@@ -151,6 +161,20 @@ export async function handleAuthRequest(request, env, options = {}) {
       if (pendingNonce) await db.prepare('DELETE FROM member_challenges WHERE token_hash=?').bind(await hashToken(pendingNonce)).run()
       return response(200, { loggedOut: true }, [cookie(config, config.sessionCookie, '', 0), cookie(config, config.nonceCookie, '', 0)])
     }
+    if (pathname === '/api/auth/profile') {
+      ensure(await currentUser(db, session, now), 'login_required', 401)
+      const nickname = normalizeNickname(input.nickname)
+      // Test the live session and unset nickname in the same statement. Concurrent
+      // onboarding requests cannot overwrite each other or a disabled member.
+      const saved = await db.prepare(`UPDATE member_users SET nickname=? WHERE nickname IS NULL AND disabled=0
+        AND id=(SELECT user_id FROM member_sessions WHERE token_hash=? AND expires>?) RETURNING id,nickname`)
+        .bind(nickname, await hashToken(session), now).first()
+      if (saved) return response(200, { user: publicUser(saved) })
+      const user = await currentUser(db, session, now)
+      ensure(user, 'login_required', 401)
+      ensure(user.nickname === nickname, 'nickname_already_set', 409)
+      return response(200, { user })
+    }
     await rateLimit(db, request, 'login', now, 20)
     const nonce = tokenCookie(request, config.nonceCookie)
     ensure(nonce, 'invalid_nonce', 401)
@@ -162,7 +186,7 @@ export async function handleAuthRequest(request, env, options = {}) {
     const token = randomToken(), tokenHash = await hashToken(token), userId = crypto.randomUUID()
     const results = await db.batch([
       db.prepare(`INSERT INTO member_users(id,google_sub,name,email,created,last_login) VALUES(?,?,?,?,?,?)
-        ON CONFLICT(google_sub) DO UPDATE SET name=excluded.name,email=excluded.email,last_login=excluded.last_login WHERE member_users.disabled=0`).bind(userId, google.sub, google.name, google.email, now, now),
+        ON CONFLICT(google_sub) DO UPDATE SET email=excluded.email,last_login=excluded.last_login WHERE member_users.disabled=0`).bind(userId, google.sub, '회원', google.email, now, now),
       db.prepare(`INSERT INTO member_sessions(token_hash,user_id,created,expires)
         SELECT ?,id,?,? FROM member_users WHERE google_sub=? AND disabled=0 RETURNING user_id`).bind(tokenHash, now, now + SESSION_SECONDS * 1000, google.sub),
       db.prepare('DELETE FROM member_sessions WHERE expires<=?').bind(now),

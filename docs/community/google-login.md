@@ -2,9 +2,11 @@
 
 ## 현재 상태 — 2026-11-09
 
-사용자 선택에 따라 Google Identity Services(GIS) 로그인과 서버 세션을 구현했다. 처음 로그인하면 Google 계정으로 회원을 만들고, 다시 로그인하면 같은 회원을 사용한다. 사용자 승인 후 Google 프로젝트 `ai-value-chain`과 회원 전용 Cloudflare D1 `ai-chain-members`를 생성하고 DB 스키마를 적용했다. Google OAuth 웹 클라이언트 ID를 발급하고 운영 설정에 연결했다. 운영 배포와 실제 Google 계정 로그인 검증은 다음 단계다. 코드·자동 테스트 완료와 실제 운영 완료를 구분한다.
+Google 프로젝트 `ai-value-chain`과 회원 전용 Cloudflare D1 `ai-chain-members`를 연결해 커밋 `266322f`를 운영 배포했다. 실제 Google 계정의 로그인 상태·새로고침 후 로그인 유지·로그아웃을 관찰했고 Google 앱을 외부 사용자용 프로덕션으로 전환했다. 공개 전환 후 추가 재로그인 시험은 컴퓨터 사용 도구 중단으로 미완료다.
 
-인증 경로는 `/api/auth/*`로 한정한다. `realtimeEnabled = false`와 기존 커뮤니티 회원·댓글·투표 API, SSE, 시세 수집·폴링, AI 워커의 중지를 유지한다. Google 회원 데이터는 기존 커뮤니티 SQLite DB와 분리한다. 기본 설정에서 `/api/auth/config`는 `enabled: false`를 반환하며 미설정 상태의 인증 요청은 성공으로 처리하지 않는다.
+이번 사용자 요청은 Google 인증 뒤 닉네임 하나만 입력하는 가입 흐름이다. 닉네임이 없는 신규·기존 회원에게 최초 설정을 안내하고 사이트 화면과 회원 API 응답에는 Google 실명·이메일을 표시하지 않는다. 닉네임용 운영 DB 컬럼 추가는 완료했으며 이번 변경의 배포·실제 가입 흐름 검증은 대기 상태다.
+
+인증 경로는 `/api/auth/*`로 한정한다. `realtimeEnabled = false`와 기존 커뮤니티 회원·댓글·투표 API, SSE, 시세 수집·폴링, AI 워커의 중지를 유지한다. Google 회원 데이터는 기존 커뮤니티 SQLite DB와 분리한다. 필수 설정이 누락되면 `/api/auth/config`는 `enabled: false`를 반환하며 미설정 상태의 인증 요청은 성공으로 처리하지 않는다.
 
 ## Google 설정
 
@@ -38,15 +40,24 @@ npm run dev
 | `AUTH_ORIGIN` | `https://ai-chain-prototype.pages.dev`와 같은 정확한 인증 원본 |
 | `MEMBER_DB` | 회원 전용 Cloudflare D1 바인딩 |
 
-회원 DB 생성과 스키마 적용까지 완료했다. 운영 연결은 다음 상태를 기준으로 이어간다.
+기존 Google 로그인 운영 연결은 완료했다. 이번 닉네임 변경과 다음 검증을 구분해 기록한다.
 
 1. 완료: Cloudflare 무료 한도 화면을 확인하고 회원 전용 D1 `ai-chain-members`를 생성했다. 유료 전환이나 추가 유료 서비스는 신청하지 않았다.
-2. 완료: `deploy/auth/0001-members.sql`의 테이블 4개·명시 인덱스 4개를 회원 DB에 적용했다. `wrangler.jsonc`의 `env.production`에 `MEMBER_DB` 바인딩과 `AUTH_ORIGIN`을 준비했으며, 배포 후 실제 연결 확인이 남아 있다.
-3. 대기: Google 웹 클라이언트 ID 발급 후 Pages 운영 환경에 `GOOGLE_CLIENT_ID`를 설정하고 `AUTH_ORIGIN`을 확인한다. `AUTH_ALLOW_LOCAL_HTTP`는 운영에 설정하지 않는다. 미리보기 환경은 별도의 원본·DB를 준비하기 전까지 비활성으로 둔다.
-4. 대기: 관련 테스트와 빌드를 통과한 작업 사본에서 기존 Pages 프로젝트에 배포한다. `functions/api/auth/[[path]].js`와 `server/member/google-auth.mjs`를 함께 포함하는 Functions 배포가 필요하다. 정적 `dist/` 파일만 호스팅하는 곳에서는 로그인 서버가 작동하지 않는다.
-5. 대기: 실제 Google 계정으로 최초 로그인·새로고침 후 로그인 유지·로그아웃을 확인하고, 다른 브라우저에서 회원 식별과 인증 실패 표시를 확인한다. 설정 대기 또는 자동 테스트만으로 이 검증을 완료했다고 기록하지 않는다.
+2. 완료: `deploy/auth/0001-members.sql`의 테이블 4개·명시 인덱스 4개를 회원 DB에 적용하고 운영 `MEMBER_DB` 바인딩을 연결했다. 이번 `deploy/auth/0002-member-nicknames.sql`의 `ALTER TABLE member_users ADD COLUMN nickname TEXT;`도 Cloudflare Console에서 성공을 확인했다. 기존 행·컬럼을 보존하고 기존 회원의 닉네임은 `null`로 둔다.
+3. 완료: 발급한 Google 웹 클라이언트 ID와 `AUTH_ORIGIN`을 `wrangler.jsonc`의 `env.production`에 설정해 운영 연결을 확인했다. `AUTH_ALLOW_LOCAL_HTTP`는 운영에 설정하지 않는다. 미리보기 환경은 별도의 원본·DB를 준비하기 전까지 비활성으로 둔다.
+4. 완료: 기존 Google 로그인 코드 `266322f`를 [고정 배포](https://6d7ec560.ai-chain-prototype.pages.dev/)와 운영 주소에 배포했다. 각각 정적 파일 119개의 SHA-256이 로컬 `dist`와 일치했다. 이번 닉네임 변경의 DB 마이그레이션은 마쳤고 코드의 검증·배포는 남아 있다. 저장소 루트의 `functions/api/auth/[[path]].js`와 참조 서버 모듈을 함께 번들하며 정적 파일만 업로드하지 않는다.
+5. 관찰 완료: 실제 Google 계정의 로그인 상태·새로고침 후 유지·로그아웃. 미완료: 외부 프로덕션 전환 후 추가 재로그인과 이번 닉네임 가입 흐름의 운영 검증. 코드·자동 테스트 결과로 실제 계정 검증을 대신하지 않는다.
 
 Pages Functions는 `/api/auth/*`만 실행하도록 제한한다. 기존 데이터·지도·차트는 저장 스냅샷을 계속 제공한다. Pages 파일 라우팅과 D1 바인딩은 [Functions 라우팅](https://developers.cloudflare.com/pages/functions/routing/)과 [D1 API](https://developers.cloudflare.com/d1/worker-api/d1-database/)를 따른다.
+
+## 닉네임 가입 변경 — 운영 배포 대기
+
+Google 인증으로 회원을 식별한 뒤 닉네임이 없으면 입력을 안내한다. 기존 회원의 새 `nickname` 값도 `null`에서 시작하며 Google 이름으로 자동 채우지 않는다. 한 번 저장한 닉네임은 재로그인으로 바뀌지 않는다. 닉네임 중복을 허용하고 식별·권한 판단은 사이트 회원 ID와 Google `sub`로 처리한다.
+
+- 서버에서 NFC 정규화 후 Unicode 코드포인트 수로 2~20자를 확인한다. 첫 글자는 Unicode 글자·숫자·밑줄이어야 하며 이후 글자에는 결합문자도 허용한다. 공백을 자동으로 잘라내지 않고 공백·이모지·제어문자를 거절한다.
+- `POST /api/auth/profile`은 현재 유효한 세션과 계정 상태·요청 원본을 확인한 뒤 `nickname IS NULL`인 회원만 원자적으로 갱신한다. 같은 닉네임 재시도는 성공으로 처리하고 다른 값으로의 재설정은 `409 nickname_already_set`으로 거절한다.
+- `deploy/auth/0002-member-nicknames.sql`로 기존 D1 테이블을 갱신했다. 로컬 `.local/members.sqlite`도 기존 회원을 보존하는 업그레이드를 적용하며 원래 커뮤니티 DB는 건드리지 않는다.
+- 신규 Google 회원의 기존 `name` 칼럼에는 일반값 `회원`을 저장한다. Google 이름을 새로 저장·갱신하지 않으며, 이미 저장된 이름 값은 보존하되 브라우저에 반환하지 않는다.
 
 ## 인증 계약과 데이터
 
@@ -54,13 +65,14 @@ Pages Functions는 `/api/auth/*`만 실행하도록 제한한다. 기존 데이�
 | --- | --- |
 | `GET /api/auth/config` | `enabled`, 공개 `clientId`; 설정 누락이면 `enabled: false` |
 | `GET /api/auth/nonce` | 10분 nonce와 해당 브라우저에 묶인 HttpOnly 쿠키 |
-| `POST /api/auth/google` | JSON `{credential}` 검증 후 회원과 7일 세션 쿠키 |
-| `GET /api/auth/me` | 현재 회원 또는 `user: null` |
+| `POST /api/auth/google` | JSON `{credential}` 검증 후 `{user:{id,nickname,needsNickname}}`와 7일 세션 쿠키 |
+| `GET /api/auth/me` | `{user:{id,nickname,needsNickname}}` 또는 `user: null` |
+| `POST /api/auth/profile` | JSON `{nickname}`으로 최초 설정 후 `{user:{id,nickname,needsNickname:false}}` |
 | `POST /api/auth/logout` | JSON `{}`로 서버 세션 삭제·쿠키 만료 |
 
-Google 서명·발급자·client ID·만료·nonce를 서버에서 검증한다. 회원 연결키는 Google `sub`이며 이메일로 기존 계정을 자동 연결하지 않는다. 저장 정보는 회원 ID, Google 식별자, 이름·이메일, 생성·로그인 시각 등 인증에 필요한 범위다. 비밀번호는 받지 않는다. Google ID token 원문을 저장하지 않고 세션·nonce는 해시로 저장한다. 운영 세션 쿠키는 HttpOnly·Secure 속성을 사용하며 인증 응답은 캐시하지 않는다. [Google ID token 검증 기준](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)
+Google 서명·발급자·client ID·만료·nonce를 서버에서 검증한다. 회원 연결키는 Google `sub`이며 이메일로 기존 계정을 자동 연결하지 않는다. Google `sub`와 확인된 이메일은 내부 회원 정보로 보관한다. 사용자 입력은 닉네임 하나이며 회원 API의 사용자 객체에는 `id`, `nickname`, `needsNickname`만 반환한다. Google 실명·이메일은 화면·회원 API 응답에 포함하지 않는다. 새 Google 이름 저장·갱신은 중단하지만 이전 이름 기록은 보존한다. 회원 ID·계정 상태·생성·로그인 시각도 저장한다. 비밀번호는 받지 않는다. Google ID token 원문을 저장하지 않고 세션·nonce는 해시로 저장한다. 운영 세션 쿠키는 HttpOnly·Secure 속성을 사용하며 인증 응답은 캐시하지 않는다. [Google ID token 검증 기준](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)
 
-검증은 정상·재로그인, 위조/만료/다른 audience 토큰, nonce 불일치·재사용, 다른 Origin, 세션 만료·로그아웃, 미설정/DB 오류, 기존 실시간 API 차단을 포함한다. 실제 Google 계정 검증은 별도 실행 기록으로 남긴다.
+검증은 정상·재로그인, 위조/만료/다른 audience 토큰, nonce 불일치·재사용, 다른 Origin, 세션 만료·로그아웃, 미설정/DB 오류, 기존 실시간 API 차단을 포함한다. 닉네임 변경에는 기존 DB 업그레이드, 신규·기존 회원의 미설정 상태, Unicode 경계값, 중복 허용, 동시 최초 설정, 같은 값 재시도·재설정 거절, 실명·이메일 비노출을 추가한다. 이번 운영 가입 흐름 검증은 별도 실행 기록으로 남긴다.
 
 ## 무료 사용량 기준
 
@@ -80,9 +92,9 @@ Google 서명·발급자·client ID·만료·nonce를 서버에서 검증한다.
 
 ## 개발 검증 기록 — 2026-11-09
 
-- `npm test`: 전체 759개 통과. Google 서명 토큰 검증·세션·nonce 보안 검사, 브라우저 API 클라이언트, 로컬 HTTP 어댑터, 기존 실시간 API 차단 회귀 검사 포함.
+- 기존 Google 로그인 배포 검증: `npm test` 전체 759개 통과. 이번 닉네임 변경의 검사 수와 결과는 별도로 기록한다. Google 서명 토큰 검증·세션·nonce 보안 검사, 브라우저 API 클라이언트, 로컬 HTTP 어댑터, 기존 실시간 API 차단 회귀 검사 포함.
 - `wrangler pages functions build`: Cloudflare Worker 컴파일 통과.
-- Chrome 데스크톱 및 390px 모바일: 헤더 로그인 버튼·모달·닫기와 초점 복원·설정 대기 표시 확인. Google client ID가 없으므로 실제 Google 버튼/계정 로그인 검증은 미완료.
+- 초기 개발 검증: Chrome 데스크톱 및 390px 모바일에서 헤더 로그인 버튼·모달·닫기·초점 복원·설정 대기 표시를 확인했다. 이후 기존 운영본에서 실제 Google 계정의 로그인 상태·새로고침 후 유지·로그아웃을 관찰했다. 이번 닉네임 변경의 운영 검증은 대기다.
 - Google 프로젝트 생성은 처음 자동 승인 검토에서 차단되었고, 이후 사용자가 새 프로젝트 생성·로그인 연결을 승인하여 `ai-value-chain`을 생성했다. 생성 시 기존 결제 계정이 자동 연결된 것을 확인해 이 프로젝트의 결제를 비활성화했다. Console의 비활성화 완료 알림과 연결 프로젝트 목록에서 제외된 상태로 확인했으며 기존 결제 계정 자체는 변경하지 않았다. 유료 전환은 실행하지 않았다.
 
 
@@ -90,13 +102,13 @@ Google 서명·발급자·client ID·만료·nonce를 서버에서 검증한다.
 
 사용자가 결제 계정을 연결하지 않고 새 Google 프로젝트를 만든 뒤 구글 로그인을 연결하도록 승인했다. Google 프로젝트 `ai-value-chain` 생성 때 기존 결제 계정이 자동 연결되었으나, 이후 이 프로젝트의 결제를 비활성화한 상태를 확인했다. Cloudflare 무료 한도 화면(10 DB, 일 읽기 500만·쓰기 10만, 총 5GB)을 확인한 뒤 전용 D1 `ai-chain-members`를 생성하고 `0001-members.sql`의 테이블 4개·명시 인덱스 4개를 적용했다. DB 식별자는 `e979860b-4763-4b90-84a7-8c4e856ccabe`다. 이 정보는 인증 비밀이 아니다.
 
-사용자가 지정한 지원 이메일 `khcho9642@gmail.com`으로 앱 등록과 웹 Client ID 발급을 완료했다. 회원 DB를 준비했지만 운영 배포/실제 로그인은 아직 완료하지 않았다. 기존 Wrangler OAuth는 pages:write만 포함하고 d1:write는 없어 DB 생성·스키마 적용은 사용자의 로그인된 Cloudflare 대시보드에서 실행했다. 운영 D1 바인딩과 공개 Client ID·원본 설정은 wrangler env.production에 준비하고 preview에는 DB를 연결하지 않는다.
+사용자가 지정한 지원 이메일 `khcho9642@gmail.com`으로 앱 등록과 웹 Client ID 발급을 완료했다. 기존 Google 로그인 운영 배포와 실제 계정의 로그인 상태·새로고침 후 유지·로그아웃 관찰을 마쳤다. 기존 Wrangler OAuth는 pages:write만 포함하고 d1:write는 없어 DB 생성·스키마 적용은 사용자의 로그인된 Cloudflare 대시보드에서 실행했다. 운영 D1 바인딩과 공개 Client ID·원본 설정은 wrangler env.production에 적용했고 preview에는 DB를 연결하지 않았다.
 
-사용자는 관리자 페이지를 만들지 않기로 했다. 현재 저장하는 가입일·Google 재로그인 시각·계정 상태로 회원 수와 최근 로그인 현황을 조회할 수 있다. last_login은 방문/활동 시각이 아니며 Google 표시 이름은 공개 닉네임과 구분한다. 이용 정지 시 세션도 함께 폐기한다. 전용 관리 CLI·탈퇴·문의 UI는 아직 만들지 않았고, 사용자와 범위를 정한 후 구현한다.
+사용자는 관리자 페이지를 만들지 않기로 했다. 현재 저장하는 가입일·Google 재로그인 시각·계정 상태로 회원 수와 최근 로그인 현황을 조회할 수 있다. last_login은 방문/활동 시각이 아니다. 이번 변경부터 사이트에서는 직접 정한 닉네임으로 표시하며, 내부 Google 이메일과 이전 이름 기록은 회원 화면·API 응답에 반환하지 않는다. 이용 정지 시 세션도 함께 폐기한다. 전용 관리 CLI·탈퇴·문의 UI는 아직 만들지 않았고, 사용자와 범위를 정한 후 구현한다.
 
 
-## 다음 연결 단계
+## 공개 상태와 남은 검증
 
 OAuth 지원 이메일·앱 등록·웹 클라이언트 발급을 마쳤다. 공개 Client ID는 `wrangler.jsonc`의 production 설정에서 관리하며 클라이언트 비밀키는 저장하거나 사용하지 않는다. `privacy.html`에서 실제 로그인 데이터 처리와 삭제 문의 주소를 안내하고 로그인 모달·사이트 하단에서 연결한다.
 
-기본 신원 정보만 사용하는 로그인 기능 시험과 공개 운영 준비는 구분한다. Google의 인증 전용 운영 안내는 운영 앱의 브랜드 검증 제출, 홈페이지·개인정보 안내 및 도메인 소유 확인을 설명한다. 공유 호스팅에서 자체 도메인 사용은 권장 사항이며 `pages.dev` 하위 도메인의 검증 승인은 아직 확인하지 않았다. 브랜드 검증과 별도 서비스 약관은 미완료다. [Google 인증 전용 운영 안내](https://developers.google.com/identity/verification/authentication-policy-compliance)
+Google 앱은 외부 사용자용 프로덕션으로 전환했다. 공개 전환 후 추가 재로그인 시험은 컴퓨터 사용 도구 중단으로 미완료이며, 이번 닉네임 변경은 운영 DB 마이그레이션을 마쳤고 코드 배포·가입 흐름 검증은 남아 있다. Google 앱 공개 전환과 브랜드 검증 승인은 구분한다. Google의 인증 전용 운영 안내는 운영 앱의 브랜드 검증 제출, 홈페이지·개인정보 안내 및 도메인 소유 확인을 설명한다. 공유 호스팅에서 자체 도메인 사용은 권장 사항이며 `pages.dev` 하위 도메인의 검증 승인은 아직 확인하지 않았다. 브랜드 검증과 별도 서비스 약관은 미완료다. [Google 인증 전용 운영 안내](https://developers.google.com/identity/verification/authentication-policy-compliance)
