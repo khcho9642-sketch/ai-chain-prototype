@@ -10,7 +10,7 @@ AI 밸류체인을 이해하고 기업 정보를 확인하며, 주주들이 글�
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. 사용자 추가 순서는 QCOM 50번을 보존하고 CXMT 51번으로 이어진다. 메모리 6개·AI 칩 6개이며 이 편입 당시 원본 49개와 회사 원장 586개를 유지했다. 이 원본은 이후 사용자 신규 회사와 분리해 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 새 시세는 수집하지 않는다.
 - 2026-11-08 사용자 요청으로 영국 비상장 Nscale(C0587)을 클라우드·GPU 컴퓨팅 핵심의 순서 52로 추가한다. `research/market/company-additions.json`에 신규 회사 1개를, `research/market/home-map-additions.json`에 핵심 선정 근거를 분리한다. 클라우드·GPU는 7개(상장 6·비상장 1), AI 모델은 기존 5개(상장 2·비상장 3)다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다.
 - 실시간 시세·원천 자동 수집·폴링·댓글·투표·기존 커뮤니티 회원 API·AI 워커는 중지 상태다. 기존 종가·통계·AI 발행물은 기준일과 출처를 보존한다.
-- 2026-11-09 사용자 선택으로 [Google 로그인](docs/community/google-login.md)을 별도 `/api/auth/*`에 구현한다. Google 프로젝트와 회원 전용 D1 스키마를 준비했고, Google 클라이언트 ID·운영 연결·배포·실제 로그인 검증은 대기 상태다. 설정 전에는 비활성 상태로 안내하고 기존 실시간 기능은 재개하지 않는다.
+- 2026-11-09 사용자 선택으로 [Google 로그인](docs/community/google-login.md)을 별도 `/api/auth/*`에 구현한다. Google 프로젝트와 회원 전용 D1 스키마를 준비했고, Google 클라이언트 ID와 운영 연결 설정을 준비했으며 배포·실제 로그인 검증은 대기 상태다. 설정 전에는 비활성 상태로 안내하고 기존 실시간 기능은 재개하지 않는다.
 - 작업 시작 시 Git 상태와 [공통 작업 안내](AGENTS.md)를 읽는다. 기존 미커밋 작업을 보존하며 오래된 폴더를 그대로 재배포하지 않는다. [배포 절차와 검증 이력](docs/deployment/overview.md)을 따른다.
 
 ## 기존 Today 발행 기록
@@ -49,7 +49,7 @@ npm run build
 | 밸류체인·시세 | 8개 고리 지도, 93개 종목·시장지표, AI 기업 75개, 관심종목·직접 티커·차트·OHLCV·CSV |
 | 기업·비교 | 기업 역할·국가·공식 출처, 8개 고리 평균·회사별 비교, 1개월~3년, 목록에서 회사 선택 |
 | 데이터 | 공식 산업통계, 검토한 AI 사업·산업 지표, Epoch AI 모델·칩·데이터센터·판매 추정, OpenRouter 토큰 집계, 공식 발표문 변경 감시, 국내 18개 기업 DART RSS |
-| Google 로그인 | GIS 인증·서버 세션·별도 회원 저장. D1 스키마 준비, Google client ID·운영 연결 대기 |
+| Google 로그인 | GIS 인증·서버 세션·별도 회원 저장. D1·Google client ID 연결 설정 준비, 운영 검증 대기 |
 | 커뮤니티 | 종목별 공유 댓글·회원 인증·영속 SQLite API·AI 워커 초안/승인. v4 의견·이력·근거 확장은 [변경별 검수 기록](docs/community/v4-implementation.md) 참조 |
 
 커뮤니티의 운영 API 연결·다른 기기에서의 운영 검증·실제 모델 작동 검증은 아직 완료하지 않았다. 자유게시판의 글 목록·본문 등 첫 출시 전체 범위와 이용자의 재미·재방문도 별도로 확인해야 한다. [커뮤니티 현황](docs/community/ai-community.md)과 [PLAN](PLAN.md)의 남은 작업을 따른다.

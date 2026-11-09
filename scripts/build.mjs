@@ -82,6 +82,8 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
       .replace('</body>', '<script type="module" src="./assets/community.js"></script>\n</body>')
   }
   await writeFile(join(output, 'index.html'), html)
+  // Only this reviewed account notice is an additional public HTML page.
+  await copyFile(join(source, 'privacy.html'), join(output, 'privacy.html'))
   await writeFile(join(output, '404.html'), '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="robots" content="noindex"><title>404</title><main><h1>페이지를 찾을 수 없습니다</h1></main></html>\n')
   // Only authentication runs on Pages Functions; saved pages/assets stay static.
   await writeFile(join(output, '_routes.json'), JSON.stringify({ version: 1, include: ['/api/auth/*'], exclude: [] }) + '\n')

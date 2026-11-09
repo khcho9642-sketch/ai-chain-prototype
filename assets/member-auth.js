@@ -23,7 +23,11 @@ const description = element('p', '', 'member-auth-description')
 const content = element('div')
 const status = element('p', '', 'member-auth-status')
 status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true')
-shell.append(close, eyebrow, heading, description, content, status)
+const privacy = element('p', undefined, 'member-auth-privacy')
+const privacyLink = element('a', '로그인 정보 처리 안내 (새 탭)')
+privacyLink.href = './privacy.html'; privacyLink.target = '_blank'; privacyLink.rel = 'noopener'
+privacy.append(privacyLink)
+shell.append(close, eyebrow, heading, description, content, status, privacy)
 dialog.append(shell)
 if (triggers.length) document.body.append(dialog)
 

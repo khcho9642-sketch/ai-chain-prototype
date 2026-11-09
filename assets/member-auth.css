@@ -35,3 +35,11 @@ header .top>.member-auth-button{grid-column:5;grid-row:1}
   .member-auth-shell{padding:30px 22px 24px}
   .member-auth-dialog h2{font-size:23px}
 }
+
+.member-auth-privacy{margin:22px 0 0;color:var(--muted,#8b95a3);font-size:12px;line-height:1.7;text-align:center}
+.member-auth-privacy a{color:var(--muted,#8b95a3);text-underline-offset:3px}
+.member-auth-privacy a:hover{color:var(--accent,#4cc2ff)}
+.member-auth-dialog a:focus-visible,.site-account-footer a:focus-visible{outline:2px solid var(--accent,#4cc2ff);outline-offset:4px}
+.site-account-footer{max-width:1360px;margin:0 auto;padding:0 32px 24px;font-size:12px;color:var(--muted,#8b95a3)}
+.site-account-footer a{color:inherit;text-decoration:none}.site-account-footer a:hover{text-decoration:underline;color:var(--accent,#4cc2ff)}
+@media(max-width:760px){.site-account-footer{padding:0 16px calc(96px + env(safe-area-inset-bottom))}}

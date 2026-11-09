@@ -119,6 +119,7 @@ test('a build generates the display file from the existing archive and leaves so
   await mkdir(join(temporary, 'data'))
   await mkdir(join(temporary, 'assets'))
   await writeFile(join(temporary, 'index.html'), '<html><head></head><body></body></html>')
+  await copyFile(join(root, 'privacy.html'), join(temporary, 'privacy.html'))
   for (const name of publicSnapshotFiles.filter(name => !['market.json', 'market-display.json', 'ripple.json'].includes(name))) {
     await copyFile(join(root, 'data', name), join(temporary, 'data', name))
   }

@@ -2,13 +2,13 @@
 
 ## 현재 상태 — 2026-11-09
 
-사용자 선택에 따라 Google Identity Services(GIS) 로그인과 서버 세션을 구현했다. 처음 로그인하면 Google 계정으로 회원을 만들고, 다시 로그인하면 같은 회원을 사용한다. 사용자 승인 후 Google 프로젝트 `ai-value-chain`과 회원 전용 Cloudflare D1 `ai-chain-members`를 생성하고 DB 스키마를 적용했다. Google OAuth 웹 클라이언트 ID, 운영 환경 연결·배포, 실제 Google 계정 로그인 검증은 아직 미완료다. 코드·자동 테스트 완료와 실제 운영 완료를 구분한다.
+사용자 선택에 따라 Google Identity Services(GIS) 로그인과 서버 세션을 구현했다. 처음 로그인하면 Google 계정으로 회원을 만들고, 다시 로그인하면 같은 회원을 사용한다. 사용자 승인 후 Google 프로젝트 `ai-value-chain`과 회원 전용 Cloudflare D1 `ai-chain-members`를 생성하고 DB 스키마를 적용했다. Google OAuth 웹 클라이언트 ID를 발급하고 운영 설정에 연결했다. 운영 배포와 실제 Google 계정 로그인 검증은 다음 단계다. 코드·자동 테스트 완료와 실제 운영 완료를 구분한다.
 
 인증 경로는 `/api/auth/*`로 한정한다. `realtimeEnabled = false`와 기존 커뮤니티 회원·댓글·투표 API, SSE, 시세 수집·폴링, AI 워커의 중지를 유지한다. Google 회원 데이터는 기존 커뮤니티 SQLite DB와 분리한다. 기본 설정에서 `/api/auth/config`는 `enabled: false`를 반환하며 미설정 상태의 인증 요청은 성공으로 처리하지 않는다.
 
 ## Google 설정
 
-[Google Cloud Console](https://console.cloud.google.com/auth/clients)의 운영 프로젝트 `ai-value-chain`에서 OAuth 클라이언트를 **웹 애플리케이션**으로 만든다. 앱 이름·지원 이메일·동의 화면을 실제 서비스에 맞게 설정한다. 사용자가 지정한 지원 이메일은 `khcho9642@gmail.com`이며, 현재 Console 로그인 계정과 달라 지원 이메일 선택을 확인 중이다. 앱 등록과 클라이언트 ID 발급은 아직 완료하지 않았다.
+[Google Cloud Console](https://console.cloud.google.com/auth/clients)의 운영 프로젝트 `ai-value-chain`에서 OAuth 클라이언트를 **웹 애플리케이션**으로 만든다. 앱 이름·지원 이메일·동의 화면을 실제 서비스에 맞게 설정한다. 사용자가 지정한 지원 이메일과 개발자 연락처는 `khcho9642@gmail.com`이다. 사용자 승인 후 이 계정에 OAuth 구성 편집자 역할만 추가해 지원 이메일을 선택했으며, Google 사용자 데이터 정책 동의와 앱 등록을 완료했다. 개요·클라이언트 목록에 필요한 추가 조회 권한은 확대하지 않고 기존 소유자 계정으로 웹 클라이언트 `AI Value Chain Web`을 발급했다.
 
 운영 클라이언트의 승인된 JavaScript 원본에는 `https://ai-chain-prototype.pages.dev`만 등록한다. 원본에는 경로·해시를 넣지 않는다. Google 정책에 따라 개발·테스트용 OAuth 클라이언트는 별도 개발 프로젝트에 만들고, 로컬 원본을 운영 클라이언트에 섞지 않는다. [운영·테스트 프로젝트 분리](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance)
 
@@ -90,13 +90,13 @@ Google 서명·발급자·client ID·만료·nonce를 서버에서 검증한다.
 
 사용자가 결제 계정을 연결하지 않고 새 Google 프로젝트를 만든 뒤 구글 로그인을 연결하도록 승인했다. Google 프로젝트 `ai-value-chain` 생성 때 기존 결제 계정이 자동 연결되었으나, 이후 이 프로젝트의 결제를 비활성화한 상태를 확인했다. Cloudflare 무료 한도 화면(10 DB, 일 읽기 500만·쓰기 10만, 총 5GB)을 확인한 뒤 전용 D1 `ai-chain-members`를 생성하고 `0001-members.sql`의 테이블 4개·명시 인덱스 4개를 적용했다. DB 식별자는 `e979860b-4763-4b90-84a7-8c4e856ccabe`다. 이 정보는 인증 비밀이 아니다.
 
-사용자가 지정한 지원 이메일 `khcho9642@gmail.com`의 선택과 앱 등록을 진행 중이며 Client ID는 아직 없다. 회원 DB를 준비했지만 운영 배포/실제 로그인은 아직 완료하지 않았다. 기존 Wrangler OAuth는 pages:write만 포함하고 d1:write는 없어 DB 생성·스키마 적용은 사용자의 로그인된 Cloudflare 대시보드에서 실행했다. 운영 D1 바인딩만 wrangler env.production에 준비하고 preview에는 DB를 연결하지 않는다.
+사용자가 지정한 지원 이메일 `khcho9642@gmail.com`으로 앱 등록과 웹 Client ID 발급을 완료했다. 회원 DB를 준비했지만 운영 배포/실제 로그인은 아직 완료하지 않았다. 기존 Wrangler OAuth는 pages:write만 포함하고 d1:write는 없어 DB 생성·스키마 적용은 사용자의 로그인된 Cloudflare 대시보드에서 실행했다. 운영 D1 바인딩과 공개 Client ID·원본 설정은 wrangler env.production에 준비하고 preview에는 DB를 연결하지 않는다.
 
 사용자는 관리자 페이지를 만들지 않기로 했다. 현재 저장하는 가입일·Google 재로그인 시각·계정 상태로 회원 수와 최근 로그인 현황을 조회할 수 있다. last_login은 방문/활동 시각이 아니며 Google 표시 이름은 공개 닉네임과 구분한다. 이용 정지 시 세션도 함께 폐기한다. 전용 관리 CLI·탈퇴·문의 UI는 아직 만들지 않았고, 사용자와 범위를 정한 후 구현한다.
 
 
 ## 다음 연결 단계
 
-지원 이메일 계정 `khcho9642@gmail.com`에 `ai-value-chain` 프로젝트의 OAuth 구성 편집자(`roles/oauthconfig.editor`) 역할을 추가하는 IAM 양식을 준비했다. 아직 저장하지 않았으며, 계정의 인증 설정 접근 권한을 새로 부여하는 작업이므로 사용자 확인을 기다린다. 확인 후 해당 계정으로 Console에 로그인해 지원 이메일을 선택하고 앱 등록을 이어간다. 프로젝트 전체 Editor/Owner 권한을 임의로 확대하지 않는다.
+OAuth 지원 이메일·앱 등록·웹 클라이언트 발급을 마쳤다. 공개 Client ID는 `wrangler.jsonc`의 production 설정에서 관리하며 클라이언트 비밀키는 저장하거나 사용하지 않는다. `privacy.html`에서 실제 로그인 데이터 처리와 삭제 문의 주소를 안내하고 로그인 모달·사이트 하단에서 연결한다.
 
-기본 신원 정보만 사용하는 로그인 기능 시험과 공개 운영 준비는 구분한다. Google의 인증 전용 운영 안내는 운영 앱의 브랜드 검증 제출, 홈페이지·개인정보 안내 및 도메인 소유 확인을 요구한다. 공유 호스팅에서 자체 도메인 사용은 권장 사항이며 `pages.dev` 하위 도메인의 검증 승인은 아직 확인하지 않았다. 현재 서비스의 개인정보/약관 페이지와 브랜드 검증은 준비되지 않았으므로 공개 운영 검증이 끝났다고 기록하지 않는다. [Google 인증 전용 운영 안내](https://developers.google.com/identity/verification/authentication-policy-compliance)
+기본 신원 정보만 사용하는 로그인 기능 시험과 공개 운영 준비는 구분한다. Google의 인증 전용 운영 안내는 운영 앱의 브랜드 검증 제출, 홈페이지·개인정보 안내 및 도메인 소유 확인을 설명한다. 공유 호스팅에서 자체 도메인 사용은 권장 사항이며 `pages.dev` 하위 도메인의 검증 승인은 아직 확인하지 않았다. 브랜드 검증과 별도 서비스 약관은 미완료다. [Google 인증 전용 운영 안내](https://developers.google.com/identity/verification/authentication-policy-compliance)

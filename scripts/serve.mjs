@@ -67,7 +67,7 @@ export function createSiteServer({ root = join(projectRoot, 'dist'), chartServic
         const relative = path === '/' ? 'index.html' : path.slice(1)
         // Explicit public-file allowlist keeps source, design notes and Git files private.
         const debateFile = /^data\/debate\/(?:index|\d{4}-\d{2}-\d{2})\.json$/.test(relative)
-        if (relative !== 'index.html' && !publicSnapshotFiles.map(name => 'data/' + name).includes(relative) && !debateFile && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
+        if (!['index.html', 'privacy.html'].includes(relative) && !publicSnapshotFiles.map(name => 'data/' + name).includes(relative) && !debateFile && !/^assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(relative)) {
           res.statusCode = 404; return res.end('페이지를 찾을 수 없습니다.')
         }
         const content = await readFile(join(root, relative))
