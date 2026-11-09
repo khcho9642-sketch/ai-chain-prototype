@@ -1,5 +1,6 @@
 import { realtimeEnabled } from './site-runtime.js'
 import { instruments } from './instruments.js'
+import { chainsFor } from './chain-order.js'
 import { COMPANIES, SECTORS } from './home-map-core.js'
 import { TODAY_AGENTS, validateTodaySnapshot, todayCards, getTodayComment, getTodayPriceComparison, getTodayWebProvider } from './today-core.js'
 import { communityEvidenceUrl } from './community-ui-core.js'
@@ -8,7 +9,6 @@ import { validateTodayDiscussion, todayDiscussionForReport } from './today-discu
 import { validateTodayPersonas, getPersonaForReport } from './today-persona-core.js'
 
 const root = document.getElementById('v-today')
-const chains = ['소부장', '파운드리·패키징', '메모리', 'AI 칩', '전력', '인프라', '모델', '애플리케이션']
 const state = { snapshot: null, marketSnapshot: window.aiChainSnapshot || null, marketError: false, busy: false, loaded: false, error: false, discussion: null, discussionDocument: null, discussionBusy: false, discussionLoaded: false, discussionError: false, personas: null, personasDocument: null, personasBusy: false, personasLoaded: false, personasError: false }
 let controller, generation = 0, dayTimer, discussionController, discussionGeneration = 0, personasController, personasGeneration = 0
 const cardNodes = new Map()
@@ -275,7 +275,7 @@ function renderCard(card, { archived = false } = {}) {
   }
   const title = node('div', null, { class: 'today-company' })
   title.append(node('h3', company?.name || pick.symbol), node('span', pick.symbol, { class: 'today-ticker mono' }))
-  if (company?.chains?.length) title.append(node('p', company.chains.filter(id => id >= 1 && id <= 8).map(id => chains[id - 1]).join(' · '), { class: 'today-chain' }))
+  if (company?.chains?.length) title.append(node('p', chainsFor(company.chains).map(chain => chain.name).join(' · '), { class: 'today-chain' }))
   const primarySectorName = COMPANIES.find(item => item.ticker === pick.symbol)?.sector
   const sector = SECTORS.find(item => item.name === primarySectorName)
   if (sector) {

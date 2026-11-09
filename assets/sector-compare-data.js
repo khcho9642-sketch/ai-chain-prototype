@@ -1,4 +1,4 @@
-import { SECTORS } from './home-map-core.js';
+import { DISPLAY_SECTORS, SECTORS } from './home-map-core.js';
 import { sectorChains, sectorInstruments } from './home-sector-returns.js';
 import { buildComparison, comparisonPeriods } from './peer-comparison-core.js';
 
@@ -30,22 +30,26 @@ export function getSectorPeriod(snapshot, days) {
     days: periodDays,
     requireFullPeriod: true,
   });
+  const sectorGroups = new Map(SECTORS.map(({ id }, index) => [id, groups[index]]));
   const companyGroups = new Map(groups.slice(sectorChains.length).map(group => [group.name, group]));
   return {
     dates,
     generatedAt: metadata.generatedAt,
     source: metadata.source,
     warnings: metadata.warnings,
-    sectors: SECTORS.map(({ id, name, color }, i) => ({
-      id, name, color,
-      series: groups[i].series.map(point => point.index),
-      members: groups[i].peers.map(({ symbol, name, currency, reason }) => {
-        const group = companyGroups.get(symbol);
-        if (!group.available) {
-          return { symbol, name, currency, series: null, reason: reason || group.unavailableReason };
-        }
-        return { symbol, name, currency, series: group.series.map(point => point.index) };
-      }),
-    })),
+    sectors: DISPLAY_SECTORS.map(({ id, name, color }) => {
+      const sector = sectorGroups.get(id);
+      return {
+        id, name, color,
+        series: sector.series.map(point => point.index),
+        members: sector.peers.map(({ symbol, name, currency, reason }) => {
+          const group = companyGroups.get(symbol);
+          if (!group.available) {
+            return { symbol, name, currency, series: null, reason: reason || group.unavailableReason };
+          }
+          return { symbol, name, currency, series: group.series.map(point => point.index) };
+        }),
+      };
+    }),
   };
 }

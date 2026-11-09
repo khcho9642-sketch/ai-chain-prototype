@@ -1,4 +1,4 @@
-import { COMPANIES, SECTORS } from './home-map-core.js';
+import { COMPANIES, DISPLAY_SECTORS, SECTORS } from './home-map-core.js';
 
 const stocksBySector = new Map(SECTORS.map(sector => [
   sector.id, COMPANIES.filter(company => company.sector === sector.name).map(company => company.ticker),
@@ -105,7 +105,7 @@ export function createSectorEventIndex(snapshot) {
 
   const movesByDate = new Map();
   function movesOn(date) {
-    if (!movesByDate.has(date)) movesByDate.set(date, SECTORS.map(sector => sectorMove(date, sector)));
+    if (!movesByDate.has(date)) movesByDate.set(date, DISPLAY_SECTORS.map(sector => sectorMove(date, sector)));
     return movesByDate.get(date);
   }
   return { sessionDates, movesOn };

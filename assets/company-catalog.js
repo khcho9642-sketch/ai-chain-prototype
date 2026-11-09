@@ -1,4 +1,4 @@
-import { SECTORS } from './home-map-core.js'
+import { DISPLAY_SECTORS } from './home-map-core.js'
 import { MAP_COMPANIES, MAP_UNIVERSE } from './home-map-universe.js'
 import { approvedCatalog } from './company-approved-catalog.js'
 import { registryRows } from './company-registry-rows.js'
@@ -15,7 +15,7 @@ const currentCompanies = registryRows.map(company => {
 
 export const catalog = {
   mode: approvedCatalog ? 'approved' : 'registry',
-  sectors: SECTORS,
+  sectors: DISPLAY_SECTORS,
   source: {
     url: MAP_UNIVERSE.sourceUrl,
     asOf: MAP_UNIVERSE.sourceAsOf,
