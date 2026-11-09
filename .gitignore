@@ -12,3 +12,6 @@ _site/
 .superdesign/
 
 .wrangler/
+
+.dev.vars
+.dev.vars.*

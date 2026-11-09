@@ -8,13 +8,14 @@
 - 2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가한다. 후속 CXMT와 Nscale 추가를 반영한 현재 선정 기준은 핵심 52개(상장 48·비상장 4), AI 칩 6개·메모리 6개다. 원본 회사 원장 586개는 보존하며 사용자 신규 Nscale 1개를 합친 효과적 전체는 587개다. 클라우드·GPU는 7개(상장 6·비상장 1), AI 모델은 기존 5개(상장 2·비상장 3)를 유지한다. 원본 ‘핵심기업 49’ 시트·`research/market/home-map-selection.json`·원본 시트명·SHA-256은 보존하고, `research/market/home-map-additions.json`의 사용자 선정을 원본 뒤 QCOM 순서 50·CXMT 순서 51·Nscale 순서 52로 합성한다. 신규 회사는 `research/market/company-additions.json`에 분리하며 원본 49개·586개 JSON/CSV와 출처 날짜·해시는 수정하지 않는다. 원본 `sourceAsOf`는 원래 날짜를 보존한다. 과거 배포 이력의 49개와 원장 비상장 49개는 이 변경으로 바꾸지 않는다.
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 2026-11-08 사용자 요청으로 Nscale(C0587)을 영국 비상장 클라우드·GPU 컴퓨팅 핵심에 포함한다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다. 원본 수집 스냅샷의 586개·555종목과 실제 날짜·결측 상태를 유지한다. 사용자 추가와 생성한 공용 원장 587개는 원천 자료 재수집이나 비상장 가격 생성의 근거가 아니다.
-- 실시간 시세·원천 수집·자동 폴링·댓글·회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
+- 실시간 시세·원천 수집·자동 폴링·댓글·기존 커뮤니티 회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
+- Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. `266322f`의 운영 배포와 실제 계정의 로그인 상태·새로고침 후 유지·로그아웃을 확인했다. 닉네임용 운영 DB 마이그레이션과 `48a9e07`의 닉네임 1회 설정 및 회원 표시·내 계정·회원 API에서 실명/이메일 미표시 변경 운영 배포를 완료했다. 닉네임 저장·새로고침 유지·로그아웃은 로컬 테스트 계정으로 확인했으며 운영 실계정의 닉네임 저장 시험은 하지 않았다. 개인정보 안내 보완 `b702266` 이후, 내 계정에서 닉네임을 직접 변경하는 최종 운영본 `973f87c`([262aa997](https://262aa997.ai-chain-prototype.pages.dev/))를 배포했다. 전체 778개 테스트와 로컬 실제 백엔드의 변경·취소·새로고침·로그아웃을 확인했으며 추가 DB 마이그레이션은 없다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
 
 ## 검증과 수동 배포
 
 1. 저장소 루트에서 git fetch origin main 후 현재 브랜치와 원격 main의 차이를 확인한다. 미커밋 변경을 임의로 reset하거나 다른 채팅의 공유 브랜치를 바꾸지 않는다.
 2. 관련 검사와 npm test, npm run build를 실행한다. 빌드는 저장 자료의 검증과 로컬 파생 계산만 수행한다. 외부 수집 명령이나 과거 Vercel 준비 스크립트를 실행하지 않는다.
-3. 검증한 dist만 기존 Cloudflare Pages 프로젝트 ai-chain-prototype에 업로드한다. Git 커밋과 배포 메타데이터를 일치시키고 비공개 원본·DB·환경파일·.local은 올리지 않는다.
+3. 검증한 `dist`를 기존 Cloudflare Pages 프로젝트 `ai-chain-prototype`에 업로드한다. Google 로그인 연결 시에는 같은 작업 사본의 `functions/api/auth/[[path]].js`와 참조하는 서버 모듈이 Functions로 묶이도록 저장소 루트에서 배포한다. Git 커밋과 배포 메타데이터를 일치시키고 비공개 원본·DB·환경파일·.local은 올리지 않는다.
 4. 공개 파일 해시·저장 자료의 기준일·필수 화면 모듈·실시간 API 차단을 확인한다. 코드·테스트·운영 배포와 실제 AI 모델 검증을 별도로 기록한다.
 
 ~~~sh
@@ -23,7 +24,27 @@ npm run build
 npx wrangler pages deploy dist --project-name ai-chain-prototype --branch main
 ~~~
 
-wrangler.jsonc는 Pages 프로젝트와 dist 출력 폴더를 지정한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
+`wrangler.jsonc`는 Pages 프로젝트와 `dist` 출력 폴더를 지정한다. 로그인용 `MEMBER_DB`, `GOOGLE_CLIENT_ID`, `AUTH_ORIGIN`은 `env.production`에만 설정하며 preview는 별도 개발 프로젝트·원본·DB를 구성하기 전까지 비활성으로 둔다. 빌드의 `_routes.json`은 `/api/auth/*`만 Functions로 보내므로 저장 화면·데이터·정적 자산에는 인증 함수를 실행하지 않는다. Google client ID가 없으면 인증은 비활성으로 응답한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
+
+## Google 로그인 운영 검증 — 2026-11-09
+
+커밋 `266322f849202589f4a39222854bb90e2c420c21`을 기존 Pages 프로젝트에 배포했다. 고정 배포는 [6d7ec560](https://6d7ec560.ai-chain-prototype.pages.dev/)이며 운영 주소와 고정 배포 각각 정적 파일 119개의 SHA-256이 로컬 `dist`와 일치했다(총 238개, 모두 HTTP 200; `_headers`·`_routes.json` 등 비공개 배포 설정 제외). `realtimeEnabled=false`와 수집·실시간 요청·자동 재조회 중지, 555개 시세의 기존 기준시각을 확인했다.
+
+실제 Google 계정의 로그인 상태·새로고침 후 로그인 유지·로그아웃을 관찰했다. Google 앱의 외부 사용자용 프로덕션 전환은 완료했으며, 공개 전환 후 추가 재로그인 시험은 컴퓨터 사용 도구 중단으로 미완료다. 앱 공개 전환과 브랜드 검증 승인은 구분한다.
+
+닉네임 변경 커밋 `48a9e0764d5cf09dc748659c82b1442ba0b1eb2f`를 운영 배포했다. 고정 배포는 [2ec91d54](https://2ec91d54.ai-chain-prototype.pages.dev/)이며 고정·운영 주소 각각 정적 파일 119개, 총 238개의 SHA-256이 로컬 `dist`와 일치했다. 실시간 중지 설정과 저장 자료의 기준시각을 유지했다. `deploy/auth/0002-member-nicknames.sql`의 `ALTER TABLE member_users ADD COLUMN nickname TEXT;`는 Cloudflare Console에서 실행해 성공을 확인했다. 기존 행·컬럼·Google 회원·세션·이름 기록은 보존하며, 닉네임이 없는 기존 회원도 다음 로그인 상태 확인 때 설정을 안내한다. Google 실명·이메일은 사이트의 회원 표시·내 계정·회원 API 응답에 반환하지 않는다. Google이 제공하는 로그인 버튼·계정 선택 화면에는 Google 이름·이메일이 표시될 수 있다.
+
+전체 `npm test` 772개 통과 후 NFC 정규화 전 HTML `maxlength` 제한을 제거한 작은 수정을 관련 15개 검사로 재검증했다. 최종 정적 빌드와 Pages Functions 컴파일도 통과했다. 로컬의 실제 백엔드와 별도 테스트 계정으로 브라우저에서 닉네임 `a` 거절 → `밸류탐험가` 저장 → 새로고침 후 유지 → 로그아웃을 확인했다. 운영 실계정의 닉네임은 사용자 선택을 임의로 대입하지 않아 저장 시험을 하지 않았으며, 새 Google 계정의 전체 가입 흐름도 시도하지 않았다. 운영 API에서 config `200 enabled:true`, 존재하지 않는 형식상 유효한 세션 쿠키로 me `200 user:null`(닉네임 컬럼 조회 포함), 익명 profile POST `401 login_required`, 다른 Origin POST `403 invalid_origin`, profile GET `405`를 확인했다. 기존 커뮤니티 me·시세 API는 `404`이고 확인한 응답은 모두 `no-store`였다. 운영 브라우저에서 Google 로그인 버튼과 첫 로그인 후 닉네임 설정 안내를 확인했다.
+
+당시 운영본은 개인정보 안내 문구를 보완한 커밋 `b7022665587dcb5a15cff97c6e16d350061798b5`이며 고정 배포는 [81b45430](https://81b45430.ai-chain-prototype.pages.dev/)다. 변경은 `privacy.html`과 그에 따른 `index.html` 출력에 한정하고 인증 Functions는 동일하다. 고정·운영 주소 각각 `index.html`, `privacy.html`, `assets/member-auth.js`, `assets/member-auth-core.js`, `assets/member-auth.css` 5개씩, 총 10개 파일의 HTTP 200과 로컬 `dist` 대비 SHA-256 일치를 확인했다. 이전 닉네임 최초 설정의 운영 배포는 완료했으며 운영 실계정의 닉네임 저장·새 Google 계정의 전체 가입 검증과 구분한다.
+
+## 닉네임 직접 변경 — 운영 배포 완료
+
+사용자 후속 요청으로 내 계정 → 닉네임 변경에서 현재값을 확인하고 새 값을 저장하거나 취소할 수 있다. `POST /api/auth/profile`은 유효한 본인 세션의 닉네임 갱신을 허용하며 기존 최초 1회 제한을 제거한다. 입력 규칙·중복 허용은 유지하고 인증과 입력 검증을 통과한 profile 요청을 접속 IP 기준 10분 동안 20회로 제한한다. 같은 값 재시도도 횟수에 포함하며 초과 시 `429 rate_limited`로 응답한다. 운영 D1의 기존 `nickname` 칼럼을 사용하므로 추가 마이그레이션은 없다. 최종 커밋 `973f87cfeda85bd2aea155f7e88836adbf0d56d5`를 운영 배포했으며 고정 배포는 [262aa997](https://262aa997.ai-chain-prototype.pages.dev/)다.
+
+전체 `npm test` 778개와 `npm run build`·실제 Pages Functions 컴파일을 통과했다. 로컬 실제 백엔드와 별도 테스트 계정으로 브라우저에서 `밸류탐험가` 최초 설정 → 변경 화면의 현재값 표시 → 다른 값 입력 후 취소하여 기존값 유지 → 다시 열어 `체인탐험가`로 변경 저장 → 헤더·내 계정 즉시 갱신 → 새로고침 유지 → 로그아웃을 확인했다. 운영 실사용자의 닉네임은 임의로 수정하지 않았다.
+
+최종 `973f87c`의 고정 배포 [262aa997](https://262aa997.ai-chain-prototype.pages.dev/)와 운영 주소에서 `index.html`, `privacy.html`, `assets/member-auth.js`, `assets/member-auth-core.js`, `assets/member-auth.css` 각각 5개씩 총 10개 파일의 HTTP 200·로컬 `dist` 대비 SHA-256 일치를 확인했다. 운영 API는 config `200 enabled:true`, 존재하지 않는 형식상 유효한 세션 쿠키로 me `200 user:null`, 익명 profile POST `401 login_required`, 다른 Origin POST `403 invalid_origin`, profile GET `405`, 기존 커뮤니티 me·시세 API `404`를 확인했고 모두 `no-store`였다. 이 운영 확인에서는 DB의 회원 데이터 값을 변경하지 않았다.
 
 ## 공개 자료
 

@@ -220,6 +220,8 @@ test('build publishes only the public site; server handles API errors without ex
   await mkdir(join(source, 'data'))
   await mkdir(join(source, 'design'))
   await writeFile(join(source, 'index.html'), '<!doctype html><title>AI CHAIN</title>')
+  await writeFile(join(source, 'privacy.html'), '<!doctype html><title>로그인 정보 처리 안내</title>')
+  await writeFile(join(source, 'private.html'), 'PRIVATE')
   await writeFile(join(source, 'assets', 'market.js'), 'console.log("public")')
   await writeFile(join(source, 'assets', 'market.css'), 'body { color: black }')
   await writeFile(join(source, 'assets', 'private.txt'), 'PRIVATE')
@@ -250,7 +252,7 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
-  assert.deepEqual((await readdir(output)).sort(), ['404.html', '_headers', 'assets', 'data', 'index.html'])
+  assert.deepEqual((await readdir(output)).sort(), ['404.html', '_headers', '_routes.json', 'assets', 'data', 'index.html', 'privacy.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
   assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','company-market.json','comparison-history.json','epoch-ai.json','industry.json','market-display.json','market.json','ripple.json','today-discussion.json','today-personas.json','today-picks.json'])
   const server = createSiteServer({ root: output, liveApi: true, chartService: async (symbol, range) => {
@@ -263,6 +265,11 @@ test('build publishes only the public site; server handles API errors without ex
   t.after(() => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())))
   const origin = `http://127.0.0.1:${server.address().port}`
   assert.match(await (await fetch(origin)).text(), /AI CHAIN/)
+  const notice = await fetch(origin + '/privacy.html')
+  assert.equal(notice.status, 200)
+  assert.equal(notice.headers.get('content-type'), 'text/html; charset=utf-8')
+  assert.match(await notice.text(), /로그인 정보 처리 안내/)
+  assert.equal((await fetch(origin + '/privacy.html', { method: 'POST' })).status, 405)
   assert.equal((await fetch(`${origin}/assets/market.js`)).headers.get('content-type'), 'text/javascript; charset=utf-8')
   assert.deepEqual(await (await fetch(`${origin}/data/market.json`)).json(), { quotes: [] })
   const ripple = await (await fetch(`${origin}/data/ripple.json`)).json()
@@ -300,7 +307,7 @@ test('build publishes only the public site; server handles API errors without ex
   assert.equal(snapshotPost.status, 405)
   assert.equal(snapshotPost.headers.get('allow'), 'GET, HEAD')
   assert.equal(typeof (await snapshotPost.json()).error, 'string')
-  for (const path of ['/design/notes.md', '/.git/config', '/.env', '/server/market.mjs', '/assets/private.txt', '/assets/%2e%2e%2f.env','/data/private-research.json','/research/ai-statistics-2026-10-26.json']) {
+  for (const path of ['/private.html', '/design/notes.md', '/.git/config', '/.env', '/server/market.mjs', '/assets/private.txt', '/assets/%2e%2e%2f.env','/data/private-research.json','/research/ai-statistics-2026-10-26.json']) {
     const response = await fetch(origin + path)
     assert.equal(response.status, 404, path)
     assert.ok(!(await response.text()).includes('PRIVATE'))

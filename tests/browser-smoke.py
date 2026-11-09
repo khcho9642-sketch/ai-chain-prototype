@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from contextlib import contextmanager
+from urllib.parse import urlsplit
 from datetime import datetime, timedelta, timezone
 from playwright.sync_api import sync_playwright
 
@@ -214,9 +215,19 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     current.on('pageerror', lambda error: errors.append(str(error)))
     requests = []
     current.on('request', lambda request: requests.append((request.method, request.url)))
-    # Any regression is recorded and blocked from reaching even the fixture backend.
-    current.route('**/api/**', lambda route: route.fulfill(
-        status=503, content_type='application/json', body='{"error":"paused_runtime_fixture"}'))
+    auth_config_url = origin + '/api/auth/config'
+    # The independent login header checks configuration once. Keep the fixture
+    # unconfigured and block every other API from reaching even the test backend.
+    def paused_api_response(route):
+        if route.request.method == 'GET' and route.request.url == auth_config_url:
+            route.fulfill(status=200, content_type='application/json',
+                          body='{"enabled":false,"clientId":null}')
+        else:
+            route.fulfill(status=503, content_type='application/json',
+                          body='{"error":"paused_runtime_fixture"}')
+    current.route('**/api/**', paused_api_response)
+    # No login interaction occurs here; record and block any eager Google load.
+    current.route('https://accounts.google.com/**', lambda route: route.abort())
     current.clock.install()
     current.add_init_script("""(() => {
       const probe = window.__pausedRuntimeProbe = {eventSources: 0, intervals: []};
@@ -266,7 +277,10 @@ def verify_paused_static_runtime(browser, origin, captured_pages):
     data_reads = [url for _, url in requests if '/data/' in url]
     current.clock.fast_forward(185000)
     assert [url for _, url in requests if '/data/' in url] == data_reads, {'before': data_reads, 'after': [url for _, url in requests if '/data/' in url]}
-    assert not any('/api/' in url for _, url in requests), requests
+    api_requests = [(method, url) for method, url in requests
+                    if urlsplit(url).path == '/api' or urlsplit(url).path.startswith('/api/')]
+    assert api_requests == [('GET', auth_config_url)], api_requests
+    assert not any(urlsplit(url).hostname == 'accounts.google.com' for _, url in requests), requests
     assert not any(method != 'GET' for method, _ in requests), requests
     assert current.evaluate('window.__pausedRuntimeProbe') == {'eventSources': 0, 'intervals': []}
     current.evaluate("location.hash = 'home'")

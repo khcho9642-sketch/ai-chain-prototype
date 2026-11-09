@@ -51,6 +51,7 @@ async function fixtureRoot(t) {
     mkdir(join(root, 'design'), { recursive: true }),
   ])
   await copyFile(join(sourceRoot, 'index.html'), join(root, 'index.html'))
+  await copyFile(join(sourceRoot, 'privacy.html'), join(root, 'privacy.html'))
   await Promise.all(scenarioAssets.map(name => copyFile(join(sourceRoot, 'assets', name), join(root, 'assets', name))))
   await writeFile(join(root, 'assets', 'private.txt'), 'PRIVATE')
   await writeFile(join(root, 'data', 'private-research.json'), 'PRIVATE')
