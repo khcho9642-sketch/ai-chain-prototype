@@ -153,7 +153,7 @@ async function memberUi(client, { google } = {}) {
 
 function fixtureClient(overrides = {}) {
   return { config: async () => ({ enabled: true, clientId: '123-test.apps.googleusercontent.com' }), me: async () => pending,
-    profile: async nickname => ({ ...account, nickname }), logout: async () => {}, nonce: async () => 'n'.repeat(64), google: async () => pending, ...overrides }
+    profile: async nickname => ({ ...account, nickname }), withdraw: async () => {}, logout: async () => {}, nonce: async () => 'n'.repeat(64), google: async () => pending, ...overrides }
 }
 
 test('an incomplete signup opens one empty nickname field after reload and remains incomplete after Escape', async () => {
@@ -242,7 +242,7 @@ test('nickname editing starts with the current value, updates the header, and re
   const input = ui.find(node => node.tag === 'input')
   assert.equal(input.value, '사용자')
   assert.equal(ui.find(node => node.tag === 'h2').textContent, '닉네임 변경')
-  assert.equal(ui.find(node => node.type === 'submit').textContent, '변경 저장')
+  assert.equal(ui.find(node => node.type === 'submit').textContent, '완료')
   assert.equal(ui.focused(), input)
   input.value = '새로운_닉네임'; await input.emit('input')
   await ui.find(node => node.tag === 'form').emit('submit')
@@ -316,4 +316,126 @@ test('a failed nickname draft is never shown to a different member after reauthe
   assert.equal(ui.find(node => node.tag === 'input').value, '')
   assert.equal(ui.trigger.textContent, '닉네임 설정')
   assert.doesNotMatch(ui.body.textContent, /이전회원_초안/)
+})
+
+
+test('withdrawal sends only the fixed confirmation and requires a positive server acknowledgment', async () => {
+  const calls = []
+  const client = createMemberAuthClient({ fetcher: async (url, options) => {
+    calls.push({ url, options }); return reply({ ok: true })
+  } })
+  await client.withdraw()
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, '/api/auth/withdraw')
+  assert.equal(calls[0].options.method, 'POST')
+  assert.equal(calls[0].options.credentials, 'same-origin')
+  assert.deepEqual(JSON.parse(calls[0].options.body), { confirmation: '탈퇴' })
+  const broken = createMemberAuthClient({ fetcher: async () => reply({ ok: false }) })
+  await assert.rejects(broken.withdraw(), { code: 'invalid_response' })
+})
+
+test('opening withdrawal explains the effects and canceling sends no deletion request', async () => {
+  let withdrawals = 0
+  const ui = await memberUi(fixtureClient({ me: async () => ({ ...account, name: 'PRIVATE NAME', email: 'PRIVATE@example.com' }), withdraw: async () => { withdrawals++ } }))
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  assert.equal(withdrawals, 0)
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '회원탈퇴')
+  assert.match(ui.body.textContent, /회원정보와 모든 기기의 로그인 세션이 삭제/)
+  assert.match(ui.body.textContent, /복구할 수 없습니다/)
+  assert.match(ui.body.textContent, /Google 계정은 삭제되지 않습니다/)
+  assert.match(ui.body.textContent, /새로 가입/)
+  assert.doesNotMatch(ui.body.textContent, /PRIVATE/)
+  assert.equal(ui.focused().tag, 'h2')
+  assert.equal(ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기').type, 'button')
+  await ui.find(node => node.tag === 'button' && node.textContent === '취소').emit('click')
+  assert.equal(withdrawals, 0)
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '내 계정')
+  assert.equal(ui.trigger.textContent, '사용자')
+})
+
+test('withdrawal requires final confirmation, prevents duplicate requests and closing while pending, then clears the member', async () => {
+  let withdrawals = 0, resolveWithdrawal, disableAutoSelect = 0
+  const google = { accounts: { id: { disableAutoSelect() { disableAutoSelect++ }, cancel() {} } } }
+  const ui = await memberUi(fixtureClient({ me: async () => account, withdraw: async () => {
+    withdrawals++; await new Promise(resolve => { resolveWithdrawal = resolve })
+  } }), { google })
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  const confirm = ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기')
+  const cancel = ui.find(node => node.tag === 'button' && node.textContent === '취소')
+  const close = ui.find(node => node.getAttribute('aria-label') === '계정 창 닫기')
+  const dialog = ui.find(node => node.tag === 'dialog')
+  const request = confirm.emit('click')
+  assert.equal(withdrawals, 1)
+  assert.equal(confirm.disabled, true)
+  assert.equal(cancel.disabled, true)
+  assert.equal(close.disabled, true)
+  await confirm.emit('click'); await cancel.emit('click'); await close.emit('click')
+  let prevented = false
+  await dialog.emit('cancel', { preventDefault() { prevented = true } })
+  assert.equal(prevented, true)
+  assert.equal(dialog.open, true)
+  assert.equal(withdrawals, 1)
+  resolveWithdrawal(); await request
+  assert.equal(ui.trigger.textContent, '로그인')
+  assert.equal(ui.trigger.dataset.signedIn, 'false')
+  assert.match(ui.body.textContent, /회원탈퇴가 완료되었습니다/)
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '탈퇴 완료')
+  assert.equal(ui.focused().tag, 'h2')
+  assert.equal(disableAutoSelect, 1)
+  assert.equal(close.disabled, false)
+})
+
+test('failed withdrawal keeps confirmation available for an explicit retry', async () => {
+  let attempts = 0
+  const ui = await memberUi(fixtureClient({ me: async () => account, withdraw: async () => {
+    if (++attempts === 1) throw new MemberAuthError('network_error')
+  } }))
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  const confirm = ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기')
+  await confirm.emit('click')
+  assert.equal(attempts, 1)
+  assert.equal(confirm.disabled, false)
+  assert.equal(ui.trigger.textContent, '사용자')
+  assert.match(ui.body.textContent, /완료했는지 확인하지 못했습니다/)
+  assert.equal(ui.find(node => node.tag === 'button' && node.textContent === '취소').disabled, false)
+  await confirm.emit('click')
+  assert.equal(attempts, 2)
+  assert.equal(ui.trigger.textContent, '로그인')
+})
+
+test('withdrawal is available before nickname completion, and canceling preserves that member draft', async () => {
+  let withdrawals = 0
+  const ui = await memberUi(fixtureClient({ withdraw: async () => { withdrawals++ } }))
+  const input = ui.find(node => node.tag === 'input')
+  input.value = '작성중_닉네임'; await input.emit('input')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '취소').emit('click')
+  assert.equal(withdrawals, 0)
+  assert.equal(ui.find(node => node.tag === 'input').value, '작성중_닉네임')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기').emit('click')
+  assert.equal(withdrawals, 1)
+  assert.equal(ui.trigger.textContent, '로그인')
+  assert.equal(ui.find(node => node.tag === 'input'), undefined)
+})
+
+test('withdrawal with an expired or already deleted session clears stale identity and offers sign-in recovery', async () => {
+  let googleOptions
+  const google = { accounts: { id: { initialize: options => { googleOptions = options }, renderButton() {}, cancel() {} } } }
+  let current = account
+  const ui = await memberUi(fixtureClient({ me: async () => current, withdraw: async () => {
+    current = null; throw new MemberAuthError('login_required', 401)
+  } }), { google })
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '회원탈퇴').emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기').emit('click')
+  assert.equal(ui.trigger.textContent, '로그인')
+  assert.equal(ui.find(node => node.tag === 'button' && node.textContent === '탈퇴하기'), undefined)
+  assert.match(ui.body.textContent, /로그인 세션이 만료되었거나 이미 탈퇴한 계정/)
+  assert.match(ui.body.textContent, /다시 로그인하면 새로 가입될 수 있습니다/)
+  await ui.find(node => node.tag === 'button' && node.textContent === '다시 로그인').emit('click')
+  assert.ok(googleOptions)
 })

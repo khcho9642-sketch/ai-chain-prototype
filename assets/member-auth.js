@@ -10,7 +10,7 @@ const element = (tag, text, className) => {
 }
 let user = null, configuration = null, initialization = null, scriptPromise = null
 let activeAttempt = 0, initializationEpoch = 0, returnFocus = null, submitting = false, nicknameDraft = ''
-let nicknameDraftOwner = null, nicknameDraftMode = null
+let nicknameDraftOwner = null, nicknameDraftMode = null, withdrawing = false
 const dialog = element('dialog', undefined, 'member-auth-dialog')
 dialog.id = 'member-auth-dialog'
 dialog.setAttribute('aria-labelledby', 'member-auth-title')
@@ -83,8 +83,62 @@ function showAccount(message = '') {
   profile.append(avatar, identity); content.append(profile)
   action('닉네임 변경', () => { if (!submitting) showNickname(true) })
   addLogout()
+  addWithdrawal()
   say(message, message ? 'success' : '')
   if (message) heading.focus()
+}
+function addWithdrawal() {
+  const withdraw = action('회원탈퇴', () => { if (!submitting) showWithdrawal() })
+  withdraw.className += ' member-auth-withdraw-link'
+}
+function showWithdrawal() {
+  heading.textContent = '회원탈퇴'
+  description.textContent = '탈퇴하면 이 사이트의 회원정보와 모든 기기의 로그인 세션이 삭제됩니다.'
+  content.replaceChildren(); busy(false); say()
+  const notice = element('div', undefined, 'member-auth-withdraw-notice')
+  notice.append(
+    element('p', '삭제한 회원정보는 복구할 수 없습니다.'),
+    element('p', 'Google 계정은 삭제되지 않습니다.'),
+    element('p', '다시 Google 로그인하면 새로 가입하게 됩니다.'),
+  )
+  content.append(notice)
+  const actions = element('div', undefined, 'member-auth-form-actions')
+  const cancel = element('button', '취소', 'member-auth-action')
+  cancel.type = 'button'
+  cancel.addEventListener('click', () => {
+    if (submitting) return
+    showAccount(); if (!user.needsNickname) heading.focus()
+  })
+  const confirm = element('button', '탈퇴하기', 'member-auth-action member-auth-danger')
+  confirm.type = 'button'
+  confirm.addEventListener('click', async () => {
+    if (submitting || !user) return
+    submitting = true; withdrawing = true; confirm.disabled = true; cancel.disabled = true; close.disabled = true
+    busy(true); say('회원탈퇴를 처리하고 있습니다.')
+    try {
+      await client.withdraw()
+      try { window.google?.accounts?.id?.disableAutoSelect() } catch { /* The site membership was already removed. */ }
+      user = null; clearNicknameDraft(); updateTriggers(); signedOut()
+      heading.textContent = '탈퇴 완료'
+      description.textContent = '회원정보와 모든 로그인 세션이 삭제되었습니다.'
+      say('회원탈퇴가 완료되었습니다.', 'success')
+      action('로그인', prepareGoogle); heading.focus()
+    } catch (error) {
+      if (error?.status === 401) {
+        user = null; clearNicknameDraft(); updateTriggers(); signedOut()
+        description.textContent = '로그인 세션이 만료되었거나 이미 탈퇴한 계정일 수 있습니다. 다시 로그인하면 새로 가입될 수 있습니다.'
+        say('회원 상태를 확인할 수 없습니다.', 'error')
+        action('다시 로그인', prepareGoogle); heading.focus()
+      } else {
+        say(error?.status === 429 ? memberAuthMessage(error) : '회원탈퇴를 완료했는지 확인하지 못했습니다. 다시 시도해 주세요.', 'error')
+        heading.focus()
+      }
+    } finally {
+      submitting = false; withdrawing = false; confirm.disabled = false; cancel.disabled = false; close.disabled = false; busy(false)
+    }
+  })
+  actions.append(cancel, confirm); content.append(actions)
+  heading.focus()
 }
 function showNickname(editing = false) {
   const mode = editing ? 'edit' : 'signup'
@@ -108,7 +162,7 @@ function showNickname(editing = false) {
   input.setAttribute('aria-describedby', 'member-auth-nickname-hint member-auth-status')
   const hint = element('p', '2~20자 · 한글·영문 등 문자, 숫자, 밑줄(_) · 공백 제외', 'member-auth-hint')
   hint.id = 'member-auth-nickname-hint'
-  const submit = element('button', editing ? '변경 저장' : '완료', 'member-auth-action member-auth-primary')
+  const submit = element('button', '완료', 'member-auth-action member-auth-primary')
   submit.type = 'submit'
   const cancel = editing ? element('button', '취소', 'member-auth-action') : null
   if (cancel) {
@@ -156,11 +210,12 @@ function showNickname(editing = false) {
       input.readOnly = false; busy(false)
     }
   })
-  form.append(label, input, hint, submit)
-  if (cancel) form.append(cancel)
-  form.append(recovery)
+  const actions = element('div', undefined, 'member-auth-form-actions')
+  if (cancel) actions.append(cancel)
+  actions.append(submit)
+  form.append(label, input, hint, actions, recovery)
   content.append(form)
-  if (!editing) addLogout()
+  if (!editing) { addLogout(); addWithdrawal() }
   input.focus()
 }
 
@@ -242,7 +297,8 @@ async function openAccount(trigger) {
   if (user) showAccount()
   else await prepareGoogle()
 }
-close.addEventListener('click', () => dialog.close())
+close.addEventListener('click', () => { if (!withdrawing) dialog.close() })
+dialog.addEventListener('cancel', event => { if (withdrawing) event.preventDefault() })
 dialog.addEventListener('click', event => { if (event.target === dialog && !submitting) dialog.close() })
 dialog.addEventListener('close', () => { ++activeAttempt; window.google?.accounts?.id?.cancel(); returnFocus?.focus() })
 // showModal supplies the native tab trap, inert background and Escape handling.

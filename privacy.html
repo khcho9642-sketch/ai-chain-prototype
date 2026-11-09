@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Value Chain 로그인 정보 처리 안내</title>
-<meta name="description" content="AI Value Chain의 Google 로그인 정보, 회원 저장, 로그인 쿠키와 정보 삭제 문의를 안내합니다.">
+<meta name="description" content="AI Value Chain의 Google 로그인 정보, 회원 저장, 로그인 쿠키와 회원 탈퇴·정보 삭제 문의를 안내합니다.">
 <style>
 :root{color-scheme:dark;--bg:#0b0e13;--panel:#0f141b;--line:#1e2733;--ink:#e8ecf1;--muted:#a0a9b7;--accent:#7fd4ff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;font-size:15px;line-height:1.85;word-break:keep-all;overflow-wrap:anywhere}a{color:var(--accent);text-underline-offset:4px}a:hover{color:#b5e6ff}a:focus-visible{outline:2px solid var(--accent);outline-offset:5px}.wrap{width:min(820px,100%);margin:0 auto;padding:0 28px}header{border-bottom:1px solid var(--line)}header .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:80px}.brand{font-size:18px;font-weight:800;text-decoration:none;color:var(--ink)}.back{font-size:13px;text-decoration:none}main{padding-top:42px!important;padding-bottom:48px!important}.eyebrow{margin:0 0 10px;color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.05em}h1{margin:0;font-size:32px;line-height:1.4;letter-spacing:-.04em}.date{margin:12px 0 24px;color:var(--muted);font-size:12px}.intro{padding:20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.intro p{margin:0}.intro p+p{margin-top:9px}section{margin-top:34px}h2{margin:0 0 12px;font-size:19px;line-height:1.5}p{margin:10px 0}ul{padding-left:22px}li+li{margin-top:7px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-size:12px;font-weight:600}td:first-child{width:29%;font-weight:600}code{font-family:ui-monospace,monospace;font-size:.9em;color:var(--accent);word-break:break-all}.note{color:var(--muted);font-size:13px}footer{border-top:1px solid var(--line);padding:20px 0 32px;color:var(--muted);font-size:12px}@media(max-width:540px){.wrap{padding:0 20px}header .wrap{min-height:68px}.brand{font-size:15px}h1{font-size:26px}main{padding-top:30px!important}.intro{padding:16px}th,td{padding:12px 7px}td:first-child{width:30%}body{font-size:14px}}
@@ -33,7 +33,7 @@
         <tr><td>로그인 세션·보안 확인값·요청 제한 정보</td><td>로그인 유지, 로그인 요청의 재사용 방지, 과도한 로그인·닉네임 설정 및 변경 요청 제한에 사용합니다.</td></tr>
       </tbody>
     </table>
-    <p>Google이 전달하는 이름은 새로 저장하거나 갱신하지 않으며 사이트의 회원 표시·내 계정 화면과 회원 API 응답에 표시하지 않습니다. 이전 버전에서 이미 저장한 Google 이름은 기존 회원 기록에 보관되며 삭제 요청 대상에 포함됩니다.</p>
+    <p>Google이 전달하는 이름은 새로 저장하거나 갱신하지 않으며 사이트의 회원 표시·내 계정 화면과 회원 API 응답에 표시하지 않습니다. 이전 버전에서 이미 저장한 Google 이름은 기존 회원 기록에 보관되며 회원 탈퇴 시 삭제 대상에 포함됩니다.</p>
     <p>Google이 제공하는 로그인 버튼과 계정 선택 화면에는 계정 확인을 위해 Google 이름·이메일이 나타날 수 있습니다.</p>
     <p>Google 비밀번호는 이 사이트에 입력하거나 전달하지 않습니다. Gmail·Google Drive의 내용에 접근할 권한을 요청하지 않으며 프로필 사진은 회원 DB에 저장하지 않습니다.</p>
     <p>요청 제한을 위해 접속 IP 주소로부터 만든 해시값과 요청 횟수·만료 시각을 저장합니다. 이 인증 DB에는 원문 IP 주소를 저장하지 않습니다.</p>
@@ -57,15 +57,18 @@
   </section>
 
   <section aria-labelledby="retention-heading">
-    <h2 id="retention-heading">보관과 로그아웃</h2>
-    <p>회원 정보에는 자동 만료 기간이 설정되어 있지 않습니다. 로그아웃은 현재 브라우저의 세션을 종료하며 회원 정보 자체를 삭제하지 않습니다.</p>
+    <h2 id="retention-heading">보관·로그아웃·회원 탈퇴</h2>
+    <p>회원 정보에는 자동 만료 기간이 설정되어 있지 않습니다. 로그아웃은 현재 브라우저의 세션을 종료하며 회원 정보 자체를 삭제하지 않습니다. 회원 탈퇴는 내 계정의 회원탈퇴에서 삭제 안내를 확인한 뒤 탈퇴하기를 선택해 진행합니다.</p>
+    <p>탈퇴하면 운영 회원 DB에 저장된 본인의 닉네임·Google 계정 식별자·이메일·이전 이름 기록 등 회원 정보와 모든 로그인 세션을 삭제합니다. 현재 브라우저의 로그인 쿠키와 로그인 확인값도 폐기하며, 다른 기기의 기존 세션도 더 이상 사용할 수 없습니다.</p>
+    <p>Google 계정은 삭제되지 않습니다. 이 사이트에서는 탈퇴한 회원 계정을 복구하지 않으며, 이후 Google로 다시 로그인하면 새 회원으로 가입합니다. 브라우저에 별도로 저장한 관심종목은 회원 DB와 분리되어 탈퇴로 자동 삭제되지 않습니다.</p>
+    <p>위 삭제 범위는 운영 중인 회원 정보와 세션에 관한 것으로, 외부 서비스의 운영 로그·백업까지 즉시 삭제된다는 의미는 아닙니다. 공유 접속 IP의 요청 제한 기록은 기존 만료·정리 방식에 따라 처리합니다.</p>
     <p>만료된 세션과 로그인 확인값은 더 이상 인증에 사용할 수 없습니다. 만료된 세션 DB 기록은 이후 로그인 처리 때, 만료된 확인값·요청 제한 기록은 이후 로그인 확인값 발급 때 정리합니다. 위의 7일·10분은 유효기간이며 DB 기록이 그 시각에 즉시 삭제된다는 의미는 아닙니다.</p>
   </section>
 
   <section aria-labelledby="contact-heading">
     <h2 id="contact-heading">정보 확인·수정·삭제 요청</h2>
     <p>닉네임은 로그인 후 내 계정에서 직접 변경할 수 있습니다. 그 밖의 로그인 정보 문의나 회원 정보 확인·수정·삭제 요청은 <a href="mailto:khcho9642@gmail.com">khcho9642@gmail.com</a>으로 보내주세요.</p>
-    <p>현재 회원 삭제 요청은 이메일로 받습니다.</p>
+    <p>회원 탈퇴는 로그인 후 내 계정에서 직접 진행할 수 있습니다. 로그인할 수 없거나 탈퇴 처리에 도움이 필요하면 위 이메일로 문의해 주세요.</p>
   </section>
 </main>
 <footer><div class="wrap">AI Value Chain · <a href="./#home">시장 지도</a></div></footer>

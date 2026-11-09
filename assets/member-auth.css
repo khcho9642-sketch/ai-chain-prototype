@@ -52,3 +52,20 @@ header .top>.member-auth-button{grid-column:5;grid-row:1}
 .member-auth-hint{margin:9px 0 0;color:var(--muted,#8b95a3);font-size:11px;line-height:1.7}
 .member-auth-primary{background:var(--accent,#4cc2ff);border-color:var(--accent,#4cc2ff);color:var(--bg,#0b0e13)}
 .member-auth-primary:hover{filter:brightness(1.08)}
+
+/* Keep primary actions visible in a short dialog, including while typing. */
+.member-auth-dialog{max-height:calc(100dvh - 32px);scroll-padding-block:16px;overscroll-behavior:contain}
+.member-auth-form-actions{position:sticky;bottom:0;z-index:2;display:flex;gap:10px;margin-top:12px;padding:12px 0;background:var(--panel,#0f141b)}
+.member-auth-form-actions>.member-auth-action{flex:1;min-width:0;margin:0;min-height:46px}
+.member-auth-withdraw-link{border-color:transparent;background:transparent;color:var(--muted,#8b95a3);font-weight:500;margin-top:10px}
+.member-auth-withdraw-link:hover{color:#ffb5a7;border-color:#ffb5a7}
+.member-auth-withdraw-notice{padding:14px 16px;border:1px solid #ffb5a745;border-radius:10px;color:var(--ink,#e8ecf1);font-size:13px;line-height:1.8;background:#ffb5a708}
+.member-auth-withdraw-notice p{margin:0}.member-auth-withdraw-notice p+p{margin-top:8px}
+.member-auth-danger{background:#a92f29;border-color:#ce635b;color:#fff}
+.member-auth-danger:hover{background:#bc3831;border-color:#ffb5a7}
+@media(max-height:480px){
+  .member-auth-shell{padding:22px 20px 18px}
+  .member-auth-eyebrow{margin-bottom:12px}
+  .member-auth-description{margin-bottom:16px}
+  .member-auth-form-actions{margin-top:8px;padding-block:10px}
+}
