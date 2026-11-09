@@ -6,7 +6,6 @@ export class MemberAuthError extends Error {
 
 export function memberAuthMessage(error) {
   if (error?.code === 'invalid_nickname') return '닉네임은 공백 없이 2~20자의 문자·숫자·밑줄로 입력해 주세요.'
-  if (error?.code === 'nickname_already_set') return '이미 닉네임이 설정되어 있습니다. 계정 정보를 다시 확인해 주세요.'
   if (error?.status === 429) return '요청이 많습니다. 잠시 후 다시 시도해 주세요.'
   if (error?.status === 401 || ['invalid_token', 'invalid_nonce', 'nonce_expired', 'nonce_required'].includes(error?.code)) return '로그인 확인 시간이 만료되었거나 확인에 실패했습니다. 다시 시도해 주세요.'
   if (['not_configured', 'auth_not_configured', 'unavailable'].includes(error?.code) || [404, 503].includes(error?.status)) return 'Google 로그인 연결을 준비 중입니다. 잠시 후 다시 이용해 주세요.'

@@ -9,7 +9,7 @@
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 2026-11-08 사용자 요청으로 Nscale(C0587)을 영국 비상장 클라우드·GPU 컴퓨팅 핵심에 포함한다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다. 원본 수집 스냅샷의 586개·555종목과 실제 날짜·결측 상태를 유지한다. 사용자 추가와 생성한 공용 원장 587개는 원천 자료 재수집이나 비상장 가격 생성의 근거가 아니다.
 - 실시간 시세·원천 수집·자동 폴링·댓글·기존 커뮤니티 회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
-- Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. `266322f`의 운영 배포와 실제 계정의 로그인 상태·새로고침 후 유지·로그아웃을 확인했다. 닉네임용 운영 DB 마이그레이션은 완료했으며 이번 닉네임 1회 설정·실명/이메일 미표시 변경의 배포·실제 흐름 검증은 대기다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
+- Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. `266322f`의 운영 배포와 실제 계정의 로그인 상태·새로고침 후 유지·로그아웃을 확인했다. 닉네임용 운영 DB 마이그레이션과 `48a9e07`의 닉네임 1회 설정 및 회원 표시·내 계정·회원 API에서 실명/이메일 미표시 변경 운영 배포를 완료했다. 닉네임 저장·새로고침 유지·로그아웃은 로컬 테스트 계정으로 확인했으며 운영 실계정의 닉네임 저장 시험은 하지 않았다. 개인정보 안내를 보완한 최종 운영본은 `b702266`([81b45430](https://81b45430.ai-chain-prototype.pages.dev/))이다. 후속 요청인 내 계정의 닉네임 직접 변경은 추가 DB 마이그레이션 없이 진행하며 검증·운영 배포 대기다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
 
 ## 검증과 수동 배포
 
@@ -32,7 +32,15 @@ npx wrangler pages deploy dist --project-name ai-chain-prototype --branch main
 
 실제 Google 계정의 로그인 상태·새로고침 후 로그인 유지·로그아웃을 관찰했다. Google 앱의 외부 사용자용 프로덕션 전환은 완료했으며, 공개 전환 후 추가 재로그인 시험은 컴퓨터 사용 도구 중단으로 미완료다. 앱 공개 전환과 브랜드 검증 승인은 구분한다.
 
-이번 닉네임 변경은 아직 운영에 배포하지 않았다. `deploy/auth/0002-member-nicknames.sql`의 `ALTER TABLE member_users ADD COLUMN nickname TEXT;`를 Cloudflare Console에서 실행해 성공을 확인했다. 기존 행·컬럼을 보존했고 변경 코드의 배포·검증은 남아 있다. 기존 Google 회원·세션·이름 기록은 보존하며, 닉네임이 없는 기존 회원도 다음 로그인 상태 확인 때 설정을 안내한다. 설정 저장·새로고침·재로그인·로그아웃 후 화면과 API에서 Google 실명·이메일이 표시되지 않는지 확인한다.
+닉네임 변경 커밋 `48a9e0764d5cf09dc748659c82b1442ba0b1eb2f`를 운영 배포했다. 고정 배포는 [2ec91d54](https://2ec91d54.ai-chain-prototype.pages.dev/)이며 고정·운영 주소 각각 정적 파일 119개, 총 238개의 SHA-256이 로컬 `dist`와 일치했다. 실시간 중지 설정과 저장 자료의 기준시각을 유지했다. `deploy/auth/0002-member-nicknames.sql`의 `ALTER TABLE member_users ADD COLUMN nickname TEXT;`는 Cloudflare Console에서 실행해 성공을 확인했다. 기존 행·컬럼·Google 회원·세션·이름 기록은 보존하며, 닉네임이 없는 기존 회원도 다음 로그인 상태 확인 때 설정을 안내한다. Google 실명·이메일은 사이트의 회원 표시·내 계정·회원 API 응답에 반환하지 않는다. Google이 제공하는 로그인 버튼·계정 선택 화면에는 Google 이름·이메일이 표시될 수 있다.
+
+전체 `npm test` 772개 통과 후 NFC 정규화 전 HTML `maxlength` 제한을 제거한 작은 수정을 관련 15개 검사로 재검증했다. 최종 정적 빌드와 Pages Functions 컴파일도 통과했다. 로컬의 실제 백엔드와 별도 테스트 계정으로 브라우저에서 닉네임 `a` 거절 → `밸류탐험가` 저장 → 새로고침 후 유지 → 로그아웃을 확인했다. 운영 실계정의 닉네임은 사용자 선택을 임의로 대입하지 않아 저장 시험을 하지 않았으며, 새 Google 계정의 전체 가입 흐름도 시도하지 않았다. 운영 API에서 config `200 enabled:true`, 존재하지 않는 형식상 유효한 세션 쿠키로 me `200 user:null`(닉네임 컬럼 조회 포함), 익명 profile POST `401 login_required`, 다른 Origin POST `403 invalid_origin`, profile GET `405`를 확인했다. 기존 커뮤니티 me·시세 API는 `404`이고 확인한 응답은 모두 `no-store`였다. 운영 브라우저에서 Google 로그인 버튼과 첫 로그인 후 닉네임 설정 안내를 확인했다.
+
+최종 운영본은 개인정보 안내 문구를 보완한 커밋 `b7022665587dcb5a15cff97c6e16d350061798b5`이며 고정 배포는 [81b45430](https://81b45430.ai-chain-prototype.pages.dev/)다. 변경은 `privacy.html`과 그에 따른 `index.html` 출력에 한정하고 인증 Functions는 동일하다. 고정·운영 주소 각각 `index.html`, `privacy.html`, `assets/member-auth.js`, `assets/member-auth-core.js`, `assets/member-auth.css` 5개씩, 총 10개 파일의 HTTP 200과 로컬 `dist` 대비 SHA-256 일치를 확인했다. 이전 닉네임 최초 설정의 운영 배포는 완료했으며 운영 실계정의 닉네임 저장·새 Google 계정의 전체 가입 검증과 구분한다.
+
+## 닉네임 직접 변경 — 검증·운영 배포 대기
+
+사용자 후속 요청으로 내 계정 → 닉네임 변경에서 현재값을 확인하고 새 값을 저장하거나 취소할 수 있도록 한다. `POST /api/auth/profile`은 유효한 본인 세션의 닉네임 갱신을 허용하며 기존 최초 1회 제한을 제거한다. 입력 규칙·중복 허용은 유지하고 인증과 입력 검증을 통과한 profile 요청을 접속 IP 기준 10분 동안 20회로 제한한다. 같은 값 재시도도 횟수에 포함하며 초과 시 `429 rate_limited`로 응답한다. 운영 D1의 기존 `nickname` 칼럼을 사용하므로 추가 마이그레이션은 없다. 새 코드의 테스트·브라우저 검증·배포 결과는 위의 `b702266` 이력과 구분해 기록한다.
 
 ## 공개 자료
 

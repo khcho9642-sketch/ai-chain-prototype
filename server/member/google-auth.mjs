@@ -164,16 +164,14 @@ export async function handleAuthRequest(request, env, options = {}) {
     if (pathname === '/api/auth/profile') {
       ensure(await currentUser(db, session, now), 'login_required', 401)
       const nickname = normalizeNickname(input.nickname)
-      // Test the live session and unset nickname in the same statement. Concurrent
-      // onboarding requests cannot overwrite each other or a disabled member.
-      const saved = await db.prepare(`UPDATE member_users SET nickname=? WHERE nickname IS NULL AND disabled=0
+      await rateLimit(db, request, 'profile', now, 20)
+      // Bind every nickname write to the live session and active member in the
+      // same statement, including changes after onboarding and same-value retries.
+      const saved = await db.prepare(`UPDATE member_users SET nickname=? WHERE disabled=0
         AND id=(SELECT user_id FROM member_sessions WHERE token_hash=? AND expires>?) RETURNING id,nickname`)
         .bind(nickname, await hashToken(session), now).first()
-      if (saved) return response(200, { user: publicUser(saved) })
-      const user = await currentUser(db, session, now)
-      ensure(user, 'login_required', 401)
-      ensure(user.nickname === nickname, 'nickname_already_set', 409)
-      return response(200, { user })
+      ensure(saved, 'login_required', 401)
+      return response(200, { user: publicUser(saved) })
     }
     await rateLimit(db, request, 'login', now, 20)
     const nonce = tokenCookie(request, config.nonceCookie)

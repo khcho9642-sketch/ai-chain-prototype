@@ -224,10 +224,10 @@ test('New challenge invalidates the previous browser challenge; logout revokes i
   assert.equal((await f.call('/api/auth/google', { method: 'POST', cookie: cookieHeader(next), body: { credential: await signed(nonce) } })).status, 401)
 })
 
-test('A nickname is normalized once, returned alone and preserved across Google logins', async t => {
+test('An authenticated member can change a normalized nickname and keep it across Google logins', async t => {
   const f = fixture(t)
   const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
-  const nickname = '가이드_É2'
+  let nickname = '가이드_É2'
   const saved = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '가이드_E\u03012' } })
   assert.equal(saved.status, 200)
   assert.deepEqual(await saved.json(), { user: { id: user.id, nickname, needsNickname: false } })
@@ -238,8 +238,10 @@ test('A nickname is normalized once, returned alone and preserved across Google 
   const same = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '가이드_E\u03012' } })
   assert.equal(same.status, 200)
   const changed = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '다른닉네임' } })
-  assert.equal(changed.status, 409)
-  assert.deepEqual(await changed.json(), { error: 'nickname_already_set' })
+  assert.equal(changed.status, 200)
+  nickname = '다른닉네임'
+  assert.deepEqual(await changed.json(), { user: { id: user.id, nickname, needsNickname: false } })
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie })).json(), { user: { id: user.id, nickname, needsNickname: false } })
   const again = await login(f, { cookie: '__Host-ai_chain_session=' + cookieValue(response, '__Host-ai_chain_session'), claims: { name: '<script>실명</script>', email: 'updated@example.test' } })
   assert.equal(again.response.status, 200)
   assert.deepEqual(await again.response.json(), { user: { id: user.id, nickname, needsNickname: false } })
@@ -278,17 +280,21 @@ test('Nickname setup requires an active session and respects account suspension'
   assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, null)
 })
 
-test('Simultaneous nickname requests cannot overwrite each other and same-value retries succeed', async t => {
+test('Concurrent valid nickname changes leave one complete value and same-value retries succeed', async t => {
   const f = fixture(t)
-  const { response } = await login(f), cookie = cookieHeader(response)
-  const raced = await Promise.all(['첫닉네임', '다른닉네임'].map(nickname => f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })))
-  assert.deepEqual(raced.map(result => result.status).sort(), [200, 409])
-  const nickname = (await raced.find(result => result.status === 200).json()).user.nickname
+  const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+  const nicknames = ['첫닉네임', '다른닉네임']
+  const raced = await Promise.all(nicknames.map(nickname => f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })))
+  assert.deepEqual(raced.map(result => result.status), [200, 200])
+  const saved = await Promise.all(raced.map(result => result.json()))
+  assert.deepEqual(saved.map(result => result.user), nicknames.map(nickname => ({ id: user.id, nickname, needsNickname: false })))
+  const nickname = f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname
+  assert.ok(nicknames.includes(nickname))
+  assert.deepEqual(await (await f.call('/api/auth/me', { cookie })).json(), { user: { id: user.id, nickname, needsNickname: false } })
   const repeated = await Promise.all([1, 2].map(() => f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname } })))
   assert.deepEqual(repeated.map(result => result.status), [200, 200])
   assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, nickname)
 })
-
 test('Duplicate nicknames are permitted and body IDs cannot select another member', async t => {
   const f = fixture(t)
   const first = await login(f), second = await login(f, { claims: { sub: 'other-member' } })
@@ -301,6 +307,10 @@ test('Duplicate nicknames are permitted and body IDs cannot select another membe
   assert.equal(duplicate.status, 200)
   assert.equal((await duplicate.json()).user.id, secondUser.id)
   assert.equal(f.db.sqlite.prepare('SELECT COUNT(*) n FROM member_users WHERE nickname=?').get(nickname).n, 2)
+  const changed = await f.call('/api/auth/profile', { method: 'POST', cookie: cookieHeader(first.response), body: { nickname: '변경회원', id: secondUser.id } })
+  assert.equal(changed.status, 200)
+  assert.deepEqual(await changed.json(), { user: { id: firstUser.id, nickname: '변경회원', needsNickname: false } })
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users WHERE id=?').get(secondUser.id).nickname, nickname)
 })
 
 test('Existing members choose a nickname while stored legacy names remain internal and unchanged', async t => {
@@ -338,4 +348,43 @@ test('Local migration upgrades an existing member database without replacing row
   database = createMemberDatabase(path)
   assert.equal(database.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, '기존회원')
   assert.deepEqual(database.sqlite.prepare('SELECT name FROM member_local_migrations ORDER BY name').all().map(row => row.name), ['0001-members.sql', '0002-member-nicknames.sql'])
+})
+test('Profile changes are limited to 20 per address in ten minutes and resume after expiry', async t => {
+  const f = fixture(t)
+  const { response } = await login(f), cookie = cookieHeader(response)
+  for (let i = 0; i < 20; i++) {
+    const result = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: `회원_${i}` } })
+    assert.equal(result.status, 200)
+    assert.equal((await result.json()).user.nickname, `회원_${i}`)
+  }
+  const limited = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '회원_19' } })
+  assert.equal(limited.status, 429)
+  assert.deepEqual(await limited.json(), { error: 'rate_limited' })
+  assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, '회원_19')
+  const rate = f.db.sqlite.prepare("SELECT key,count FROM member_rate_limits WHERE key LIKE 'profile:%'").get()
+  assert.equal(rate.count, 21)
+  assert.equal(rate.key.includes('192.0.2.1'), false)
+  const resumed = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '새닉네임' }, now: NOW + 600001 })
+  assert.equal(resumed.status, 200)
+  assert.equal((await resumed.json()).user.nickname, '새닉네임')
+  assert.equal(f.db.sqlite.prepare("SELECT count FROM member_rate_limits WHERE key LIKE 'profile:%'").get().count, 1)
+})
+
+test('A session revoked or account disabled between authentication and nickname write cannot mutate a member', async t => {
+  for (const revoke of ['session', 'member']) {
+    const f = fixture(t)
+    const { response } = await login(f), cookie = cookieHeader(response), { user } = await response.json()
+    const original = f.db.prepare
+    f.env.MEMBER_DB = { ...f.db, prepare(sql) {
+      if (sql.startsWith('UPDATE member_users SET nickname=')) {
+        if (revoke === 'session') f.db.sqlite.prepare('DELETE FROM member_sessions WHERE user_id=?').run(user.id)
+        else f.db.sqlite.prepare('UPDATE member_users SET disabled=1 WHERE id=?').run(user.id)
+      }
+      return original(sql)
+    } }
+    const result = await f.call('/api/auth/profile', { method: 'POST', cookie, body: { nickname: '변경회원' } })
+    assert.equal(result.status, 401)
+    assert.deepEqual(await result.json(), { error: 'login_required' })
+    assert.equal(f.db.sqlite.prepare('SELECT nickname FROM member_users').get().nickname, null)
+  }
 })

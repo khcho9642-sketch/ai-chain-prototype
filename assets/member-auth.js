@@ -10,6 +10,7 @@ const element = (tag, text, className) => {
 }
 let user = null, configuration = null, initialization = null, scriptPromise = null
 let activeAttempt = 0, initializationEpoch = 0, returnFocus = null, submitting = false, nicknameDraft = ''
+let nicknameDraftOwner = null, nicknameDraftMode = null
 const dialog = element('dialog', undefined, 'member-auth-dialog')
 dialog.id = 'member-auth-dialog'
 dialog.setAttribute('aria-labelledby', 'member-auth-title')
@@ -34,6 +35,7 @@ if (triggers.length) document.body.append(dialog)
 
 function say(message = '', tone = '') { status.textContent = message; status.dataset.tone = tone }
 function busy(value) { content.setAttribute('aria-busy', String(value)) }
+function clearNicknameDraft() { nicknameDraft = ''; nicknameDraftOwner = null; nicknameDraftMode = null }
 function updateTriggers() {
   for (const trigger of triggers) {
     const label = user ? (user.needsNickname ? '닉네임 설정' : user.nickname) : '로그인'
@@ -61,7 +63,7 @@ function addLogout() {
     try {
       await client.logout()
       try { window.google?.accounts?.id?.disableAutoSelect() } catch { /* Session was already revoked by the server. */ }
-      user = null; nicknameDraft = ''; updateTriggers(); signedOut()
+      user = null; clearNicknameDraft(); updateTriggers(); signedOut()
       say('로그아웃되었습니다.', 'success')
       action('다시 로그인', prepareGoogle)
     } catch (error) { say(memberAuthMessage(error), 'error'); logout.disabled = false }
@@ -79,13 +81,21 @@ function showAccount(message = '') {
   const identity = element('div', undefined, 'member-auth-identity')
   identity.append(element('p', user.nickname, 'member-auth-name'))
   profile.append(avatar, identity); content.append(profile)
+  action('닉네임 변경', () => { if (!submitting) showNickname(true) })
   addLogout()
   say(message, message ? 'success' : '')
   if (message) heading.focus()
 }
-function showNickname() {
-  heading.textContent = '닉네임 설정'
-  description.textContent = '사이트에서 사용할 닉네임만 입력해 주세요.'
+function showNickname(editing = false) {
+  const mode = editing ? 'edit' : 'signup'
+  // A draft belongs only to this member and flow. Each explicit edit starts
+  // from the server-confirmed nickname, while unfinished signup can resume.
+  if (nicknameDraftOwner !== user.id || nicknameDraftMode !== mode || editing) {
+    nicknameDraft = editing ? user.nickname : ''
+    nicknameDraftOwner = user.id; nicknameDraftMode = mode
+  }
+  heading.textContent = editing ? '닉네임 변경' : '닉네임 설정'
+  description.textContent = editing ? '사이트에서 사용할 새 닉네임을 입력해 주세요.' : '사이트에서 사용할 닉네임만 입력해 주세요.'
   content.replaceChildren(); busy(false); say()
   const form = element('form', undefined, 'member-auth-nickname-form')
   form.noValidate = true
@@ -98,8 +108,16 @@ function showNickname() {
   input.setAttribute('aria-describedby', 'member-auth-nickname-hint member-auth-status')
   const hint = element('p', '2~20자 · 한글·영문 등 문자, 숫자, 밑줄(_) · 공백 제외', 'member-auth-hint')
   hint.id = 'member-auth-nickname-hint'
-  const submit = element('button', '완료', 'member-auth-action member-auth-primary')
+  const submit = element('button', editing ? '변경 저장' : '완료', 'member-auth-action member-auth-primary')
   submit.type = 'submit'
+  const cancel = editing ? element('button', '취소', 'member-auth-action') : null
+  if (cancel) {
+    cancel.type = 'button'
+    cancel.addEventListener('click', () => {
+      if (submitting) return
+      clearNicknameDraft(); showAccount(); heading.focus()
+    })
+  }
   const recovery = element('div')
   let composing = false
   input.addEventListener('compositionstart', () => { composing = true })
@@ -112,34 +130,37 @@ function showNickname() {
     let nickname
     try { nickname = normalizeMemberNickname(nicknameDraft) }
     catch (error) { input.setAttribute('aria-invalid', 'true'); say(memberAuthMessage(error), 'error'); input.focus(); return }
-    submitting = true; submit.disabled = true; input.readOnly = true; busy(true); recovery.replaceChildren(); say('닉네임을 저장하고 있습니다.')
+    submitting = true; submit.disabled = true; if (cancel) cancel.disabled = true
+    input.readOnly = true; busy(true); recovery.replaceChildren(); say('닉네임을 저장하고 있습니다.')
     try {
       const member = await client.profile(nickname)
       if (member.needsNickname) throw new MemberAuthError('invalid_response')
-      user = member; nicknameDraft = ''; updateTriggers()
-      if (dialog.open) showAccount('닉네임이 설정되었습니다.')
+      user = member; clearNicknameDraft(); updateTriggers()
+      if (dialog.open) showAccount(editing ? '닉네임이 변경되었습니다.' : '닉네임이 설정되었습니다.')
     } catch (error) {
-      say(error?.code === 'invalid_nickname' || error?.code === 'nickname_already_set' || error?.status === 429 || error?.status === 401
+      say(error?.code === 'invalid_nickname' || error?.status === 429 || error?.status === 401
         ? memberAuthMessage(error) : '닉네임을 저장하지 못했습니다. 입력한 내용을 확인하고 다시 시도해 주세요.', 'error')
       if (error?.code === 'invalid_nickname') input.setAttribute('aria-invalid', 'true')
-      if (error?.status === 401 || error?.code === 'nickname_already_set') {
-        const retry = element('button', error.status === 401 ? '다시 로그인' : '계정 다시 확인', 'member-auth-action')
+      if (error?.status === 401) {
+        const retry = element('button', '다시 로그인', 'member-auth-action')
         retry.type = 'button'
         retry.addEventListener('click', async () => {
           if (submitting) return
-          if (error.status === 401) { user = null; updateTriggers(); await prepareGoogle(); return }
-          retry.disabled = true
-          try { await initialize(true); if (user) showAccount(); else await prepareGoogle() }
-          catch (failure) { say(memberAuthMessage(failure), 'error'); retry.disabled = false }
+          user = null; updateTriggers(); await prepareGoogle()
         })
         recovery.append(retry)
       }
       input.focus()
-    } finally { submitting = false; submit.disabled = false; input.readOnly = false; busy(false) }
+    } finally {
+      submitting = false; submit.disabled = false; if (cancel) cancel.disabled = false
+      input.readOnly = false; busy(false)
+    }
   })
-  form.append(label, input, hint, submit, recovery)
+  form.append(label, input, hint, submit)
+  if (cancel) form.append(cancel)
+  form.append(recovery)
   content.append(form)
-  addLogout()
+  if (!editing) addLogout()
   input.focus()
 }
 

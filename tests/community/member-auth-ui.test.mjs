@@ -228,3 +228,92 @@ test('Google authentication starts nickname signup and logout clears the account
   assert.equal(logouts, 1)
   assert.equal(ui.trigger.textContent, '로그인')
 })
+
+
+test('nickname editing starts with the current value, updates the header, and restores the saved value after reload', async () => {
+  let saved = account, saves = 0
+  const client = fixtureClient({ me: async () => saved, profile: async nickname => {
+    saves++; saved = { ...account, nickname }; return saved
+  } })
+  const ui = await memberUi(client)
+  assert.equal(ui.find(node => node.tag === 'dialog').open, false)
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '닉네임 변경').emit('click')
+  const input = ui.find(node => node.tag === 'input')
+  assert.equal(input.value, '사용자')
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '닉네임 변경')
+  assert.equal(ui.find(node => node.type === 'submit').textContent, '변경 저장')
+  assert.equal(ui.focused(), input)
+  input.value = '새로운_닉네임'; await input.emit('input')
+  await ui.find(node => node.tag === 'form').emit('submit')
+  assert.equal(saves, 1)
+  assert.equal(ui.trigger.textContent, '새로운_닉네임')
+  assert.match(ui.body.textContent, /닉네임이 변경되었습니다/)
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '내 계정')
+  assert.equal(ui.focused().tag, 'h2')
+  const reloaded = await memberUi(client)
+  assert.equal(reloaded.find(node => node.tag === 'dialog').open, false)
+  assert.equal(reloaded.trigger.textContent, '새로운_닉네임')
+  await reloaded.trigger.emit('click')
+  await reloaded.find(node => node.tag === 'button' && node.textContent === '닉네임 변경').emit('click')
+  assert.equal(reloaded.find(node => node.tag === 'input').value, '새로운_닉네임')
+})
+
+test('canceling a nickname change returns to the account without saving or retaining the abandoned draft', async () => {
+  let saves = 0
+  const ui = await memberUi(fixtureClient({ me: async () => account, profile: async () => { saves++; return account } }))
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '닉네임 변경').emit('click')
+  const input = ui.find(node => node.tag === 'input')
+  input.value = '취소할_입력'; await input.emit('input')
+  await ui.find(node => node.tag === 'button' && node.textContent === '취소').emit('click')
+  assert.equal(saves, 0)
+  assert.equal(ui.trigger.textContent, '사용자')
+  assert.equal(ui.find(node => node.tag === 'h2').textContent, '내 계정')
+  assert.equal(ui.focused().tag, 'h2')
+  assert.equal(ui.find(node => node.tag === 'input'), undefined)
+  await ui.find(node => node.tag === 'button' && node.textContent === '닉네임 변경').emit('click')
+  assert.equal(ui.find(node => node.tag === 'input').value, '사용자')
+})
+
+test('nickname editing preserves composition and failed input, then allows a successful retry', async () => {
+  let attempts = 0
+  const ui = await memberUi(fixtureClient({ me: async () => account, profile: async nickname => {
+    if (++attempts === 1) throw new MemberAuthError('rate_limited', 429)
+    return { ...account, nickname }
+  } }))
+  await ui.trigger.emit('click')
+  await ui.find(node => node.tag === 'button' && node.textContent === '닉네임 변경').emit('click')
+  const form = ui.find(node => node.tag === 'form'), input = ui.find(node => node.tag === 'input')
+  input.value = '변경할_닉네임'; await input.emit('compositionstart'); await form.emit('submit')
+  assert.equal(attempts, 0)
+  await input.emit('compositionend'); await form.emit('submit')
+  assert.equal(attempts, 1)
+  assert.equal(input.value, '변경할_닉네임')
+  assert.equal(input.readOnly, false)
+  assert.equal(ui.find(node => node.type === 'submit').disabled, false)
+  assert.equal(ui.find(node => node.tag === 'button' && node.textContent === '취소').disabled, false)
+  assert.match(ui.body.textContent, /잠시 후 다시 시도/)
+  assert.equal(ui.trigger.textContent, '사용자')
+  await form.emit('submit')
+  assert.equal(attempts, 2)
+  assert.equal(ui.trigger.textContent, '변경할_닉네임')
+})
+
+test('a failed nickname draft is never shown to a different member after reauthentication', async () => {
+  let current = pending, googleOptions
+  const nextMember = { id: 'another-member', nickname: null, needsNickname: true }
+  const google = { accounts: { id: { initialize: options => { googleOptions = options }, renderButton() {}, cancel() {} } } }
+  const ui = await memberUi(fixtureClient({ me: async () => current, profile: async () => {
+    current = null; throw new MemberAuthError('login_required', 401)
+  }, google: async () => nextMember }), { google })
+  const input = ui.find(node => node.tag === 'input')
+  input.value = '이전회원_초안'; await input.emit('input')
+  await ui.find(node => node.tag === 'form').emit('submit')
+  assert.equal(input.value, '이전회원_초안')
+  await ui.find(node => node.tag === 'button' && node.textContent === '다시 로그인').emit('click')
+  await googleOptions.callback({ credential: 'header.payload.signature' })
+  assert.equal(ui.find(node => node.tag === 'input').value, '')
+  assert.equal(ui.trigger.textContent, '닉네임 설정')
+  assert.doesNotMatch(ui.body.textContent, /이전회원_초안/)
+})
