@@ -55,7 +55,7 @@ content.innerHTML = `<div class="map-main">
       <div class="chart-data-note map-breadth"><span class="data-label">확정 종가</span><span data-map-coverage>지도 선정 ${MAP_CATALOGUE.length} · 상장 ${MAP_LISTED_COUNT} · 비상장 ${MAP_PRIVATE_COUNT} · 수집 확인 중</span><span>상장 표시 <b id="company-count">—</b>개</span><span class="positive">상승 <b id="up-count">—</b></span><span class="negative">하락 <b id="down-count">—</b></span></div>
       <p class="map-data-status" id="map-data-status" role="status">시총과 확정 종가를 확인하고 있습니다.</p>
       <details class="map-data-details" id="map-data-details" hidden><summary>미반영·수집 상태 보기</summary><ul id="map-exclusions"></ul></details>
-      <section class="map-private-roster" data-map-private data-map-private-roster aria-label="비상장 핵심기업" hidden><div class="map-private-heading"><h2>비상장 핵심기업</h2><p>시총·종가 없음 · 면적·수익률 계산에서 제외</p></div><div class="map-private-grid" data-map-private-cards></div></section>
+      <section class="map-private-roster" data-map-private aria-labelledby="map-company-news-heading" hidden><div class="map-private-heading"><h2 id="map-company-news-heading">핵심기업 최신 소식</h2><p>2026.11.09 확인</p></div><div class="map-private-grid" data-map-private-cards></div></section>
       <div class="chart-meta"><div class="breadcrumb"><button id="overview">전체 산업</button><span id="crumb-sector"></span></div><div id="chart-explainer">크기: <b>최근 관측 시총 USD</b><span>·</span>색상: <b>확정 종가 등락률</b></div></div>
       <div class="chart-stage" id="chart-stage" aria-label="히트맵 차트">
         <div class="heatmap" id="heatmap"></div>
@@ -66,7 +66,7 @@ content.innerHTML = `<div class="map-main">
       <div class="chart-footer"><span id="chart-hint"><span class="hint-dot"></span>분야 확대·기업 검색으로 작은 기업 찾기 · 기업을 누르면 정보 확인</span><button type="button" class="map-zoom" id="map-zoom" aria-pressed="false">지도 확대</button><div class="return-legend" id="return-legend"><span>−3%</span><div class="gradient"></div><span>0</span><div class="gradient positive-gradient"></div><span>+3%</span><span class="missing-legend">회색 — 미확보</span></div><span id="bubble-legend" hidden>가로: 분야 · 세로·색상: 확정 종가 등락률 · 면적: 최근 관측 시총 USD</span></div>
       <aside class="selection" id="selection" aria-label="선택 기업 정보" hidden></aside>
     </section>
-    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 비상장은 이름과 역할을 별도 표시하며 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 지도 선정 ${MAP_CATALOGUE.length}개</span></footer>
+    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 지도 선정 ${MAP_CATALOGUE.length}개</span></footer>
 </div>`;
 root.append(content);
 const $=s=>root.querySelector(s), $$=s=>[...root.querySelectorAll(s)];
@@ -235,23 +235,62 @@ function htmlElement(tag, className, text) {
   if (text !== undefined) element.textContent = text;
   return element;
 }
-function renderPrivateCompanies(matchingCatalog) {
-  const companies = matchingCatalog.filter(company => !company.listed);
-  const section = $('[data-map-private]'), cards = $('[data-map-private-cards]');
+// Official publications reviewed on 2026-11-09. Dates belong to the original sources.
+const CORE_COMPANY_NEWS = {
+  C0351: {
+    date: '2026-11-06',
+    title: 'Hacktron과 보안 협력 발표',
+    summary: '외부 서비스와 연동되는 OpenAI 시스템의 취약점을 Hacktron과 함께 점검할 계획입니다.',
+    url: 'https://openai.com/index/partnering-with-hacktron/',
+  },
+  C0037: {
+    date: '2026-11-06',
+    title: 'Claude 에이전트 메모리 연구 공개',
+    summary: 'Claude가 이전 작업 기록을 검토해 기억을 정리하고 오류를 수정하는 방법과 실험 결과를 공개했습니다.',
+    url: 'https://www.anthropic.com/research/components-of-agent-memory',
+  },
+  C0128: {
+    date: '2026-10-17',
+    title: 'V4.1-Flash-1017 출시',
+    summary: '업데이트 모델을 웹·앱·API에 적용하고 웹 검색과 페이지 가져오기 API를 공개했습니다.',
+    url: 'https://api-docs.deepseek.com/news/news261017/',
+  },
+  C0587: {
+    date: '2026-11-05',
+    correction: true,
+    title: '마이크로소프트 GPU 공급 발표 정정',
+    summary: '텍사스 700MW 2단계 증설에 마이크로소프트 옵션이 있다는 2025년 발표의 설명을 정정했습니다.',
+    url: 'https://www.nscale.com/press-releases/nscale-microsoft-2025',
+  },
+};
+
+function renderCoreCompanyNews(matchingCatalog) {
+  const companies = matchingCatalog.filter(company => CORE_COMPANY_NEWS[company.id]);
+  const section = $('[data-map-private]');
+  const cards = $('[data-map-private-cards]');
   section.hidden = !companies.length;
   cards.replaceChildren();
   host.dataset.mapPrivateCount = companies.length;
-  section.querySelector('h2').textContent = `비상장 핵심기업 ${companies.length}개`;
   for (const company of companies) {
+    const news = CORE_COMPANY_NEWS[company.id];
     const card = htmlElement('article', 'map-private-company');
     card.dataset.mapPrivateCompany = company.id;
     card.dataset.companyId = company.id;
-    const name = htmlElement('h3', '', company.name); name.id = `map-private-${company.id}`;
+    const name = htmlElement('h3', '', company.name);
+    name.id = `map-private-${company.id}`;
     card.setAttribute('aria-labelledby', name.id);
-    card.append(name);
-    if (company.role) card.append(htmlElement('p', 'map-private-role', company.role));
-    card.append(htmlElement('span', 'map-private-country', (COUNTRY_NAMES[company.country] || company.countryName || company.country) + ' · ' + company.sector));
-    card.append(htmlElement('small', 'map-private-status', '비상장 · 시총·종가 없음'));
+
+    const meta = htmlElement('div', 'map-private-news-meta');
+    const date = htmlElement('time', '', news.date.replaceAll('-', '.') + (news.correction ? ' 정정' : ''));
+    date.dateTime = news.date;
+    const source = htmlElement('a', 'map-private-news-source', '공식 원문 ↗');
+    source.href = news.url;
+    source.target = '_blank';
+    source.rel = 'noopener noreferrer';
+    source.setAttribute('aria-label', `${company.name} 공식 원문 (새 창)`);
+    meta.append(date, source);
+    card.append(name, htmlElement('p', 'map-private-news-title', news.title),
+      htmlElement('p', 'map-private-news-summary', news.summary), meta);
     cards.append(card);
   }
 }
@@ -530,8 +569,8 @@ function renderEmptyState(model, matchingCatalog, sizedItems) {
     title = '조건에 맞는 기업이 없어요';
     message = '검색어를 바꾸거나 조회 조건을 초기화해 보세요.';
   } else if (matchingCatalog.every(company => !company.listed)) {
-    title = '비상장 기업은 별도 명단으로 표시해요';
-    message = `${matchingCatalog.length}개 비상장 기업의 이름과 역할을 위의 비상장 핵심기업 명단에서 확인할 수 있습니다. 공개 시총·종가가 없어 면적과 수익률 계산에서 제외합니다.`;
+    title = '검색 조건에 맞는 비상장 기업입니다';
+    message = '위에서 공개된 공식 소식과 자료 상태를 확인할 수 있습니다.';
   } else if (matchingCatalog.every(company => !company.listed || company.unmappedReason)) {
     title = '시세 종목코드가 연결되지 않았어요';
     message = '기업 이름과 코드 미연결 사유를 위의 수집 상태에서 확인할 수 있습니다.';
@@ -554,7 +593,7 @@ function render() {
   renderRipple();
   const model = actualMapModel();
   const matchingCatalog = filterMapCompanies(MAP_CATALOGUE);
-  renderPrivateCompanies(matchingCatalog);
+  renderCoreCompanyNews(matchingCatalog);
   const sizedItems = filterMapCompanies(model?.companies || []).filter(company => Number.isFinite(company.capUSD) && company.capUSD > 0 && Number.isFinite(company.cap) && company.cap > 0);
   currentItems = state.view === 'bubble' ? sizedItems.filter(company => Number.isFinite(getReturn(company, state.period))) : sizedItems;
   if (!currentItems.some(company => company.id === state.selected)) state.selected = null;

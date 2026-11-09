@@ -284,16 +284,24 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
                 assert home.locator('.tile').count()==48
-                assert home.locator('[data-map-private-company]').count()==4
-                assert all(name in home.locator('[data-map-private]').inner_text() for name in ['OpenAI','Anthropic','DeepSeek','Nscale'])
-                assert home.locator('[data-map-private] h2').inner_text()=='비상장 핵심기업 4개'
-                nscale=home.locator('[data-map-private-company="C0587"]')
-                assert nscale.locator('h3').inner_text()=='Nscale'
-                assert nscale.locator('.map-private-country').inner_text().startswith('영국 · ')
-                assert '클라우드·GPU' in nscale.locator('.map-private-country').inner_text()
-                assert nscale.locator('.map-private-role').inner_text()
-                assert nscale.locator('.map-private-status').inner_text()=='비상장 · 시총·종가 없음'
-                assert nscale.locator('.ticker,.return').count()==0
+                news_section=home.locator('[data-map-private]')
+                news_cards=news_section.locator('[data-map-private-company]')
+                expected_news=[
+                    ('OpenAI', '2026-11-06', 'https://openai.com/index/partnering-with-hacktron/'),
+                    ('Anthropic', '2026-11-06', 'https://www.anthropic.com/research/components-of-agent-memory'),
+                    ('DeepSeek', '2026-10-17', 'https://api-docs.deepseek.com/news/news261017/'),
+                    ('Nscale', '2026-11-05', 'https://www.nscale.com/press-releases/nscale-microsoft-2025'),
+                ]
+                assert news_section.locator('h2').inner_text()=='핵심기업 최신 소식'
+                assert news_cards.count()==len(expected_news)
+                for index,(name,date,source) in enumerate(expected_news):
+                    card=news_cards.nth(index)
+                    assert card.locator('h3').inner_text()==name
+                    assert card.locator('.map-private-news-title').inner_text().strip()
+                    assert card.locator('.map-private-news-summary').inner_text().strip()
+                    assert card.locator('time').get_attribute('datetime')==date
+                    assert card.locator('a.map-private-news-source').get_attribute('href')==source
+                    assert card.locator('.ticker,.return').count()==0
                 assert home.locator('.tile[data-id="C0587"],.tile[data-ticker="NSCL"]').count()==0
                 assert home.locator('.tile[data-ticker=AAPL],.tile[data-ticker=TSLA]').count()==0
                 ids=home.locator('.tile').evaluate_all('els=>els.map(el=>el.dataset.id)')
@@ -322,7 +330,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert home.locator('.sector-heading').count()==9
                 home.locator('.ripple-trigger-card').click()
                 page.wait_for_function("location.hash.startsWith('#company-info/company/')")
-                checks.append('exact approved52 selection,48 listed heatmap/bubbles and4 named private companies including Nscale, no Apple/Tesla, exact NVDA completed return, provenance, search, sector and detail interactions')
+                checks.append('exact approved52 selection,48 listed heatmap/bubbles and four dated company news cards with official sources, no Apple/Tesla, exact NVDA completed return, provenance, search, sector and detail interactions')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
                 incomplete=fixture_data['incomplete']
