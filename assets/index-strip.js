@@ -7,7 +7,7 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character])
 const number = value => Number.isFinite(value) ? value.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'
-const zones = { 'America/New_York': '뉴욕', 'Asia/Seoul': '한국' }
+const zones = { 'America/New_York': '뉴욕', 'Asia/Seoul': '한국', 'Asia/Shanghai': '상하이' }
 let saved = window.aiChainSnapshot || null
 let error = ''
 let attempted = Boolean(saved)
