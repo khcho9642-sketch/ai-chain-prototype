@@ -52,7 +52,12 @@ test('saved indices sit directly after the top header brand before chapter navig
 })
 
 test('the mounted strip renders without a status element and reuses stored dashboard events without requests or timers', async () => {
-  const initial = snapshot(quote())
+  const nvidiaQuote = quote({
+    symbol: 'NVDA', price: 181.60, previousClose: 200.13,
+    closeDate: '2026-11-05', previousCloseDate: '2026-11-04',
+    sourceUrl: 'https://finance.yahoo.com/quote/NVDA/', currency: 'USD',
+  })
+  const initial = snapshot(quote(), nvidiaQuote)
   const ui = await stripHarness(initial)
   const storedFacts = html => ({
     values: [...html.matchAll(/<span class="index-strip-value">([^<]*)<[/]span>/g)].map(match => match[1]),
@@ -62,7 +67,13 @@ test('the mounted strip renders without a status element and reuses stored dashb
   assert.equal((ui.cards.innerHTML.match(/role="listitem"/g) || []).length, 5)
   assert.match(ui.cards.innerHTML, /110[.]00/)
   assert.match(ui.cards.innerHTML, /2026-11-06/)
-  assert.match(ui.cards.innerHTML, /저장된 지수 자료가 없습니다/)
+  assert.match(ui.cards.innerHTML, /저장된 종가 자료가 없습니다/)
+  const nvidiaCard = ui.cards.innerHTML.match(/data-index-symbol="NVDA"[\s\S]*?<[/]article>/)?.[0] ?? ''
+  assert.match(nvidiaCard, /엔비디아/)
+  assert.match(nvidiaCard, /181[.]60/)
+  assert.match(nvidiaCard, /▼ 9[.]26%/)
+  assert.match(nvidiaCard, /2026-11-05 · 뉴욕/)
+  assert.match(nvidiaCard, /href="https:[/][/]finance[.]yahoo[.]com[/]quote[/]NVDA[/]"/)
   assert.doesNotMatch(ui.cards.innerHTML, /실시간 갱신 중지 · 저장된 종가/)
   const html = ui.cards.innerHTML
   const facts = storedFacts(html)
@@ -73,7 +84,7 @@ test('the mounted strip renders without a status element and reuses stored dashb
   const notes = [...ui.cards.innerHTML.matchAll(/<p class="index-strip-note">([^<]*)<[/]p>/g)].map(match => match[1])
   assert.equal(notes.length, 5)
   assert.ok(notes.every(note => note.includes('저장 자료 조회 실패: 자료를 확인할 수 없습니다.')))
-  ui.dispatch('market-snapshot', snapshot(quote({ price: 120 })))
+  ui.dispatch('market-snapshot', snapshot(quote({ price: 120 }), nvidiaQuote))
   assert.match(ui.cards.innerHTML, /120[.]00/)
   assert.doesNotMatch(ui.cards.innerHTML, /저장 자료 조회 실패/)
 })
@@ -98,17 +109,17 @@ test('source metadata is escaped before rendering the saved index cards', async 
   assert.match(ui.cards.innerHTML, /이전 저장값/)
 })
 
-test('the header strip prioritizes Nasdaq, S&P 500 and Kospi while retaining all five indices including unavailable SOX', () => {
+test('the header strip keeps its order when a snapshot lacks the Nvidia quote', () => {
   const cards = buildIndexCards(snapshot(quote()), { now })
-  assert.deepEqual(cards.map(row => row.symbol), ['^IXIC', '^GSPC', '^KS11', '^SOX', '^KQ11'])
+  assert.deepEqual(cards.map(row => row.symbol), ['^IXIC', '^GSPC', '^KS11', 'NVDA', '^KQ11'])
   assert.equal(new Set(cards.map(row => row.symbol)).size, 5)
-  assert.equal(INDEX_STRIP_INDICES.find(index => index.symbol === '^SOX').ai, true)
-  const sox = cards.find(index => index.symbol === '^SOX')
-  assert.equal(sox.available, false)
-  assert.equal(sox.status, 'unavailable')
-  assert.equal(sox.price, null)
-  assert.equal(sox.changePercent, null)
-  assert.match(sox.reason, /저장된 지수 자료/)
+  assert.equal(INDEX_STRIP_INDICES.find(index => index.symbol === 'NVDA').ai, true)
+  const nvidia = cards.find(index => index.symbol === 'NVDA')
+  assert.equal(nvidia.available, false)
+  assert.equal(nvidia.status, 'unavailable')
+  assert.equal(nvidia.price, null)
+  assert.equal(nvidia.changePercent, null)
+  assert.match(nvidia.reason, /저장된 종가 자료/)
 })
 
 test('confirmed stored closes calculate positive, negative and flat changes from the same quote', () => {

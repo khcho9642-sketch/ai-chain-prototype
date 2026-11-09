@@ -19,6 +19,9 @@ function render() {
   if (!target) return
   target.innerHTML = cards.map(card => {
     const value = card.available ? card.price : null
+    const displayValue = Number.isFinite(value) && card.currency
+      ? value.toLocaleString('ko-KR', { style: 'currency', currency: card.currency })
+      : number(value)
     const change = card.available ? card.changePercent : null
     const direction = Number.isFinite(change) ? change > 0 ? 'up' : change < 0 ? 'down' : 'flat' : 'flat'
     const arrow = Number.isFinite(change) ? change > 0 ? '▲' : change < 0 ? '▼' : '—' : ''
@@ -31,7 +34,7 @@ function render() {
       ? `<a class="index-strip-source" href="${escape(card.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escape(card.name)} 저장 자료 출처">출처 ↗</a>` : ''
     return `<article class="index-strip-card${card.ai ? ' is-ai' : ''}${!card.available ? ' is-unavailable' : ''}" role="listitem" data-index-symbol="${escape(card.symbol)}" title="${escape(provenance)}">
       <div class="index-strip-name"><span class="index-strip-flag" aria-hidden="true">${escape(card.flag)}</span><span>${escape(card.name)}</span>${card.ai ? '<span class="index-strip-ai">AI</span>' : ''}</div>
-      <div class="index-strip-quote"><span class="index-strip-value">${number(value)}</span><span class="index-strip-change is-${direction}" aria-label="${Number.isFinite(change) ? `직전 저장 종가 대비 ${change > 0 ? '상승' : change < 0 ? '하락' : '보합'} ${number(Math.abs(change))}%` : '등락률 미확보'}">${rate}</span></div>
+      <div class="index-strip-quote"><span class="index-strip-value">${displayValue}</span><span class="index-strip-change is-${direction}" aria-label="${Number.isFinite(change) ? `직전 저장 종가 대비 ${change > 0 ? '상승' : change < 0 ? '하락' : '보합'} ${number(Math.abs(change))}%` : '등락률 미확보'}">${rate}</span></div>
       <details class="index-strip-provenance" name="saved-index-provenance"><summary aria-label="${escape(card.name)} 저장 종가 날짜와 출처" title="기준일과 출처 확인">ⓘ</summary><div class="index-strip-evidence">
         <div class="index-strip-meta"><span><i class="index-strip-dot" aria-hidden="true"></i>${escape(label)}</span>${source}</div>
         <div class="index-strip-date">${escape(close)}</div><p class="index-strip-note">${escape(provenance)}</p>

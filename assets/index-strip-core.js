@@ -4,7 +4,7 @@ export const INDEX_STRIP_INDICES = Object.freeze([
   { symbol: '^IXIC', name: '나스닥', flag: '🇺🇸', ai: false },
   { symbol: '^GSPC', name: 'S&P 500', flag: '🇺🇸', ai: false },
   { symbol: '^KS11', name: '코스피', flag: '🇰🇷', ai: false },
-  { symbol: '^SOX', name: '반도체(SOX)', flag: '🇺🇸', ai: true },
+  { symbol: 'NVDA', name: '엔비디아', flag: '🇺🇸', ai: true, currency: 'USD' },
   { symbol: '^KQ11', name: '코스닥', flag: '🇰🇷', ai: false },
 ].map(Object.freeze))
 
@@ -57,7 +57,7 @@ function emptyCard(identity, snapshot, quote) {
     snapshotGeneratedAt: savedTimestamp(snapshot?.generatedAt),
     collectionStatus: savedString(quote?.status),
     status: 'unavailable', stale: false,
-    error: savedString(quote?.error), reason: '저장된 지수 자료가 없습니다.',
+    error: savedString(quote?.error), reason: '저장된 종가 자료가 없습니다.',
     priceBasis: null,
   }
 }
@@ -75,7 +75,7 @@ function returnsFrom(price, previousClose) {
 function projectQuote(identity, snapshot, quote, nowMs) {
   const card = emptyCard(identity, snapshot, quote)
   if (!quote) return card
-  if (['error', 'unavailable'].includes(quote.status)) return { ...card, reason: '저장된 지수 종가를 확인할 수 없습니다.' }
+  if (['error', 'unavailable'].includes(quote.status)) return { ...card, reason: '저장된 종가를 확인할 수 없습니다.' }
   const capturedAt = timestamp(quote.fetchedAt) || timestamp(snapshot?.generatedAt)
   const capturedDate = localDate(capturedAt, quote.timezone)
   const today = localDate(nowMs, quote.timezone)
