@@ -83,6 +83,8 @@ export async function build(root = projectRoot, { communityOrigin = process.env.
   }
   await writeFile(join(output, 'index.html'), html)
   await writeFile(join(output, '404.html'), '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="robots" content="noindex"><title>404</title><main><h1>페이지를 찾을 수 없습니다</h1></main></html>\n')
+  // Only authentication runs on Pages Functions; saved pages/assets stay static.
+  await writeFile(join(output, '_routes.json'), JSON.stringify({ version: 1, include: ['/api/auth/*'], exclude: [] }) + '\n')
   await writeFile(join(output, '_headers'), '/*\n  X-Content-Type-Options: nosniff\n\n/data/*\n  Cache-Control: public, max-age=60, must-revalidate\n')
   await Promise.all(assets.map(entry => copyFile(join(source, 'assets', entry.name), join(output, 'assets', entry.name))))
   await Promise.all(publicSnapshotFiles.filter(name => !['ripple.json', 'market-display.json'].includes(name)).map(name=>copyFile(join(source,'data',name),join(output,'data',name))))

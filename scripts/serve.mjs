@@ -12,9 +12,16 @@ import { createEvidenceSource } from '../server/community/evidence.mjs'
 const snapshotRoutes = {'/api/snapshot':'market.json', '/api/industry':'industry.json', '/api/epoch-ai':'epoch-ai.json',
   '/api/ai-statistics':'ai-statistics.json', '/api/ai-tokens':'ai-tokens.json', '/api/ai-disclosures':'ai-disclosures.json', '/api/company-disclosures':'company-disclosures.json', '/api/comparison-history':'comparison-history.json', '/api/ripple':'ripple.json'}
 
-export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null, debateVotes = null, liveApi = realtimeEnabled } = {}) {
+export function createSiteServer({ root = join(projectRoot, 'dist'), chartService, community = null, recommendationComments = null, debateVotes = null, memberAuth = null, liveApi = realtimeEnabled } = {}) {
   return createServer(async (req, res) => {
     const pathname = URL.canParse(req.url, 'http://localhost') ? new URL(req.url, 'http://localhost').pathname : ''
+    // Login is independent of the paused market/community services.
+    if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) {
+      if (memberAuth) return memberAuth(req, res)
+      const config = pathname === '/api/auth/config' && req.method === 'GET'
+      res.writeHead(config ? 200 : 503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
+      return res.end(JSON.stringify(config ? { enabled: false, clientId: null } : { error: 'auth_not_configured' }))
+    }
     if (!liveApi && (pathname === '/api' || pathname.startsWith('/api/'))) {
       res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
       return res.end(JSON.stringify({ error: 'live_services_paused' }))
@@ -86,7 +93,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     if (!['127.0.0.1','localhost'].includes(host)) throw new Error('댓글 개발 서버는 loopback에서만 실행합니다.')
     community = createCommunityHandler({ catalog: instruments.filter(x => x.chains.some(n => n > 0)), evidenceSource: createEvidenceSource(), path: join(projectRoot,'.local','community.sqlite'), workerToken: process.env.COMMUNITY_WORKER_TOKEN, adminToken: process.env.COMMUNITY_ADMIN_TOKEN })
   }
-  const server = createSiteServer({ root, community, liveApi: realtimeEnabled })
+  let memberAuth = null
+  if (process.env.GOOGLE_CLIENT_ID) {
+    if (!['127.0.0.1', 'localhost'].includes(host)) throw new Error('로그인 개발 서버는 loopback에서만 실행합니다.')
+    const { createLocalMemberHandler } = await import('../server/member/node-http.mjs')
+    memberAuth = await createLocalMemberHandler({ path: join(projectRoot, '.local', 'members.sqlite'), clientId: process.env.GOOGLE_CLIENT_ID, origin: `http://${host}:${port}` })
+  }
+  const server = createSiteServer({ root, community, memberAuth, liveApi: realtimeEnabled })
+  server.once('close', () => memberAuth?.close())
   server.once('close', () => community?.close())
   server.on('error', error => { console.error(error.message); process.exitCode = 1 })
   server.listen(port, host, () => console.log(`AI CHAIN: http://${host}:${port} (저장된 자료 · 실시간 중지${community ? ', 로컬 댓글 개발 모드' : ''})`))

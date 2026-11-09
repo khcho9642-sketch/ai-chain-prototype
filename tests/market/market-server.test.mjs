@@ -250,7 +250,7 @@ test('build publishes only the public site; server handles API errors without ex
   await writeFile(join(source, 'design', 'notes.md'), 'PRIVATE')
   await writeFile(join(source, '.env'), 'PRIVATE')
   const output = await build(source)
-  assert.deepEqual((await readdir(output)).sort(), ['404.html', '_headers', 'assets', 'data', 'index.html'])
+  assert.deepEqual((await readdir(output)).sort(), ['404.html', '_headers', '_routes.json', 'assets', 'data', 'index.html'])
   assert.deepEqual((await readdir(join(output, 'assets'))).sort(), ['market.css', 'market.js'])
   assert.deepEqual((await readdir(join(output,'data'))).sort(),['ai-disclosures.json','ai-statistics.json','ai-tokens.json','company-disclosures.json','company-market.json','comparison-history.json','epoch-ai.json','industry.json','market-display.json','market.json','ripple.json','today-discussion.json','today-personas.json','today-picks.json'])
   const server = createSiteServer({ root: output, liveApi: true, chartService: async (symbol, range) => {

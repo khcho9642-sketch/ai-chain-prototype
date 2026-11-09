@@ -169,6 +169,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
   .tabbar a,.tabbar a:first-child{flex:0 0 72px;min-width:72px;min-height:60px;padding:4px 2px;scroll-snap-align:start;white-space:nowrap}
 }
 </style>
+<link rel="stylesheet" href="./assets/member-auth.css">
 </head>
 <body>
 <header>
@@ -218,6 +219,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <label for="q" class="sr">종목 검색</label><input id="q" type="text" placeholder="종목 검색 후 Enter">
     </div>
     <button class="mine-btn">관심종목 0</button>
+    <button type="button" class="member-auth-button" data-member-auth-open aria-haspopup="dialog">로그인</button>
   </div>
 </header>
 
@@ -420,5 +422,6 @@ window.addEventListener('hashchange',function(){mobileMenu.open=false;});
 <script type="module" src="./assets/today.js"></script>
 <script type="module" src="./assets/debate.js"></script>
 <script type="module" src="./assets/scenario.js"></script>
+<script type="module" src="./assets/member-auth.js"></script>
 </body>
 </html>
