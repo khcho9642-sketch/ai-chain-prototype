@@ -93,7 +93,7 @@ function showNickname() {
   label.htmlFor = 'member-auth-nickname'
   const input = element('input', undefined, 'member-auth-input')
   input.id = 'member-auth-nickname'; input.name = 'nickname'; input.type = 'text'; input.autocomplete = 'nickname'
-  input.autocapitalize = 'none'; input.spellcheck = false; input.required = true; input.maxLength = 40
+  input.autocapitalize = 'none'; input.spellcheck = false; input.required = true
   input.enterKeyHint = 'done'; input.value = nicknameDraft; input.placeholder = '닉네임을 입력하세요'
   input.setAttribute('aria-describedby', 'member-auth-nickname-hint member-auth-status')
   const hint = element('p', '2~20자 · 한글·영문 등 문자, 숫자, 밑줄(_) · 공백 제외', 'member-auth-hint')

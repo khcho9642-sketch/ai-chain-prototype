@@ -98,6 +98,8 @@ test('request timeout aborts fetch and returns a stable message without leaking 
 
 test('nickname normalization matches server Unicode rules without trimming spaces', () => {
   assert.equal(normalizeMemberNickname('한글'), '한글')
+  assert.equal(normalizeMemberNickname('각'.repeat(20)), '각'.repeat(20))
+  assert.throws(() => normalizeMemberNickname('각'.repeat(21)), { code: 'invalid_nickname' })
   assert.equal(normalizeMemberNickname('A\u0301_'), 'Á_')
   assert.equal(normalizeMemberNickname('사용자_12'), '사용자_12')
   assert.equal(normalizeMemberNickname('𐐀'.repeat(20)), '𐐀'.repeat(20))
