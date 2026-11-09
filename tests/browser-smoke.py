@@ -430,8 +430,11 @@ with tempfile.TemporaryDirectory(prefix='ai-chain-browser-') as temp:
             assert comparison.locator('[data-peer-empty]').is_visible()
             assert comparison.locator('#peer-chart').count() == 0
             assert comparison.locator('[data-peer-remove-symbol]').count() == 0
-            show_company_chain(comparison, 2)
-            samsung.first.check()
+            comparison.locator('[data-peer-mode=groups]').click()
+            foundry_samsung = comparison.locator('[data-peer-chain="2"] [data-peer-symbol="005930.KS"]')
+            foundry_samsung.check()
+            assert picker.locator('[data-peer-chain="2"]').is_visible()
+            assert page.evaluate("document.activeElement.closest('[data-peer-chain]').dataset.peerChain") == '2'
             assert all(samsung.nth(i).is_checked() for i in range(samsung.count()))
             show_company_chain(comparison, 4)
             comparison.locator('[data-peer-symbol="NVDA"]').first.check()

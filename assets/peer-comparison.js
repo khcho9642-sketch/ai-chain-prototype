@@ -174,16 +174,16 @@ function changeSelection(symbol,checked){
   if(!catalogMap.has(symbol))return
   const enteringCompanyMode=!isCompany()
   const focused=document.activeElement,focusSymbol=focused?.dataset?.peerSymbol
-  const focusIndex=focusSymbol?[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol).indexOf(focused):-1
+  const focusChain=Number(focused?.closest('[data-peer-chain]')?.dataset.peerChain)
   if(checked){selected.add(symbol);hiddenCompanies.delete(symbol)}else{selected.delete(symbol);hiddenCompanies.delete(symbol)}
-  if(enteringCompanyMode)pickerChain=Number(focused?.closest('[data-peer-chain]')?.dataset.peerChain)||chainsFor(catalogMap.get(symbol).chains)[0]?.id
+  if(enteringCompanyMode)pickerChain=focusChain||chainsFor(catalogMap.get(symbol).chains)[0]?.id
   mode='companies';calculate();render()
-  if(focusIndex>=0)[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol)[focusIndex]?.focus({preventScroll:true})
   if(enteringCompanyMode){
     const picker=document.querySelector('[data-peer-company-picker]')
     if(picker)picker.open=true
-    document.querySelector('[data-peer-symbol="'+CSS.escape(symbol)+'"]')?.focus({preventScroll:true})
   }
+  const targetSymbol=enteringCompanyMode?symbol:focusSymbol,targetChain=enteringCompanyMode?pickerChain:focusChain
+  if(targetSymbol&&targetChain)document.querySelector('#v-compare [data-peer-chain="'+targetChain+'"] [data-peer-symbol="'+CSS.escape(targetSymbol)+'"]')?.focus({preventScroll:true})
 }
 window.renderComparison=render
 window.addEventListener('market-snapshot',event=>{snapshot=event.detail;loadError='';calculate();render()})
