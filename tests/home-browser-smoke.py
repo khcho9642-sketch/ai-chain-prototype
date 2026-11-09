@@ -198,10 +198,29 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                     verify_header_indices(page)
                     assert indices.evaluate('element => element === window.__persistentIndexStrip')
                     assert indices.locator('[data-index-strip-cards]').text_content() == saved_indices
+                    if menu == 'compare':
+                        buttons = page.locator('#v-compare [data-peer-jump]')
+                        buttons.first.wait_for(state='attached')
+                        assert buttons.all_text_contents()[:3] == ['소부장', '메모리', '파운드리·패키징']
+                        assert buttons.evaluate_all('els => els.slice(0, 3).map(el => el.dataset.peerJump)') == ['1', '3', '2']
+                    if menu == 'map':
+                        nodes = page.locator('#mapRow .node')
+                        assert nodes.locator('.name').all_text_contents()[:3] == ['소부장', '메모리', '파운드리·패키징']
+                        assert nodes.locator('.num').all_text_contents()[:3] == ['01', '02', '03']
+                        nodes.nth(2).click()
+                        assert page.locator('#detail h2').inner_text() == '파운드리·패키징'
+                        assert '선택한 고리 · 03' in page.locator('#detail').inner_text()
+                        assert 'TSMC' in page.locator('#detail .chips').inner_text()
+                    if menu == 'data':
+                        assert page.locator('#market-filter option').all_text_contents()[1:4] == ['소부장', '메모리', '파운드리·패키징']
+                        assert page.locator('#v-data [data-df]').all_text_contents()[1:4] == ['소부장', '메모리', '파운드리·패키징']
                 home = wait_home(page)
                 checks.append('five saved indices persist beside the top header logo across all twelve menus without a status sentence or changed values')
                 cards = home.locator('.sector-return-card')
                 assert cards.count() == 9
+                assert cards.evaluate_all('els => els.slice(1, 3).map(el => el.dataset.sector)') == ['memory', 'foundry-packaging']
+                assert cards.nth(1).locator('.sector-return-step').inner_text() == '02'
+                assert cards.nth(2).locator('.sector-return-step').inner_text() == '03'
                 assert home.locator('[data-home-weight=eq]').get_attribute('aria-pressed') == 'true'
                 assert home.locator('[data-home-card-period]').input_value() == '3mo'
                 assert '587개 기업' in home.locator('[data-home-coverage]').inner_text()
@@ -291,6 +310,8 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 home.get_by_role('button',name='버블',exact=True).click()
                 home.locator('.bubble-node').first.wait_for()
+                axis_names = home.locator('.sector-axis-label').evaluate_all("els => els.slice(1, 3).map(el => el.getAttribute('aria-label'))")
+                assert axis_names == ['메모리 분야 확대', '파운드리·패키징 분야 확대']
                 assert home.locator('.bubble-node').count()==fixture_data['actualMap']['coverage']['returnableCount']
                 assert home.locator('.bubble-node[data-id="C0587"],.bubble-node[data-ticker="NSCL"]').count()==0
                 assert home.locator('[data-map-private-company]').count()==4

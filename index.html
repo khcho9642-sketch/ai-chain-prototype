@@ -184,8 +184,6 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <summary aria-label="전체 메뉴"><span class="mobile-menu-label">전체 메뉴</span> <span aria-hidden="true">☰</span></summary>
       <nav aria-label="전체 메뉴">
       <a href="#home" data-r="home" class="on">시장 지도</a>
-      <a href="#today" data-r="today">오늘의 변화</a>
-      <a href="#debate" data-r="debate">오늘의 토론</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
       <a href="#data" data-r="data">기업정보</a>
       <a href="#company-info" data-r="company-info">신기업정보</a>
@@ -193,14 +191,14 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#compare" data-r="compare">고리 비교</a>
       <a href="#industry" data-r="industry">산업·AI 통계</a>
       <a href="#scenario" data-r="scenario">시나리오 분석</a>
+      <a href="#today" data-r="today">오늘의 변화</a>
+      <a href="#debate" data-r="debate">오늘의 토론</a>
       <a href="#talk" data-r="talk">토론</a>
       <a href="#ai" data-r="ai">AI에게 묻기</a>
       </nav>
     </details>
     <nav class="topnav" aria-label="주요 메뉴">
       <a href="#home" data-r="home" class="on">시장 지도</a>
-      <a href="#today" data-r="today">오늘의 변화</a>
-      <a href="#debate" data-r="debate">오늘의 토론</a>
       <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
       <a href="#data" data-r="data">기업정보</a>
       <a href="#company-info" data-r="company-info">신기업정보</a>
@@ -209,6 +207,8 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <a href="#industry" data-r="industry">산업·AI 통계</a>
       <span class="topnav-actions">
         <a href="#scenario" data-r="scenario">시나리오 분석</a>
+        <a href="#today" data-r="today">오늘의 변화</a>
+        <a href="#debate" data-r="debate">오늘의 토론</a>
         <a href="#talk" data-r="talk">토론</a>
         <a href="#ai" data-r="ai">AI에게 묻기</a>
       </span>
@@ -286,8 +286,6 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
 
 <nav class="tabbar" aria-label="주요 메뉴">
   <a href="#home" data-r="home" class="on"><span aria-hidden="true">▦</span>시장 지도</a>
-  <a href="#today" data-r="today"><span aria-hidden="true">◈</span>오늘의 변화</a>
-  <a href="#debate" data-r="debate"><span aria-hidden="true">◌</span>오늘의 토론</a>
   <a href="#sector-compare" data-r="sector-compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 17l5-5 5 2 8-10M3 17l5-1 5 2 8-5"/></svg>섹터 비교</a>
   <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>기업정보</a>
   <a href="#company-info" data-r="company-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>신기업정보</a>
@@ -295,30 +293,34 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
   <a href="#compare" data-r="compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 18L9 11L14 14L21 5M3 10L9 15L14 7L21 11"/></svg>고리 비교</a>
   <a href="#industry" data-r="industry"><span aria-hidden="true">▥</span>산업·AI 통계</a>
   <a href="#scenario" data-r="scenario"><span aria-hidden="true">±</span>시나리오</a>
+  <a href="#today" data-r="today"><span aria-hidden="true">◈</span>오늘의 변화</a>
+  <a href="#debate" data-r="debate"><span aria-hidden="true">◌</span>오늘의 토론</a>
   <a href="#talk" data-r="talk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>토론</a>
   <a href="#ai" data-r="ai"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>AI</a>
 </nav>
 
-<script>
+<script type="module">
+import { legacyChains, chainName, chainDisplayNumber, chainsFor } from "./assets/chain-order.js";
 var ph='[이 고리의 오늘 AI 해설이 들어갈 자리]';
 var S=[
- {id:1,name:'소부장',desc:'반도체 장비·소재·부품·기판',t:['ASML','한미반도체','[국내 소재·기판]'],sig:'보통',mine:false,m:[['ASML 신규 수주','[값]','','ASML 실적 자료'],['국내 수주 공시','[건수]','','DART 최근 30일'],['고객사 설비투자','[값]','','실적 발표 자료']],up:[],down:[2,3],ai:ph},
- {id:2,name:'파운드리·패키징',desc:'칩 위탁생산과 CoWoS 같은 첨단 패키징',t:['TSMC','삼성전자','인텔'],sig:'강세',mine:false,m:[['TSMC 9월 매출','NT$5,118.6억','전년 대비 +54.6%','TSMC 10월 8일'],['3분기 웨이퍼 출하','447.6만 장','전 분기 대비 +3.2%','TSMC 10월 15일'],['4분기 매출 가이던스','$523억~543억','','TSMC 10월 15일']],up:[1],down:[4],ai:'TSMC가 4분기 매출을 523억~543억 달러로 제시했어요. 7나노 이하 첨단 공정이 웨이퍼 매출의 79%를 차지해요. 첨단 패키징이 늘수록 HBM(메모리)과 AI 칩 고리의 물량으로 이어져요.'},
- {id:3,name:'메모리',desc:'DRAM·HBM·NAND',t:['SK하이닉스','삼성전자','마이크론'],sig:'보통',mine:true,m:[['DRAM 현물가','[값]','','TrendForce'],['한국 반도체 수출','[값]','','관세청 10월 1~20일'],['HBM 가격 동향','[값]','','업계 추정']],up:[1],down:[4],ai:ph},
- {id:4,name:'AI 칩',desc:'GPU와 맞춤형 칩(ASIC) 설계',t:['엔비디아','AMD','브로드컴'],sig:'강세',mine:true,m:[['데이터센터 매출','[값]','','엔비디아 IR'],['다음 분기 가이던스','[값]','','엔비디아 IR'],['CoWoS 할당 비중','[추정치]','','기관 추정']],up:[2,3],down:[6],ai:ph},
- {id:5,name:'전력',desc:'변압기·전선·냉각',t:['HD현대일렉트릭','LS일렉트릭','버티브'],sig:'약세',mine:false,m:[['수주잔고','[값]','','각 사 실적'],['변압기 수출','[값]','','관세청'],['데이터센터 전력 수요','[값]','','업계 자료']],up:[],down:[6],ai:ph},
- {id:6,name:'인프라',desc:'데이터센터·클라우드·데이터센터 리츠',t:['마이크로소프트','아마존','에퀴닉스','디지털 리얼티'],sig:'강세',mine:true,m:[['빅테크 설비투자 합계','[값]','','각 사 실적'],['클라우드 매출 성장률','[값]','','각 사 실적'],['데이터센터 착공','[값]','','업계 자료']],up:[4,5],down:[7],ai:ph},
- {id:7,name:'모델',desc:'AI 모델 개발',t:['구글','메타'],sig:'보통',mine:false,m:[['주요 모델 출시','[건수]','','각 사 발표'],['AI 이용량 지표','[값]','','각 사 발표'],['모델 학습 투자','[값]','','실적 자료']],up:[6],down:[8],ai:ph},
- {id:8,name:'애플리케이션',desc:'AI 서비스·소프트웨어',t:['네이버','팔란티어'],sig:'보통',mine:false,m:[['AI 매출 비중','[값]','','각 사 실적'],['유료 사용자','[값]','','각 사 발표'],['신규 AI 서비스','[건수]','','각 사 발표']],up:[7],down:[],ai:ph}
+ {id:1,name:chainName(1),desc:'반도체 장비·소재·부품·기판',t:['ASML','한미반도체','[국내 소재·기판]'],sig:'보통',mine:false,m:[['ASML 신규 수주','[값]','','ASML 실적 자료'],['국내 수주 공시','[건수]','','DART 최근 30일'],['고객사 설비투자','[값]','','실적 발표 자료']],up:[],down:[2,3],ai:ph},
+ {id:2,name:chainName(2),desc:'칩 위탁생산과 CoWoS 같은 첨단 패키징',t:['TSMC','삼성전자','인텔'],sig:'강세',mine:false,m:[['TSMC 9월 매출','NT$5,118.6억','전년 대비 +54.6%','TSMC 10월 8일'],['3분기 웨이퍼 출하','447.6만 장','전 분기 대비 +3.2%','TSMC 10월 15일'],['4분기 매출 가이던스','$523억~543억','','TSMC 10월 15일']],up:[1],down:[4],ai:'TSMC가 4분기 매출을 523억~543억 달러로 제시했어요. 7나노 이하 첨단 공정이 웨이퍼 매출의 79%를 차지해요. 첨단 패키징이 늘수록 HBM(메모리)과 AI 칩 고리의 물량으로 이어져요.'},
+ {id:3,name:chainName(3),desc:'DRAM·HBM·NAND',t:['SK하이닉스','삼성전자','마이크론'],sig:'보통',mine:true,m:[['DRAM 현물가','[값]','','TrendForce'],['한국 반도체 수출','[값]','','관세청 10월 1~20일'],['HBM 가격 동향','[값]','','업계 추정']],up:[1],down:[4],ai:ph},
+ {id:4,name:chainName(4),desc:'GPU와 맞춤형 칩(ASIC) 설계',t:['엔비디아','AMD','브로드컴'],sig:'강세',mine:true,m:[['데이터센터 매출','[값]','','엔비디아 IR'],['다음 분기 가이던스','[값]','','엔비디아 IR'],['CoWoS 할당 비중','[추정치]','','기관 추정']],up:[2,3],down:[6],ai:ph},
+ {id:5,name:chainName(5),desc:'변압기·전선·냉각',t:['HD현대일렉트릭','LS일렉트릭','버티브'],sig:'약세',mine:false,m:[['수주잔고','[값]','','각 사 실적'],['변압기 수출','[값]','','관세청'],['데이터센터 전력 수요','[값]','','업계 자료']],up:[],down:[6],ai:ph},
+ {id:6,name:chainName(6),desc:'데이터센터·클라우드·데이터센터 리츠',t:['마이크로소프트','아마존','에퀴닉스','디지털 리얼티'],sig:'강세',mine:true,m:[['빅테크 설비투자 합계','[값]','','각 사 실적'],['클라우드 매출 성장률','[값]','','각 사 실적'],['데이터센터 착공','[값]','','업계 자료']],up:[4,5],down:[7],ai:ph},
+ {id:7,name:chainName(7),desc:'AI 모델 개발',t:['구글','메타'],sig:'보통',mine:false,m:[['주요 모델 출시','[건수]','','각 사 발표'],['AI 이용량 지표','[값]','','각 사 발표'],['모델 학습 투자','[값]','','실적 자료']],up:[6],down:[8],ai:ph},
+ {id:8,name:chainName(8),desc:'AI 서비스·소프트웨어',t:['네이버','팔란티어'],sig:'보통',mine:false,m:[['AI 매출 비중','[값]','','각 사 실적'],['유료 사용자','[값]','','각 사 발표'],['신규 AI 서비스','[건수]','','각 사 발표']],up:[7],down:[],ai:ph}
 ];
 var cls={'강세':'s-up','보통':'s-mid','약세':'s-down'};
-var cols=[[1],[2,3],[4,5],[6],[7],[8]];
-var sel=2;
+var cols=[[1],[2,3],[4,5],[6],[7],[8]].map(c=>chainsFor(c).map(s=>s.id));
+var sel=legacyChains[1].id;
+window.S=S;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function get(id){return S[id-1];}
 function pad(n){return (n<10?'0':'')+n;}
 function arrow(){return '<div class="arrow" aria-hidden="true"><svg class="right" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="down" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A4656" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>';}
-function node(s){return '<button class="node'+(s.mine?' mine':'')+(s.id===sel?' on':'')+'" data-id="'+s.id+'" aria-pressed="'+(s.id===sel)+'"><div class="row"><span class="num mono">'+pad(s.id)+'</span><span class="pill '+cls[s.sig]+'">'+s.sig+'</span></div><span class="name">'+esc(s.name)+'</span><span class="tick">'+esc(s.t.join(' · '))+'</span>'+(s.mine?'<span class="tag">내 종목</span>':'')+'</button>';}
+function node(s){return '<button class="node'+(s.mine?' mine':'')+(s.id===sel?' on':'')+'" data-id="'+s.id+'" aria-pressed="'+(s.id===sel)+'"><div class="row"><span class="num mono">'+pad(chainDisplayNumber(s.id))+'</span><span class="pill '+cls[s.sig]+'">'+s.sig+'</span></div><span class="name">'+esc(s.name)+'</span><span class="tick">'+esc(s.t.join(' · '))+'</span>'+(s.mine?'<span class="tag">내 종목</span>':'')+'</button>';}
 function renderMap(){
   document.getElementById('mapRow').innerHTML=cols.map(function(c){return '<div class="col" style="--n:'+c.length+'">'+c.map(function(id){return node(get(id));}).join('')+'</div>';}).join(arrow());
   var c={'강세':0,'보통':0,'약세':0};S.forEach(function(s){c[s.sig]++;});
@@ -326,10 +328,10 @@ function renderMap(){
 }
 function renderDetail(){
   var d=get(sel);
-  var up=d.up.length?d.up.map(function(i){return get(i).name;}).join(' · '):'사슬의 시작';
-  var dn=d.down.length?d.down.map(function(i){return get(i).name;}).join(' · '):'최종 사용자';
+  var up=d.up.length?chainsFor(d.up).map(s=>s.name).join(' · '):'사슬의 시작';
+  var dn=d.down.length?chainsFor(d.down).map(s=>s.name).join(' · '):'최종 사용자';
   document.getElementById('detail').innerHTML=
-   '<div class="dhead"><div><span class="muted" style="font-size:12px">선택한 고리 · '+pad(d.id)+'</span><h2>'+esc(d.name)+'</h2><span class="muted" style="font-size:14px">'+esc(d.desc)+'</span></div><span class="pill '+cls[d.sig]+'">'+d.sig+' · 예시</span></div>'+
+   '<div class="dhead"><div><span class="muted" style="font-size:12px">선택한 고리 · '+pad(chainDisplayNumber(d.id))+'</span><h2>'+esc(d.name)+'</h2><span class="muted" style="font-size:14px">'+esc(d.desc)+'</span></div><span class="pill '+cls[d.sig]+'">'+d.sig+' · 예시</span></div>'+
    '<div class="chips">'+d.t.map(function(x){return '<span class="chip">'+esc(x)+'</span>';}).join('')+'</div>'+
    '<div class="metrics">'+d.m.map(function(m){return '<div class="metric"><span class="muted" style="font-size:12px">'+esc(m[0])+'</span><span class="v mono">'+esc(m[1])+'</span><span class="s">'+esc(m[2])+'</span><span class="muted" style="font-size:11px">출처 · '+esc(m[3])+'</span></div>';}).join('')+'</div>'+
    '<div class="links"><div class="link"><span class="muted" style="font-size:12px">← 공급받는 고리</span><b>'+esc(up)+'</b></div><div class="link"><span class="muted" style="font-size:12px">공급하는 고리 →</span><b>'+esc(dn)+'</b></div></div>'+
@@ -338,20 +340,22 @@ function renderDetail(){
    '<div class="post"><span>['+esc(d.name)+' 토론방 인기 분석 글 제목]</span><span class="muted" style="font-size:12px">인증 주주 · 출처 포함</span></div>'+
    '<div class="post"><span>['+esc(d.name)+' 토론방 질문 글 제목]</span><span class="muted" style="font-size:12px">인증 주주 · 질문</span></div></div>';
 }
-function pick(id,scroll){sel=id;renderMap();renderDetail();if(scroll&&window.innerWidth<=760)document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'start'});}
+function pick(id,scroll){sel=id;window.sel=id;window.renderMap();window.renderDetail();if(scroll&&window.innerWidth<=760)document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'start'});}
 document.addEventListener('click',function(e){
   var n=e.target.closest('.node');if(n){pick(+n.dataset.id,true);return;}
   var b=e.target.closest('[data-go]');if(b){pick(+b.dataset.go,false);document.getElementById('map').scrollIntoView({behavior:'smooth'});}
 });
-pick(2,false);
+window.renderMap=renderMap;
+window.renderDetail=renderDetail;
+pick(sel,false);
 
 var NOREC=/(살까|팔까|사야|팔아야|매수|매도|추천|목표가|목표주가|오를까|내릴까|전망|예측)/;
 var dataF=0;
 function renderData(){
-  var rows=[];S.forEach(function(s){if(dataF&&s.id!==dataF)return;s.m.forEach(function(m){rows.push([s,m]);});});
+  var rows=[];legacyChains.forEach(function(c){if(dataF&&c.id!==dataF)return;var s=get(c.id);s.m.forEach(function(m){rows.push([s,m]);});});
   var ok=0;rows.forEach(function(r){if(r[1][1].charAt(0)!=='[')ok++;});
   document.getElementById('v-data').innerHTML='<div id="company-directory"></div><section class="panel sec"><div><h2>고리별 추가 지표 · 연결 현황</h2><p class="note"><a href="#industry">실제 수출금액·수출물량지수·TSMC 월매출 통계 보기 →</a></p><p class="note">모든 숫자는 출처와 함께 표시합니다. 확인되지 않은 값은 [값]으로 비워 두었어요. 확인된 값 '+ok+' / '+rows.length+'개</p></div>'+
-   '<div class="filters">'+['전체'].concat(S.map(function(s){return s.name;})).map(function(n,i){return '<button class="f'+(i===dataF?' on':'')+'" data-df="'+i+'">'+esc(n)+'</button>';}).join('')+'</div>'+
+   '<div class="filters">'+[{id:0,name:'전체'},...legacyChains].map(function(c){return '<button class="f'+(c.id===dataF?' on':'')+'" data-df="'+c.id+'">'+esc(c.name)+'</button>';}).join('')+'</div>'+
    '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>고리</th><th>지표</th><th>값</th><th class="hide-m">변화</th><th>출처·기준일</th></tr></thead><tbody>'+
    rows.map(function(r){var m=r[1],c=m[1].charAt(0)!=='[';return '<tr><td>'+esc(r[0].name)+'</td><td>'+esc(m[0])+'</td><td class="v mono">'+esc(m[1])+'<br>'+(c?'<span class="ok">확인</span>':'<span class="no">미확인</span>')+'</td><td class="hide-m" style="color:var(--accent)">'+esc(m[2])+'</td><td class="muted">'+esc(m[3])+'</td></tr>';}).join('')+
    '</tbody></table></div></section>';
@@ -360,7 +364,7 @@ function answer(q){
   if(NOREC.test(q))return '<p>이 서비스는 매수·매도 추천, 목표주가, 주가 예측을 제공하지 않아요. 대신 해당 고리의 공개 지표와 출처를 보여드릴 수 있어요. 고리 이름으로 다시 물어보세요.</p>';
   var hit=null;S.forEach(function(s){if(!hit&&(q.indexOf(s.name.split('·')[0])>-1||s.t.some(function(t){return t.charAt(0)!=='['&&q.toLowerCase().indexOf(t.toLowerCase())>-1;})))hit=s;});
   if(!hit)return '<p>아직 8개 고리 이름이나 대표 종목으로 묻는 질문만 답할 수 있어요. 예: “메모리 고리는 어디서 물량을 받나요?”</p>';
-  var up=hit.up.map(function(i){return get(i).name;}).join(', ')||'없음(사슬의 시작)',dn=hit.down.map(function(i){return get(i).name;}).join(', ')||'없음(최종 사용자)';
+  var up=chainsFor(hit.up).map(s=>s.name).join(', ')||'없음(사슬의 시작)',dn=chainsFor(hit.down).map(s=>s.name).join(', ')||'없음(최종 사용자)';
   var conf=hit.m.filter(function(m){return m[1].charAt(0)!=='[';});
   return '<p><b>'+esc(hit.name)+'</b> — '+esc(hit.desc)+'. 공급받는 고리: '+esc(up)+' / 공급하는 고리: '+esc(dn)+'.</p>'+
    (conf.length?'<p>확인된 지표: '+conf.map(function(m){return esc(m[0])+' '+esc(m[1])+' ('+esc(m[3])+')';}).join(', ')+'</p>':'<p>아직 확인된 수치가 없어요. 데이터 연결 후 채워져요.</p>')+
@@ -391,7 +395,7 @@ function route(){
   document.body.dataset.page=r;
   if(r==='home')window.renderHomeMap?.();
   if(r==='sector-compare')window.renderSectorCompare?.(h[1]);
-  if(r==='debate')window.renderDebate?.();if(r==='scenario')window.renderScenario?.();if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='data')renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
+  if(r==='debate')window.renderDebate?.();if(r==='scenario')window.renderScenario?.();if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='data')window.renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
   var titles={home:'AI 시장 지도',today:'오늘의 변화',debate:'오늘의 토론','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업정보','company-info':'신기업정보',compare:'고리 비교',industry:'산업·AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
   var industryTitle=h[1]==='ai'?'AI 통계':h[1]==='epoch'?'Epoch AI':titles.industry;
   document.title=(r==='industry'?industryTitle:titles[r])+' | AI Value Chain';
@@ -401,10 +405,11 @@ function route(){
 }
 window.addEventListener('hashchange',route);
 document.addEventListener('click',function(e){
-  var f=e.target.closest('[data-df]');if(f){dataF=+f.dataset.df;renderData();return;}
+  var f=e.target.closest('[data-df]');if(f){dataF=+f.dataset.df;window.renderData();return;}
   var q=e.target.closest('[data-q]');if(q){ask(q.dataset.q);}
 });
 document.addEventListener('submit',function(e){if(e.target.id==='askForm'){e.preventDefault();var v=document.getElementById('aq').value.trim();if(v)ask(v);}});
+window.renderData=renderData;
 route();
 var mobileMenu=document.querySelector('.mobile-menu');
 mobileMenu.addEventListener('click',function(event){if(event.target.closest('a[data-r]'))mobileMenu.open=false;});

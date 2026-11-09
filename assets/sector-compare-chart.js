@@ -1,6 +1,6 @@
 const flowChartDisposers = new WeakMap();
 
-export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, onPinGuideReady, showPeak = true } = {}) {
+export function renderFlowChart(container, { dates = [], lines = [], title = '주가 흐름', onFocus, onLayout, onPinGuideReady, showPeak = true, sortTooltipByValue = true } = {}) {
   flowChartDisposers.get(container)?.();
   container.replaceChildren();
 
@@ -103,7 +103,8 @@ export function renderFlowChart(container, { dates = [], lines = [], title = '�
     time.dateTime = dates[cursor];
     time.textContent = dates[cursor].replaceAll('-', '. ');
     tip.replaceChildren(time);
-    for (const line of [...rows].sort((a, b) => b.values[cursor] - a.values[cursor])) {
+    const tooltipRows = sortTooltipByValue ? [...rows].sort((a, b) => b.values[cursor] - a.values[cursor]) : rows;
+    for (const line of tooltipRows) {
       const row = document.createElement('div');
       row.className = 'sector-flow-chart-tip-row';
       const dot = document.createElement('i');

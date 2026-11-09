@@ -273,7 +273,10 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
       onLayout: sectorMode ? eventPins.layout : undefined,
       onPinGuideReady: sectorMode ? eventPins.guideReady : undefined,
-      lines: rows.map(row => ({ id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused })),
+      sortTooltipByValue: !sectorMode,
+      lines: (sectorMode ? model.sectors : rows).map(row => ({
+        id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused,
+      })),
     });
 
     const detail = sectorMode ? [...(focused?.members ?? [])].sort(byPerformance) : stockCatalog;

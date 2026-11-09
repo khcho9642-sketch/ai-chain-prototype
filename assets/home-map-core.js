@@ -5,8 +5,11 @@
  * cap is measured in USD billions. country identifies the issuer's home market.
  */
 
+import { SECTOR_DISPLAY_IDS } from './chain-order.js';
+
 export const DATA_NOTE = '화면 미리보기용 합성 데이터입니다. 실시간 시세가 아닙니다. 시총 단위: USD 십억.';
 
+// This order also defines the original workbook codes and the ripple direction.
 export const SECTORS = Object.freeze([
   { id: 'semiconductor-equipment', name: '반도체 소부장', color: '#68A9FF' },
   { id: 'foundry-packaging', name: '파운드리·패키징', color: '#47CCDE' },
@@ -18,6 +21,8 @@ export const SECTORS = Object.freeze([
   { id: 'cloud-gpu', name: '클라우드·GPU 컴퓨팅', color: '#71BDEB' },
   { id: 'ai-models', name: 'AI 모델', color: '#CA98E5' },
 ].map(Object.freeze));
+
+export const DISPLAY_SECTORS = Object.freeze(SECTOR_DISPLAY_IDS.map(id => SECTORS.find(sector => sector.id === id)));
 
 // A company has one primary sector, so its market cap is counted only once.
 const ROWS = [
@@ -251,7 +256,7 @@ export function bubbleLayout(items, width = 1080, height = 560, { period = '1d',
     left: 48, right: viewWidth - 16, top: 22, bottom: viewHeight - 78,
   };
   const requested = selectionSet(sector);
-  const sectors = SECTORS.filter((entry) => !requested || requested.has(entry.name) || requested.has(entry.id));
+  const sectors = DISPLAY_SECTORS.filter((entry) => !requested || requested.has(entry.name) || requested.has(entry.id));
   const sectorByName = new Map(sectors.map((entry) => [entry.name, entry]));
   const excluded = [];
   const valid = [];

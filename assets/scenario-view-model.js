@@ -1,4 +1,5 @@
 import { BIG7_COMPANY_IDS, MODEL_ASSUMPTIONS, PROPAGATION_EDGES, SEGMENTS } from './scenario-data.js'
+import { SECTOR_DISPLAY_IDS } from './chain-order.js'
 
 export const VIEW_MODEL_GRADE = 'C'
 export const VIEW_MODEL_METHOD = '직접 경로와 전체 경로의 현금흐름 재평가'
@@ -7,6 +8,24 @@ const LEGACY_NOTE = '이전 버전의 경로 점수를 배분한 설명값입니
 const RATE_METHOD = '동일 기준 EV에서 금리만 반영한 값과 CAPEX 경유를 더한 값의 차이'
 const RATE_NOTE = '직접효과는 투자 예산을 고정하고 금리만 바꾼 EV의 변화율입니다. 전파효과는 같은 기준에서 4개사의 CAPEX 경로를 추가한 EV 변화분입니다.'
 export const MAX_RECONCILIATION_RESIDUAL_PCT = 0.001
+
+// The scenario model's SEG IDs are stable even when sector display positions change.
+const segmentIdBySectorId = {
+  'semiconductor-equipment': 'SEG1',
+  'memory': 'SEG3',
+  'foundry-packaging': 'SEG2',
+  'ai-chips': 'SEG4',
+  'ai-equipment': 'SEG5',
+  'power-cooling': 'SEG6',
+  'data-centers': 'SEG7',
+  'cloud-gpu': 'SEG8',
+  'ai-models': 'SEG9',
+}
+const displaySegmentIds = SECTOR_DISPLAY_IDS.map(sectorId => segmentIdBySectorId[sectorId])
+export const SCENARIO_DISPLAY_SEGMENTS = Object.freeze(displaySegmentIds.map(id => SEGMENTS.find(segment => segment.id === id)))
+const displayPositions = new Map(displaySegmentIds.map((id, position) => [id, position]))
+const displayPosition = row => displayPositions.get(row.segmentId) ?? displayPositions.size
+const compareDisplaySegments = (left, right) => displayPosition(left) - displayPosition(right)
 
 export const REPRESENTATIVE_COMPANIES = Object.freeze([
   Object.freeze({ segmentId: 'SEG1', companyId: 'ASML' }),
@@ -18,7 +37,7 @@ export const REPRESENTATIVE_COMPANIES = Object.freeze([
   Object.freeze({ segmentId: 'SEG7', companyId: 'EQIX' }),
   Object.freeze({ segmentId: 'SEG8', companyId: 'MSFT' }),
   Object.freeze({ segmentId: 'SEG9', companyId: 'META' }),
-])
+].sort(compareDisplaySegments))
 
 export const REPRESENTATIVE_COMPANY_IDS = Object.freeze(REPRESENTATIVE_COMPANIES.map(item => item.companyId))
 
@@ -163,7 +182,7 @@ export function buildScenarioView(result) {
   return {
     scenario: result.scenario,
     model: result.model,
-    segments: result.segments,
+    segments: Array.isArray(result.segments) ? result.segments.slice().sort(compareDisplaySegments) : result.segments,
     companies,
     representativeRows,
     big7Rows,

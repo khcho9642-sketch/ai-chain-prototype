@@ -1,5 +1,6 @@
 import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { instruments } from './instruments.js'
+import { legacyChains } from './chain-order.js'
 import { normalizeSymbol, validSymbol, readSymbols, filterQuotes, chooseBars, newestQuote } from './market-core.js'
 import { companyHrefForTicker, companyHrefForQuery } from './company-links.js'
 import { MARKET_DATA_POLICY } from './market-data-policy.js'
@@ -104,7 +105,7 @@ function mount(){
   const parent=document.getElementById('v-data');if(!parent||parent.hidden)return
   document.getElementById('market-data')?.remove()
   const el=document.createElement('section');el.id='market-data';el.className='panel sec market-section'
-  el.innerHTML=`<div class="market-top"><h2>종목 · 시세 · 관심종목</h2><button class="f" data-market-refresh>${autoRefreshEnabled?'다시 조회':'저장값 확인'}</button></div><p class="note">${note()}</p><form id="market-add-form" class="market-controls"><input id="market-add" aria-label="추가할 티커" placeholder="저장 종목 찾기: NVDA / 005930.KS" maxlength="24"><button class="f" type="submit">종목 찾기</button></form><p id="market-form-status" class="market-error" role="status">${text(formError)}</p><div class="market-controls"><input id="market-search" aria-label="실제 시세 종목 검색" placeholder="종목명 또는 티커 검색" value="${text(search)}"><select id="market-group" aria-label="시장 선택">${['전체','국내','해외','시장','관심','직접추가'].map(g=>`<option${g===group?' selected':''}>${g}</option>`).join('')}</select><select id="market-filter" aria-label="시세 고리 선택"><option value="0">모든 고리</option>${window.S.map(s=>`<option value="${s.id}"${filter===s.id?' selected':''}>${text(s.name)}</option>`).join('')}</select></div><div id="market-results">${result()}</div><div id="market-community"></div>`
+  el.innerHTML=`<div class="market-top"><h2>종목 · 시세 · 관심종목</h2><button class="f" data-market-refresh>${autoRefreshEnabled?'다시 조회':'저장값 확인'}</button></div><p class="note">${note()}</p><form id="market-add-form" class="market-controls"><input id="market-add" aria-label="추가할 티커" placeholder="저장 종목 찾기: NVDA / 005930.KS" maxlength="24"><button class="f" type="submit">종목 찾기</button></form><p id="market-form-status" class="market-error" role="status">${text(formError)}</p><div class="market-controls"><input id="market-search" aria-label="실제 시세 종목 검색" placeholder="종목명 또는 티커 검색" value="${text(search)}"><select id="market-group" aria-label="시장 선택">${['전체','국내','해외','시장','관심','직접추가'].map(g=>`<option${g===group?' selected':''}>${g}</option>`).join('')}</select><select id="market-filter" aria-label="시세 고리 선택"><option value="0">모든 고리</option>${legacyChains.map(s=>`<option value="${s.id}"${filter===s.id?' selected':''}>${text(s.name)}</option>`).join('')}</select></div><div id="market-results">${result()}</div><div id="market-community"></div>`
   parent.prepend(el)
   notifyCommunity()
 }

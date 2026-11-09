@@ -1,5 +1,6 @@
 import { realtimeEnabled, staticHost } from './site-runtime.js'
 import { instruments } from './instruments.js'
+import { legacyChains as chains, chainsFor } from './chain-order.js'
 import { buildComparison, buildCompanyComparison } from './peer-comparison-core.js'
 import { validateComparisonHistorySnapshot } from './comparison-history-core.js'
 import { MARKET_DATA_POLICY } from './market-data-policy.js'
@@ -9,9 +10,9 @@ const liveRequestsEnabled = realtimeEnabled && MARKET_DATA_POLICY.liveRequestsEn
 
 const COLORS=['#6ac9ff','#ffce62','#bbabff','#6ce0ce','#ff9e6d','#ff99c8','#b5d97e','#e3e9f2']
 const DASHES=['','','','','9 4','9 4','3 4','12 4 3 4']
-const CHAIN_NAMES=['소부장','파운드리·패키징','메모리','AI 칩','전력','인프라','모델','애플리케이션']
+
 const PERIODS=[[30,'1개월'],[90,'3개월'],[180,'6개월'],[365,'1년'],[730,'2년'],[1095,'3년']]
-const chains=CHAIN_NAMES.map((name,index)=>({id:index+1,name}))
+
 const catalog=[...new Map(instruments.filter(item=>item.chains?.some(id=>Number(id)>0)).map(item=>[item.symbol,item])).values()]
 const catalogMap=new Map(catalog.map(item=>[item.symbol,item]))
 const DEFAULT_COMPANIES=['005930.KS','000660.KS']
@@ -173,16 +174,16 @@ function changeSelection(symbol,checked){
   if(!catalogMap.has(symbol))return
   const enteringCompanyMode=!isCompany()
   const focused=document.activeElement,focusSymbol=focused?.dataset?.peerSymbol
-  const focusIndex=focusSymbol?[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol).indexOf(focused):-1
+  const focusChain=Number(focused?.closest('[data-peer-chain]')?.dataset.peerChain)
   if(checked){selected.add(symbol);hiddenCompanies.delete(symbol)}else{selected.delete(symbol);hiddenCompanies.delete(symbol)}
-  if(enteringCompanyMode)pickerChain=Number(focused?.closest('[data-peer-chain]')?.dataset.peerChain)||catalogMap.get(symbol).chains[0]
+  if(enteringCompanyMode)pickerChain=focusChain||chainsFor(catalogMap.get(symbol).chains)[0]?.id
   mode='companies';calculate();render()
-  if(focusIndex>=0)[...document.querySelectorAll('[data-peer-symbol]')].filter(input=>input.dataset.peerSymbol===focusSymbol)[focusIndex]?.focus({preventScroll:true})
   if(enteringCompanyMode){
     const picker=document.querySelector('[data-peer-company-picker]')
     if(picker)picker.open=true
-    document.querySelector('[data-peer-symbol="'+CSS.escape(symbol)+'"]')?.focus({preventScroll:true})
   }
+  const targetSymbol=enteringCompanyMode?symbol:focusSymbol,targetChain=enteringCompanyMode?pickerChain:focusChain
+  if(targetSymbol&&targetChain)document.querySelector('#v-compare [data-peer-chain="'+targetChain+'"] [data-peer-symbol="'+CSS.escape(targetSymbol)+'"]')?.focus({preventScroll:true})
 }
 window.renderComparison=render
 window.addEventListener('market-snapshot',event=>{snapshot=event.detail;loadError='';calculate();render()})
