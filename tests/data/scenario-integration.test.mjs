@@ -29,14 +29,14 @@ import {
 } from '../../assets/scenario-view-model.js'
 
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url))
-const scenarioAssets = ['scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-rate-fits.js', 'scenario-view-model.js', 'scenario-drag.js', 'scenario-explorer.js', 'scenario-format.js', 'scenario-profit-check.js', 'scenario.css', 'scenario.js']
+const scenarioAssets = ['chain-order.js', 'scenario-core.js', 'scenario-data.js', 'scenario-actuals.js', 'scenario-financial-baselines.js', 'scenario-rate-fits.js', 'scenario-view-model.js', 'scenario-drag.js', 'scenario-explorer.js', 'scenario-format.js', 'scenario-profit-check.js', 'scenario.css', 'scenario.js']
 const segmentNames = [
   '반도체 소부장', '파운드리·패키징', '메모리', 'AI 칩', 'AI 장비',
   '전력·냉각', '데이터센터', '클라우드·GPU 컴퓨팅', 'AI 모델',
 ]
 const scenarioIds = ['interest_rate', 'hyperscaler_capex', 'hbm_market', 'gpu_dc_rent', 'model_growth']
 const big7Symbols = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA']
-const representativeIds = ['ASML', 'TSM', '000660.KS', 'NVDA', 'SMCI', 'VRT', 'EQIX', 'MSFT', 'META']
+const representativeIds = ['ASML', '000660.KS', 'TSM', 'NVDA', 'SMCI', 'VRT', 'EQIX', 'MSFT', 'META']
 
 async function fixtureRoot(t) {
   const root = await mkdtemp(join(tmpdir(), 'ai-chain-scenario-integration-'))
@@ -176,7 +176,7 @@ test('static build publishes the scenario chapter without widening the public fi
   assert.match(html, /if\(h\[0\]===['"]ai-stats['"]\)/u)
   assert.match(html, /history\.replaceState\(null,'','#'\+h\.join\('\/'\)\)/u)
   const industryModule = await readFile(join(sourceRoot, 'assets', 'industry.js'), 'utf8')
-  assert.match(industryModule, /import \{ SECTORS \} from ['"]\.\/home-map-core\.js['"]/u)
+  assert.match(industryModule, /import \{ SECTORS, DISPLAY_SECTORS \} from ['"]\.\/home-map-core\.js['"]/u)
   assert.match(industryModule, /renderAiStatisticsPanel\(content/u)
   assert.match(industryModule, /월별 산업통계/u)
   assert.match(industryModule, /AI 통계/u)

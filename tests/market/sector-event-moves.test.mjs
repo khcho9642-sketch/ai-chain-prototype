@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { COMPANIES, SECTORS } from '../../assets/home-map-core.js';
+import { COMPANIES, DISPLAY_SECTORS } from '../../assets/home-map-core.js';
 import { createSectorEventMoves } from '../../assets/sector-event-moves.js';
 
 const snapshot = quotes => ({ schemaVersion: 1, generatedAt: '2026-04-10T23:00:00Z', quotes });
@@ -18,7 +18,8 @@ test('each member uses its prior local session close and contributes equal weigh
     quote('MU', us),
   ]));
   const rows = moves('2026-04-06');
-  assert.deepEqual(rows.map(row => row.sectorId), SECTORS.map(item => item.id));
+  assert.deepEqual(rows.map(row => row.sectorId), DISPLAY_SECTORS.map(item => item.id));
+  assert.deepEqual(rows.slice(1, 3).map(row => row.sectorId), ['memory', 'foundry-packaging']);
   const chips = sector(moves, '2026-04-06');
   assert.equal(chips.observedCount, 2);
   assert.equal(chips.totalCount, COMPANIES.filter(company => company.sector === chips.name).length);

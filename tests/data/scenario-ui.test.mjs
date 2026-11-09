@@ -48,6 +48,15 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.match(root.innerHTML, /<th>직접효과<\/th><th>밸류체인 효과<\/th><th>총 EV 변화<\/th>/)
   assert.match(root.innerHTML, /scenario-impact-bar/)
   assert.equal((root.innerHTML.match(/data-explore-sector="/g) || []).length, 9)
+  const sectorTiles = [...root.innerHTML.matchAll(/data-explore-sector="([^"]+)"[^>]*>\s*<span class="scenario-sector-meta"><span class="scenario-sector-id" aria-hidden="true">(\d+)<\/span>.*\s*<strong class="scenario-sector-title">([^<]+)<\/strong>/g)]
+  assert.deepEqual(sectorTiles.slice(1, 3).map(match => match.slice(1)), [
+    ['SEG3', '02', '메모리'],
+    ['SEG2', '03', '파운드리·패키징'],
+  ])
+  const matrixBody = root.innerHTML.match(/class="scenario-matrix"[^>]*>[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/)[1]
+  assert.deepEqual([...matrixBody.matchAll(/<tr><th>([^<]+)<\/th>/g)].slice(0, 3).map(match => match[1]), [
+    '반도체 소부장', '메모리', '파운드리·패키징',
+  ])
   assert.match(root.innerHTML, /9개 섹터에 직접 적용/)
   assert.match(root.innerHTML, /공개 재무 없음 · 섹터 가정/)
   assert.match(root.innerHTML, /data-scenario-range="rateChangePctPoints"/)
@@ -71,6 +80,7 @@ test('scenario chapter renders compact controls and view-model tables without in
   assert.equal((big7.match(/data-company-row/g) || []).length, 7)
   const reps = root.innerHTML.split('id="scenario-representative-heading"')[1]?.split('scenario-other-results')[0] || ''
   assert.equal((reps.match(/data-company-row/g) || []).length, 9)
+  assert.deepEqual([...reps.matchAll(/data-company-id="([^"]+)"/g)].slice(0, 3).map(match => match[1]), ['ASML', '000660.KS', 'TSM'])
 
   const selected = () => root.innerHTML.match(/scenario-company-row selected" data-company-row data-company-id="([^"]+)"/)?.[1]
   const selectedBefore = selected()

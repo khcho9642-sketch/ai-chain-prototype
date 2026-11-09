@@ -1,5 +1,5 @@
 import { realtimeEnabled, staticHost } from './site-runtime.js'
-import { SECTORS } from './home-map-core.js'
+import { SECTORS, DISPLAY_SECTORS } from './home-map-core.js'
 import { validateIndustry, latestPoint, yearOnYear } from './industry-core.js'
 import { safeSourceUrl, validateAiStatistics } from './ai-statistics-core.js'
 import { validateEpochSnapshot } from './epoch-ai-core.js'
@@ -157,7 +157,7 @@ function paintChart() {
 }
 
 function picker() {
-  return `<div class="sector-picker" role="group" aria-label="섹터 선택">${SECTORS.map(item =>
+  return `<div class="sector-picker" role="group" aria-label="섹터 선택">${DISPLAY_SECTORS.map(item =>
     `<button type="button" class="sector-choice" style="--sector-color:${esc(item.color)}" data-pick-sector="${esc(item.id)}" aria-pressed="${item.id === sector}">${esc(item.name)}</button>`).join('')}</div>`
 }
 

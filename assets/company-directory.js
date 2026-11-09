@@ -4,8 +4,7 @@ import { companyProfiles } from './company-profiles.js'
 import { dartCompanies } from './company-disclosure-sources.js'
 import { validateCompanyDisclosures } from './company-disclosures-core.js'
 
-const CHAIN_NAMES=['소부장','파운드리·패키징','메모리','AI 칩','전력','인프라','모델','애플리케이션']
-const chains=CHAIN_NAMES.map((name,index)=>({id:index+1,name}))
+import { legacyChains as chains, chainName, chainsFor } from './chain-order.js'
 const companies=instruments.filter(item=>item.chains.some(id=>id>=1&&id<=8))
 const PAGE_SIZE=12
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))
@@ -101,7 +100,7 @@ function matches(){
   const needle=searchText(search)
   return companies.filter(item=>{
     const profile=profileFor(item.symbol)
-    return (!chain||item.chains.includes(chain))&&(market==='전체'||item.group===market)&&(!needle||searchText([item.name,item.symbol,profile.role,profile.country,...item.chains.map(id=>CHAIN_NAMES[id-1])].join(' ')).includes(needle))
+    return (!chain||item.chains.includes(chain))&&(market==='전체'||item.group===market)&&(!needle||searchText([item.name,item.symbol,profile.role,profile.country,...chainsFor(item.chains).map(c=>c.name)].join(' ')).includes(needle))
   })
 }
 function card(item){
@@ -110,13 +109,13 @@ function card(item){
   const change=percent===null?'—':`${percent>0?'+':''}${percent.toFixed(2)}%`
   const changeClass=percent>0?'company-up':percent<0?'company-down':''
   const price=Number.isFinite(quote?.price)?`${number(quote.price)} ${esc(quote.currency||'')}`:'시세 미수집'
-  return `<article class="company-card"><div class="company-card-heading"><div><h3>${esc(item.name)}</h3><p class="company-symbol mono">${esc(item.symbol)}</p></div><span class="company-region">${esc(profile.country||item.group)}</span></div><div class="company-tags">${item.chains.filter(id=>id>=1&&id<=8).map(id=>`<span>${esc(CHAIN_NAMES[id-1])}</span>`).join('')}${profile.exposure?`<span class="company-exposure">${esc(profile.exposure)}</span>`:''}</div><p class="company-role">${esc(profile.role||'사업 범위 확인 중')}</p><div class="company-price"><strong class="mono">${price}</strong><span class="mono ${changeClass}">${change}</span></div><p class="company-time">${quote?`시세 ${esc(quoteTime(quote.marketTime))}${quote.status&&quote.status!=='ok'?' · 이전 수집값':''}`:'다음 자동 수집에서 시세를 확인합니다.'}</p>${disclosureCard(item)}<div class="company-actions"><a href="#talk/${encodeURIComponent(item.symbol)}">토론</a><button class="company-open" data-market-symbol="${esc(item.symbol)}" data-directory-symbol="${esc(item.symbol)}">시세 · 차트 <span aria-hidden="true">↗</span><span class="sr">: ${esc(item.name)}</span></button>${sourceUrl?`<a href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(profile.sourceLabel||'기업 공식 자료')} <span aria-hidden="true">↗</span><span class="sr">: ${esc(item.name)}, 새 창</span></a>`:'<span class="company-source-pending">공식 사업 자료 확인 중</span>'}</div></article>`
+  return `<article class="company-card"><div class="company-card-heading"><div><h3>${esc(item.name)}</h3><p class="company-symbol mono">${esc(item.symbol)}</p></div><span class="company-region">${esc(profile.country||item.group)}</span></div><div class="company-tags">${chainsFor(item.chains).map(c=>`<span>${esc(c.name)}</span>`).join('')}${profile.exposure?`<span class="company-exposure">${esc(profile.exposure)}</span>`:''}</div><p class="company-role">${esc(profile.role||'사업 범위 확인 중')}</p><div class="company-price"><strong class="mono">${price}</strong><span class="mono ${changeClass}">${change}</span></div><p class="company-time">${quote?`시세 ${esc(quoteTime(quote.marketTime))}${quote.status&&quote.status!=='ok'?' · 이전 수집값':''}`:'다음 자동 수집에서 시세를 확인합니다.'}</p>${disclosureCard(item)}<div class="company-actions"><a href="#talk/${encodeURIComponent(item.symbol)}">토론</a><button class="company-open" data-market-symbol="${esc(item.symbol)}" data-directory-symbol="${esc(item.symbol)}">시세 · 차트 <span aria-hidden="true">↗</span><span class="sr">: ${esc(item.name)}</span></button>${sourceUrl?`<a href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(profile.sourceLabel||'기업 공식 자료')} <span aria-hidden="true">↗</span><span class="sr">: ${esc(item.name)}, 새 창</span></a>`:'<span class="company-source-pending">공식 사업 자료 확인 중</span>'}</div></article>`
 }
 function renderResults(){
   const host=document.getElementById('company-directory');if(!host)return
   const rows=matches(),shown=rows.slice(0,limit)
   const summary=host.querySelector('#company-result-count')
-  if(summary)summary.textContent=`${chain?CHAIN_NAMES[chain-1]+' · ':''}${market} ${rows.length}개 기업${search?' · “'+search+'” 검색':''} · ${shown.length}개 표시`
+  if(summary)summary.textContent=`${chain?chainName(chain)+' · ':''}${market} ${rows.length}개 기업${search?' · “'+search+'” 검색':''} · ${shown.length}개 표시`
   const filingStatus=host.querySelector('#company-disclosure-status')
   if(filingStatus)filingStatus.textContent=disclosureStatus()
   const refresh=host.querySelector('[data-directory-filings-refresh]')
