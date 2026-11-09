@@ -8,13 +8,14 @@
 - 2026-11-08 사용자 요청으로 Qualcomm(QCOM, C0371)을 AI 칩 핵심에 추가한다. 후속 CXMT와 Nscale 추가를 반영한 현재 선정 기준은 핵심 52개(상장 48·비상장 4), AI 칩 6개·메모리 6개다. 원본 회사 원장 586개는 보존하며 사용자 신규 Nscale 1개를 합친 효과적 전체는 587개다. 클라우드·GPU는 7개(상장 6·비상장 1), AI 모델은 기존 5개(상장 2·비상장 3)를 유지한다. 원본 ‘핵심기업 49’ 시트·`research/market/home-map-selection.json`·원본 시트명·SHA-256은 보존하고, `research/market/home-map-additions.json`의 사용자 선정을 원본 뒤 QCOM 순서 50·CXMT 순서 51·Nscale 순서 52로 합성한다. 신규 회사는 `research/market/company-additions.json`에 분리하며 원본 49개·586개 JSON/CSV와 출처 날짜·해시는 수정하지 않는다. 원본 `sourceAsOf`는 원래 날짜를 보존한다. 과거 배포 이력의 49개와 원장 비상장 49개는 이 변경으로 바꾸지 않는다.
 - 2026-11-08 사용자 후속 요청으로 CXMT(C0119)를 메모리 핵심에 추가한다. QCOM의 기존 사용자 추가 기록은 보존한다. CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 이 연결 변경은 새 가격 수집이나 운영 검증 완료를 의미하지 않는다. 저장 자료에 없는 값은 결측으로 보존한다.
 - 2026-11-08 사용자 요청으로 Nscale(C0587)을 영국 비상장 클라우드·GPU 컴퓨팅 핵심에 포함한다. [공식 서비스 소개](https://www.nscale.com/service-overview)를 근거로 클라우드·GPU 컴퓨팅에 분류한다. [IPO 신청 발표](https://www.nscale.com/press-releases/nscale-files-initial-public-offering)의 `NSCL`은 제안 티커이며, 작업 시점 [SEC 제출 메타데이터](https://data.sec.gov/submissions/CIK0002110365.json)의 `tickers`·`exchanges`가 빈 배열인 상태를 기준으로 비상장으로 둔다. `NSCL`을 상장 티커나 시세 조회 대상으로 연결하지 않는다. 원본 수집 스냅샷의 586개·555종목과 실제 날짜·결측 상태를 유지한다. 사용자 추가와 생성한 공용 원장 587개는 원천 자료 재수집이나 비상장 가격 생성의 근거가 아니다.
-- 실시간 시세·원천 수집·자동 폴링·댓글·회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
+- 실시간 시세·원천 수집·자동 폴링·댓글·기존 커뮤니티 회원·투표 API·SSE·AI 워커는 중지한다. GitHub 수집 워크플로는 disabled_manually 상태를 유지한다.
+- 사용자 승인으로 추가하는 Google 로그인은 별도 `/api/auth/*`만 Pages Functions에서 실행한다. 회원 전용 D1 스키마와 운영 바인딩을 준비했으며 Google client ID·운영 배포·실제 계정 검증은 대기 상태다. [Google 로그인 연결 현황](../community/google-login.md)을 따른다.
 
 ## 검증과 수동 배포
 
 1. 저장소 루트에서 git fetch origin main 후 현재 브랜치와 원격 main의 차이를 확인한다. 미커밋 변경을 임의로 reset하거나 다른 채팅의 공유 브랜치를 바꾸지 않는다.
 2. 관련 검사와 npm test, npm run build를 실행한다. 빌드는 저장 자료의 검증과 로컬 파생 계산만 수행한다. 외부 수집 명령이나 과거 Vercel 준비 스크립트를 실행하지 않는다.
-3. 검증한 dist만 기존 Cloudflare Pages 프로젝트 ai-chain-prototype에 업로드한다. Git 커밋과 배포 메타데이터를 일치시키고 비공개 원본·DB·환경파일·.local은 올리지 않는다.
+3. 검증한 `dist`를 기존 Cloudflare Pages 프로젝트 `ai-chain-prototype`에 업로드한다. Google 로그인 연결 시에는 같은 작업 사본의 `functions/api/auth/[[path]].js`와 참조하는 서버 모듈이 Functions로 묶이도록 저장소 루트에서 배포한다. Git 커밋과 배포 메타데이터를 일치시키고 비공개 원본·DB·환경파일·.local은 올리지 않는다.
 4. 공개 파일 해시·저장 자료의 기준일·필수 화면 모듈·실시간 API 차단을 확인한다. 코드·테스트·운영 배포와 실제 AI 모델 검증을 별도로 기록한다.
 
 ~~~sh
@@ -23,7 +24,7 @@ npm run build
 npx wrangler pages deploy dist --project-name ai-chain-prototype --branch main
 ~~~
 
-wrangler.jsonc는 Pages 프로젝트와 dist 출력 폴더를 지정한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
+`wrangler.jsonc`는 Pages 프로젝트와 `dist` 출력 폴더를 지정한다. 로그인용 `MEMBER_DB`와 `AUTH_ORIGIN`은 `env.production`에만 준비하며 preview는 별도 개발 프로젝트·원본·DB를 구성하기 전까지 비활성으로 둔다. 빌드의 `_routes.json`은 `/api/auth/*`만 Functions로 보내므로 저장 화면·데이터·정적 자산에는 인증 함수를 실행하지 않는다. Google client ID가 없으면 인증은 비활성으로 응답한다. 빌드는 nosniff 헤더와 명시적 404.html을 생성하며 API가 없는 경로를 첫 화면 HTML 200으로 바꾸지 않는다. COMMUNITY_API_ORIGIN이 남아 있어도 정지 모드에서는 빈 주소를 출력한다.
 
 ## 공개 자료
 

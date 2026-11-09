@@ -1,5 +1,24 @@
 {
   "name": "ai-chain-prototype",
   "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-11-08"
+  "compatibility_date": "2026-11-08",
+  "env": {
+    "production": {
+      "vars": {
+        "AUTH_ORIGIN": "https://ai-chain-prototype.pages.dev"
+      },
+      "d1_databases": [
+        {
+          "binding": "MEMBER_DB",
+          "database_name": "ai-chain-members",
+          "database_id": "e979860b-4763-4b90-84a7-8c4e856ccabe",
+          "migrations_dir": "deploy/auth"
+        }
+      ]
+    },
+    "preview": {
+      "vars": {},
+      "d1_databases": []
+    }
+  }
 }
