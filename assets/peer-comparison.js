@@ -11,7 +11,7 @@ const liveRequestsEnabled = realtimeEnabled && MARKET_DATA_POLICY.liveRequestsEn
 const COLORS=['#6ac9ff','#ffce62','#bbabff','#6ce0ce','#ff9e6d','#ff99c8','#b5d97e','#e3e9f2']
 const DASHES=['','','','','9 4','9 4','3 4','12 4 3 4']
 
-const PERIODS=[[30,'1개월'],[90,'3개월'],[180,'6개월'],[365,'1년'],[730,'2년'],[1095,'3년']]
+const PERIODS=[[7,'1주일'],[30,'1개월'],[90,'3개월'],[180,'6개월'],[365,'1년'],[730,'2년'],[1095,'3년']]
 
 const catalog=[...new Map(instruments.filter(item=>item.chains?.some(id=>Number(id)>0)).map(item=>[item.symbol,item])).values()]
 const catalogMap=new Map(catalog.map(item=>[item.symbol,item]))
@@ -157,8 +157,8 @@ function render(){
     (longLoading&&days>365?'<p class="peer-period-note" role="status">장기 일봉 수집값 읽는 중…</p>':'')+
     (error?'<p class="peer-alert" role="alert">'+esc(error)+'</p>':'')+
     (warnings.length?'<details class="peer-alert peer-data-notes"><summary>'+(model.metadata?.stale?'이전 수집값 포함 · ':'')+'자료 확인 사항 '+warnings.length+'개</summary><ul>'+warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul></details>':'')+
-    '<div class="peer-legend">'+items().map(item=>'<button class="peer-legend-item'+(isVisible(item)?' selected':'')+'" data-peer-toggle="'+esc(item.id)+'" aria-pressed="'+isVisible(item)+'" style="--peer-color:'+color(item.id)+'">'+swatch(item.id)+'<span>'+esc(itemLabel(item))+'</span><b>'+percent(item.returnPercent)+'</b></button>').join('')+'</div>'+chart()+
-    '<p class="peer-reading">100에서 110이 되면 '+(isCompany()?'그 회사의 주가 등락률':'해당 피어 묶음의 평균 주가 등락률')+'은 +10%입니다. 범례를 눌러 선을 숨길 수 있습니다. 선 위에서 마우스를 움직이거나 날짜 슬라이더로 같은 날짜의 값을 확인하세요.</p><p class="note"><a href="#data">기업 전체 목록·사업 설명 →</a> · <a href="#industry">수출·물량 산업통계 →</a></p></section>'+(isCompany()?'':cards())+methodology()
+    '<h2 class="peer-ranking-title">'+(isCompany()?'종목 등락률 순위':'고리 등락률 순위')+'</h2><div class="peer-legend">'+[...items()].sort((a,b)=>(b.returnPercent??-Infinity)-(a.returnPercent??-Infinity)).map(item=>'<button class="peer-legend-item'+(isVisible(item)?' selected':'')+'" data-peer-toggle="'+esc(item.id)+'" aria-pressed="'+isVisible(item)+'" style="--peer-color:'+color(item.id)+'">'+swatch(item.id)+'<span>'+esc(itemLabel(item))+'</span><b>'+percent(item.returnPercent)+'</b></button>').join('')+'</div>'+chart()+
+    '<p class="note"><a href="#data">기업 전체 목록·사업 설명 →</a> · <a href="#industry">수출·물량 산업통계 →</a></p></section>'+(isCompany()?'':cards())+methodology()
   const pickerList=el.querySelector('[data-peer-picker-list]');if(pickerList)pickerList.scrollTop=pickerScroll
 }
 function inspect(index){

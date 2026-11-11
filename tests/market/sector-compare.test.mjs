@@ -29,9 +29,9 @@ test('sector and company curves share the home calculation and use only common l
     'semiconductor-equipment', 'memory', 'foundry-packaging', 'ai-chips', 'ai-equipment',
     'optical-communications', 'power-cooling', 'data-centers', 'cloud-gpu', 'ai-models',
   ]);
-  assert.equal(period.sectors.flatMap(s => s.members).length, COMPANIES.length);
+  assert.equal(new Set(period.sectors.flatMap(s => s.members).map(m => m.symbol)).size, period.sectors.flatMap(s => s.members).length);
   const homeSeries = new Map(home.groups.map(group => [group.name, group.series.map(point => point.index)]));
-  for (const sector of period.sectors) assert.deepEqual(sector.series, homeSeries.get(sector.name));
+  for (const sector of period.sectors.filter(s => s.id !== 'optical-communications')) assert.deepEqual(sector.series, homeSeries.get(sector.name));
   const foundry = period.sectors[2];
   assert.deepEqual(foundry.members.find(m => m.symbol === 'TSM').series, [100, 70]);
   const chips = period.sectors.find(s => s.id === 'ai-chips');
@@ -73,11 +73,24 @@ test('multi-year periods require collected long daily history and enforce durati
   assert.equal(three.sectors.find(s => s.id === 'memory').members.find(m => m.symbol === 'MU').reason, '3년 일봉 자료 없음');
 });
 
-test('bad payloads fail explicitly and missing quotes keep every empty sector entry', () => {
+test('bad payloads fail explicitly and missing quotes keep the ten empty catalog entries', () => {
   assert.throws(() => getSectorPeriod({}, 90), TypeError);
   assert.throws(() => getSectorPeriod(snapshot([]), 14), RangeError);
   const empty = getSectorPeriod(snapshot([]), 90);
   assert.equal(empty.sectors.length, 10);
   assert.deepEqual(empty.dates, []);
   assert.ok(empty.sectors.every(s => !s.series.length && s.members.every(m => m.series === null && m.reason)));
+});
+
+test('one week uses seven calendar days and optical members belong to one sector only', () => {
+  const input = snapshot([
+    quote('GLW', [['2025-03-25', 100], ['2025-03-26', 105], ['2025-03-31', 110], ['2025-04-01', 120]]),
+    quote('NVDA', [['2025-03-25', 100], ['2025-03-26', 101], ['2025-03-31', 103], ['2025-04-01', 105]]),
+  ]);
+  const period = getSectorPeriod(input, 7);
+  assert.equal(period.sectors.length, 10);
+  assert.deepEqual(period.dates, ['2025-03-25', '2025-03-26', '2025-03-31', '2025-04-01']);
+  const optical = period.sectors.find(s => s.id === 'optical-communications');
+  assert.deepEqual(optical.series.map(value => Number(value.toFixed(8))), [100, 105, 110, 120]);
+  assert.equal(period.sectors.flatMap(s => s.members).filter(m => m.symbol === 'GLW').length, 1);
 });

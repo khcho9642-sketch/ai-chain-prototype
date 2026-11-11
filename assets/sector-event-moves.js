@@ -1,9 +1,12 @@
-import { COMPANIES, DISPLAY_SECTORS, SECTORS } from './home-map-core.js';
+import { comparisonSectors as DISPLAY_SECTORS, comparisonInstruments } from './sector-compare-data.js';
+import { SECTORS } from './home-map-core.js';
+const sectorOrder = [...SECTORS.map(sector => sector.id)];
+if (!sectorOrder.includes('optical-communications')) sectorOrder.push('optical-communications');
 
-const stocksBySector = new Map(SECTORS.map(sector => [
-  sector.id, COMPANIES.filter(company => company.sector === sector.name).map(company => company.ticker),
+const stocksBySector = new Map(sectorOrder.map((id, index) => [
+  id, comparisonInstruments.filter(stock => stock.chains.includes(index + 1)).map(stock => stock.symbol),
 ]));
-const stockSymbols = new Set(COMPANIES.map(company => company.ticker));
+const stockSymbols = new Set(comparisonInstruments.map(stock => stock.symbol));
 const DAY_MS = 86_400_000;
 
 function closingPrices(quote, generatedAt, markets) {

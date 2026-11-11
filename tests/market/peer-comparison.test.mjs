@@ -114,7 +114,7 @@ test('calendar range filters shared points without silently changing the peer de
   assert.equal(result.groups[0].includedCount, 2)
   assert.equal(result.metadata.requestedStartDate, '2025-12-07')
   approx(result.groups[0].returnPercent, 10)
-  assert.deepEqual(comparisonPeriods, { '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
+  assert.deepEqual(comparisonPeriods, { '1w': 7, '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
 })
 
 test('a completely missing group is unavailable while other valid groups still compare', () => {
