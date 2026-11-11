@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "user-request",
+    "requestedOn": "2026-11-11",
+    "note": "광트랜시버·레이저·광섬유·광부품·광전송 기업을 AI 장비에서 독립 광통신 섹터로 재분류한다. 네트워크 장비와 연결 반도체 기업은 기존 섹터를 유지한다."
+  },
+  "changes": [
+    {"companyId":"C0520","sectorId":"optical-communications"},
+    {"companyId":"C0110","sectorId":"optical-communications"},
+    {"companyId":"C0293","sectorId":"optical-communications","sources":[{"label":"Lumentum · Cloud and Networking","url":"https://www.lumentum.com/en/optical-communications"}]},
+    {"companyId":"C0116","sectorId":"optical-communications","sources":[{"label":"Corning · Optical Communications","url":"https://www.corning.com/optical-communications/worldwide/en/home.html"}]},
+    {"companyId":"C0153","sectorId":"optical-communications","sources":[{"label":"Eoptolink · 공식 제품","url":"https://www.eoptolink.com/"}]},
+    {"companyId":"C0160","sectorId":"optical-communications"},
+    {"companyId":"C0102","sectorId":"optical-communications","sources":[{"label":"Ciena · Optical Networking","url":"https://www.ciena.com/insights/what-is/What-Is-Optical-Networking"}]},
+    {"companyId":"C0176","sectorId":"optical-communications","sources":[{"label":"Fujikura · Telecommunication Systems","url":"https://www.fujikura.com/products/telecommunications/"}]},
+    {"companyId":"C0446","sectorId":"optical-communications"},
+    {"companyId":"C0179","sectorId":"optical-communications"},
+    {"companyId":"C0044","sectorId":"optical-communications"},
+    {"companyId":"C0470","sectorId":"optical-communications"},
+    {"companyId":"C0008","sectorId":"optical-communications"},
+    {"companyId":"C0215","sectorId":"optical-communications"},
+    {"companyId":"C0208","sectorId":"optical-communications"},
+    {"companyId":"C0516","sectorId":"optical-communications"},
+    {"companyId":"C0252","sectorId":"optical-communications"},
+    {"companyId":"C0165","sectorId":"optical-communications"},
+    {"companyId":"C0294","sectorId":"optical-communications"},
+    {"companyId":"C0482","sectorId":"optical-communications"},
+    {"companyId":"C0167","sectorId":"optical-communications"},
+    {"companyId":"C0342","sectorId":"optical-communications"},
+    {"companyId":"C0557","sectorId":"optical-communications"},
+    {"companyId":"C0559","sectorId":"optical-communications"},
+    {"companyId":"C0539","sectorId":"optical-communications"}
+  ]
+}

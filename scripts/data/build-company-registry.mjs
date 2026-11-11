@@ -9,6 +9,7 @@ import { dartCompanies } from '../../assets/company-disclosure-sources.js'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { loadMarketUniverse } from './market-universe.mjs'
 import { buildCompanyAdditions } from './company-additions.mjs'
+import { applySectorReclassifications } from './sector-reclassifications.mjs'
 
 // Reads a UTF-8 CSV export of the 원장's 회사리스트 sheet, including multiline cells.
 // Only identity, business descriptions, ticker mappings and public reference links
@@ -109,10 +110,11 @@ function registryCompany(issuer, sheet, targets) {
 }
 
 export async function buildCompanyRegistry(csvText) {
-  const [master, market, issuerAdditions] = await Promise.all([
+  const [master, market, issuerAdditions, reclassifications] = await Promise.all([
     readFile(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8').then(JSON.parse),
     loadMarketUniverse(),
     readFile(new URL('../../research/market/company-additions.json', import.meta.url), 'utf8').then(JSON.parse),
+    readFile(new URL('../../research/market/sector-reclassifications.json', import.meta.url), 'utf8').then(JSON.parse),
   ])
   const sheet = readBusinessSheet(csvText)
   if (master.companies.length !== 586 || sheet.size !== 586 || MAP_UNIVERSE.companyCount !== MAP_COMPANIES.length || coreById.size !== MAP_COMPANIES.length) throw new Error('대상 원장 건수 불일치')
@@ -133,8 +135,9 @@ export async function buildCompanyRegistry(csvText) {
   const tesla = reviewedById.get('SCN038')
   rows.push(registryCompany({id:tesla.id,name:tesla.name,country:tesla.country,listed:true,ticker:'TSLA',sectors:[]}, null, byIssuer.get(tesla.id) || []))
   rows.push(...buildCompanyAdditions({master, additions:issuerAdditions}).registryRows)
-  if (rows.filter(c=>coreById.has(c.id)).length !== MAP_COMPANIES.length) throw new Error('핵심 ' + MAP_COMPANIES.length + '개사 원장 대조 실패')
-  return rows.sort((a,b) => a.id.localeCompare(b.id))
+  const classified = applySectorReclassifications(rows, reclassifications)
+  if (classified.filter(c=>coreById.has(c.id)).length !== MAP_COMPANIES.length) throw new Error('핵심 ' + MAP_COMPANIES.length + '개사 원장 대조 실패')
+  return classified.sort((a,b) => a.id.localeCompare(b.id))
 }
 
 async function main() {

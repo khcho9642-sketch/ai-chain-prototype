@@ -10,6 +10,7 @@ const masterPath = new URL('../../research/market/company-universe.json', import
 const selectionPath = new URL('../../research/market/home-map-selection.json', import.meta.url)
 const additionsPath = new URL('../../research/market/home-map-additions.json', import.meta.url)
 const issuerAdditionsPath = new URL('../../research/market/company-additions.json', import.meta.url)
+const reclassificationsPath = new URL('../../research/market/sector-reclassifications.json', import.meta.url)
 const outputPath = new URL('../../assets/home-map-universe.js', import.meta.url)
 const countries = Object.freeze({
   한국:'KR', 미국:'US', 일본:'JP', 대만:'TW', 중국:'CN', 홍콩:'HK',
@@ -23,7 +24,7 @@ const countries = Object.freeze({
 
 // The curated sheet controls membership, order, names, sectors and the exact
 // selected listing. The broader 586-company master remains a collection source.
-export function buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions } = {}) {
+export function buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions, reclassifications } = {}) {
   if (master?.schemaVersion !== 1 || !Array.isArray(master.companies) || !Array.isArray(universe?.targets)) throw new Error('지도 기업 원장 형식 오류')
   if (selection?.schemaVersion !== 1 || !Array.isArray(selection.companies) || selection.companies.length !== 49
     || selection.companyCount !== 49 || selection.listedCompanyCount !== 46 || selection.unlistedCompanyCount !== 3
@@ -39,12 +40,14 @@ export function buildHomeMapUniverse({ master, universe, selection, additions, i
     ({...company, order: selection.companies.length + index + 1}))]
   const sectors = new Map(SECTORS.map(sector => [sector.name, sector]))
   sectors.set('클라우드·GPU',sectors.get('클라우드·GPU 컴퓨팅'))
+  const sectorNames = new Map(SECTORS.map(sector => [sector.id, sector.name]))
+  const reclassified = new Map((reclassifications?.changes || []).map(change => [change.companyId, sectorNames.get(change.sectorId)]))
   const extra = buildCompanyAdditions({master, additions:issuerAdditions})
   const masterCompanies = new Map([...master.companies,...extra.issuers].map(company=>[company.id,company]))
   if (masterCompanies.size !== master.companies.length + extra.issuers.length) throw new Error('지도 기업 식별 중복')
   const ids = new Set(), symbols = new Set()
   const companies = selectedCompanies.map((selected,index) => {
-    const company=masterCompanies.get(selected.companyId),sector=sectors.get(selected.sector)
+    const company=masterCompanies.get(selected.companyId),sector=sectors.get(reclassified.get(selected.companyId) || selected.sector)
     const countryCodes=String(company?.country).split('·').map(name=>countries[name.trim()])
     if (!company || !/^C\d{4}$/.test(selected.companyId) || ids.has(selected.companyId) || !selected.name || !sector
       || selected.order !== index+1 || typeof selected.listed !== 'boolean' || !selected.role
@@ -59,7 +62,7 @@ export function buildHomeMapUniverse({ master, universe, selection, additions, i
       listings.push({ticker:selected.ticker,primary:true,currency:targets[0].currency || null,exchange:targets[0].exchange || null})
     } else if (selected.ticker !== null) throw new Error('지도 비상장 선정 기업의 티커 오류')
     const row={id:company.id,name:selected.name,country:countryCodes[0],countryName:company.country,countryCodes,
-      sector:sector.name,sectorId:sector.id,sourceOrder:selected.order,sourceSector:selected.sector,
+      sector:sector.name,sectorId:sector.id,sourceOrder:selected.order,sourceSector:reclassified.get(selected.companyId) || selected.sector,
       selectionChange:selected.change,role:selected.role,listed:selected.listed,primaryTicker:selected.ticker,listings}
     if (!selected.listed) row.unmappedReason='비상장: 공개 시총·종가 없음'
     return row
@@ -71,7 +74,7 @@ export function buildHomeMapUniverse({ master, universe, selection, additions, i
     sourceAsOf:new Date(Date.parse(selection.source.modifiedAt)+9*3600000).toISOString().slice(0,10),sourceTimezone:'Asia/Seoul',
     sourceUrl:selection.source.url,sourceSheet:selection.source.sheet,sourceModifiedAt:selection.source.modifiedAt,sourceSha256:selection.source.sha256,
     baseCompanyCount: selection.companyCount,
-    userAdditions: additionalCompanies.map(company => ({companyId: company.companyId, ticker: company.ticker, requestedOn: additions.source.requestedOn})),
+    userAdditions: additionalCompanies.map(company => ({companyId: company.companyId, ticker: company.ticker, requestedOn: company.requestedOn || additions.source.requestedOn})),
     sourceStatus: 'user-selected', mappingStatus: 'candidate',listingPolicy:'exact-approved-ticker',masterCompanyCount:masterCompanies.size,baseMasterCompanyCount:master.companies.length,
     companyCount: companies.length, listedCompanyCount, unlistedCompanyCount: companies.length - listedCompanyCount,
     mappedListedCompanyCount: companies.filter(company => company.listed && company.primaryTicker).length,
@@ -90,8 +93,8 @@ export function renderHomeMapUniverse({ companies, metadata }) {
 }
 
 export async function writeHomeMapUniverse({ destination = outputPath } = {}) {
-  const [master, universe, selection, additions, issuerAdditions] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse),readFile(additionsPath,'utf8').then(JSON.parse),readFile(issuerAdditionsPath,'utf8').then(JSON.parse)])
-  const value = buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions })
+  const [master, universe, selection, additions, issuerAdditions, reclassifications] = await Promise.all([readFile(masterPath, 'utf8').then(JSON.parse), loadMarketUniverse(),readFile(selectionPath,'utf8').then(JSON.parse),readFile(additionsPath,'utf8').then(JSON.parse),readFile(issuerAdditionsPath,'utf8').then(JSON.parse),readFile(reclassificationsPath,'utf8').then(JSON.parse)])
+  const value = buildHomeMapUniverse({ master, universe, selection, additions, issuerAdditions, reclassifications })
   const path = destination instanceof URL ? fileURLToPath(destination) : resolve(destination)
   const temporary = path + '.' + randomUUID() + '.tmp'
   try {

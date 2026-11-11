@@ -140,7 +140,7 @@ export function buildCompanyRelease(input, previous = null) {
     requireValue(entry.order === selected.sourceOrder, '핵심 기업 표시 순서 오류')
     company.selection = { reason: text(entry.reason, '선정 이유'), role:selected.role, order: entry.order }
   }
-  requireValue(new Set(companies.filter(c => c.selection).map(c => c.sectorId)).size === SECTORS.length, '9개 핵심 섹터 모두에 기업이 필요합니다.')
+  requireValue(new Set(companies.filter(c => c.selection).map(c => c.sectorId)).size === SECTORS.length, SECTORS.length + '개 핵심 섹터 모두에 기업이 필요합니다.')
   for (const old of previous?.companies || []) {
     const current = byId.get(old.id)
     if (current?.selection && old.analysis) current.analysis = publishedAnalysis(old.analysis)

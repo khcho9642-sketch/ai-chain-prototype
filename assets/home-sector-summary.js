@@ -33,7 +33,7 @@ export function mountHomeSectorSummary(container, { onSelect }) {
   const meta = element('p', 'sector-summary-meta', '수집된 종가를 확인하고 있습니다.');
   const grid = element('div', 'sector-summary-grid');
   grid.setAttribute('role', 'group');
-  grid.setAttribute('aria-label', '9개 섹터 선택');
+  grid.setAttribute('aria-label', SECTORS.length + '개 섹터 선택');
   const status = element('p', 'sector-summary-status');
   status.setAttribute('role', 'status');
   status.hidden = true;

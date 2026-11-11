@@ -20,6 +20,8 @@ export const SECTORS = Object.freeze([
   { id: 'data-centers', name: '데이터센터', color: '#D9C466' },
   { id: 'cloud-gpu', name: '클라우드·GPU 컴퓨팅', color: '#71BDEB' },
   { id: 'ai-models', name: 'AI 모델', color: '#CA98E5' },
+  // Appended so legacy SEG1–SEG9 identifiers and saved chain indices stay stable.
+  { id: 'optical-communications', name: '광통신', color: '#62D0E8' },
 ].map(Object.freeze));
 
 export const DISPLAY_SECTORS = Object.freeze(SECTOR_DISPLAY_IDS.map(id => SECTORS.find(sector => sector.id === id)));
@@ -64,8 +66,16 @@ const ROWS = [
   ['hpe', 'HPE', '휴렛팩커드 엔터프라이즈', 'US', 4, 32, 0.7],
   ['arista', 'ANET', '아리스타 네트웍스', 'US', 4, 160, 2.9],
   ['cisco', 'CSCO', '시스코', 'US', 4, 238, 0],
-  ['innolight', '300308.SZ', '이노라이트', 'CN', 4, 34, 3.1],
+  ['innolight', '300308.SZ', '이노라이트', 'CN', 9, 87.43, -7.51],
   ['accton', '2345.TW', '액톤테크놀로지', 'TW', 4, 16, 1.8],
+
+  // Synthetic preview rows follow the stored 2026-11-05 market-cap rank only.
+  ['corning', 'GLW', '코닝', 'US', 9, 89.09, -12.92],
+  ['lumentum', 'LITE', '루멘텀', 'US', 9, 46.22, -18.68],
+  ['eoptolink', '300502.SZ', 'Eoptolink', 'CN', 9, 38.79, -5.54],
+  ['fujikura', '5803.T', '후지쿠라', 'JP', 9, 34.08, -11.41],
+  ['coherent-optical', 'COHR', '코히어런트', 'US', 9, 33.44, -12.98],
+  ['ciena-optical', 'CIEN', '시에나', 'US', 9, 32.73, -15.22],
 
   ['ge-vernova', 'GEV', 'GE 버노바', 'US', 5, 145, 2.2],
   ['vistra', 'VST', '비스트라', 'US', 5, 65, 4.1],

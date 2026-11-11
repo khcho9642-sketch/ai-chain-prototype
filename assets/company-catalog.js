@@ -23,7 +23,7 @@ export const catalog = {
     registrySheet: '회사리스트',
     excludedId: 'C0435',
     includedId: 'SCN038',
-    note: '회사리스트 586개사 중 xAI 사업만으로 편입된 SpaceX(C0435)를 제외하고, Tesla(SCN038)를 자체 설계 칩 기업으로 포함했습니다. 별도 사용자 요청으로 Nscale(C0587)을 추가해 전체 587개사이며, 원본 시트와 저장된 시세 범위는 보존합니다.',
+    note: '회사리스트 586개사 중 xAI 사업만으로 편입된 SpaceX(C0435)를 제외하고 Tesla(SCN038)를 포함했습니다. 별도 사용자 요청으로 Nscale과 광통신 7개사를 추가해 전체 594개사이며, 원본 시트와 2026-11-05 저장 시세 범위는 보존합니다.',
   },
   companies: approvedCatalog?.companies || currentCompanies,
 }

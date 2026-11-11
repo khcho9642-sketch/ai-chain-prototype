@@ -24,14 +24,14 @@ function edition(overrides = {}) {
   }
 }
 
-test('587 issuer scope uses the approved 52-company roster including Qualcomm, CXMT and Nscale without duplicating issuers', () => {
+test('594 issuer scope uses the approved 58-company roster including the optical-communications core without duplicating issuers', () => {
   const core = catalog.companies.filter(c => c.selection)
-  assert.equal(catalog.companies.length, 587)
-  assert.equal(core.length, 52)
-  assert.equal(catalog.companies.filter(c=>c.listed).length, 537)
-  assert.equal(core.filter(c => c.listed).length, 48)
-  assert.equal(new Set(core.map(c => c.sectorId)).size, 9)
-  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,6,6,6,7,4,7,5])
+  assert.equal(catalog.companies.length, 594)
+  assert.equal(core.length, 58)
+  assert.equal(catalog.companies.filter(c=>c.listed).length, 544)
+  assert.equal(core.filter(c => c.listed).length, 54)
+  assert.equal(new Set(core.map(c => c.sectorId)).size, 10)
+  assert.deepEqual(SECTORS.map(s=>core.filter(c=>c.sectorId===s.id).length), [6,5,6,6,5,7,4,7,5,7])
   assert.equal(core.filter(c => !c.listed && !c.listings.length).length, 4)
   for (const selected of MAP_COMPANIES) {
     const row = core.find(c=>c.id===selected.id)
@@ -84,19 +84,32 @@ test('Nscale is added once as an unlisted cloud issuer without turning the propo
   assert.ok(nscale.sources.some(s => s.url === 'https://www.nscale.com/service-overview'))
 })
 
-test('the original 586 issuer IDs stay intact with the existing SpaceX-to-Tesla exception and one separate Nscale addition', () => {
+test('optical communications contains 25 reclassified issuers and seven source-backed additions while networking semiconductors stay put', () => {
+  const optical = catalog.companies.filter(company => company.sectorId === 'optical-communications')
+  assert.equal(optical.length, 32)
+  assert.equal(catalog.companies.filter(company => company.sectorId === 'ai-equipment').length, 48)
+  const moved = ['C0520','C0110','C0293','C0116','C0153','C0160','C0102','C0176','C0446','C0179','C0044','C0470','C0008','C0215','C0208','C0516','C0252','C0165','C0294','C0482','C0167','C0342','C0557','C0559','C0539']
+  assert.ok(moved.every(id => optical.some(company => company.id === id)))
+  assert.deepEqual(optical.filter(company => /^C05(?:8[8-9]|9[0-4])$/.test(company.id)).map(company => company.listings[0].ticker),
+    ['AXTI','010170.KQ','046970.KQ','062970.KQ','688498.SS','3081.TWO','2455.TW'])
+  assert.equal(catalog.companies.find(company => company.id === 'C0117').sectorId, 'ai-equipment')
+  for (const ticker of ['ANET','CSCO','2345.TW']) assert.equal(findCompanyByTicker(ticker).sectorId, 'ai-equipment')
+  for (const ticker of ['AVGO','MRVL']) assert.equal(findCompanyByTicker(ticker).sectorId, 'ai-chips')
+})
+
+test('the original 586 issuer IDs stay intact with the SpaceX-to-Tesla exception and eight separate additions', () => {
   const master = JSON.parse(readFileSync(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8'))
   assert.equal(master.companies.length, 586)
   assert.equal(new Set(master.companies.map(c => c.id)).size, 586)
   assert.ok(master.companies.some(c => c.id === 'C0435'))
   assert.ok(!master.companies.some(c => c.id === 'C0587' || c.id === 'SCN038'))
   const preservedIds = master.companies.map(c => c.id === 'C0435' ? 'SCN038' : c.id)
-  assert.deepEqual(catalog.companies.map(c => c.id).sort(), [...preservedIds, 'C0587'].sort())
+  assert.deepEqual(catalog.companies.map(c => c.id).sort(), [...preservedIds, ...Array.from({length:8},(_,index)=>'C'+String(587+index).padStart(4,'0'))].sort())
 })
 
 test('an approved release validates issuer counts, publication flags and sector identities', () => {
   const out = buildCompanyRelease(input())
-  assert.equal(out.companies.length, 587)
+  assert.equal(out.companies.length, 594)
   for (const change of [
     r => { r.status = 'draft' }, r => { r.companies.pop() }, r => { r.selections.pop() },
     r => { r.companies[0].id = r.companies[1].id }, r => { r.companies[0].sectorId = '8' },

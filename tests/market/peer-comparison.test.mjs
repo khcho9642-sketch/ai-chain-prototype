@@ -13,7 +13,7 @@ const chains = [{ id: 1, name: '메모리' }, { id: 2, name: '파운드리' }]
 const approx = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`)
 const build = (quotes, instruments = quotes.map(item => instrument(item.symbol)), extra = {}) => buildComparison({ quotes, instruments, chains, now, ...extra })
 
-test('home sector returns retain all nine primary sectors with collected prices only', () => {
+test('home sector returns retain all primary sectors with collected prices only', () => {
   const homeQuotes = ['NVDA', 'MSFT', 'GOOGL'].map(symbol => q(symbol, [['2025-10-08', 100], ['2026-01-06', 120]]))
   const result = buildHomeSectorReturns({ schemaVersion: 1, quotes: homeQuotes, generatedAt: now, source: 'fixture' }, { now })
   assert.deepEqual(result.groups.map(group => group.name), SECTORS.map(sector => sector.name))
@@ -52,7 +52,7 @@ test('home comparison rejects malformed transport data and leaves empty snapshot
     assert.throws(() => buildHomeSectorReturns(snapshot), TypeError)
   }
   const result = buildHomeSectorReturns({ schemaVersion: 1, quotes: [] }, { now })
-  assert.equal(result.groups.length, 9)
+  assert.equal(result.groups.length, SECTORS.length)
   assert.ok(result.groups.every(group => !group.available && group.returnPercent === null))
 })
 

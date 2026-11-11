@@ -1,7 +1,7 @@
 // Display position is independent of legacy IDs used by quotes, metrics and links.
 export const SECTOR_DISPLAY_IDS = Object.freeze([
   'semiconductor-equipment', 'memory', 'foundry-packaging', 'ai-chips', 'ai-equipment',
-  'power-cooling', 'data-centers', 'cloud-gpu', 'ai-models',
+  'optical-communications', 'power-cooling', 'data-centers', 'cloud-gpu', 'ai-models',
 ])
 
 export const legacyChains = Object.freeze([
