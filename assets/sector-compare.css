@@ -148,3 +148,6 @@
   .scv-table td:nth-child(2) { font-size: 12px; overflow-wrap: anywhere; }
   .scv-chart-foot { flex-wrap: wrap; }
 }
+
+.scv-selection-actions { display: flex; gap: 6px; padding: 0 6px 8px; }
+.scv-selection-mark { flex-shrink: 0; color: var(--scv-accent); }

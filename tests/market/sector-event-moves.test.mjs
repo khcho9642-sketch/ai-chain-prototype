@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { COMPANIES, DISPLAY_SECTORS } from '../../assets/home-map-core.js';
+import { COMPANIES } from '../../assets/home-map-core.js';
+import { comparisonSectors as DISPLAY_SECTORS } from '../../assets/sector-compare-data.js';
 import { createSectorEventMoves } from '../../assets/sector-event-moves.js';
 
 const snapshot = quotes => ({ schemaVersion: 1, generatedAt: '2026-04-10T23:00:00Z', quotes });

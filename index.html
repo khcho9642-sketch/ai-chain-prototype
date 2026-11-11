@@ -184,7 +184,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
       <summary aria-label="전체 메뉴"><span class="mobile-menu-label">전체 메뉴</span> <span aria-hidden="true">☰</span></summary>
       <nav aria-label="전체 메뉴">
       <a href="#home" data-r="home" class="on">시장 지도</a>
-      <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
+      <a href="#sector-compare" data-r="sector-compare">주가 비교</a>
       <a href="#data" data-r="data">기업정보</a>
       <a href="#company-info" data-r="company-info">신기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
@@ -199,7 +199,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
     </details>
     <nav class="topnav" aria-label="주요 메뉴">
       <a href="#home" data-r="home" class="on">시장 지도</a>
-      <a href="#sector-compare" data-r="sector-compare">섹터 비교</a>
+      <a href="#sector-compare" data-r="sector-compare">주가 비교</a>
       <a href="#data" data-r="data">기업정보</a>
       <a href="#company-info" data-r="company-info">신기업정보</a>
       <a href="#map" data-r="map">밸류체인 지도</a>
@@ -287,7 +287,7 @@ body[data-page="home"]>main.wrap{max-width:1920px;padding:0 0 48px;gap:0}
 
 <nav class="tabbar" aria-label="주요 메뉴">
   <a href="#home" data-r="home" class="on"><span aria-hidden="true">▦</span>시장 지도</a>
-  <a href="#sector-compare" data-r="sector-compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 17l5-5 5 2 8-10M3 17l5-1 5 2 8-5"/></svg>섹터 비교</a>
+  <a href="#sector-compare" data-r="sector-compare"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 17l5-5 5 2 8-10M3 17l5-1 5 2 8-5"/></svg>주가 비교</a>
   <a href="#data" data-r="data"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>기업정보</a>
   <a href="#company-info" data-r="company-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>신기업정보</a>
   <a href="#map" data-r="map"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.3 7.2l7.4 3.6M8.3 16.8l7.4-3.6"/></svg>Value Chain</a>
@@ -397,7 +397,7 @@ function route(){
   if(r==='home')window.renderHomeMap?.();
   if(r==='sector-compare')window.renderSectorCompare?.(h[1]);
   if(r==='debate')window.renderDebate?.();if(r==='scenario')window.renderScenario?.();if(r==='today')window.renderToday?.();if(r==='compare')window.renderComparison?.();if(r==='industry')window.renderIndustry?.();if(r==='data')window.renderData();if(r==='talk')window.renderTalk?.();if(r==='ai')renderAI();
-  var titles={home:'AI 시장 지도',today:'오늘의 변화',debate:'오늘의 토론','sector-compare':'섹터 비교',map:'밸류체인 지도',data:'기업정보','company-info':'신기업정보',compare:'고리 비교',industry:'산업·AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
+  var titles={home:'AI 시장 지도',today:'오늘의 변화',debate:'오늘의 토론','sector-compare':'주가 비교',map:'밸류체인 지도',data:'기업정보','company-info':'신기업정보',compare:'고리 비교',industry:'산업·AI 통계',talk:'토론',ai:'AI에게 묻기',scenario:'시나리오 분석'};
   var industryTitle=h[1]==='ai'?'AI 통계':h[1]==='epoch'?'Epoch AI':titles.industry;
   document.title=(r==='industry'?industryTitle:titles[r])+' | AI Value Chain';
   document.getElementById('site-ai-note').hidden=(r==='scenario'||r==='home'||r==='sector-compare'||r==='company-info'||r==='debate');

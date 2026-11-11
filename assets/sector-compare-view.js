@@ -3,9 +3,9 @@ import { companyHrefForTicker } from './company-links.js';
 import { mountEventPins } from './sector-event-pins.js';
 
 const periods = new Map([
-  [30, '1개월'], [90, '3개월'], [180, '6개월'], [365, '1년'], [730, '2년'], [1095, '3년'],
+  [7, '1주일'], [30, '1개월'], [90, '3개월'], [180, '6개월'], [365, '1년'], [730, '2년'], [1095, '3년'],
 ]);
-const stockColors = ['#78d6fe', '#edbe76', '#c0a4ff', '#6edeb1', '#fb9dbe', '#9dafff', '#c2d46b', '#f3986f', '#6ccaaf'];
+const stockColors = ['#78d6fe', '#edbe76', '#c0a4ff', '#6edeb1', '#fb9dbe', '#9dafff', '#c2d46b', '#f3986f', '#6ccaaf', '#62D0E8'];
 const collectedDate = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
 });
@@ -86,7 +86,7 @@ function renderDetailTable(rows, sectorMode) {
 export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
   host.innerHTML = `<div class="scv">
     <header class="scv-intro">
-      <div><h1>섹터 비교</h1><p>AI 밸류체인 9개 섹터와 구성 종목의 기간별 주가 흐름</p></div>
+      <div><h1>주가 비교</h1><p>AI 밸류체인 섹터와 구성 종목의 기간별 주가 흐름</p></div>
       <span data-field="stamp" class="scv-caption"></span>
     </header>
     <div class="scv-controls">
@@ -107,9 +107,8 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
             <button type="button" class="scv-outline" data-action="choose">종목 직접 선택</button>
           </div>
         </div>
-        <div data-field="scopeList" class="scv-scope-list" role="group" aria-label="9개 섹터"></div>
+        <div data-field="scopeList" class="scv-scope-list" role="group" aria-label="섹터 목록"></div>
       </section>
-      <div class="scv-insight" aria-live="polite"><strong>한 줄 요약</strong><span data-field="insight"></span></div>
       <div class="scv-work">
         <section class="scv-panel scv-chart">
           <div class="scv-panel-head"><div><h2 data-field="chartTitle"></h2>
@@ -123,7 +122,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
         <section class="scv-panel scv-rail">
           <div class="scv-panel-head"><h2 data-field="rankTitle"></h2><span data-field="rankPeriod" class="scv-caption"></span></div>
           <div class="scv-rank-labels"><span data-field="rankLabel"></span><span>기간 등락률</span><span>고점 대비</span></div>
-          <div data-field="rankList"></div>
+          <div class="scv-selection-actions"><button type="button" class="scv-outline" data-selection="all">모두 선택</button><button type="button" class="scv-outline" data-selection="none">모두 해제</button></div><div data-field="rankList"></div>
         </section>
       </div>
       <section class="scv-panel scv-detail">
@@ -142,7 +141,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </div>
     <dialog class="scv-dialog" aria-label="비교할 종목 선택">
       <div class="scv-panel-head"><h2>비교할 종목 선택</h2><button type="button" data-action="close" class="scv-outline">닫기</button></div>
-      <p class="scv-caption">9개 섹터에서 함께 볼 종목을 최대 9개 선택하세요.</p>
+      <p class="scv-caption">함께 볼 종목을 최대 10개 선택하세요.</p>
       <input type="search" data-field="query" aria-label="종목 검색" placeholder="종목명, 티커 또는 섹터 검색">
       <div data-field="options" class="scv-options"></div>
       <div class="scv-picker-foot"><span data-field="pickCount" aria-live="polite"></span>
@@ -163,6 +162,8 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
   let customSymbols = [];
   let draft = new Set();
   let stocks = [];
+  const hiddenSectors = new Set();
+  const hiddenStocks = new Set();
 
   function updateControls() {
     for (const button of host.querySelectorAll('[data-days]'))
@@ -214,12 +215,14 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     const stockCatalog = sectorMode ? [] : getStockRows(model.sectors, stockScope, customSymbols).sort(byPerformance);
     const rows = sectorMode ? [...model.sectors].sort(byPerformance) : stockCatalog.filter(row => row.rate != null);
     const singleSector = !sectorMode && stockScope !== 'all' && stockScope !== 'custom';
-    let focused = rows.find(row => row.id === (sectorMode ? sectorId : stockId));
+    const hidden = sectorMode ? hiddenSectors : hiddenStocks;
+    const visibleRows = rows.filter(row => !hidden.has(row.id));
+    let focused = visibleRows.find(row => row.id === (sectorMode ? sectorId : stockId));
     if (!focused && sectorMode) {
-      focused = rows.filter(row => row.belowPeak != null)
+      focused = visibleRows.filter(row => row.belowPeak != null)
         .reduce((lowest, row) => !lowest || row.belowPeak < lowest.belowPeak ? row : lowest, null);
     }
-    focused ??= rows[0];
+    focused ??= visibleRows[0];
     if (focused && sectorMode) sectorId = focused.id;
     else if (focused) stockId = focused.id;
     const label = periods.get(days);
@@ -248,33 +251,26 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     ui.warnings.innerHTML = warnings.map(warning => '<li>' + escape(warning) + '</li>').join('');
     const name = focused?.name ?? '';
     if (focused?.rate != null) {
-      const highDate = dates[0].slice(0, 4) === dates.at(-1).slice(0, 4)
-        ? date(focused.highDate).slice(5) : date(focused.highDate);
-      const change = Math.abs(focused.belowPeak).toFixed(2);
-      ui.insight.textContent = name + ' · ' + (focused.belowPeak === 0
-        ? '마지막 종가가 선택 기간의 고점과 같습니다.'
-        : highDate + ' 고점에서 마지막 거래일까지 ' + change + '% 하락했습니다.');
       ui.metric.innerHTML = '<span>' + swatch(focused.color) + escape(name) + '</span><strong class="' +
         tone(focused.rate) + '">' + pct(focused.rate) + '</strong><small>' + label + ' · ' +
         rows.filter(r => r.rate != null).length + (sectorMode ? '개 섹터 중 ' : '개 종목 중 ') + (rows.indexOf(focused) + 1) + '위</small>';
     } else {
-      ui.insight.textContent = name ? name + ' · 선택 기간의 등락률을 계산할 종가가 부족합니다.' : '이 범위에서 선택 기간의 종가 이력이 충분한 종목이 없습니다.';
-      ui.metric.textContent = name;
+      ui.metric.textContent = visibleRows.length ? name : '순위에서 비교할 대상을 선택하세요.';
     }
     ui.rankList.innerHTML = rows.map((row, index) =>
-      '<button type="button" class="scv-rank" data-focus="' + escape(row.id) + '" aria-pressed="' + (row === focused) + '">' +
-      '<span class="scv-rank-name"><small>' + (row.rate == null ? '—' : String(index + 1).padStart(2, '0')) + '</small>' +
+      '<button type="button" class="scv-rank" data-focus="' + escape(row.id) + '" aria-pressed="' + !hidden.has(row.id) + '">' +
+      '<span class="scv-rank-name"><span aria-hidden="true" class="scv-selection-mark">' + (hidden.has(row.id) ? '☐' : '☑') + '</span><small>' + (row.rate == null ? '—' : String(index + 1).padStart(2, '0')) + '</small>' +
       swatch(row.color) + '<span>' + escape(row.name) +
       (!sectorMode && (stockScope === 'all' || stockScope === 'custom') ? '<small class="scv-stock-sector">' + escape(row.sectorName) + '</small>' : '') +
       '</span></span><b class="' + tone(row.rate) + '">' + pct(row.rate) +
       '</b><span class="scv-drawdown">' + pct(row.belowPeak) + '</span></button>').join('');
-    eventPins.update(sectorMode ? model : null, sectorId, days);
+    eventPins.update(sectorMode && focused ? model : null, focused?.id, days);
     renderFlowChart(ui.plot, {
       dates, title: ui.chartTitle.textContent, onFocus: focusRow, showPeak: true,
       onLayout: sectorMode ? eventPins.layout : undefined,
       onPinGuideReady: sectorMode ? eventPins.guideReady : undefined,
       sortTooltipByValue: !sectorMode,
-      lines: (sectorMode ? model.sectors : rows).map(row => ({
+      lines: visibleRows.map(row => ({
         id: row.id, name: row.name, color: row.color, values: row.series, focused: row === focused,
       })),
     });
@@ -329,9 +325,23 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
         paint();
       } else if (button.dataset.stockScope) {
         enterStockScope(button.dataset.stockScope);
+      } else if (button.dataset.selection) {
+        const hidden = mode === 'sector' ? hiddenSectors : hiddenStocks;
+        const rows = mode === 'sector' ? model.sectors : getStockRows(model.sectors, stockScope, customSymbols);
+        for (const row of rows) {
+          if (button.dataset.selection === 'all') hidden.delete(row.id);
+          else hidden.add(row.id);
+        }
+        paint();
       } else if (button.dataset.focus) {
         const id = button.dataset.focus;
-        focusRow(id);
+        const hidden = mode === 'sector' ? hiddenSectors : hiddenStocks;
+        if (hidden.has(id)) {
+          hidden.delete(id);
+          if (mode === 'sector') sectorId = id;
+          else stockId = id;
+        } else hidden.add(id);
+        paint();
         Array.from(ui.rankList.children).find(item => item.dataset.focus === id)?.focus({ preventScroll: true });
       } else if (button.dataset.action === 'drill') {
         drill();
@@ -389,6 +399,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
         stockId = null;
       } else if (requestedId && model.sectors.some(row => row.id === requestedId)) {
         sectorId = requestedId;
+        hiddenSectors.delete(requestedId);
         mode = 'sector';
       }
       ui.status.hidden = true;
@@ -398,6 +409,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     selectSector(id) {
       if (id && (!model || model.sectors.some(row => row.id === id))) {
         sectorId = id;
+        hiddenSectors.delete(id);
         mode = 'sector';
         paint();
       }

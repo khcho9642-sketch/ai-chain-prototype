@@ -1,5 +1,5 @@
 // Compare the fixed catalog's peers using collected daily closes. No network calls.
-export const comparisonPeriods = Object.freeze({ '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
+export const comparisonPeriods = Object.freeze({ '1w': 7, '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365, '2y': 730, '3y': 1095 })
 
 const DAY = 86400000
 const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0

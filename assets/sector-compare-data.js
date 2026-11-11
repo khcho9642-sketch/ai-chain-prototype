@@ -1,14 +1,31 @@
 import { DISPLAY_SECTORS, SECTORS } from './home-map-core.js';
-import { sectorChains, sectorInstruments } from './home-sector-returns.js';
+import { sectorChains as mapChains, sectorInstruments as mapInstruments } from './home-sector-returns.js';
 import { buildComparison, comparisonPeriods } from './peer-comparison-core.js';
 
+// Optical companies are compared using the same saved daily closes as the map.
+const optical = { id: 'optical-communications', name: '광통신', color: '#62D0E8' };
+const opticalMembers = [
+  ['GLW', '코닝'], ['300308.SZ', '이노라이트'], ['LITE', '루멘텀'],
+  ['300502.SZ', 'Eoptolink'], ['5803.T', '후지쿠라'], ['COHR', '코히어런트'], ['CIEN', '시에나'],
+];
+const hasOptical = SECTORS.some(sector => sector.id === optical.id);
+const sectors = hasOptical ? SECTORS : [...SECTORS, optical];
+export const comparisonSectors = [...DISPLAY_SECTORS];
+if (!hasOptical) comparisonSectors.splice(comparisonSectors.findIndex(sector => sector.id === 'ai-equipment') + 1, 0, optical);
+const sectorChains = hasOptical ? mapChains : [...mapChains, { id: sectors.length, name: optical.name }];
+const opticalSymbols = new Set(opticalMembers.map(([symbol]) => symbol));
+export const comparisonInstruments = hasOptical ? mapInstruments : [
+  ...mapInstruments.filter(instrument => !opticalSymbols.has(instrument.symbol)),
+  ...opticalMembers.map(([symbol, name]) => ({ symbol, name, chains: [sectors.length] })),
+];
+
 // Single-company groups give the detail table the exact same dates and base as the sector.
-const companyChains = sectorInstruments.map((instrument, i) => ({
+const companyChains = comparisonInstruments.map((instrument, i) => ({
   id: sectorChains.length + i + 1,
   name: instrument.symbol,
 }));
 const chains = [...sectorChains, ...companyChains];
-const instruments = sectorInstruments.map((instrument, i) => ({
+const instruments = comparisonInstruments.map((instrument, i) => ({
   ...instrument,
   chains: [...instrument.chains, companyChains[i].id],
 }));
@@ -30,14 +47,14 @@ export function getSectorPeriod(snapshot, days) {
     days: periodDays,
     requireFullPeriod: true,
   });
-  const sectorGroups = new Map(SECTORS.map(({ id }, index) => [id, groups[index]]));
+  const sectorGroups = new Map(sectors.map(({ id }, index) => [id, groups[index]]));
   const companyGroups = new Map(groups.slice(sectorChains.length).map(group => [group.name, group]));
   return {
     dates,
     generatedAt: metadata.generatedAt,
     source: metadata.source,
     warnings: metadata.warnings,
-    sectors: DISPLAY_SECTORS.map(({ id, name, color }) => {
+    sectors: comparisonSectors.map(({ id, name, color }) => {
       const sector = sectorGroups.get(id);
       return {
         id, name, color,
