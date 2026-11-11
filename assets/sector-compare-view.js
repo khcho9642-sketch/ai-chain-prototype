@@ -86,7 +86,7 @@ function renderDetailTable(rows, sectorMode) {
 export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
   host.innerHTML = `<div class="scv">
     <header class="scv-intro">
-      <div><h1>섹터 비교</h1><p>AI 밸류체인 9개 섹터와 구성 종목의 기간별 주가 흐름</p></div>
+      <div><h1>섹터 비교</h1><p>AI 밸류체인 10개 섹터와 구성 종목의 기간별 주가 흐름</p></div>
       <span data-field="stamp" class="scv-caption"></span>
     </header>
     <div class="scv-controls">
@@ -107,7 +107,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
             <button type="button" class="scv-outline" data-action="choose">종목 직접 선택</button>
           </div>
         </div>
-        <div data-field="scopeList" class="scv-scope-list" role="group" aria-label="9개 섹터"></div>
+        <div data-field="scopeList" class="scv-scope-list" role="group" aria-label="10개 섹터"></div>
       </section>
       <div class="scv-insight" aria-live="polite"><strong>한 줄 요약</strong><span data-field="insight"></span></div>
       <div class="scv-work">
@@ -142,7 +142,7 @@ export function mountSectorCompare(host, { onPeriodChange, onRetry }) {
     </div>
     <dialog class="scv-dialog" aria-label="비교할 종목 선택">
       <div class="scv-panel-head"><h2>비교할 종목 선택</h2><button type="button" data-action="close" class="scv-outline">닫기</button></div>
-      <p class="scv-caption">9개 섹터에서 함께 볼 종목을 최대 9개 선택하세요.</p>
+      <p class="scv-caption">10개 섹터에서 함께 볼 종목을 최대 9개 선택하세요.</p>
       <input type="search" data-field="query" aria-label="종목 검색" placeholder="종목명, 티커 또는 섹터 검색">
       <div data-field="options" class="scv-options"></div>
       <div class="scv-picker-foot"><span data-field="pickCount" aria-live="polite"></span>

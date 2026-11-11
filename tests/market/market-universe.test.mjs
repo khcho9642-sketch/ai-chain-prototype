@@ -6,11 +6,11 @@ import { normalizeListing, buildMarketUniverse, loadMarketUniverse } from '../..
 
 const master = JSON.parse(await readFile(new URL('../../research/market/company-universe.json', import.meta.url), 'utf8'))
 
-test('collector projection preserves the actual 586-issuer source, 537 listed issuers and stable IDs', async () => {
+test('collector projection preserves the 586-issuer source and appends eight approved issuers with stable IDs', async () => {
   const { targets, coverage } = await loadMarketUniverse()
-  assert.equal(coverage.companyCount, 586)
-  assert.equal(coverage.listedCompanyCount, 537)
-  assert.equal(coverage.unlistedCompanyCount, 49)
+  assert.equal(coverage.companyCount, 594)
+  assert.equal(coverage.listedCompanyCount, 544)
+  assert.equal(coverage.unlistedCompanyCount, 50)
   assert.equal(new Set(master.companies.map(company => company.id)).size, 586)
   assert.equal(coverage.mappedListedCompanyCount + coverage.unmapped.length, coverage.listedCompanyCount)
   assert.equal(coverage.mappingStatus, 'candidate')

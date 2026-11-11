@@ -20,16 +20,16 @@ function measuredSectors() {
 test('all stocks starts with one eligible company per sector, even after a memory-only selection', () => {
   const sectors = measuredSectors();
   const rows = getStockRows(sectors, 'all', ['memory-2']);
-  assert.equal(rows.length, 9);
+  assert.equal(rows.length, SECTORS.length);
   for (const sector of sectors) {
     const representatives = rows.filter(row => row.sectorName === sector.name);
     assert.deepEqual(representatives.map(row => row.id), [sector.id + '-1']);
   }
 });
 
-test('each of nine sector scopes includes every registered company and preserves its data status', () => {
+test('each sector scope includes every registered company and preserves its data status', () => {
   const sectors = measuredSectors();
-  assert.equal(sectors.length, 9);
+  assert.equal(sectors.length, SECTORS.length);
   for (const sector of sectors) {
     const rows = getStockRows(sectors, sector.id);
     assert.equal(rows.length, sector.members.length);
@@ -52,7 +52,7 @@ test('a sector with only unavailable quotes keeps its companies but contributes 
   assert.deepEqual(members.map(row => row.id).sort(), ['memory-0', 'memory-3']);
   assert.ok(members.every(row => row.rate === null && row.series === null));
   const rows = getStockRows(sectors, 'all', []);
-  assert.equal(rows.length, 8);
+  assert.equal(rows.length, SECTORS.length - 1);
   assert.ok(rows.every(row => row.sectorName !== memory.name));
 });
 

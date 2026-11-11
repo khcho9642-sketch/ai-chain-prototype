@@ -78,7 +78,7 @@ calm.generatedAt=new Date(now+1000).toISOString();
 for(const quote of calm.quotes){quote.bars.at(-1).close=quote.bars.at(-2).close*1.001;quote.price=quote.bars.at(-1).close;quote.changePercent=.1;}
 const calmRipple=buildRippleSnapshot({marketSnapshot:calm,now:now+1000});
 const actualMap=buildActualMap({snapshot:market,now});
-if(actualMap.coverage.catalogCount!==52||actualMap.coverage.unlistedCompanyCount!==4||actualMap.coverage.renderableCount!==48||actualMap.coverage.returnableCount!==48)throw new Error('Browser map fixture must cover exactly approved52 companies with48 listed and4 private');
+if(actualMap.coverage.catalogCount!==58||actualMap.coverage.unlistedCompanyCount!==4||actualMap.coverage.renderableCount!==54||actualMap.coverage.returnableCount!==54)throw new Error('Browser map fixture must cover exactly approved58 companies with54 listed and4 private');
 const incomplete=structuredClone(market);
 incomplete.quotes.find(q=>q.symbol==='AMD').marketCap=null;
 delete incomplete.fxHistory.EUR;
@@ -102,7 +102,7 @@ def percent(value):
 def wait_home(page):
     page.locator('#v-home .sector-return-card').first.wait_for()
     page.wait_for_function("document.querySelector('#v-home')?.shadowRoot?.querySelectorAll('[data-ripple-trigger]').length === 3")
-    page.wait_for_function("(() => {const cards=[...document.querySelector('#v-home').shadowRoot.querySelectorAll('.sector-return-value')];return cards.length===9 && cards.every(value=>value.textContent.trim()!=='—')})()")
+    page.wait_for_function("(() => {const cards=[...document.querySelector('#v-home').shadowRoot.querySelectorAll('.sector-return-value')];return cards.length===10 && cards.every(value=>value.textContent.trim()!=='—')})()")
     return page.locator('#v-home')
 
 
@@ -217,14 +217,14 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 home = wait_home(page)
                 checks.append('five saved indices persist beside the top header logo across all twelve menus without a status sentence or changed values')
                 cards = home.locator('.sector-return-card')
-                assert cards.count() == 9
+                assert cards.count() == 10
                 assert cards.evaluate_all('els => els.slice(1, 3).map(el => el.dataset.sector)') == ['memory', 'foundry-packaging']
                 assert cards.nth(1).locator('.sector-return-step').inner_text() == '02'
                 assert cards.nth(2).locator('.sector-return-step').inner_text() == '03'
                 assert home.locator('[data-home-weight=eq]').get_attribute('aria-pressed') == 'true'
                 assert home.locator('[data-home-card-period]').input_value() == '3mo'
-                assert '587개 기업' in home.locator('[data-home-coverage]').inner_text()
-                assert '핵심 52개' in home.locator('[data-home-coverage]').inner_text()
+                assert '594개 기업' in home.locator('[data-home-coverage]').inner_text()
+                assert '핵심 58개' in home.locator('[data-home-coverage]').inner_text()
                 for sector in fixture_data['model']['sectors']:
                     card=home.locator('[data-sector="'+sector['sectorId']+'"]')
                     assert card.locator('.sector-return-value').count()==1
@@ -244,7 +244,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 page.reload(); home=wait_home(page)
                 assert home.locator('[data-home-weight=cap]').get_attribute('aria-pressed')=='true'
                 home.locator('[data-home-card-period]').select_option('1d')
-                assert home.locator('[data-home-card-caption]').inner_text()=='선정 52개 중 상장 48개의 최근 1거래일 종가 수익률'
+                assert home.locator('[data-home-card-caption]').inner_text()=='선정 58개 중 상장 54개의 최근 1거래일 종가 수익률'
                 assert home.locator('.sector-return-value').all_inner_texts()!=weighted
                 checks.append('nine actual closed-price sector cards; equal/cap toggle, exact-date weights, divergence, storage and independent periods')
 
@@ -283,7 +283,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 assert fixture_data['usEnd'] in home.locator('#selection').inner_text()
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
-                assert home.locator('.tile').count()==48
+                assert home.locator('.tile').count()==54
                 news_section=home.locator('[data-map-private]')
                 news_cards=news_section.locator('[data-map-private-company]')
                 expected_news=[
@@ -314,7 +314,7 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                     assert float(nvda.get_attribute('data-cap-usd'))==expected_nvda['capUSD']
                     assert home.locator('.tile').count()==fixture_data['actualMap']['coverage']['renderableCount']
                 home.locator('#country').select_option('TW')
-                assert 0<home.locator('.tile').count()<48
+                assert 0<home.locator('.tile').count()<54
                 home.get_by_role('button',name='조회 조건 초기화',exact=True).click()
                 home.get_by_role('button',name='버블',exact=True).click()
                 home.locator('.bubble-node').first.wait_for()
@@ -327,10 +327,10 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 home.locator('.sector-return-card[data-sector=memory]').click()
                 assert home.locator('.sector-heading').count()==1
                 home.locator('.sector-return-card[data-sector=memory]').click()
-                assert home.locator('.sector-heading').count()==9
+                assert home.locator('.sector-heading').count()==10
                 home.locator('.ripple-trigger-card').click()
                 page.wait_for_function("location.hash.startsWith('#company-info/company/')")
-                checks.append('exact approved52 selection,48 listed heatmap/bubbles and four dated company news cards with official sources, no Apple/Tesla, exact NVDA completed return, provenance, search, sector and detail interactions')
+                checks.append('exact approved58 selection,54 listed heatmap/bubbles and four dated company news cards with official sources, no Apple/Tesla, exact NVDA completed return, provenance, search, sector and detail interactions')
 
                 page.goto(origin+'/#home'); home=wait_home(page)
                 incomplete=fixture_data['incomplete']

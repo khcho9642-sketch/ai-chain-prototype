@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "source": {
     "type": "user-request",
-    "requestedOn": "2026-11-08",
-    "note": "원본 회사 원장 586개를 보존하고 사용자 요청으로 Nscale을 추가한다. IPO 추진 단계의 비상장 기업으로 표시하며 제안 티커·시세·시총은 연결하지 않는다."
+    "requestedOn": "2026-11-11",
+    "note": "원본 회사 원장 586개를 보존하고 사용자 요청 기업을 별도 추가한다. Nscale은 비상장으로, 광통신 7개사는 확인된 상장시장과 공식 사업 출처를 연결한다."
   },
   "companies": [
     {
@@ -34,6 +34,136 @@
           "label": "Companies House · NSCALE PLC 법인 정보",
           "url": "https://find-and-update.company-information.service.gov.uk/company/16925886"
         }
+      ]
+    },
+    {
+      "id": "C0588",
+      "name": "AXT",
+      "englishName": "AXT, Inc.",
+      "aliases": ["AXTI"],
+      "country": "미국",
+      "listed": true,
+      "ticker": "AXTI",
+      "exchange": "NASDAQ",
+      "symbol": "AXTI",
+      "currency": "USD",
+      "sector": "SEG10",
+      "product": "광레이저용 인화인듐(InP) 기판",
+      "overview": "광통신 레이저와 검출기에 쓰이는 인화인듐 기판을 포함한 화합물 반도체 기판을 제조합니다.",
+      "sources": [
+        {"label":"AXT · 공식 제품","url":"https://www.axt.com/products/indium-phosphide/"},
+        {"label":"SEC · AXT 2025 Form 10-K","url":"https://www.sec.gov/Archives/edgar/data/1051627/000143774926008612/axti20251231_10k.htm"}
+      ]
+    },
+    {
+      "id": "C0589",
+      "name": "대한광통신",
+      "englishName": "Taihan Fiberoptics",
+      "aliases": ["Taihan Fiber Optics"],
+      "country": "한국",
+      "listed": true,
+      "ticker": "010170",
+      "exchange": "KRX KOSDAQ",
+      "symbol": "010170.KQ",
+      "currency": "KRW",
+      "sector": "SEG10",
+      "product": "광섬유·광케이블",
+      "overview": "광섬유 모재부터 광섬유와 광케이블까지 생산해 통신망과 데이터 전송 인프라에 공급합니다.",
+      "sources": [
+        {"label":"대한광통신 · 공식 사업","url":"https://www.taihanfiber.com/"},
+        {"label":"KRX KIND · 종목코드 010170","url":"https://kind.krx.co.kr/external/2026/03/16/001803/20260316005313/00636.htm"}
+      ]
+    },
+    {
+      "id": "C0590",
+      "name": "우리로",
+      "englishName": "WOORIRO",
+      "aliases": ["우리로광통신"],
+      "country": "한국",
+      "listed": true,
+      "ticker": "046970",
+      "exchange": "KRX KOSDAQ",
+      "symbol": "046970.KQ",
+      "currency": "KRW",
+      "sector": "SEG10",
+      "product": "광분배기·포토다이오드",
+      "overview": "광통신망용 평면광파회로 분배기와 광신호 수신용 포토다이오드 칩·모듈을 공급합니다.",
+      "sources": [
+        {"label":"우리로 · 공식 제품","url":"https://www.wooriro.com/"},
+        {"label":"KRX 정보데이터시스템 · 046970","url":"https://data.krx.co.kr/"}
+      ]
+    },
+    {
+      "id": "C0591",
+      "name": "한국첨단소재",
+      "englishName": "Korea Advanced Materials",
+      "aliases": ["피피아이", "PPI"],
+      "country": "한국",
+      "listed": true,
+      "ticker": "062970",
+      "exchange": "KRX KOSDAQ",
+      "symbol": "062970.KQ",
+      "currency": "KRW",
+      "sector": "SEG10",
+      "product": "평면광파회로 광부품",
+      "overview": "평면광파회로 기술을 활용한 광분배기와 데이터센터·통신망용 광부품을 제조합니다.",
+      "sources": [
+        {"label":"한국첨단소재 · 공식 회사정보","url":"https://www.ppitek.com/"},
+        {"label":"KRX KIND · 상호변경 확인","url":"https://kind.krx.co.kr/external/2025/09/19/000626/20250919001469/00633.htm"}
+      ]
+    },
+    {
+      "id": "C0592",
+      "name": "Yuanjie Semiconductor",
+      "englishName": "Shaanxi Yuanjie Semiconductor Technology",
+      "aliases": ["위안제반도체", "源杰科技"],
+      "country": "중국",
+      "listed": true,
+      "ticker": "688498",
+      "exchange": "SSE STAR",
+      "symbol": "688498.SS",
+      "currency": "CNY",
+      "sector": "SEG10",
+      "product": "광통신용 레이저 칩",
+      "overview": "광통신용 레이저 칩을 설계·제조해 광모듈과 통신장비 제조사에 공급합니다.",
+      "sources": [
+        {"label":"SSE · 688498 회사정보","url":"https://www.sse.com.cn/assortment/stock/list/info/company/index.shtml?COMPANY_CODE=688498&tabActive=1"}
+      ]
+    },
+    {
+      "id": "C0593",
+      "name": "LandMark Optoelectronics",
+      "englishName": "LandMark Optoelectronics Corporation",
+      "aliases": ["랜드마크 옵토", "LandMark"],
+      "country": "대만",
+      "listed": true,
+      "ticker": "3081",
+      "exchange": "TPEx",
+      "symbol": "3081.TWO",
+      "currency": "TWD",
+      "sector": "SEG10",
+      "product": "InP·GaAs 에피웨이퍼",
+      "overview": "광통신 레이저와 광검출기용 인화인듐·갈륨비소 에피웨이퍼를 제조합니다.",
+      "sources": [
+        {"label":"TPEx · 3081 상장정보","url":"https://www.tpex.org.tw/storage/eb_data/10407/10400199303.htm"}
+      ]
+    },
+    {
+      "id": "C0594",
+      "name": "VPEC",
+      "englishName": "Visual Photonics Epitaxy Co., Ltd.",
+      "aliases": ["비주얼 포토닉스 에피택시", "全新光電"],
+      "country": "대만",
+      "listed": true,
+      "ticker": "2455",
+      "exchange": "TWSE",
+      "symbol": "2455.TW",
+      "currency": "TWD",
+      "sector": "SEG10",
+      "product": "화합물 반도체 에피웨이퍼",
+      "overview": "광통신·무선통신 소자용 갈륨비소와 인화인듐 화합물 반도체 에피웨이퍼를 공급합니다.",
+      "sources": [
+        {"label":"TWSE · 2455 회사정보","url":"https://www.twse.com.tw/IIH2/en/company/stock.html?code=2455"}
       ]
     }
   ]

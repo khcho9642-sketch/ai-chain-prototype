@@ -67,7 +67,7 @@ function updateResults() {
   if(box)box.scrollLeft=oldScroll
 }
 function renderList(snapshot) {
-  root.innerHTML=`<div class="ci-shell"><div class="ci-heading"><div><span class="ci-kicker">AI VALUE CHAIN / COMPANIES</span><h1>신기업정보</h1><p>9개 섹터의 핵심 기업을 읽고, 전체 기업의 시장·재무 지표를 비교하세요.</p></div><nav class="ci-tools" aria-label="종목 도구"><a href="#data/quotes">시세 조회 ↗</a><a href="#data/watchlist">관심종목 ↗</a></nav></div>
+  root.innerHTML=`<div class="ci-shell"><div class="ci-heading"><div><span class="ci-kicker">AI VALUE CHAIN / COMPANIES</span><h1>신기업정보</h1><p>${catalog.sectors.length}개 섹터의 핵심 기업을 읽고, 전체 기업의 시장·재무 지표를 비교하세요.</p></div><nav class="ci-tools" aria-label="종목 도구"><a href="#data/quotes">시세 조회 ↗</a><a href="#data/watchlist">관심종목 ↗</a></nav></div>
     <div class="ci-tabs" role="group" aria-label="기업 범위"><button data-ci-tab="core">핵심 기업 <b>${core.length}</b></button><button data-ci-tab="all">전체 기업 <b>${catalog.companies.length}</b></button></div>
     <div class="ci-search-row"><label class="ci-searchbox"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg><span class="sr">기업 검색</span><input type="search" id="ci-query" autocomplete="off" placeholder="기업명, 영문명, 티커 또는 역할 검색" value="${esc(state.q)}"></label><button class="ci-filter-toggle" aria-controls="ci-filters" aria-expanded="${Boolean(snapshot?.open)}">필터</button></div>
     <div class="ci-conditions"><span class="ci-criteria"></span><button data-ci-reset>필터 초기화</button></div>

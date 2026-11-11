@@ -32,6 +32,66 @@
       "listed": false,
       "change": "사용자 추가",
       "role": "AI 학습·추론용 GPU 클라우드"
+    },
+    {
+      "companyId": "C0116",
+      "name": "코닝",
+      "sector": "광통신",
+      "ticker": "GLW",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "광섬유·데이터센터 광케이블"
+    },
+    {
+      "companyId": "C0520",
+      "name": "이노라이트",
+      "sector": "광통신",
+      "ticker": "300308.SZ",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "고속 광트랜시버"
+    },
+    {
+      "companyId": "C0293",
+      "name": "루멘텀",
+      "sector": "광통신",
+      "ticker": "LITE",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "광통신 레이저·광스위치"
+    },
+    {
+      "companyId": "C0153",
+      "name": "Eoptolink",
+      "sector": "광통신",
+      "ticker": "300502.SZ",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "고속 광트랜시버"
+    },
+    {
+      "companyId": "C0176",
+      "name": "후지쿠라",
+      "sector": "광통신",
+      "ticker": "5803.T",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "광섬유·데이터센터 케이블"
+    },
+    {
+      "companyId": "C0102",
+      "name": "시에나",
+      "sector": "광통신",
+      "ticker": "CIEN",
+      "listed": true,
+      "requestedOn": "2026-11-11",
+      "change": "광통신 핵심 7개",
+      "role": "데이터센터 간 광전송"
     }
   ]
 }

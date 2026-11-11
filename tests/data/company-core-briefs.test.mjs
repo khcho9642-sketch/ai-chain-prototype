@@ -7,8 +7,8 @@ import { yearsById } from '../../assets/company-financial-snapshot.js'
 import { supplementalFinancials } from '../../assets/company-core-financials.js'
 import { MAP_COMPANIES } from '../../assets/home-map-universe.js'
 
-test('core articles and cited operating evidence cover precisely the 52 mapped issuers', () => {
-  assert.equal(MAP_COMPANIES.length, 52)
+test('core articles and cited operating evidence cover precisely the 58 mapped issuers', () => {
+  assert.equal(MAP_COMPANIES.length, 58)
   assert.equal(MAP_COMPANIES.filter(c => !c.listed).length, 4)
   assert.deepEqual(Object.keys(coreBriefs).sort(), MAP_COMPANIES.map(c => c.id).sort())
   const seenRisks = new Set()
@@ -27,8 +27,8 @@ test('core articles and cited operating evidence cover precisely the 52 mapped i
 
 test('the previously verified 46 listed issuers retain comparable cited revenues and unavailable profit', () => {
   const listed = MAP_COMPANIES.filter(c => c.listed)
-  assert.equal(listed.length, 48)
-  const verified = listed.filter(c => !['C0371', 'C0119'].includes(c.id))
+  assert.equal(listed.length, 54)
+  const verified = listed.filter(c => c.sourceOrder <= 49)
   assert.equal(verified.length, 46)
   for (const c of verified) {
     const company = catalog.companies.find(row => row.id === c.id)

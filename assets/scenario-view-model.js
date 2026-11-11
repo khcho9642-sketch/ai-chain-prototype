@@ -21,7 +21,9 @@ const segmentIdBySectorId = {
   'cloud-gpu': 'SEG8',
   'ai-models': 'SEG9',
 }
-const displaySegmentIds = SECTOR_DISPLAY_IDS.map(sectorId => segmentIdBySectorId[sectorId])
+// The market map can add sectors without silently expanding the separately
+// reviewed nine-segment scenario model.
+const displaySegmentIds = SECTOR_DISPLAY_IDS.map(sectorId => segmentIdBySectorId[sectorId]).filter(Boolean)
 export const SCENARIO_DISPLAY_SEGMENTS = Object.freeze(displaySegmentIds.map(id => SEGMENTS.find(segment => segment.id === id)))
 const displayPositions = new Map(displaySegmentIds.map((id, position) => [id, position]))
 const displayPosition = row => displayPositions.get(row.segmentId) ?? displayPositions.size

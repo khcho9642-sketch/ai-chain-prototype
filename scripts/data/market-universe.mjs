@@ -2,9 +2,11 @@ import { readFile } from 'node:fs/promises'
 import { instruments } from '../../assets/instruments.js'
 import { previewRecords } from '../../assets/company-preview-records.js'
 import { SECTORS } from '../../assets/home-map-core.js'
+import { buildCompanyAdditions } from './company-additions.mjs'
 
 const defaultMaster = new URL('../../research/market/company-universe.json', import.meta.url)
 const defaultResolutions = new URL('../../research/market/listing-resolutions.json', import.meta.url)
+const defaultAdditions = new URL('../../research/market/company-additions.json', import.meta.url)
 const sectorIds = Object.fromEntries(SECTORS.map((sector, index) => ['SEG' + (index + 1), sector.id]))
 // Preserve the historical ADR/share-class mappings independently of which issuers
 // are currently featured in the company directory.
@@ -168,9 +170,11 @@ export function buildMarketUniverse({ master, legacyItems = instruments, catalog
   }
 }
 
-export async function loadMarketUniverse({ masterPath = defaultMaster, resolutionsPath = defaultResolutions, ...options } = {}) {
-  const [master, resolutions] = await Promise.all([
-    readFile(masterPath, 'utf8').then(JSON.parse), readFile(resolutionsPath, 'utf8').then(JSON.parse),
+export async function loadMarketUniverse({ masterPath = defaultMaster, resolutionsPath = defaultResolutions, additionsPath = defaultAdditions, ...options } = {}) {
+  const [master, resolutions, additions] = await Promise.all([
+    readFile(masterPath, 'utf8').then(JSON.parse), readFile(resolutionsPath, 'utf8').then(JSON.parse), readFile(additionsPath, 'utf8').then(JSON.parse),
   ])
-  return buildMarketUniverse({ master, listingResolutions: resolutions.entries, alternateListings: resolutions.alternates || [], ...options })
+  const extra = buildCompanyAdditions({master,additions})
+  const merged = {...master,companies:[...master.companies,...extra.issuers]}
+  return buildMarketUniverse({ master:merged, listingResolutions: resolutions.entries, alternateListings: resolutions.alternates || [], ...options })
 }

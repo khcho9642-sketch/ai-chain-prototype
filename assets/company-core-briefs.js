@@ -1,6 +1,54 @@
 // Keyed by the issuer IDs in the project’s approved core-company register.
 // Named relationships below are documented in the linked issuer materials.
 export const coreBriefs = {
+  C0116: { // Corning
+    business: '통신사업자와 데이터센터에 광섬유, 광케이블과 연결 솔루션을 공급한다.',
+    role: 'AI 클러스터의 서버·스위치와 데이터센터 간 연결에서 전기 신호를 장거리 광신호로 운반하는 물리 매체를 제공한다.',
+    buyers: '통신망 운영사, 클라우드·데이터센터 운영사와 케이블 시스템 통합사가 고객이다.',
+    supply: '고순도 유리 원료를 광섬유로 인출하고 케이블·커넥터로 가공하는 제조 기반을 사용한다.',
+    risk: '데이터센터 증설과 통신사 투자 시기가 수요를 흔든다. 광통신 매출과 생산능력 증설의 실제 가동 시점을 함께 확인한다.',
+    source: ['Corning · Optical Communications', 'https://www.corning.com/optical-communications/worldwide/en/home.html'],
+  },
+  C0520: { // Innolight
+    business: '데이터센터와 통신망용 고속 광트랜시버를 설계·제조한다.',
+    role: 'GPU 서버와 이더넷 스위치 사이의 대역폭을 광신호로 연결해 대규모 AI 클러스터의 데이터 이동을 지원한다.',
+    buyers: '클라우드 데이터센터와 네트워크 장비 공급망이 주요 수요처다.',
+    supply: '광레이저·수광소자, DSP와 정밀 패키징 부품을 조합해 광모듈을 만든다.',
+    risk: '고객 집중, 제품 세대 전환과 광부품 조달이 출하·마진에 영향을 준다. 800G·1.6T 제품 비중을 확인한다.',
+    source: ['InnoLight · 공식 제품', 'https://www.innolight.com/'],
+  },
+  C0293: { // Lumentum
+    business: '광통신용 레이저와 광부품, 데이터센터용 광연결 제품을 공급한다.',
+    role: '광트랜시버가 전기 신호를 광신호로 바꿀 때 필요한 레이저 광원과 부품을 제공한다.',
+    buyers: '광모듈 제조사, 네트워크 장비사와 클라우드 데이터센터 공급망이 고객이다.',
+    supply: '화합물 반도체 웨이퍼, 레이저 칩 제조와 광학 패키징 공정에 의존한다.',
+    risk: '레이저 생산능력 확대가 고객 수요보다 빠르거나 인증이 늦어지면 가동률과 수익성이 하락할 수 있다.',
+    source: ['Lumentum · Cloud and Networking', 'https://www.lumentum.com/en/optical-communications'],
+  },
+  C0153: { // Eoptolink
+    business: '클라우드 데이터센터와 통신망에 쓰이는 고속 광트랜시버를 제조한다.',
+    role: '스위치와 서버 사이의 400G·800G 이상 연결을 광모듈로 구현한다.',
+    buyers: '클라우드 사업자와 네트워크 장비 제조사의 공급망이 수요처다.',
+    supply: '레이저·수광소자, 광학 부품과 신호처리 반도체를 조달해 모듈로 조립한다.',
+    risk: '고속 규격 전환, 부품 수급과 고객 인증 일정이 매출 인식에 영향을 준다.',
+    source: ['Eoptolink · 공식 제품', 'https://www.eoptolink.com/'],
+  },
+  C0176: { // Fujikura
+    business: '통신용 광섬유·광케이블과 접속·배선 제품을 공급한다.',
+    role: '데이터센터 내부와 데이터센터 간 광배선의 전송 경로를 제공한다.',
+    buyers: '통신사업자, 데이터센터 운영사와 네트워크 구축 사업자가 고객이다.',
+    supply: '광섬유 모재·인출, 케이블 피복과 커넥터·접속 부품 제조가 연결된다.',
+    risk: '광섬유 가격과 증설 속도, 지역별 통신 투자 변화가 수익성을 흔들 수 있다.',
+    source: ['Fujikura · Telecommunication Systems', 'https://www.fujikura.com/products/telecommunications/'],
+  },
+  C0102: { // Ciena
+    business: '통신사업자와 데이터센터에 광전송 시스템, 라우팅 장비와 네트워크 소프트웨어를 판매한다.',
+    role: '데이터센터 사이의 대용량 트래픽을 장거리 광망에서 전송·제어한다.',
+    buyers: '통신사업자, 클라우드 사업자와 대규모 네트워크 운영사가 고객이다.',
+    supply: '고속 광부품, 네트워크 프로세서와 시스템 제조 파트너를 활용한다.',
+    risk: '대형 고객의 프로젝트 일정과 부품 조달이 분기 출하를 흔들 수 있다. 수주잔고와 매출 전환을 함께 본다.',
+    source: ['Ciena · Optical Networking', 'https://www.ciena.com/insights/what-is/What-Is-Optical-Networking'],
+  },
   C0051: { // ASML
     business: '반도체 제조사에 EUV·DUV 노광 장비를 판매하고, 설치한 장비의 유지보수와 성능 개선에서도 매출을 얻는다.',
     role: '노광은 회로 도안을 웨이퍼에 옮기는 공정이다. 미세 회로를 정확히 그릴 수 있어야 GPU와 고성능 메모리의 차세대 공정을 양산할 수 있다.',

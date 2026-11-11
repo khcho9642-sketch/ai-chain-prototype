@@ -27,7 +27,7 @@ test('sector and company curves share the home calculation and use only common l
   assert.deepEqual(period.dates, ['2025-01-02', '2025-04-01']);
   assert.deepEqual(period.sectors.map(s => s.id), [
     'semiconductor-equipment', 'memory', 'foundry-packaging', 'ai-chips', 'ai-equipment',
-    'power-cooling', 'data-centers', 'cloud-gpu', 'ai-models',
+    'optical-communications', 'power-cooling', 'data-centers', 'cloud-gpu', 'ai-models',
   ]);
   assert.equal(period.sectors.flatMap(s => s.members).length, COMPANIES.length);
   const homeSeries = new Map(home.groups.map(group => [group.name, group.series.map(point => point.index)]));
@@ -73,11 +73,11 @@ test('multi-year periods require collected long daily history and enforce durati
   assert.equal(three.sectors.find(s => s.id === 'memory').members.find(m => m.symbol === 'MU').reason, '3년 일봉 자료 없음');
 });
 
-test('bad payloads fail explicitly and missing quotes keep the nine empty catalog entries', () => {
+test('bad payloads fail explicitly and missing quotes keep every empty sector entry', () => {
   assert.throws(() => getSectorPeriod({}, 90), TypeError);
   assert.throws(() => getSectorPeriod(snapshot([]), 14), RangeError);
   const empty = getSectorPeriod(snapshot([]), 90);
-  assert.equal(empty.sectors.length, 9);
+  assert.equal(empty.sectors.length, 10);
   assert.deepEqual(empty.dates, []);
   assert.ok(empty.sectors.every(s => !s.series.length && s.members.every(m => m.series === null && m.reason)));
 });

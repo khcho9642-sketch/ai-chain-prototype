@@ -29,7 +29,7 @@ Pages 작업의 시간 예약은 제거하고 `main` 변경·수동 배포만 �
 | 항목 | 범위와 기준 |
 |---|---|
 | 기업 원장 | 586개사: 상장 537개, 비상장 49개. 2026-11-03 Excel의 공개 필드만 `research/market/company-universe.json`에 투영 |
-| 사용자 신규 원장 | `research/market/company-additions.json`의 영국 비상장 Nscale(C0587) 1개를 원본 586개와 합쳐 효과적 전체 587개로 제공. 원본 JSON/CSV·출처·실제 수집 통계는 그대로 보존 |
+| 사용자 신규 원장 | `research/market/company-additions.json`의 Nscale과 광통신 상장사 7개를 원본 586개와 합쳐 효과적 전체 594개로 제공. 원본 JSON/CSV·출처·실제 수집 통계는 그대로 보존 |
 | 종목 연결 후보 | 상장 525개사의 대표 티커. 본주 미연결 PLDT의 PHI ADR을 별도로 포함해 고유 555종목: 기존 93종목 보존, 462종목 추가 |
 | 미연결 | MOEX 6개, 베트남 HOSE 2개, Bahrain 1개, 필리핀 PSE 2개, Abu Dhabi ADX 1개. `coverage.unmapped`에 회사·거래소·이유 보존 |
 | 검증 상태 | 원장은 검토용 초안이다. `mappingStatus: candidate`, 신규 연결은 `identityStatus: unverified`. 조회 성공은 회사 식별 검증 완료와 다르며 `providerName`을 원장 이름과 대조해야 함 |
@@ -45,7 +45,7 @@ Pages 작업의 시간 예약은 제거하고 `main` 변경·수동 배포만 �
 
 종가 자료의 장기 지연과 이전 수집 상태는 화면에 표시한다. 현재는 예약 수집과 60초 새로고침을 사용하지 않는다. `/api/snapshot`·`/api/chart`의 기존 구현은 보존하지만 현재 브라우저에서는 호출하지 않으며, 경량 표시본 조회 실패 시 전체 22MB 파일이나 실시간 API로 우회하지 않는다.
 
-홈 히트맵·버블은 원본 **핵심기업 49** 시트에 사용자 추가 QCOM(C0371)·CXMT(C0119)·Nscale(C0587)을 합친 52개사(상장 48개·비상장 4개)를 대상으로 한다. 업종 카드·파급·과거 시총 계산은 같은 승인 목록의 상장 48개를 대상으로 하며 AI 칩과 메모리는 각각 6개다. 원본 회사 원장 586개와 기존 555종목 보관 파일은 유지한다. 사용자 신규 원장 1개를 합친 효과적 전체는 587개이며, Nscale은 클라우드·GPU 7개(상장 6·비상장 1)에 포함한다. AI 모델은 기존 5개(상장 2·비상장 3)다. QCOM·CXMT는 기존 회사의 핵심 편입이며 새 회사 생성이나 원천 시세 추가 수집을 뜻하지 않는다. 신규 티커의 회사 동일성 검증 상태는 시세 조회 성공 여부와 구분한다.
+홈 히트맵·버블은 원본 **핵심기업 49** 시트에 후속 사용자 선택 9개를 합친 58개사(상장 54개·비상장 4개)를 대상으로 한다. 업종 카드·파급·과거 시총 계산은 같은 승인 목록의 상장 54개를 대상으로 한다. 원본 회사 원장 586개와 기존 555종목 보관 파일은 유지한다. 사용자 신규 회사 8개를 합친 효과적 전체는 594개다. 광통신은 독립 섹터로 전체 32개, 핵심 7개이며 신규 7개사의 새 시세를 저장 스냅샷에 합성하지 않는다.
 
 CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en/about.html)와 [상하이거래소 상장 공고](https://www.sse.com.cn/disclosure/announcement/listing/ipo/c/c_20260724_10826610.shtml)로 확인하며, 제공처 연결 티커는 `688825.SS`다. 상장 사실·회사 연결만 확인하며 제공처 가격의 존재·최신성을 보증하거나 새 시세를 수집하지 않는다. 원본 원장 통계와 현재 핵심 선정 수는 구분한다.
 
@@ -53,9 +53,9 @@ CXMT의 상장 코드 `688825`는 [회사 공식 소개](https://www.cxmt.com/en
 
 ## 홈 시장 지도: 승인 핵심기업 52 연결
 
-선택 근거 `research/market/home-map-selection.json`은 원본 시트의 49개 이름·순서·주 섹터·승인 티커·상장 구분·역할을 수정 없이 보존한다. 별도 `research/market/home-map-additions.json`은 `user-request`·`2026-11-08`의 QCOM(C0371)·CXMT(C0119)·Nscale(C0587) 선정 추가만 기록한다. 신규 Nscale 회사 식별 원장은 `research/market/company-additions.json`에서 결합한다. 생성기는 원본 뒤 QCOM 순서 50·CXMT 순서 51·Nscale 순서 52로 합성하며 `baseCompanyCount: 49`와 `userAdditions` 출처를 보존한다. `assets/home-map-universe.js`는 효과적 회사 원장 587개와 연결한 52개 고유 회사 ID, 상장 48개·비상장 4개(OpenAI·Anthropic·DeepSeek·Nscale)의 안전한 식별 필드만 생성한다. 재생성 명령은 `node scripts/data/build-home-map-universe.mjs`다. 원본 시트명·SHA-256·`sourceAsOf`는 변경하지 않으며 Excel·비공개 분석은 공개 모듈에 포함하지 않는다.
+선택 근거 `research/market/home-map-selection.json`은 원본 시트의 49개 이름·순서·승인 티커·상장 구분·역할을 보존한다. 별도 `research/market/home-map-additions.json`은 QCOM·CXMT·Nscale과 광통신 핵심 6개를 기록하고, 기존 핵심 Coherent는 `sector-reclassifications.json`으로 광통신에 재분류한다. `assets/home-map-universe.js`는 효과적 회사 원장 594개와 연결한 58개 고유 회사 ID, 상장 54개·비상장 4개의 안전한 식별 필드만 생성한다.
 
-`assets/home-map-data.js`는 승인 52개 목록을 시장 스냅샷에 연결하고 합성 시총·등락률을 사용하지 않는다. `ASML.AS`·`2330.TW`·`0981.HK`·`GDS`·`BABA` 등 지정 티커를 그대로 사용하고 누락 시 다른 상장 종목으로 대체하지 않는다. 회사 ID당 하나의 면적만 만들며 비상장·제공처 결측도 대상과 사유에 남긴다. 한미반도체→반도체 소부장, 이수페타시스→AI 장비, 삼성전자→메모리, 알파벳→AI 모델처럼 시트의 주 섹터를 계산에도 적용한다.
+`assets/home-map-data.js`는 승인 58개 목록을 시장 스냅샷에 연결하고 합성 시총·등락률을 사용하지 않는다. 지정 티커를 그대로 사용하고 누락 시 다른 상장 종목으로 대체하지 않는다. 회사 ID당 하나의 면적만 만들며 비상장·제공처 결측도 대상과 사유에 남긴다. 광통신 핵심 7개도 같은 저장 시세·결측 규칙을 적용한다.
 
 업종 카드·파급·날짜별 시총 계산 대상은 `assets/home-focus.js`에서 사용자 추가를 합성한 승인 상장 목록을 직접 파생한다. QCOM·CXMT의 필요한 관측값이 없으면 결측으로 남기며 새로 수집하거나 임의 이력을 만들지 않는다. 섹터당 5개를 가정하지 않으며 AI 모델의 수익률 대상은 상장 2개(알파벳·메타)다. AI 모델의 비상장 3개와 클라우드·GPU의 Nscale 1개에 공개 가격·수익률·임의 시총을 만들지 않는다.
 
