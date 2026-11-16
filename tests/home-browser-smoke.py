@@ -84,7 +84,11 @@ incomplete.quotes.find(q=>q.symbol==='AMD').marketCap=null;
 delete incomplete.fxHistory.EUR;
 const nvda=incomplete.quotes.find(q=>q.symbol==='NVDA');nvda.bars=nvda.bars.slice(-1);
 const incompleteMap=buildActualMap({snapshot:incomplete,now});
-console.log(JSON.stringify({market,ripple,model,actualMap,incomplete,incompleteMap,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
+const capless=structuredClone(market);
+for(const quote of capless.quotes)quote.marketCapHistory=[];
+const caplessModel=buildSectorReturns({snapshot:capless,period:'3mo',now});
+if(caplessModel.coverage.capAvailableSectors!==0||caplessModel.sectors.some(sector=>sector.eq===null))throw new Error('Capless fixture must retain equal-weight returns only');
+console.log(JSON.stringify({market,ripple,model,actualMap,incomplete,incompleteMap,capless,caplessModel,calm,calmRipple,sectors:SECTORS,usEnd,krEnd}));
 """
 prepared = subprocess.run(['node', '--input-type=module'], cwd=root, input=fixture_script,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
@@ -375,6 +379,21 @@ with tempfile.TemporaryDirectory(prefix='ai-home-browser-') as temp:
                 checks.append('calm closed-price feed has explicit empty state')
                 feeds.update(market=fixture_data['market'],ripple=fixture_data['ripple'])
                 context.close()
+
+                feeds['market']=fixture_data['capless']
+                capless=browser.new_context(ignore_https_errors=True,viewport={'width':1440,'height':1000})
+                capless.add_init_script("localStorage.setItem('ai-chain.home-weight.v1','cap')")
+                attach_routes(capless)
+                capless_page=new_page(capless);capless_page.goto(origin+'/#home');capless_home=wait_home(capless_page)
+                assert capless_home.locator('[data-home-weight=eq]').get_attribute('aria-pressed')=='true'
+                assert capless_home.locator('[data-home-weight=cap]').is_disabled()
+                assert capless_page.evaluate("localStorage.getItem('ai-chain.home-weight.v1')")=='eq'
+                assert '시작일 시총 자료가 없어 동일가중으로 표시합니다' in capless_home.locator('[data-home-summary-status]').inner_text()
+                for sector in fixture_data['caplessModel']['sectors']:
+                    assert capless_home.locator('[data-sector="'+sector['sectorId']+'"] .sector-return-value').inner_text()==percent(sector['eq'])
+                capless.close()
+                feeds['market']=fixture_data['market']
+                checks.append('saved capitalization mode falls back to visible equal-weight returns when the selected period has no start-date caps')
 
                 blocked=browser.new_context(ignore_https_errors=True,viewport={'width':1440,'height':1000})
                 blocked.add_init_script("Object.defineProperty(window,'localStorage',{configurable:true,get(){throw new DOMException('browser fixture: storage blocked','SecurityError')}})")
