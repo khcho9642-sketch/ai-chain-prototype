@@ -95,6 +95,20 @@ test('capitalization weights use exact beginning-date observations, ignoring rev
   assert.equal(sector.divergence, '대형주 쏠림')
 })
 
+test('capitalization weights derive beginning caps from start close and verified shares when exact caps are absent', () => {
+  const quotes = [
+    quote('AAA', [100, 110], undefined, { sharesOutstanding: 9, sharesObservedAt: '2026-11-10T10:00:00Z', marketCapHistory: [] }),
+    quote('BBB', [100, 100], undefined, { sharesOutstanding: 1, sharesObservedAt: '2026-11-10T10:00:00Z', marketCapHistory: [] }),
+  ]
+  const sector = model(quotes).sectors[0]
+  close(sector.eq, 5)
+  close(sector.cap, 9)
+  assert.equal(sector.capCount, 2)
+  assert.equal(sector.capMissing, false)
+  assert.equal(sector.capEstimated, true)
+  assert.ok(sector.peers.every(peer => peer.capEstimated && peer.capBasis === 'start-close-times-latest-shares'))
+})
+
 test('start-date FX makes mixed market caps comparable and no raw currencies are summed', () => {
   const quotes = [quote('AAA', [100, 110], undefined, { marketCapHistory: [cap('2026-11-02', 100)] }),
     quote('BBB', [100, 100], undefined, { currency: 'KRW', marketCapHistory: [cap('2026-11-02', 1000000, 'KRW')] })]

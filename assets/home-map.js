@@ -32,7 +32,7 @@ content.innerHTML = `<div class="map-main">
       <p class="sector-summary-meta" data-home-summary-meta role="status">수집된 종가를 확인하고 있습니다.</p>
       <div class="sector-summary-grid" data-home-sector-cards role="group" aria-label="${DISPLAY_SECTORS.length}개 섹터 선택"></div>
       <p class="sector-summary-status" data-home-summary-status hidden></p>
-      <details class="sector-summary-details"><summary>계산 기준·구성 종목 보기</summary><p class="sector-methodology">선정표의 ${MAP_CATALOGUE.length}개 기업 중 상장 ${MAP_LISTED_COUNT}개의 현지통화 종가 수익률을 평균합니다. 시총가중은 기간 시작일 시총을 확인할 수 있는 종목만 사용합니다. 비상장 ${MAP_PRIVATE_COUNT}개는 이름과 역할을 별도 표시하고 시총·수익률 계산에서 제외합니다. 배당 재투자와 환율 변동은 제외하며 결측을 0으로 채우지 않습니다. 아래 지도의 크기는 최근 관측 시총 USD, 색상은 확정 종가 수익률입니다. <a data-home-selection-source target="_blank" rel="noopener noreferrer" hidden>선정표 보기 ↗</a></p><div class="sector-member-groups" data-home-sector-members></div></details>
+      <details class="sector-summary-details"><summary>계산 기준·구성 종목 보기</summary><p class="sector-methodology">선정표의 ${MAP_CATALOGUE.length}개 기업 중 상장 ${MAP_LISTED_COUNT}개의 현지통화 종가 수익률을 평균합니다. 시총가중은 기간 시작일 시총을 사용하고, 해당 값이 없으면 시작일 종가 × 최근 확인 주식수로 산출합니다. 비상장 ${MAP_PRIVATE_COUNT}개는 이름과 역할을 별도 표시하고 시총·수익률 계산에서 제외합니다. 배당 재투자와 환율 변동은 제외하며 결측을 0으로 채우지 않습니다. 아래 지도의 크기는 최근 관측 시총 USD, 색상은 확정 종가 수익률입니다. <a data-home-selection-source target="_blank" rel="noopener noreferrer" hidden>선정표 보기 ↗</a></p><div class="sector-member-groups" data-home-sector-members></div></details>
     </section>
     <section id="home-ripple" class="home-ripple" aria-labelledby="ripple-title">
       <div class="ripple-heading"><div><p class="ripple-eyebrow">TODAY'S CO-MOVEMENT</p><h2 id="ripple-title">오늘의 파급</h2></div><div class="ripple-chips" data-ripple-chips role="group" aria-label="크게 움직인 기업 선택"></div></div>
@@ -322,11 +322,7 @@ function renderHeader() {
 function renderSectorSummary() {
   renderHeader();
   const model = summaryModel();
-  const resolvedWeightMode = resolveSectorWeightMode(model, weightMode);
-  if (resolvedWeightMode !== weightMode) {
-    weightMode = resolvedWeightMode;
-    try { localStorage.setItem('ai-chain.home-weight.v1', weightMode); } catch {}
-  }
+  weightMode = resolveSectorWeightMode(model, weightMode);
   const capWeightAvailable = Number(model?.coverage?.capAvailableSectors) > 0;
   $('[data-home-card-caption]').textContent = `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 ${summaryPeriodName()} 종가 수익률`;
   const sourceLink = $('[data-home-selection-source]');
@@ -339,7 +335,7 @@ function renderSectorSummary() {
     button.setAttribute('aria-pressed', String(active));
     const unavailable = button.dataset.homeWeight === 'cap' && !!model && !capWeightAvailable;
     button.disabled = unavailable;
-    button.title = unavailable ? '이 기간은 시작일 시총 자료가 없어 동일가중으로 표시합니다.' : '';
+    button.title = unavailable ? '시총가중에 필요한 시총 또는 주식수 자료가 없습니다.' : '';
   });
   const grid = $('[data-home-sector-cards]');
   if (!sectorCardNodes.size) {
@@ -405,7 +401,7 @@ function renderSectorSummary() {
   }
   $('[data-home-summary-meta]').textContent = model ? `지도 선정 ${MAP_CATALOGUE.length}개 · 수익률 대상 상장 ${MAP_LISTED_COUNT}개 · ${summaryPeriodName()} · ${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 카드를 누르면 아래 지도에서 보기` : `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 확정 종가와 기간별 자료를 확인하고 있습니다.`;
   const warnings = [...(model?.warnings || [])];
-  if (model && !capWeightAvailable) warnings.push('이 기간은 시작일 시총 자료가 없어 동일가중으로 표시합니다.');
+  if (model && !capWeightAvailable) warnings.push('시총가중에 필요한 시총 또는 주식수 자료가 없습니다.');
   if (capMissing) warnings.push('* 기간 시작일 시총 미확인 종목 제외');
   if (marketError) warnings.push('최신 수집 파일을 읽지 못해 이전 확인값을 표시합니다.');
   const status = $('[data-home-summary-status]');

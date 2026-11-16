@@ -64,6 +64,25 @@ function exactHistoricalCap(quote, date) {
   return { value: records[0].value, currency: records[0].currency, reason: null }
 }
 
+function beginningCap(quote, date, startClose) {
+  const exact = exactHistoricalCap(quote, date)
+  if (positive(exact.value)) return { ...exact, estimated: false, basis: 'provider-dated' }
+  if (exact.reason === '기간 시작일 시총 자료 충돌') return exact
+  const currency = quote?.currency
+  if (positive(quote?.sharesOutstanding) && Number.isFinite(timestamp(quote?.sharesObservedAt))
+    && positive(startClose) && /^[A-Z]{3}$/.test(currency || '')
+    && !['GBX', 'ILA'].includes(currency)) {
+    return {
+      value: quote.sharesOutstanding * startClose,
+      currency,
+      reason: null,
+      estimated: true,
+      basis: 'start-close-times-latest-shares',
+    }
+  }
+  return exact
+}
+
 function exactFx(snapshot, normalizedQuotes, currency, date) {
   if (currency === 'USD') return 1
   const entry = snapshot?.fxHistory?.[currency]
@@ -104,10 +123,12 @@ export function resolveSectorWeightMode(model, preferred = 'eq') {
 }
 
 /**
- * Fixed-universe, same-date local-currency price returns. Capitalizations must be
- * verified observations dated exactly at the comparison start, converted to USD
- * at that same date. Current caps, nearest quarter values and inferred shares
- * never enter the calculation. No network calls are made here.
+ * Fixed-universe, same-date local-currency price returns. Capitalizations use a
+ * verified observation dated exactly at the comparison start when available.
+ * Otherwise, beginning capitalization is estimated from that session's close and
+ * the latest verified shares outstanding, then converted to USD at start-date FX.
+ * Current market-cap values and nearest-quarter substitutions never enter the
+ * calculation. No network calls are made here.
  */
 export function buildSectorReturns({ snapshot, companies = focusCompanies, period = '3mo', now = Date.now() } = {}) {
   const selected = Array.isArray(companies) ? companies : []
@@ -150,12 +171,14 @@ export function buildSectorReturns({ snapshot, companies = focusCompanies, perio
       const change = peer.included && positive(first) && positive(last) ? (last / first - 1) * 100 : null
       const returnPercent = Number.isFinite(change) ? change : null
       const quote = normalizedQuotes.get(peer.symbol)
-      const cap = returnPercent !== null && startDate ? exactHistoricalCap(quote, startDate) : { value: null, reason: '유효 종가 이력 없음' }
+      const cap = returnPercent !== null && startDate ? beginningCap(quote, startDate, first) : { value: null, reason: '유효 종가 이력 없음' }
       const fx = positive(cap.value) ? exactFx(snapshot, normalizedQuotes, cap.currency, startDate) : null
       const usd = positive(fx) ? cap.value / fx : null
       return { symbol: peer.symbol, name: peer.name, returnPercent, included: returnPercent !== null,
         startClose: positive(first) ? first : null, endClose: positive(last) ? last : null,
         capUSD: positive(usd) ? usd : null,
+        capEstimated: !!cap.estimated,
+        capBasis: cap.basis || null,
         capReason: !positive(cap.value) ? cap.reason : !positive(fx) ? '기간 시작일 환율 미확보' : !positive(usd) ? '유효 시총 미확보' : null,
         stale: peer.stale, warnings: peer.warnings }
     })
@@ -171,6 +194,7 @@ export function buildSectorReturns({ snapshot, companies = focusCompanies, perio
     const divergence = gap !== null && Math.abs(gap) + 1e-10 >= 3 ? gap < 0 ? '대형주 쏠림' : '중소형↑' : null
     const missingReasons = [...new Set(peers.filter(peer => !positive(peer.capUSD)).map(peer => peer.capReason).filter(Boolean))]
     return { ...sector, sectorId: sector.id, eq, cap, capMissing: weighted.length < peers.length,
+      capEstimated: weighted.some(peer => peer.capEstimated),
       eqCount: eq === null ? 0 : eligible.length, capCount: cap === null ? 0 : weighted.length, total: peers.length,
       startDate, endDate, gap, divergence, capReason: missingReasons.join(' · ') || null, peers }
   })
@@ -181,6 +205,7 @@ export function buildSectorReturns({ snapshot, companies = focusCompanies, perio
   const warnings = [...comparison.metadata.warnings]
   if (comparison.metadata.stale) warnings.push('이전 수집값 포함 · 종가 기준일과 수집 시각을 확인하세요.')
   if (sectors.some(sector => sector.capMissing)) warnings.push('기간 시작일 시총 또는 같은 날짜 환율이 없는 종목은 시총가중에서 제외합니다.')
+  if (sectors.some(sector => sector.capEstimated)) warnings.push('시작일 시총이 없는 종목은 시작일 종가 × 최근 확인 주식수로 산출했습니다.')
   if (sectors.some(sector => sector.eqCount && sector.eqCount !== sector.capCount)) warnings.push('가중 방식별 구성 종목이 다른 섹터에는 쏠림 태그를 표시하지 않습니다.')
   if (valid.length !== selected.length) warnings.push('섹터·종목 연결이 확인되지 않은 기업은 계산에서 제외합니다.')
   if (startDate && endDate && period !== '1d') {
