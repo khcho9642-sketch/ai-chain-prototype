@@ -1,8 +1,20 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-06T10:25:29.171Z",
-  "latestDate": "2026-11-05",
+  "publishedAt": "2026-11-16T09:41:31.078Z",
+  "latestDate": "2026-11-13",
   "days": [
+    {
+      "id": "debate-2026-11-13-NVDA",
+      "date": "2026-11-13",
+      "topic": {
+        "ticker": "NVDA",
+        "name": "엔비디아",
+        "sectorId": "ai-chips",
+        "changePct": -2.009745645841854,
+        "title": "엔비디아 실적발표가 주가에 어떤 영향을 줄까?"
+      },
+      "issue": "마진 둔화 우려를 덜려면 매출 상단 초과가 필요할까, 이후 수요 전망으로 충분할까?"
+    },
     {
       "id": "debate-2026-11-05-SNDK",
       "date": "2026-11-05",
