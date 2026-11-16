@@ -97,6 +97,12 @@ function emptyResult(snapshot, companies, period, warning) {
   }
 }
 
+export function resolveSectorWeightMode(model, preferred = 'eq') {
+  const mode = preferred === 'cap' ? 'cap' : 'eq'
+  if (!model || mode === 'eq') return mode
+  return Number(model?.coverage?.capAvailableSectors) > 0 ? 'cap' : 'eq'
+}
+
 /**
  * Fixed-universe, same-date local-currency price returns. Capitalizations must be
  * verified observations dated exactly at the comparison start, converted to USD

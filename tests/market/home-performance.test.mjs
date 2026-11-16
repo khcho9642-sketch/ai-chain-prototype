@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { SECTORS } from '../../assets/home-map-core.js'
 import { buildComparison } from '../../assets/peer-comparison-core.js'
-import { buildSectorReturns } from '../../assets/home-performance.js'
+import { buildSectorReturns, resolveSectorWeightMode } from '../../assets/home-performance.js'
 import { focusCompanies } from '../../assets/home-focus.js'
 import { MAP_COMPANIES, MAP_UNIVERSE } from '../../assets/home-map-universe.js'
 
@@ -61,6 +61,14 @@ test('default result preserves all existing sectors and gracefully handles missi
   assert.equal(result.sectors[0].cap, null)
   assert.ok(result.warnings.length)
   assert.doesNotThrow(() => buildSectorReturns({ snapshot: { quotes: [] }, companies }))
+})
+
+test('unavailable capitalization weights fall back to visible equal-weight returns', () => {
+  assert.equal(resolveSectorWeightMode(null, 'cap'), 'cap')
+  assert.equal(resolveSectorWeightMode({ coverage: { capAvailableSectors: 0 } }, 'cap'), 'eq')
+  assert.equal(resolveSectorWeightMode({ coverage: { capAvailableSectors: 3 } }, 'cap'), 'cap')
+  assert.equal(resolveSectorWeightMode({ coverage: { capAvailableSectors: 0 } }, 'eq'), 'eq')
+  assert.equal(resolveSectorWeightMode({ coverage: { capAvailableSectors: 3 } }, 'unsupported'), 'eq')
 })
 
 test('equal weights match the existing fixed-peer calculation on the same dates and universe', () => {

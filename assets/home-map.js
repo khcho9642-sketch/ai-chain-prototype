@@ -4,7 +4,7 @@ import { instruments } from './instruments.js';
 import { companyHrefForTicker } from './company-links.js';
 import { focusCompanies } from './home-focus.js';
 import { MARKET_DATA_POLICY } from './market-data-policy.js';
-import { buildSectorReturns } from './home-performance.js';
+import { buildSectorReturns, resolveSectorWeightMode } from './home-performance.js';
 import { buildActualMap, buildMapCatalogue } from './home-map-data.js';
 import { MAP_UNIVERSE } from './home-map-universe.js';
 import { validateRippleSnapshot, rippleMatchesSelection } from './ripple-core.js';
@@ -322,6 +322,12 @@ function renderHeader() {
 function renderSectorSummary() {
   renderHeader();
   const model = summaryModel();
+  const resolvedWeightMode = resolveSectorWeightMode(model, weightMode);
+  if (resolvedWeightMode !== weightMode) {
+    weightMode = resolvedWeightMode;
+    try { localStorage.setItem('ai-chain.home-weight.v1', weightMode); } catch {}
+  }
+  const capWeightAvailable = Number(model?.coverage?.capAvailableSectors) > 0;
   $('[data-home-card-caption]').textContent = `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 ${summaryPeriodName()} 종가 수익률`;
   const sourceLink = $('[data-home-selection-source]');
   sourceLink.hidden = !MAP_UNIVERSE.sourceUrl;
@@ -331,6 +337,9 @@ function renderSectorSummary() {
     const active = button.dataset.homeWeight === weightMode;
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
+    const unavailable = button.dataset.homeWeight === 'cap' && !!model && !capWeightAvailable;
+    button.disabled = unavailable;
+    button.title = unavailable ? '이 기간은 시작일 시총 자료가 없어 동일가중으로 표시합니다.' : '';
   });
   const grid = $('[data-home-sector-cards]');
   if (!sectorCardNodes.size) {
@@ -396,6 +405,7 @@ function renderSectorSummary() {
   }
   $('[data-home-summary-meta]').textContent = model ? `지도 선정 ${MAP_CATALOGUE.length}개 · 수익률 대상 상장 ${MAP_LISTED_COUNT}개 · ${summaryPeriodName()} · ${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 카드를 누르면 아래 지도에서 보기` : `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 확정 종가와 기간별 자료를 확인하고 있습니다.`;
   const warnings = [...(model?.warnings || [])];
+  if (model && !capWeightAvailable) warnings.push('이 기간은 시작일 시총 자료가 없어 동일가중으로 표시합니다.');
   if (capMissing) warnings.push('* 기간 시작일 시총 미확인 종목 제외');
   if (marketError) warnings.push('최신 수집 파일을 읽지 못해 이전 확인값을 표시합니다.');
   const status = $('[data-home-summary-status]');
