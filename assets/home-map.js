@@ -66,7 +66,7 @@ content.innerHTML = `<div class="map-main">
       <div class="chart-footer"><span id="chart-hint"><span class="hint-dot"></span>분야 확대·기업 검색으로 작은 기업 찾기 · 기업을 누르면 정보 확인</span><button type="button" class="map-zoom" id="map-zoom" aria-pressed="false">지도 확대</button><div class="return-legend" id="return-legend"><span>−3%</span><div class="gradient"></div><span>0</span><div class="gradient positive-gradient"></div><span>+3%</span><span class="missing-legend">회색 — 미확보</span></div><span id="bubble-legend" hidden>가로: 분야 · 세로·색상: 확정 종가 등락률 · 면적: 최근 관측 시총 USD</span></div>
       <aside class="selection" id="selection" aria-label="선택 기업 정보" hidden></aside>
     </section>
-    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">9개 분야 · 지도 선정 ${MAP_CATALOGUE.length}개</span></footer>
+    <footer class="page-footer"><span>AI VALUE CHAIN</span><p>크기: 최근 관측 시총 USD · 색상: 확정 종가 등락률. 기업별 시총·환율과 종가의 기준일은 다를 수 있습니다.</p><span class="footer-note">${DISPLAY_SECTORS.length}개 분야 · 지도 선정 ${MAP_CATALOGUE.length}개</span></footer>
 </div>`;
 root.append(content);
 const $=s=>root.querySelector(s), $$=s=>[...root.querySelectorAll(s)];
@@ -353,7 +353,9 @@ function renderSectorSummary() {
       const value = htmlElement('strong', 'sector-return-value', '—');
       const gap = htmlElement('small', 'sector-return-gap');
       const coverage = htmlElement('small', 'sector-return-coverage');
-      button.append(identity, value, gap, coverage);
+      const meta = htmlElement('span', 'sector-return-meta');
+      meta.append(coverage, gap);
+      button.append(identity, value, meta);
       button.addEventListener('click', () => setSector(state.sector === sector.name ? 'all' : sector.name));
       grid.append(button);
       sectorCardNodes.set(sector.id, { button, value, gap, coverage });
@@ -399,7 +401,7 @@ function renderSectorSummary() {
     const total = companies.filter(company => company.listed).length, privateCount = companies.length - total;
     card.coverage.textContent = (Number.isInteger(count) ? `${count}/${total}개 반영` : `상장 ${total}개 · 종가 확인 중`) + (privateCount ? ` · 비상장 ${privateCount}개 별도` : '');
   }
-  $('[data-home-summary-meta]').textContent = model ? `지도 선정 ${MAP_CATALOGUE.length}개 · 수익률 대상 상장 ${MAP_LISTED_COUNT}개 · ${summaryPeriodName()} · ${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 카드를 누르면 아래 지도에서 보기` : `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 확정 종가와 기간별 자료를 확인하고 있습니다.`;
+  $('[data-home-summary-meta]').textContent = model ? `${weightMode === 'cap' ? '기간 시작일 시총가중' : '동일가중'} · 섹터를 선택하면 아래 지도에서 구성 기업을 볼 수 있습니다.` : `선정 ${MAP_CATALOGUE.length}개 중 상장 ${MAP_LISTED_COUNT}개의 확정 종가와 기간별 자료를 확인하고 있습니다.`;
   const warnings = [...(model?.warnings || [])];
   if (model && !capWeightAvailable) warnings.push('시총가중에 필요한 시총 또는 주식수 자료가 없습니다.');
   if (capMissing) warnings.push('* 기간 시작일 시총 미확인 종목 제외');
